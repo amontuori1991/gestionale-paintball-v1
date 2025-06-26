@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Tesseramento già esistente";
+}
+
+<style>
+    body {
+        background-color: #F8D7DA;
+    }
+
+    .duplicato-container {
+        padding: 3rem;
+        text-align: center;
+    }
+
+        .duplicato-container h1 {
+            font-size: 2.5rem;
+            color: #842029;
+            margin-bottom: 1rem;
+        }
+
+        .duplicato-container p {
+            font-size: 1.2rem;
+            color: #842029;
+            margin-bottom: 2rem;
+        }
+
+    .btn-primary {
+        background-color: #0d6efd;
+        border: none;
+    }
+</style>
+
+<div class="duplicato-container">
+    <h1>Tesseramento già registrato</h1>
+    <p>@ViewBag.NomeUtente risulta già tesserato per l'anno corrente.</p>
+
+    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Torna alla Home</a>
+</div>

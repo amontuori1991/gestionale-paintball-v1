@@ -1,0 +1,32 @@
+﻿@{
+    // Questo è il layout specifico per le pagine di gestione dell'account di Identity.
+    // Di default, dovrebbe incapsularsi nel layout principale dell'applicazione.
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
+    {
+        Layout = parentLayout.ToString();
+    }
+    else
+    {
+        // Questo dovrebbe puntare al layout principale dell'applicazione (Views/Shared/_Layout.cshtml)
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+}
+
+<h1>Gestisci il tuo account</h1>
+
+<div>
+    <h2>Modifica le tue impostazioni account</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+            <partial name="_ManageNav" />
+        </div>
+        <div class="col-md-9">
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

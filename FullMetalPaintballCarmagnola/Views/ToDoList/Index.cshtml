@@ -1,0 +1,256 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.ToDoListIndexViewModel
+@{
+    ViewData["Title"] = "ToDoList";
+}
+
+<style>
+    /* Stili copiati per coerenza da altre pagine */
+    body {
+        background-color: #CED4B5 !important;
+    }
+
+    .background-logo {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        background: url('/img/logo.gif') no-repeat center center;
+        background-size: contain;
+        margin: 40px auto 20px auto;
+    }
+
+    .content-container {
+        background-color: white;
+        border-radius: 10px;
+        max-width: 1200px; /* Adatta la larghezza per la ToDoList */
+        margin: 0 auto 40px auto;
+        padding: 30px 40px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .content-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+    /* Stili specifici per la ToDoList */
+    .topic-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fcfcfc;
+    }
+
+        .topic-section h3 {
+            color: #495057;
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 5px;
+            display: inline-block; /* Per far sì che il bordo sia solo sotto il testo */
+        }
+
+    .todo-item {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+        .todo-item.completed {
+            background-color: #e6ffe6;
+            border-color: #a3e6a3;
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .todo-item .actions {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+            .todo-item .actions button, .todo-item .actions a {
+                font-size: 0.85rem;
+                padding: 5px 10px;
+                border-radius: 4px;
+            }
+
+    .completed-section {
+        margin-top: 40px;
+        padding: 20px;
+        border: 1px solid #d4edda;
+        border-radius: 8px;
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+        .completed-section h3 {
+            color: #155724;
+            border-bottom-color: #28a745;
+        }
+
+    .form-add-item {
+        margin-top: 40px;
+        padding: 25px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+        .form-add-item h3 {
+            color: #0d6efd;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .form-add-item .form-group label {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .form-add-item .form-control, .form-add-item .form-select {
+            border-radius: 5px;
+        }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="content-container">
+    <h2>ToDo List</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @* Sezione per l'aggiunta di una nuova attività *@
+    <div class="form-add-item">
+        <h3>Aggiungi Nuova Attività</h3>
+        <form asp-controller="ToDoList" asp-action="CreateItem" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3">
+                <label asp-for="NewItem.Description" class="form-label">Descrizione Attività</label>
+                <input asp-for="NewItem.Description" class="form-control" />
+                <span asp-validation-for="NewItem.Description" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewItem.TopicId" class="form-label">Topic</label>
+                <select asp-for="NewItem.TopicId" class="form-select">
+                    <option value="">-- Seleziona Topic --</option>
+                    @foreach (var topic in Model.Topics)
+                    {
+                        <option value="@topic.Id">@topic.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="NewItem.TopicId" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewItem.Notes" class="form-label">Note (Opzionale)</label>
+                <textarea asp-for="NewItem.Notes" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="NewItem.Notes" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Crea Attività</button>
+        </form>
+    </div>
+
+    <hr />
+
+    @* Sezioni per i Topic (attività non completate) *@
+    @if (Model.Topics.Any())
+    {
+        @foreach (var topic in Model.Topics)
+        {
+            <div class="topic-section">
+                <h3>@topic.Name</h3>
+                @if (Model.ToDoItemsByTopic.ContainsKey(topic.Name) && Model.ToDoItemsByTopic[topic.Name].Any())
+                {
+                    @foreach (var item in Model.ToDoItemsByTopic[topic.Name])
+                    {
+                        <div class="todo-item">
+                            <div>
+                                <strong>@item.Description</strong><br />
+                                <small class="text-muted">Creata il: @item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</small>
+                                @if (!string.IsNullOrEmpty(item.Notes))
+                                {
+                                    <br />
+                
+                                    <small>Note: @item.Notes</small>
+                                }
+                            </div>
+                            <div class="actions">
+                                <form asp-controller="ToDoList" asp-action="MarkAsCompleted" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">Completa</button>
+                                </form>
+                                <form asp-controller="ToDoList" asp-action="AddNote" method="post" style="display:inline;">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="text" name="note" value="@item.Notes" placeholder="Aggiungi/modifica nota" class="form-control form-control-sm" style="width: 180px;" />
+                                    <button type="submit" class="btn btn-info btn-sm">Salva Nota</button>
+                                </form>
+                                <form asp-controller="ToDoList" asp-action="DeleteItem" method="post" style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questa attività?');">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Elimina</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">Nessuna attività non completata per questo topic.</p>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">Nessun topic disponibile. Aggiungi i topic iniziali nel database (seeding).</p>
+    }
+
+
+    @* Sezione per le attività completate *@
+    @if (Model.CompletedItems.Any())
+    {
+        <div class="completed-section">
+            <h3>Attività Completate</h3>
+            @foreach (var item in Model.CompletedItems)
+            {
+                <div class="todo-item completed">
+                    <div>
+                        <strong>@item.Description</strong> (<small>Topic: @item.TopicName</small>)<br />
+                        <small class="text-muted">Completata il: @item.CreatedDate.ToString("dd/MM/yyyy HH:mm")</small>
+                        @if (!string.IsNullOrEmpty(item.Notes))
+                        {
+                            <br />
+                
+                            <small>Note: @item.Notes</small>
+                        }
+                    </div>
+                    <div class="actions">
+                        <form asp-controller="ToDoList" asp-action="DeleteItem" method="post" style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questa attività completata?');">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm">Elimina</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

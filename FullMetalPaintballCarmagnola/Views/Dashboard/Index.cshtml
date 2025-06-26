@@ -1,0 +1,310 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    .dashboard-container {
+        position: relative;
+        z-index: 2;
+        padding-top: 50px;
+        padding-bottom: 50px;
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .background-logo {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 20px auto;
+        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
+        background-size: contain;
+        pointer-events: none;
+        opacity: 1;
+        position: relative; /* no fixed */
+    }
+
+    .dashboard-title {
+        font-size: 2.5rem;
+        color: #0d6efd;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-btns {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+    }
+
+        .dashboard-btns .btn-container {
+            display: inline-block; /* O solo display: block; con float: left; se non fosse flex */
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease-in-out;
+            position: relative;
+            background-color: inherit;
+            width: 140px; /* Larghezza fissa per ogni pulsante */
+            height: 140px; /* Aggiunto altezza fissa per coerenza, se necessario */
+        }
+
+    .btn-container:hover {
+        transform: scale(1.05);
+    }
+
+    .dashboard-btns .btn-container .btn {
+        font-size: 1.3rem;
+        padding: 10px 20px 15px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center; /* Centra verticalmente il contenuto del pulsante */
+        gap: 10px;
+        text-decoration: none;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        z-index: 2;
+        border: none;
+        color: inherit;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .dashboard-btns .btn-container .btn i {
+            font-size: 3rem;
+            color: inherit;
+            transition: color 0.3s ease;
+        }
+
+        .dashboard-btns .btn-container .btn:hover,
+        .dashboard-btns .btn-container .btn:hover i {
+            color: #fff !important;
+        }
+
+    /* Colori base più chiari */
+    .btn-outline-primary {
+        background-color: #f5d2e7;
+        color: #c2185b;
+        border: none;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #c2185b;
+        }
+
+    .btn-outline-success {
+        background-color: #c7e5cd;
+        color: #2e7d32;
+        border: none;
+    }
+
+        .btn-outline-success:hover {
+            background-color: #2e7d32;
+        }
+
+    .btn-outline-warning {
+        background-color: #ffe8b3;
+        color: #f57c00;
+        border: none;
+    }
+
+        .btn-outline-warning:hover {
+            background-color: #f57c00;
+        }
+
+    .btn-outline-info {
+        background-color: #b2f0f7;
+        color: #00838f;
+        border: none;
+    }
+
+        .btn-outline-info:hover {
+            background-color: #00838f;
+        }
+
+        .btn-outline-info.calendar {
+            background-color: #d0f0ff;
+            color: #0077b6;
+        }
+
+            .btn-outline-info.calendar:hover {
+                background-color: #0077b6;
+            }
+
+    .btn-outline-dark {
+        background-color: #d3d3d3;
+        color: #212529;
+        border: none;
+    }
+
+        .btn-outline-dark:hover {
+            background-color: #212529;
+        }
+
+    .btn-outline-secondary {
+        background-color: #b0b0b0;
+        color: #495057;
+        border: none;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #495057;
+        }
+
+    .btn-outline-purple {
+        background-color: #d9c6f4;
+        color: #6f42c1;
+        border: none;
+    }
+
+        .btn-outline-purple:hover {
+            background-color: #6f42c1;
+        }
+
+    .dashboard-btns .btn-container::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 15%;
+        width: 70%;
+        height: 10px;
+        border-radius: 0 0 12px 12px;
+        background-color: #a0a0a0;
+        z-index: 1;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-outline-primary::after {
+        background-color: #c2185b;
+    }
+
+    .btn-outline-success::after {
+        background-color: #2e7d32;
+    }
+
+    .btn-outline-warning::after {
+        background-color: #f57c00;
+    }
+
+    .btn-outline-info::after {
+        background-color: #00838f;
+    }
+
+    .btn-outline-info.calendar::after {
+        background-color: #0077b6;
+    }
+
+    .btn-outline-dark::after {
+        background-color: #212529;
+    }
+
+    .btn-outline-secondary::after {
+        background-color: #495057;
+    }
+
+    .btn-outline-purple::after {
+        background-color: #6f42c1;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="background-logo"></div>
+    <h1 class="dashboard-title">Benvenuto @ViewBag.FullName!</h1>
+    <p class="dashboard-subtitle">Seleziona una sezione per iniziare a gestire l'associazione.</p>
+
+    <div class="dashboard-btns">
+        <div class="btn-container">
+            <a class="btn btn-outline-primary" href="@Url.Action("ListaTesseramenti", "Tesseramento")">
+                <i class="bi bi-people"></i>
+                Tesserati
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-success" href="@Url.Action("Index", "Partite")">
+                <i class="bi bi-calendar-check"></i>
+                Prenotazioni
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-warning" href="@Url.Action("Caparre", "Partite")">
+                <i class="bi bi-wallet2"></i>
+                Caparre
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-info" asp-controller="PresenzeStaff" asp-action="Index">
+                <i class="bi bi-people-fill"></i>
+                Presenze Staff
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-dark" href="@Url.Action("GestionePermessi", "Ruoli")">
+                <i class="bi bi-person-badge"></i>
+                Gestione Utenti
+            </a>
+        </div>
+
+        <div class="btn-container">
+            <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Statistiche")">
+                <i class="bi bi-bar-chart-line"></i>
+                Statistiche
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-purple" href="@Url.Action("Index", "Prezzi")">
+                <i class="bi bi-currency-euro"></i>
+                Prezzi
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-info calendar" href="/CalendarioAssenze">
+                <i class="bi bi-calendar-event"></i>
+                Calendario Assenze
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-secondary" href="/TessereAcsi">
+                <i class="bi bi-card-text"></i>
+                ACSI
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-info" href="@Url.Action("Index", "Documenti")">
+                <i class="bi bi-folder"></i>
+                Documenti
+            </a>
+        </div>
+        <div class="btn-container">
+            <a class="btn btn-outline-info" href="@Url.Action("Index", "DocumentiAsd")">
+                <i class="bi bi-file-earmark-ruled-fill"></i>
+                Documenti ASD
+            </a>
+        </div>
+
+        <div class="btn-container">
+            <a class="btn btn-outline-success" asp-controller="ToDoList" asp-action="Index">
+                <i class="bi bi-card-checklist"></i>
+                ToDoList
+            </a>
+        </div>
+
+    </div> 
+</div> 

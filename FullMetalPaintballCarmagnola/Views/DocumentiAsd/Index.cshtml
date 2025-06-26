@@ -1,0 +1,159 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.DocumentiAsdViewModelList
+@{
+    ViewData["Title"] = "Documenti ASD";
+}
+
+<style>
+    /* Stili copiati da TessereAcsi/Index.cshtml per coerenza */
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .background-logo {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center; background-size: contain;
+        margin: 40px auto 20px auto;
+    }
+
+    .content-container {
+        background-color: white;
+        border-radius: 10px;
+        max-width: 1000px; /* MODIFICATO: Aumentato per la tabella, puoi adattarlo */
+        margin: 0 auto 40px auto;
+        padding: 30px 40px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .content-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+    form.mb-3 { /* Regola il margine inferiore del form di filtro */
+        margin-bottom: 30px !important;
+    }
+
+    table.table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+        table.table th, table.table td {
+            vertical-align: middle;
+            text-align: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        table.table th {
+            background-color: #e9ecef;
+            font-weight: 600;
+        }
+
+    .input-group input { /* Stili per il campo di filtro */
+        border-radius: 5px 0 0 5px;
+        border: 1px solid #ced4da;
+    }
+
+    .input-group button, .input-group a { /* Stili per i bottoni del filtro */
+        border-radius: 0 5px 5px 0; /* Regolato se sono adiacenti */
+    }
+
+        .input-group a.ms-2 { /* Stile per il bottone Reset con margine */
+            border-radius: 5px !important;
+        }
+
+    /* Stili per il bottone "Carica Documento" */
+    p .btn-success {
+        display: block; /* Per centrarlo con margin: auto */
+        width: fit-content; /* Larghezza solo per il contenuto */
+        margin: 20px auto 30px auto; /* Centra il bottone */
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+
+    /* Stili per icone PDF/Word all'interno della tabella */
+    table.table i.bi {
+        margin-right: 5px; /* Spazio tra icona e testo */
+    }
+
+    /* Stili per i bottoni Modifica/Elimina nella tabella */
+    table.table .btn-sm {
+        margin: 0 2px;
+        border-radius: 5px;
+    }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="content-container">
+    <h2>Documenti ASD</h2>
+
+    <form method="get" class="mb-3 d-flex justify-content-center">
+               <div class="input-group" style="max-width: 450px;">
+                        <input type="text" name="filtroDescrizione" value="@Model.FiltroDescrizione" placeholder="Filtra per descrizione..." class="form-control" />
+            <button type="submit" class="btn btn-primary">Filtra</button>
+            <a asp-action="Index" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <p>
+        <a asp-action="Create" class="btn btn-success">➕ Carica Documento</a>
+    </p>
+
+    @if (TempData["Successo"] != null)
+    {
+        <div class="alert alert-success">@TempData["Successo"]</div>
+    }
+
+       <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Descrizione</th>
+                <th>Data Caricamento</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var doc in Model.Documenti)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="Download" asp-route-id="@doc.Id" target="_blank" style="text-decoration:none;">
+                            @if (doc.OriginalFileName != null && doc.OriginalFileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: red;"></i>
+                            }
+                            else if (doc.OriginalFileName != null && (doc.OriginalFileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase) || doc.OriginalFileName.EndsWith(".doc", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                <i class="bi bi-file-earmark-word" style="font-size: 1.5rem; color: blue;"></i>
+                            }
+                            @doc.OriginalFileName
+                        </a>
+                    </td>
+                    <td>@doc.Descrizione</td>
+                    <td>@(doc.DataCaricamento?.ToString("dd/MM/yyyy") ?? "")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@doc.Id" class="btn btn-sm btn-warning">Modifica</a>
+                        <form asp-action="Delete" asp-route-id="@doc.Id" method="post" style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questo documento?');">
+                            <button type="submit" class="btn btn-sm btn-danger">Elimina</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div> @* Chiusura di .content-container *@

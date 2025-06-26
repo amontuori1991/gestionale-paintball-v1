@@ -1,0 +1,37 @@
+﻿@model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.Tesseramento>
+
+@{
+    ViewData["Title"] = "Tesserati della Partita";
+}
+
+<h2 class="mb-4">Tesserati per la partita del @ViewBag.DataPartita alle @ViewBag.OraPartita</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Nome</th>
+            <th>Cognome</th>
+            <th>Data Creazione</th>
+            <th>Azioni</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model)
+        {
+            <tr>
+                <td>@t.Nome</td>
+                <td>@t.Cognome</td>
+                <td>@t.DataCreazione.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <form asp-action="EliminaTesserato" asp-controller="Partite" method="post" onsubmit="return confirm('Sei sicuro di voler rimuovere questo tesserato?');">
+                        <input type="hidden" name="id" value="@t.Id" />
+                        <input type="hidden" name="partitaId" value="@ViewBag.PartitaId" />
+                        <button type="submit" class="btn btn-danger btn-sm">Rimuovi</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a class="btn btn-secondary" asp-action="Index">Torna alla lista partite</a>

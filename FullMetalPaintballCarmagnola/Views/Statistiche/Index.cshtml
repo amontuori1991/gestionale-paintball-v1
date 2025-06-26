@@ -1,0 +1,255 @@
+﻿@{
+    ViewData["Title"] = "Statistiche";
+    var labels = ViewBag.Labels as List<string>; // Nomi dei mesi (Gennaio, Febbraio, ...)
+    var anni = ViewBag.Anni as List<string>;     // Lista degli anni (2022, 2023, ...)
+    var dati = ViewBag.Dati as Dictionary<string, Dictionary<string, int>>; // Dati Partite Confermate (Anno -> Mese -> Conteggio)
+    var datiCancellati = ViewBag.DatiCancellati as Dictionary<string, Dictionary<string, int>>; // Dati Partite Cancellate (Anno -> Mese -> Conteggio)
+
+    var colorsConfermate = new string[] { "#0d6efd", "#198754", "#ffc107", "#0dcaf0", "#6f42c1", "#fd7e14" };
+    var colorsCancellate = new string[] { "#dc3545", "#b02a37", "#a71d2a", "#870000", "#700000", "#5a0000" };
+}
+
+<style>
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .background-logo {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
+        background-size: contain;
+        margin: 40px auto 20px auto;
+    }
+
+    .statistiche-container {
+        background-color: white;
+        border-radius: 10px;
+        max-width: 90%;
+        margin: 0 auto;
+        padding: 30px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow-x: auto; /* Per tabelle o grafici grandi */
+    }
+
+        .statistiche-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+    /* Stili aggiuntivi per la tabella riepilogativa */
+    .summary-table {
+        width: 100%;
+        margin-top: 40px;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+
+        .summary-table th, .summary-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .summary-table thead th {
+            background-color: #e9ecef;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .summary-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .summary-table .total-row th, .summary-table .total-row td {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+
+        .summary-table .grand-total-row th, .summary-table .grand-total-row td {
+            /* Rimosso o lasciato come fallback per coerenza */
+            /* background-color: #e2e6ea; */
+            /* font-weight: bold; */
+            /* color: #212529; */
+        }
+
+        .summary-table .total-column {
+            background-color: #eaf3ff; /* Colore per la colonna totale mensile */
+            font-weight: bold;
+        }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="statistiche-container">
+    <h2>Statistiche Partite per Mese</h2>
+
+    <canvas id="graficoPartite" width="800" height="400"></canvas>
+
+    <hr style="margin-top: 50px; margin-bottom: 50px;" />
+
+    <h2>Riepilogo Totali Partite</h2>
+
+    <table class="summary-table">
+        <thead>
+            <tr>
+                <th rowspan="2">Mese</th>
+                @foreach (var anno in anni)
+                {
+                    <th colspan="2">@anno</th>
+                }
+                <th rowspan="2">Totale Mensile</th>
+            </tr>
+            <tr>
+                @foreach (var anno in anni)
+                {
+                    <th>Confermate</th>
+                    <th>Cancellate</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                // Inizializza i totali annuali (per riga "Totale Anno")
+                var annualTotalsConfermate = new Dictionary<string, int>();
+                var annualTotalsCancellate = new Dictionary<string, int>();
+                foreach (var anno in anni)
+                {
+                    annualTotalsConfermate[anno] = 0;
+                    annualTotalsCancellate[anno] = 0;
+                }
+            }
+
+            @for (int i = 0; i < labels.Count; i++)
+            {
+                var meseLabel = labels[i]; // Nome del mese (es. "Gennaio")
+                var meseKey = (i + 1).ToString("D2"); // Chiave numerica del mese (es. "01")
+                int monthlyGrandTotal = 0; // Totale per il mese corrente su tutti gli anni
+
+                <tr>
+                    <td>@meseLabel</td>
+                    @foreach (var anno in anni)
+                    {
+                        var confermate = dati.ContainsKey(anno) && dati[anno].ContainsKey(meseKey) ? dati[anno][meseKey] : 0;
+                        var cancellate = datiCancellati != null && datiCancellati.ContainsKey(anno) && datiCancellati[anno].ContainsKey(meseKey) ? datiCancellati[anno][meseKey] : 0;
+
+                        <td>@confermate</td>
+                        <td>@cancellate</td>
+
+                        annualTotalsConfermate[anno] += confermate;
+                        annualTotalsCancellate[anno] += cancellate;
+                        monthlyGrandTotal += (confermate + cancellate);
+                    }
+                    <td class="total-column">@monthlyGrandTotal</td>
+                </tr>
+            }
+            <tr class="total-row">
+                <th>Totale Anno</th>
+                @foreach (var anno in anni)
+                {
+                    <td>@annualTotalsConfermate[anno]</td>
+                    <td>@annualTotalsCancellate[anno]</td>
+                }
+                <td></td> @* Cella vuota per l'allineamento della colonna "Totale Mensile" *
+            </tr>
+            @* RIMOSSO QUI: L'intera riga del "TOTALE GENERALE" *
+            @* <tr class="grand-total-row">
+                <th colspan="1">TOTALE GENERALE</th> 
+                @{
+                    int grandTotalConfermateDisplay = annualTotalsConfermate.Values.Sum();
+                    int grandTotalCancellateDisplay = annualTotalsCancellate.Values.Sum();
+                    int combinedGrandTotal = grandTotalConfermateDisplay + grandTotalCancellateDisplay;
+                }
+                <th colspan="@((anni.Count * 2) - 1)">Totale Generale</th> 
+                <td>@combinedGrandTotal</td>
+            </tr> *@
+        </tbody>
+    </table>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const labels = @Html.Raw(Json.Serialize(labels));
+    const datasets = [];
+
+    @for (var i = 0; i < anni.Count; i++)
+    {
+                var anno = anni[i];
+                var confermateValues = new List<int>();
+                var cancellateValues = new List<int>();
+
+                for (int mese = 1; mese <= 12; mese++)
+                {
+                            var key = mese.ToString("D2");
+                            int confermate = dati.ContainsKey(anno) && dati[anno].ContainsKey(key) ? dati[anno][key] : 0;
+                            int cancellate = datiCancellati != null && datiCancellati.ContainsKey(anno) && datiCancellati[anno].ContainsKey(key) ? datiCancellati[anno][key] : 0;
+
+                            confermateValues.Add(confermate);
+                            cancellateValues.Add(cancellate);
+                }
+
+                var colorIndex = i % colorsConfermate.Length;
+
+                <text>
+                datasets.push({
+                    label: 'Anno @anno - Confermate',
+                    data: [@string.Join(",", confermateValues)],
+                    backgroundColor: '@colorsConfermate[colorIndex]',
+                    stack: '@anno',
+                    borderWidth: 1
+                });
+                datasets.push({
+                    label: 'Anno @anno - Cancellate',
+                    data: [@string.Join(",", cancellateValues)],
+                    backgroundColor: '@colorsCancellate[colorIndex]',
+                    stack: '@anno',
+                    borderWidth: 1
+                });
+                </text>
+    }
+
+    const config = {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Confronto Partite Mese per Mese (Anni)'
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    beginAtZero: true,
+                    stacked: true,
+                    title: {
+                        display: true,
+                        text: 'Numero Partite'
+                    }
+                }
+            }
+        }
+    };
+
+    const ctx = document.getElementById('graficoPartite').getContext('2d');
+    new Chart(ctx, config);
+</script>

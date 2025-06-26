@@ -1,0 +1,211 @@
+﻿@using System.Globalization
+@{
+    ViewData["Title"] = "Presenze Staff";
+    var dateList = ViewBag.DateList as List<DateTime>;
+    var reperibilitaList = ViewBag.ReperibilitaList as List<Full_Metal_Paintball_Carmagnola.Models.AssenzaCalendario>;
+    var presenzaList = ViewBag.PresenzaList as List<Full_Metal_Paintball_Carmagnola.Models.PresenzaStaff>;
+    var staff = new List<string> { "Simone", "Davide", "Andrea", "Federico", "Enrico" };
+}
+
+<style>
+    body {
+        background-color: #CED4B5;
+        font-family: Arial, sans-serif;
+    }
+
+    .container-custom {
+        padding-top: 120px;
+        padding-bottom: 50px;
+        max-width: 95%;
+        margin: auto;
+        position: relative;
+    }
+
+    .logo {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 5;
+        height: 100px;
+    }
+
+    .table-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    table {
+        background-color: white;
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 500px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-image: url('/img/splatter1.png'), url('/img/splatter2.png');
+        background-repeat: no-repeat, no-repeat;
+        background-position: right 30px top 20px, left 30px bottom 20px;
+        background-size: 120px, 120px;
+    }
+
+    th, td, select {
+        padding: 8px;
+        text-align: center;
+        border: 2px solid #ccc;
+    }
+
+    th {
+        background-color: #f8f8f8;
+        font-weight: bold;
+    }
+
+    select {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        color: #0d6efd;
+        margin-bottom: 20px;
+    }
+
+    .bg-success {
+        background-color: #198754 !important;
+        color: white;
+    }
+
+    .bg-danger {
+        background-color: #dc3545 !important;
+        color: white;
+    }
+
+    .bg-warning {
+        background-color: #ffc107 !important;
+        color: black;
+    }
+
+    .btn-danger-small {
+        padding: 2px 6px;
+        font-size: 0.8rem;
+        margin-top: 4px;
+    }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="container-custom">
+    <img src="https://i.imgur.com/K9Ugseg.gif" class="logo" />
+
+    <h2>Gestione Presenze Staff</h2>
+    <div class="mb-3">
+        <button id="aggiungiInfrasettimanale" class="btn btn-warning">Inserisci data infrasettimanale</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Giorno</th>
+                    <th>Data</th>
+                    <th>Reperibile</th>
+                    @foreach (var m in staff)
+                    {
+                        <th>@m</th>
+                    }
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var giorno in dateList)
+                {
+                    var giornoSet = giorno.ToString("dddd", new CultureInfo("it-IT"));
+                    var isWeekend = giorno.DayOfWeek == DayOfWeek.Saturday || giorno.DayOfWeek == DayOfWeek.Sunday;
+                    var rep = reperibilitaList.FirstOrDefault(r => r.Data.Date == giorno.Date);
+                    var sceltaRep = string.IsNullOrWhiteSpace(rep?.Reperibile) ? "In attesa" : rep.Reperibile.Trim();
+                    var repClass = sceltaRep == "Nessuno" ? "bg-danger" :
+                    sceltaRep == "In attesa" ? "bg-warning" :
+                    "bg-success";
+
+                    <tr data-data="@giorno.ToString("yyyy-MM-dd")">
+                        <td>@giornoSet</td>
+                        <td>@giorno.ToString("dd/MM/yyyy")</td>
+                        <td class="@repClass">@sceltaRep</td>
+
+                        @foreach (var membro in staff)
+                        {
+                            var prs = presenzaList.FirstOrDefault(p => p.Data.Date == giorno.Date && p.NomeStaff == membro);
+                            var currentSelection = prs?.Presente == true ? "SI" :
+                            prs?.Presente == false ? "NO" : "In attesa";
+
+                            var bgClass = currentSelection == "SI" ? "bg-success" :
+                            currentSelection == "NO" ? "bg-danger" : "bg-warning";
+
+                            <td class="@bgClass">
+                                <select class="presente-select form-select text-center"
+                                        data-data="@giorno.ToString("yyyy-MM-dd")"
+                                        data-nome="@membro">
+                                    <option value="In attesa" selected="@(currentSelection == "In attesa" ? "selected" : null)">In attesa</option>
+                                    <option value="SI" selected="@(currentSelection == "SI" ? "selected" : null)">SI</option>
+                                    <option value="NO" selected="@(currentSelection == "NO" ? "selected" : null)">NO</option>
+                                </select>
+                            </td>
+                        }
+
+                        <td>
+                            @if (!isWeekend)
+                            {
+                                <button class="btn btn-danger btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.presente-select').on('change', function () {
+                const sel = $(this);
+                const data = sel.data('data');
+                const nome = sel.data('nome');
+                const val = sel.val();
+                const td = sel.closest('td');
+
+                let presenteValue = null;
+                if (val === 'SI') presenteValue = true;
+                else if (val === 'NO') presenteValue = false;
+
+                $.post('/PresenzeStaff/AggiornaPresenza', { data: data, nomeStaff: nome, presente: presenteValue })
+                    .done(() => {
+                        td.removeClass('bg-success bg-danger bg-warning');
+                        if (val === 'SI') td.addClass('bg-success');
+                        else if (val === 'NO') td.addClass('bg-danger');
+                        else td.addClass('bg-warning');
+                    })
+                    .fail(() => alert("Errore durante il salvataggio della presenza."));
+            });
+
+            $('#aggiungiInfrasettimanale').on('click', function () {
+                const dataSelezionata = prompt("Inserisci una data in formato GG/MM/AAAA:");
+                if (dataSelezionata) {
+                    $.post("/PresenzeStaff/InserisciDataInfrasettimanale", { data: dataSelezionata })
+                        .done(() => location.reload())
+                        .fail(() => alert("Errore nell'inserimento della data."));
+                }
+            });
+
+            $('.elimina-data').on('click', function () {
+                const data = $(this).data('data');
+                if (confirm(`Vuoi eliminare la data ${data}?`)) {
+                    $.post("/PresenzeStaff/EliminaDataInfrasettimanale", { data: data })
+                        .done(() => location.reload())
+                        .fail(() => alert("Errore nell'eliminazione della data."));
+                }
+            });
+        });
+    </script>
+}

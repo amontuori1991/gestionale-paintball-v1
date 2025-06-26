@@ -1,0 +1,363 @@
+﻿@using Full_Metal_Paintball_Carmagnola.Models
+
+@{
+    ViewData["Title"] = "Gestione Partite";
+    var partiteFuture = ViewBag.PartiteFuture as List<Partita>;
+    var partitePassate = ViewBag.PartitePassate as List<Partita>;
+    var partiteCancellate = ViewBag.PartiteCancellate as List<Partita>;
+    var staffList = new List<string> { "Simone", "Enrico", "Federico", "Davide", "Andrea" };
+}
+
+<!-- SweetAlert2 CSS e JS -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* Evita che Giorno e Data vadano a capo nella colonna Data */
+    th:nth-child(2),
+    td:nth-child(2),
+    /* Evita wrap anche nella colonna Azioni (ultima colonna) */
+    th:nth-child(14),
+    td:nth-child(14) {
+        white-space: nowrap;
+        min-width: 140px;
+    }
+</style>
+<div class="container-list">
+    <div class="list-container">
+
+        <h2>Gestione Partite</h2>
+
+        <p>
+            <a class="btn btn-success" href="@Url.Action("Create", "Partite")">➕ Aggiungi Partita</a>
+        </p>
+
+        <h4>📅 Prossime Partite</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Stato</th>
+                    <th>Data</th>
+                    <th>Ora Inizio</th>
+                    <th>Riferimento</th>
+                    <th>Durata</th>
+                    <th>Partecipanti</th>
+                    <th>Iscritti</th>
+                    <th>Caparra (€)</th>
+                    <th>Torneo</th>
+                    <th>Illimitati</th>
+                    <th>Caccia</th>
+                    <th>Link</th>
+                    <th>Tesserati</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var partita in partiteFuture)
+                {
+                    <tr>
+                        <td>
+                            @if (partita.CaparraConfermata)
+                            {
+                                <span style="background-color: #d4edda; padding: 4px 8px; border-radius: 5px;">Confermata</span>
+                            }
+                            else
+                            {
+                                <span style="background-color: #fff3cd; padding: 4px 8px; border-radius: 5px;">In Attesa</span>
+                            }
+                        </td>
+                        <td>@partita.Data.ToString("dddd dd/MM/yyyy")</td>
+                        <td>@partita.OraInizio</td>
+                        <td>
+                            <span class="ref-icon" style="cursor:pointer" onclick="showRiferimento('@partita.Riferimento')">📇</span>
+                        </td>
+                        <td>@partita.Durata</td>
+                        <td>@partita.NumeroPartecipanti</td>
+                        <td>@(partita.Tesseramenti?.Count ?? 0)</td>
+                        <td>@partita.Caparra.ToString("C")</td>
+                        <td class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
+                        <td class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
+                        <td class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
+                        <td>
+                            <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
+                            <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", "Partite", new { id = partita.Id })">🗑️</a>
+                            <button class="btn btn-sm btn-primary btn-invia-recensione" data-id="@partita.Id" title="Invia richiesta recensione">
+                                📧
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="14" style="background-color: #f0f0f0;">
+                            <strong>Gestita da:</strong>
+                            @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
+                            {
+                                var currentVal = (string)typeof(Partita).GetProperty(staff).GetValue(partita) ?? "";
+                                <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
+                                        data-campo="@staff" data-partita="@partita.Id">
+                                    <option value="">--</option>
+                                    @foreach (var s in staffList)
+                                    {
+                                        <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+                                    }
+                                </select>
+                            }
+                            <span style="float: right;"><strong>Reperibile:</strong> @partita.Reperibile</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <h4 class="mt-5">✅ Partite Disputate</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Stato</th>
+                    <th>Data</th>
+                    <th>Ora Inizio</th>
+                    <th>Riferimento</th>
+                    <th>Durata</th>
+                    <th>Partecipanti</th>
+                    <th>Iscritti</th>
+                    <th>Caparra (€)</th>
+                    <th>Torneo</th>
+                    <th>Illimitati</th>
+                    <th>Caccia</th>
+                    <th>Link</th>
+                    <th>Tesserati</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var partita in partitePassate)
+                {
+                    <tr>
+                        <td>
+                            @if (partita.CaparraConfermata)
+                            {
+                                <span style="background-color: #d4edda; padding: 4px 8px; border-radius: 5px;">Confermata</span>
+                            }
+                            else
+                            {
+                                <span style="background-color: #fff3cd; padding: 4px 8px; border-radius: 5px;">In Attesa</span>
+                            }
+                        </td>
+                        <td>@partita.Data.ToString("dddd dd/MM/yyyy")</td>
+                        <td>@partita.OraInizio</td>
+                        <td>
+                            <span class="ref-icon" style="cursor:pointer" onclick="showRiferimento('@partita.Riferimento')">📇</span>
+                        </td>
+                        <td>@partita.Durata</td>
+                        <td>@partita.NumeroPartecipanti</td>
+                        <td>@(partita.Tesseramenti?.Count ?? 0)</td>
+                        <td>@partita.Caparra.ToString("C")</td>
+                        <td class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
+                        <td class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
+                        <td class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
+                        <td>
+                            <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
+                            <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", "Partite", new { id = partita.Id })">🗑️</a>
+                            <button class="btn btn-sm btn-primary btn-invia-recensione" data-id="@partita.Id" title="Invia richiesta recensione">
+                                📧
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="14" style="background-color: #f0f0f0;">
+                            <strong>Gestita da:</strong>
+                            @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
+                            {
+                                var currentVal = (string)typeof(Partita).GetProperty(staff).GetValue(partita) ?? "";
+                                <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
+                                        data-campo="@staff" data-partita="@partita.Id">
+                                    <option value="">--</option>
+                                    @foreach (var s in staffList)
+                                    {
+                                        <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+                                    }
+                                </select>
+                            }
+                            <span style="float: right;"><strong>Reperibile:</strong> @partita.Reperibile</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <h4 class="mt-5 text-danger">❌ Partite Annullate</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Stato</th>
+                    <th>Data</th>
+                    <th>Ora Inizio</th>
+                    <th>Riferimento</th>
+                    <th>Durata</th>
+                    <th>Partecipanti</th>
+                    <th>Iscritti</th>
+                    <th>Caparra (€)</th>
+                    <th>Torneo</th>
+                    <th>Illimitati</th>
+                    <th>Caccia</th>
+                    <th>Link</th>
+                    <th>Tesserati</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var partita in partiteCancellate)
+                {
+                    <tr>
+                        <td>
+                            <span style="background-color: #f8d7da; color: #842029; padding: 4px 8px; border-radius: 5px;">
+                                Annullata
+                            </span>
+                        </td>
+                        <td>@partita.Data.ToString("dddd dd/MM/yyyy")</td>
+                        <td>@partita.OraInizio</td>
+                        <td>
+                            <span class="ref-icon" style="cursor:pointer" onclick="showRiferimento('@partita.Riferimento')">📇</span>
+                        </td>
+                        <td>@partita.Durata</td>
+                        <td>@partita.NumeroPartecipanti</td>
+                        <td>@(partita.Tesseramenti?.Count ?? 0)</td>
+                        <td>@partita.Caparra.ToString("C")</td>
+                        <td class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
+                        <td class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
+                        <td class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
+                        <td>
+                            <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
+                            <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", "Partite", new { id = partita.Id })">🗑️</a>
+                            <button class="btn btn-sm btn-primary btn-invia-recensione" data-id="@partita.Id" title="Invia richiesta recensione">
+                                📧
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="14" style="background-color: #f0f0f0;">
+                            <strong>Gestita da:</strong>
+                            @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
+                            {
+                                var currentVal = (string)typeof(Partita).GetProperty(staff).GetValue(partita) ?? "";
+                                <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
+                                        data-campo="@staff" data-partita="@partita.Id">
+                                    <option value="">--</option>
+                                    @foreach (var s in staffList)
+                                    {
+                                        <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+                                    }
+                                </select>
+                            }
+                            <span style="float: right;"><strong>Reperibile:</strong> @partita.Reperibile</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Riferimento -->
+<div class="modal fade" id="riferimentoModal" tabindex="-1" aria-labelledby="riferimentoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Riferimento Prenotazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body">
+                <span id="riferimentoContent"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showRiferimento(rif) {
+            const modal = new bootstrap.Modal(document.getElementById('riferimentoModal'));
+            document.getElementById('riferimentoContent').textContent = rif ?? "";
+            modal.show();
+        }
+
+        $(document).ready(function() {
+            $('.staff-select').on('change', function() {
+                var select = $(this);
+                var campo = select.data('campo');
+                var partitaId = select.data('partita');
+                var valore = select.val();
+
+                $.ajax({
+                    url: '@Url.Action("AggiornaStaff", "Partite")',
+                    method: 'POST',
+                    data: { id: partitaId, campo: campo, valore: valore },
+                    success: function() {
+                        console.log('Aggiornamento Staff riuscito');
+                    },
+                    error: function() {
+                        alert('Errore durante l\'aggiornamento dello staff');
+                    }
+                });
+            });
+
+            $('.btn-invia-recensione').on('click', function() {
+                var partitaId = $(this).data('id');
+                Swal.fire({
+                    title: 'Sei sicuro?',
+                    text: "Vuoi inviare la richiesta di recensione per la partita selezionata?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Invia',
+                    cancelButtonText: 'Annulla'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("InviaRecensione", "Partite")',
+                            method: 'POST',
+                            data: { id: partitaId },
+                            success: function(response) {
+                                if(response.success){
+                                    Swal.fire(
+                                        'Inviato!',
+                                        response.message || 'Email inviate con successo!',
+                                        'success'
+                                    )
+                                } else {
+                                    Swal.fire(
+                                        'Errore',
+                                        response.message || 'Errore nell\'invio delle email.',
+                                        'error'
+                                    )
+                                }
+                            },
+                            error: function() {
+                                Swal.fire(
+                                    'Errore',
+                                    'Errore nell\'invio delle email.',
+                                    'error'
+                                )
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

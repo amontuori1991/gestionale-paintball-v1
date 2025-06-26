@@ -1,0 +1,41 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Partita
+
+@{
+    ViewData["Title"] = "Conferma Cancellazione";
+}
+
+<style>
+    .delete-container {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 2rem;
+        margin-top: 3rem;
+        border-radius: 8px;
+    }
+
+    .delete-title {
+        color: #721c24;
+    }
+
+    .btn-cancella {
+        background-color: #dc3545;
+        color: white;
+        margin-right: 10px;
+    }
+
+    .btn-annulla {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+
+<div class="container delete-container">
+    <h2 class="delete-title">Conferma cancellazione</h2>
+    <p>Sei sicuro di voler cancellare la partita del <strong>@Model.Data.ToString("dd/MM/yyyy")</strong> alle <strong>@Model.OraInizio</strong>?</p>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-cancella">Conferma Cancellazione</button>
+        <a asp-action="Index" class="btn btn-annulla">Annulla</a>
+    </form>
+</div>

@@ -1,0 +1,127 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.PartitaPubblicoViewModel
+@{
+    ViewData["Title"] = "Iscritti Partita";
+    Layout = null; // <<< Importante: Nessun layout per una pagina pubblica e autonoma
+}
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Full Metal Paintball Carmagnola</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css" integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oDFMCDh8P9gS3YVbItYtW3Nbc9wY0Q50c" crossorigin="anonymous">
+
+    <style>
+        body {
+            background-color: #CED4B5; /* Il tuo colore di sfondo */
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .public-container {
+            background-color: white;
+            border-radius: 10px;
+            max-width: 600px; /* Larghezza del contenitore */
+            width: 95%;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+            .public-container h1 {
+                font-size: 2rem;
+                color: #0d6efd;
+                margin-bottom: 20px;
+            }
+
+            .public-container h2 {
+                font-size: 1.5rem;
+                color: #495057;
+                margin-bottom: 25px;
+            }
+
+        .public-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+            .public-table th, .public-table td {
+                border: 1px solid #ddd;
+                padding: 10px;
+                text-align: left;
+            }
+
+            .public-table th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+                color: #333;
+            }
+
+            .public-table tbody tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            .public-table tbody tr:hover {
+                background-color: #e9e9e9;
+            }
+
+        .no-tesserati-message {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7fe;
+            border: 1px solid #cce5ff;
+            border-radius: 5px;
+            color: #004085;
+        }
+
+        .logo-image {
+            max-width: 150px; /* Dimensione del logo nella pagina pubblica */
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="public-container">
+        <img src="~/img/logo.gif" alt="Logo Full Metal Paintball" class="logo-image" />
+        <h1>Iscritti alla Partita</h1>
+        <h2>Del @Model.DataPartita.ToString("dd/MM/yyyy") alle @Model.OraPartita.ToString("hh\\:mm")</h2>
+
+        @if (!Model.Tesserati.Any())
+        {
+            <div class="no-tesserati-message">
+                Nessun tesserato è ancora registrato per questa partita.
+            </div>
+        }
+        else
+        {
+            <table class="public-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Cognome</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tesserato in Model.Tesserati)
+                    {
+                        <tr>
+                            <td>@tesserato.Nome</td>
+                            <td>@tesserato.Cognome</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        <p style="margin-top: 30px; font-size: 0.9em; color: #6c757d;">
+            Questo elenco mostra le persone registrate per la partita.
+        </p>
+    </div>
+</body>
+</html>

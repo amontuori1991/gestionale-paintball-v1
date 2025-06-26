@@ -1,0 +1,98 @@
+﻿@* @model Full_Metal_Paintball_Carmagnola.Models.TesseramentoViewModel // Rimuovi o commenta se non serve il modello completo *@
+
+@{
+    ViewData["Title"] = "Tesseramento Completato";
+    Layout = "_Layout"; // Assicurati di usare il tuo layout principale
+}
+
+<style>
+    /* CSS riutilizzato o adattato dalla pagina di tesseramento */
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    .background-logo {
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 250px;
+        height: 250px;
+        background: url('/img/logo.gif') no-repeat top center; /* Sostituisci con il percorso del tuo logo */
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 1;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .container {
+        position: relative;
+        z-index: 2;
+        padding-top: 200px; /* Abbastanza spazio per il logo */
+        padding-bottom: 20px;
+        min-height: 100vh;
+        display: flex; /* Centra verticalmente il contenuto */
+        align-items: center;
+        justify-content: center;
+    }
+
+    .success-container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 600px; /* Rendi il contenitore più ampio */
+        margin: 0 auto;
+        text-align: center;
+        padding-top: 30px;
+    }
+
+        .success-container h2 {
+            font-size: 2.5rem; /* Testo più grande per il titolo */
+            color: #28a745; /* Verde per il successo */
+            margin-bottom: 20px;
+        }
+
+        .success-container p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .success-container .success-icon {
+            font-size: 80px; /* Dimensione icona */
+            color: #28a745; /* Colore verde */
+            margin-bottom: 20px;
+        }
+
+        .success-container a {
+            display: inline-block;
+            background-color: #0d6efd;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+            .success-container a:hover {
+                background-color: #0056b3;
+            }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="container">
+    <div class="success-container">
+        <div class="success-icon">&#10004;</div> <h2>Tesseramento avvenuto con successo!</h2>
+        <p>Grazie per esserti tesserato con Full Metal Paintball Carmagnola.</p>
+        <a href="@Url.Action("Index", "Home")">Torna alla Home Page</a>
+    </div>
+</div>

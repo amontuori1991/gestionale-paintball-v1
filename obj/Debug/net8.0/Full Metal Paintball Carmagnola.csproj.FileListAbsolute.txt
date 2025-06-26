@@ -1,0 +1,18 @@
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.csproj.AssemblyReference.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.AssemblyInfoInputs.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.AssemblyInfo.cs
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.csproj.CoreCompileInputs.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.RazorAssemblyInfo.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.RazorAssemblyInfo.cs
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.csproj.AssemblyReference.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.AssemblyInfoInputs.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.AssemblyInfo.cs
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.csproj.CoreCompileInputs.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.RazorAssemblyInfo.cache
+C:\Users\Alex\source\repos\Full Metal Paintball Carmagnola\obj\Debug\net8.0\Full Metal Paintball Carmagnola.RazorAssemblyInfo.cs

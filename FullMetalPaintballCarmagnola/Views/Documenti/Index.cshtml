@@ -1,0 +1,296 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.DocumentiViewModel
+@{
+    ViewData["Title"] = "Documenti";
+}
+
+<style>
+    /* Stili copiati da TessereAcsi/Index.cshtml per coerenza */
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .background-logo {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
+        background-size: contain;
+        margin: 40px auto 20px auto;
+    }
+
+    .content-container {
+        background-color: white;
+        border-radius: 10px;
+        max-width: 1200px; /* MODIFICATO: Aumentato per adattare la tabella senza scorrimento */
+        margin: 0 auto 40px auto;
+        padding: 30px 40px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .content-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+    form.mb-4 {
+        max-width: 800px; /* Aumentato leggermente per i filtri, adattalo se necessario */
+        margin: 0 auto 30px auto;
+    }
+
+    table.table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: separate; /* Mantiene la distanza tra le righe */
+        border-spacing: 0 10px; /* Spazio tra le righe della tabella */
+    }
+
+        table.table th, table.table td {
+            vertical-align: middle;
+            text-align: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa; /* Sfondo chiaro per le celle */
+            border-radius: 5px; /* Bordi arrotondati per le singole celle */
+        }
+
+        table.table th {
+            background-color: #e9ecef; /* Sfondo leggermente più scuro per l'intestazione */
+            font-weight: 600;
+        }
+
+    /* Stili per i form di filtro */
+    .row.g-3.align-items-center {
+        justify-content: center; /* Centra i filtri orizzontalmente */
+        margin-bottom: 20px;
+    }
+
+    .col-auto {
+        flex: 0 0 auto; /* Impedisce che i col-auto si allunghino troppo */
+        margin-right: 10px; /* Spazio tra gli elementi del filtro */
+    }
+
+        .col-auto:last-child {
+            margin-right: 0;
+        }
+
+    .form-select, .form-control {
+        border-radius: 5px;
+    }
+
+    /* Stili per i bottoni "Inserisci Fornitore" e "Carica PDF" */
+    .btn-toolbar {
+        display: flex;
+        justify-content: center;
+        gap: 15px; /* Spazio tra i bottoni */
+        margin-bottom: 20px;
+    }
+
+    /* Stili per i modali */
+    .modal-content {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+        background-color: #0d6efd;
+        color: white;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .modal-title {
+        color: white;
+    }
+
+    .modal-footer {
+        border-top: none;
+    }
+
+    /* Regolazione per i bottoni all'interno della tabella (Modifica/Elimina) */
+    table.table .btn-sm {
+        margin: 0 2px;
+    }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="content-container">
+    <h2>Documenti</h2>
+
+    @if (TempData["SuccessoFornitore"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessoFornitore"]</div>
+    }
+    @if (TempData["ErroreFornitore"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErroreFornitore"]</div>
+    }
+    @if (TempData["Successo"] != null)
+    {
+        <div class="alert alert-success">@TempData["Successo"]</div>
+    }
+    @if (TempData["Errore"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Errore"]</div>
+    }
+
+    <form method="get" class="mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-auto">
+                <select name="filtroTipoDocumento" class="form-select">
+                    <option value="">Tutti i tipi</option>
+                    <option value="Ordine" selected="@(Model.FiltroTipoDocumento == "Ordine")">Ordine</option>
+                    <option value="Fattura" selected="@(Model.FiltroTipoDocumento == "Fattura")">Fattura</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <input type="date" name="filtroDataDocumento" class="form-control" value="@(Model.FiltroDataDocumento?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+            <div class="col-auto">
+                <select name="filtroFornitoreId" class="form-select">
+                    <option value="">Tutti i fornitori</option>
+                    @foreach (var f in Model.Fornitori)
+                    {
+                        <option value="@f.Id" selected="@(Model.FiltroFornitoreId == f.Id)">@f.Nome</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <input type="text" name="filtroNote" class="form-control" placeholder="Note contiene..." value="@Model.FiltroNote" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filtra</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar con bottoni azioni">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inserisciFornitoreModal">Inserisci Fornitore</button>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadPdfModal">Carica PDF</button>
+    </div>
+
+   
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>PDF</th>
+                <th>Data Caricamento</th>
+                <th>Tipo Documento</th>
+                <th>Data Documento</th>
+                <th>Numero Documento</th>
+                <th>Fornitore</th>
+                <th>Importo (€)</th>
+                <th>Note</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var doc in Model.Documenti)
+            {
+                <tr>
+                    <td>
+                        <a href="@Url.Action("DownloadPdf", "Documenti", new { id = doc.Id })" target="_blank" title="Scarica PDF">
+                            <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: red;"></i>
+                        </a>
+                    </td>
+                    <td>@(doc.DataCaricamento.ToString("dd/MM/yyyy"))</td>
+                    <td>@doc.TipoDocumento</td>
+                    <td>@doc.DataDocumento.ToString("dd/MM/yyyy")</td>
+                    <td>@doc.NumeroDocumento</td>
+                    <td>@doc.FornitoreNome</td>
+                    <td>@doc.Importo.ToString("F2")</td>
+                    <td>@doc.Note</td>
+                    <td>
+                        <a class="btn btn-sm btn-warning" href="@Url.Action("ModificaDocumento", new { id = doc.Id })">Modifica</a>
+                        <form asp-action="EliminaDocumento" method="post" style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questo documento?');">
+                            <input type="hidden" name="id" value="@doc.Id" />
+                            <button type="submit" class="btn btn-sm btn-danger">Elimina</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="modal fade" id="inserisciFornitoreModal" tabindex="-1" aria-labelledby="inserisciFornitoreLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="InserisciFornitore" asp-controller="Documenti" method="post" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inserisciFornitoreLabel">Inserisci nuovo fornitore</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="NomeFornitore" class="form-label">Nome Fornitore</label>
+                        <input type="text" name="NomeFornitore" class="form-control" required maxlength="100" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="uploadPdfModal" tabindex="-1" aria-labelledby="uploadPdfModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="UploadPdf" asp-controller="Documenti" method="post" enctype="multipart/form-data" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadPdfModalLabel">Carica PDF Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="PdfFile" class="form-label">Seleziona file PDF</label>
+                        <input type="file" name="PdfFile" accept=".pdf" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="FornitoreId" class="form-label">Fornitore</label>
+                        <select name="FornitoreId" class="form-select" required>
+                            <option value="">Seleziona fornitore</option>
+                            @foreach (var fornitore in Model.Fornitori)
+                            {
+                                <option value="@fornitore.Id">@fornitore.Nome</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="DataDocumento" class="form-label">Data Documento</label>
+                        <input type="date" name="DataDocumento" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="NumeroDocumento" class="form-label">Numero Documento</label>
+                        <input type="text" name="NumeroDocumento" class="form-control" maxlength="100" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Importo" class="form-label">Importo (€)</label>
+                        <input type="number" step="0.01" min="0" name="Importo" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="TipoDocumento" class="form-label">Tipo Documento</label>
+                        <select name="TipoDocumento" class="form-select" required>
+                            <option value="">Seleziona tipo documento</option>
+                            <option value="Ordine">Ordine</option>
+                            <option value="Fattura">Fattura</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Note" class="form-label">Note</label>
+                        <textarea name="Note" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Carica</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div> @* Chiusura di .content-container *@

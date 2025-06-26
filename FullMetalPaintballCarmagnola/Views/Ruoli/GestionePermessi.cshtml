@@ -1,0 +1,276 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.GestionePermessiViewModel
+
+<style>
+    body {
+        background-color: #CED4B5 !important;
+    }
+
+    .background-logo {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        background: url('/img/logo.gif') no-repeat center center;
+        background-size: contain;
+        margin: 40px auto 20px auto;
+    }
+
+    .content-container {
+        background-color: white;
+        border-radius: 10px;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        padding: 30px 40px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .content-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+    table.table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+        table.table th, table.table td {
+            vertical-align: middle;
+            text-align: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        table.table th {
+            background-color: #e9ecef;
+            font-weight: 600;
+        }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 5px;
+        padding: 8px 15px;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        border-radius: 5px;
+    }
+
+    .custom-toast-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1050;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .custom-toast {
+        background-color: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        padding: 20px 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        min-width: 250px;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+        .custom-toast.success .icon-circle {
+            background-color: #28a745;
+        }
+
+        .custom-toast.error .icon-circle {
+            background-color: #dc3545;
+        }
+
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+
+        .icon-circle i.bi {
+            font-size: 1.8rem;
+        }
+
+    .custom-toast p {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .custom-toast .close-btn {
+        background: none;
+        border: none;
+        color: #6c757d;
+        font-size: 1.5rem;
+        cursor: pointer;
+        align-self: flex-end;
+        line-height: 1;
+        padding: 0;
+    }
+
+        .custom-toast .close-btn:hover {
+            color: #333;
+        }
+
+    .custom-toast.show {
+        display: flex;
+        opacity: 1;
+    }
+</style>
+
+<div class="background-logo"></div>
+<div class="content-container">
+
+    <h2>Gestione Permessi</h2>
+
+    <form asp-action="SalvaPermessi" method="post">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Funzionalità</th>
+                    <th>Consenti Admin</th>
+                    <th>Nega Admin</th>
+                    <th>Consenti Staff</th>
+                    <th>Nega Staff</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var feature in Model.Permessi.Select(m => m.FeatureName).Distinct())
+                {
+                    <tr>
+                        <td>@feature</td>
+                        @{
+                            var consentiAdmin = Model.Permessi.FirstOrDefault(x => x.RoleName == "Admin" && x.FeatureName == feature);
+                            var consentiStaff = Model.Permessi.FirstOrDefault(x => x.RoleName == "Staff" && x.FeatureName == feature);
+                        }
+                        <td>
+                            <input type="radio" name="permessi[@feature]_Admin" value="consenti" @(consentiAdmin?.IsAllowed == true ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio" name="permessi[@feature]_Admin" value="nega" @(consentiAdmin?.IsAllowed == false ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio" name="permessi[@feature]_Staff" value="consenti" @(consentiStaff?.IsAllowed == true ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio" name="permessi[@feature]_Staff" value="nega" @(consentiStaff?.IsAllowed == false ? "checked" : "") />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary mt-3">Salva Permessi</button>
+    </form>
+
+    <hr />
+
+    <h2>Gestione Ruoli Utenti</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nome Completo</th>
+                <th>Email</th>
+                <th>Ruolo Attuale</th>
+                <th>Approvato</th>
+                <th>Assegna Ruolo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var utente in Model.Utenti)
+            {
+                <tr>
+                    <td>@utente.NomeCompleto</td>
+                    <td>@utente.Email</td>
+                    <td>@utente.Ruolo</td>
+                    <td>
+                        <form asp-action="CambiaApprovazione" asp-controller="Ruoli" method="post" class="d-inline">
+                            <input type="hidden" name="userId" value="@utente.Id" />
+                            <input type="checkbox" name="isApproved" onchange="this.form.submit()" @(utente.IsApproved ? "checked" : "") />
+                        </form>
+                    </td>
+                    <td>
+                        <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="form-inline">
+                            <input type="hidden" name="userId" value="@utente.Id" />
+                            <select name="ruolo" class="form-control">
+                                <option value="Admin" selected="@(@utente.Ruolo == "Admin")">Admin</option>
+                                <option value="Staff" selected="@(@utente.Ruolo == "Staff")">Staff</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary ml-2">Salva</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="customToastContainer" class="custom-toast-container">
+    <div class="custom-toast">
+        <button type="button" class="close-btn" id="toastCloseBtn" aria-label="Chiudi">&times;</button>
+        <div class="icon-circle" id="toastIcon"></div>
+        <p id="toastMessage"></p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    @using System.Text.Json
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+            var successMessage = @Html.Raw(Json.Serialize(TempData["SuccessMessage"]));
+            var errorMessage = @Html.Raw(Json.Serialize(TempData["ErrorMessage"]));
+
+            var toastContainer = document.getElementById('customToastContainer');
+            var toastIcon = document.getElementById('toastIcon');
+            var toastMessage = document.getElementById('toastMessage');
+
+            if (successMessage && successMessage.trim() !== '') {
+                toastContainer.classList.remove('error');
+                toastContainer.classList.add('success');
+                toastIcon.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+                toastMessage.textContent = successMessage;
+                showToast();
+            } else if (errorMessage && errorMessage.trim() !== '') {
+                toastContainer.classList.remove('success');
+                toastContainer.classList.add('error');
+                toastIcon.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+                toastMessage.textContent = errorMessage;
+                showToast();
+            }
+
+            function showToast() {
+                toastContainer.classList.add('show');
+                setTimeout(hideToast, 5000);
+            }
+
+            function hideToast() {
+                toastContainer.classList.remove('show');
+            }
+
+            document.getElementById('toastCloseBtn').addEventListener('click', hideToast);
+        });
+    </script>
+}

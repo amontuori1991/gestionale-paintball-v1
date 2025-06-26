@@ -1,0 +1,41 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Full_Metal_Paintball_Carmagnola.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav d-flex align-items-center gap-3" style="margin-right: 20px;">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        var nomeCompleto = user != null ? $"{user.FirstName} {user.LastName}" : User.Identity?.Name;
+
+        <li class="nav-item">
+            <a class="nav-link text-dark fw-semibold" asp-controller="Dashboard" asp-action="Index">
+                🏠 Dashboard
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link text-dark fw-semibold" asp-area="Identity" asp-page="/Account/Manage/Index" title="Gestisci profilo">
+                🙋‍♂️ @nomeCompleto
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit" class="nav-link btn btn-link text-dark fw-semibold" style="text-decoration: none; font-size: 1rem;">
+                    🚪 Logout
+                </button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">📝 Registrati</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">🔐 Accedi</a>
+        </li>
+    }
+</ul>

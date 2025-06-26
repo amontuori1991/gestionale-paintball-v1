@@ -1,0 +1,500 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.TesseramentoViewModel
+
+@{
+    ViewData["Title"] = "Tesseramento";
+}
+
+<style>
+    /* Tutto il tuo CSS, modificato per risolvere i problemi di layout */
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    .background-logo {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 20px auto;
+        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
+        background-size: contain;
+        pointer-events: none;
+        opacity: 1;
+        position: relative;
+    }
+
+    .container {
+        position: relative;
+        z-index: 2;
+        /* Regolato padding-top. La navbar spinge già il contenuto. */
+        /* Considera l'altezza della tua navbar (es. 56px per Bootstrap standard) e aggiungi un piccolo margine */
+        padding-top: 80px; /* Margine dall'alto per lasciare spazio alla navbar e un po' di respiro */
+        padding-bottom: 20px;
+        min-height: 100vh;
+        /* Per centrare il form-container orizzontalmente se il container non è già centrato dal _Layout */
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centra il form-container */
+    }
+
+    .form-container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%; /* Occupa tutta la larghezza disponibile nel container */
+        margin: 0; /* Rimosso auto per lasciarlo centrato da align-items: center nel .container */
+        padding-top: 30px;
+    }
+
+        .form-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-container label {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .form-container input,
+        .form-container select,
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-container button {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+            .form-container button:hover {
+                background-color: #0056b3;
+            }
+
+    .signature-pad {
+        width: 100%;
+        height: 150px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+        .signature-pad canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+        }
+
+    .terms-checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .terms-checkbox {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ddd;
+        border-radius: 3px;
+        position: relative;
+        margin-right: 10px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+        .terms-checkbox.checked {
+            background-color: red;
+        }
+
+            .terms-checkbox.checked::after {
+                content: "X";
+                position: absolute;
+                top: -5px;
+                left: 3px;
+                font-size: 16px;
+                color: white;
+                font-weight: bold;
+            }
+
+    /* Stili per i messaggi di validazione */
+    .field-validation-error {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: -15px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .input-validation-error {
+        border-color: #dc3545;
+    }
+
+    /* Stile per il bottone di visualizzazione tesserati pubblici */
+    .btn-show-tesserati {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        margin-top: 20px;
+        border-radius: 5px;
+        font-size: 1rem;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+        .btn-show-tesserati:hover {
+            background-color: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+</style>
+
+@* Rimosso il div .background-logo da qui *
+@* Non è necessario un div .background-logo in questa pagina specifica
+   per evitare problemi di sovrapposizione con la navbar.
+   Il background del body è già gestito dalla classe body nel CSS. *@
+
+<div class="container">
+    <div class="form-container">
+        <div class="background-logo"></div>
+
+        <h2>Tesseramento</h2>
+
+        <form method="post" asp-action="Index" id="tesseramentoForm">
+            <div class="form-group">
+                <label asp-for="Nome"></label>
+                <input asp-for="Nome" class="form-control" />
+                <span asp-validation-for="Nome" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Cognome"></label>
+                <input asp-for="Cognome" class="form-control" />
+                <span asp-validation-for="Cognome" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DataNascita"></label>
+                <input asp-for="DataNascita" class="form-control" />
+                <span asp-validation-for="DataNascita" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Genere"></label>
+                <select asp-for="Genere" class="form-control">
+                    <option value="">Seleziona...</option>
+                    <option value="Maschio">Maschio</option>
+                    <option value="Femmina">Femmina</option>
+                </select>
+                <span asp-validation-for="Genere" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ComuneNascita"></label>
+                <input asp-for="ComuneNascita" class="form-control" />
+                <span asp-validation-for="ComuneNascita" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="ComuneResidenza"></label>
+                <input asp-for="ComuneResidenza" class="form-control" />
+                <span asp-validation-for="ComuneResidenza" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="CodiceFiscale"></label>
+                <input asp-for="CodiceFiscale" class="form-control" />
+                <span asp-validation-for="CodiceFiscale" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Minorenne"></label>
+                <select asp-for="Minorenne" class="form-control">
+                    <option value="">Seleziona...</option>
+                    <option value="Sì">Sì</option>
+                    <option value="No">No</option>
+                </select>
+                <span asp-validation-for="Minorenne" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div id="GenitoreSection" style="display: none;">
+                <div class="form-group">
+                    <label asp-for="NomeGenitore"></label>
+                    <input asp-for="NomeGenitore" class="form-control" />
+                    <span asp-validation-for="NomeGenitore" class="text-danger field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CognomeGenitore"></label>
+                    <input asp-for="CognomeGenitore" class="form-control" />
+                    <span asp-validation-for="CognomeGenitore" class="text-danger field-validation-error"></span>
+                </div>
+            </div>
+
+            <div class="terms-checkbox-wrapper">
+                <div id="termsCheckbox" class="terms-checkbox"></div>
+                <label asp-for="TerminiAccettati"></label>
+                <input type="hidden" asp-for="TerminiAccettati" id="TerminiAccettatiInput" />
+                <span asp-validation-for="TerminiAccettati" class="text-danger field-validation-error"></span>
+            </div>
+            <div class="terms-text-container" style="max-height: 200px; overflow-y: auto; background-color: #e9f2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; color: #444; line-height: 1.4;">
+                <strong>Termini e Condizioni</strong>
+                <p>
+                    DICHIARO: Di aver preso visione/conoscenza nonché di aver accettato lo Statuto della presente associazione, nonché le norme comportamentali, di correttezza e di sicurezza, di volta in volta in dettaglio esposte dall’associazione stessa, in persona dei suoi rappresentanti; 2. Di essere consapevole e di aver accettato tutte le regole di sicurezza, scritte nei regolamenti/atti/circolari dell’associazione e/o consuetudinarie, normalmente praticate nell’attività paintball, in particolar modo le regole di sicurezza ad oggetto le protezioni al volto ed agli occhi. In particolare, a solo titolo esemplificativo e non tassativo dichiaro di accettare sotto la mia responsabilità: di impegnarmi a portare le obbligatorie protezioni agli occhi ed al volto per l’intera durata delle singole partite e manches di gioco; che la scelta delle protezioni al volto è appannaggio del giocatore, il quale si assume la piena e totale responsabilità di protezioni che salvaguardino gli occhi e il resto del volto; che le protezioni prescelte dovranno essere assolutamente ed inderogabilmente idonee a prevenire l’impatto diretto della paintball con gli occhi e il volto, sia frontalmente che lateralmente, sia di rimbalzo che a brevissima distanza e lunga distanza. Che il giocatore si assume la piena e totale responsabilità dell’eventuale inidoneità e/o malfunzionamento delle protezioni prescelte; che i giocatori si impegnano a non togliere le suddette protezioni facciali sino a che non si siano debitamente allontanati dal gioco in corso di almeno 50 metri, inteso come distanza di sicurezza idonea a prevenire anche fortuiti colpi di rimbalzo o interni alle relative zone di sicurezza denominate safety area e visibilmente individuate nel terreno di gioco. 3. Di aver accettato tutti gli obblighi conseguenti all’appartenenza alla presente associazione, quali il versamento della quota di iscrizione. 4. Di esonerare la presente associazione ed i suoi rappresentanti da ogni e qualsivoglia responsabilità per sinistri in cui incorresse il socio, che saranno eventualmente coperti/garantiti solo ed esclusivamente dalle polizze assicurative stipulate dall’associazione medesima con l’Ente di promozione sportiva deputata al caso /e/o altre eventuali polizze personali dei singoli); 5. Di essere a conoscenza e di accettare il fatto che l’organizzazione non garantisce alcuna copertura assicurativa per infortuni ancora ai soci, fatte salve le polizze sottoscritte dalla presente associazione con l’Ente di promozione sportiva deputata al caso, di cui il socio dichiara di aver preso visione/conoscenza mediante il rilascio di fotocopie; 6. Di essere in buona condizione fisica, tale da praticare attività sportive non agonistiche; di non essere a conoscenza di suoi problemi fisici/fisiologici tali da impedire/sconsigliare la pratica sportiva non agonistica. 7. I dati forniti verranno utilizzati solo ed esclusivamente a scopo di comunicazione ed aggiornamento sulle attività Asd Full Metal Paintball Carmagnola (via Monteu Roero n. 12, Carmagnola TO) nel pieno rispetto della legge sulla privacy e sul trattamento dei dati personali ex art. 13 d. lgs. 196/2003.
+                </p>
+            </div>
+
+
+            <div class="form-group">
+                <label asp-for="Firma"></label>
+                <div class="signature-pad" id="signature-pad">
+                    <canvas id="signatureCanvas"></canvas>
+                </div>
+                <button type="button" id="clearSignature" class="btn btn-danger">Cancella Firma</button>
+                <input type="hidden" asp-for="Firma" id="FirmaInput" />
+                <span asp-validation-for="Firma" class="text-danger field-validation-error"></span>
+            </div>
+
+            @Html.HiddenFor(model => model.PartitaId)
+            <button type="submit" class="btn btn-primary">Invia</button>
+        </form>
+
+        @* AGGIUNTO QUI: TASTO PER VISUALIZZARE L'ELENCO DEI TESSERATI PUBBLICI *@
+        @if (Model.PartitaId.HasValue)
+        {
+            <a class="btn btn-show-tesserati"
+               asp-controller="Partite"
+               asp-action="VisualizzaTesseratiPubblico"
+               asp-route-id="@Model.PartitaId.Value"
+               target="_blank">
+                Mostra Elenco Iscritti
+            </a>
+        }
+        @* FINE TASTO AGGIUNTO *@
+
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Riferimenti agli elementi DOM
+        const minorenneSelect = document.getElementById('Minorenne');
+        const genitoreSection = document.getElementById('GenitoreSection');
+        const nomeGenitoreInput = document.getElementById('NomeGenitore');
+        const cognomeGenitoreInput = document.getElementById('CognomeGenitore');
+        const termsCheckboxDiv = document.getElementById('termsCheckbox');
+        const terminiAccettatiInput = document.getElementById('TerminiAccettatiInput');
+        const signatureCanvas = document.getElementById("signatureCanvas");
+        const ctx = signatureCanvas.getContext("2d");
+        const firmaInput = document.getElementById('FirmaInput'); // Riferimento all'input hidden della firma
+
+        // Configurazione del Canvas per la firma
+        signatureCanvas.width = 400; // Puoi adattare queste dimensioni
+        signatureCanvas.height = 100; // Puoi adattare queste dimensioni
+        ctx.lineWidth = 2; // Spessore della linea di disegno
+        ctx.lineCap = 'round'; // Estremità arrotondate per un tratto più morbido
+        ctx.strokeStyle = '#000'; // Colore del tratto (nero)
+
+        let drawing = false; // Flag per indicare se l'utente sta disegnando
+
+        // Funzione per aggiornare la validazione lato client per un campo specifico
+        function updateClientValidation(elementId, isRequired) {
+            const inputElement = document.getElementById(elementId);
+            if (!inputElement || !$.validator) return; // Esci se l'elemento o jQuery Validation non esistono
+
+            const formValidator = $('#tesseramentoForm').validate();
+            const validationSpan = $(`span[data-valmsg-for="${inputElement.name}"]`); // Seleziona lo span di validazione
+
+            if (isRequired) {
+                inputElement.setAttribute('required', 'required');
+                // Aggiungi/aggiorna la regola 'required' in jQuery Validation
+                $(inputElement).rules("add", {
+                    required: true,
+                    messages: {
+                        required: $(inputElement).data('val-required') || "Questo campo è obbligatorio." // Usa il messaggio da data-val-required
+                    }
+                });
+            } else {
+                inputElement.removeAttribute('required'); // Rimuovi l'attributo HTML5 'required'
+
+                // Rimuovi la regola 'required' in jQuery Validation
+                $(inputElement).rules("remove", "required");
+
+                inputElement.value = ''; // Pulisci il valore se il campo non è più richiesto
+
+                // IMPORTANTE: Pulisci manualmente i messaggi di errore e lo stato di validazione.
+                validationSpan.empty(); // Pulisci lo span dei messaggi di errore
+                $(inputElement).removeClass("input-validation-error"); // Rimuovi la classe che mette il bordo rosso
+                formValidator.element(inputElement); // Forza la ri-validazione (utile per pulire lo stato interno)
+            }
+        }
+
+        // Gestione della visibilità e obbligatorietà della sezione genitore
+        function handleMinorenneChange() {
+            if (minorenneSelect.value == 'No') {
+                genitoreSection.style.display = 'none';
+                updateClientValidation('NomeGenitore', false);
+                updateClientValidation('CognomeGenitore', false);
+            } else if (minorenneSelect.value == 'Sì') {
+                genitoreSection.style.display = 'block';
+                updateClientValidation('NomeGenitore', true);
+                updateClientValidation('CognomeGenitore', true);
+            } else { // Gestisci il caso in cui sia "Seleziona..." o altro
+                genitoreSection.style.display = 'none';
+                updateClientValidation('NomeGenitore', false);
+                updateClientValidation('CognomeGenitore', false);
+            }
+        }
+
+        // Event listener per il cambio di Minorenne
+        minorenneSelect.addEventListener('change', handleMinorenneChange);
+
+        // Gestione del click sulla casella per accettare i termini
+        termsCheckboxDiv.addEventListener('click', function() {
+            const isChecked = !this.classList.contains('checked'); // Calcola il nuovo stato
+            if (isChecked) {
+                this.classList.add('checked');
+            } else {
+                this.classList.remove('checked');
+            }
+            terminiAccettatiInput.value = isChecked ? 'true' : 'false';
+
+            // Forza la ri-validazione lato client per il campo TerminiAccettati
+            if ($.validator) {
+                const formValidator = $('#tesseramentoForm').validate();
+                formValidator.element(terminiAccettatiInput);
+            }
+        });
+
+        // Event listener per il disegno sul canvas (firma)
+        signatureCanvas.addEventListener("mousedown", function(e) {
+            drawing = true;
+            ctx.beginPath(); // Inizia un nuovo percorso
+            ctx.moveTo(e.offsetX, e.offsetY); // Sposta all'inizio del disegno
+        });
+
+        signatureCanvas.addEventListener("mousemove", function(e) {
+            if (drawing) {
+                ctx.lineTo(e.offsetX, e.offsetY); // Disegna una linea fino alla posizione corrente
+                ctx.stroke(); // Esegui il tratto
+            }
+        });
+
+        signatureCanvas.addEventListener("mouseup", function() {
+            drawing = false;
+            validateAndSetSignature(); // Valida e salva la firma quando il disegno finisce
+        });
+
+        signatureCanvas.addEventListener("mouseleave", function() {
+            drawing = false;
+            validateAndSetSignature(); // Valida e salva se il mouse esce dal canvas
+        });
+
+        // Funzione per cancellare la firma
+        document.getElementById('clearSignature').addEventListener('click', function() {
+            ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height); // Cancella il canvas
+            firmaInput.value = ''; // Pulisci l'input hidden della firma
+
+            // Forza la ri-validazione lato client del campo Firma
+            if ($.validator) {
+                const formValidator = $('#tesseramentoForm').validate();
+                formValidator.element(firmaInput);
+            }
+        });
+
+        // Funzione per validare il canvas e impostare il valore dell'input hidden Firma
+        function validateAndSetSignature() {
+            const imageData = ctx.getImageData(0, 0, signatureCanvas.width, signatureCanvas.height);
+            let isEmpty = true;
+            // Controlla se ci sono pixel disegnati (canale alfa diverso da 0)
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                if (imageData.data[i + 3] !== 0) { // Se il canale alfa non è 0, c'è qualcosa disegnato
+                    isEmpty = false;
+                    break;
+                }
+            }
+
+            if (isEmpty) {
+                firmaInput.value = ''; // Se il canvas è vuoto, l'input hidden deve essere vuoto
+            } else {
+                firmaInput.value = signatureCanvas.toDataURL("image/png"); // Altrimenti, converti e assegna
+            }
+
+            // Forza la ri-validazione lato client del campo Firma
+            if ($.validator) {
+                const formValidator = $('#tesseramentoForm').validate();
+                formValidator.element(firmaInput);
+            }
+        }
+
+        // Inizializza lo stato dei campi al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inizializza lo stato della checkbox TerminiAccettati in base al valore del model
+            if (terminiAccettatiInput.value === 'true') {
+                termsCheckboxDiv.classList.add('checked');
+            } else {
+                termsCheckboxDiv.classList.remove('checked');
+            }
+
+            // Importante: ri-parsare la validazione unobtrusive dopo che tutti gli elementi sono nel DOM
+            if ($.validator) {
+                // Rimuovi i dati di validazione esistenti per forzare una re-analisi
+                $('#tesseramentoForm').removeData('validator');
+                $('#tesseramentoForm').removeData('unobtrusiveValidation');
+                // Parsa nuovamente il form
+                $.validator.unobtrusive.parse('#tesseramentoForm');
+
+                // Assicurati che l'input hidden per TerminiAccettati abbia gli attributi di validazione corretti
+                if (!$(terminiAccettatiInput).attr('data-val')) {
+                    $(terminiAccettatiInput).attr('data-val', 'true');
+                    $(terminiAccettatiInput).attr('data-val-range', 'Devi accettare i termini e le condizioni');
+                    $(terminiAccettatiInput).attr('data-val-range-min', 'True');
+                    $(terminiAccettatiInput).attr('data-val-range-max', 'True');
+                }
+
+                const formValidator = $('#tesseramentoForm').validate(); // Ottieni il validatore dopo il parse
+
+                // Forza una validazione iniziale del campo TerminiAccettati
+                if (formValidator) {
+                    formValidator.element(terminiAccettatiInput);
+                }
+
+                // Forza la validazione iniziale della firma
+                validateAndSetSignature(); // Per assicurarsi che lo stato iniziale sia correttamente validato
+
+                // CHIAMATA FONDAMENTALE: imposta lo stato iniziale dei campi genitore
+                handleMinorenneChange();
+            }
+        });
+
+    </script>
+}

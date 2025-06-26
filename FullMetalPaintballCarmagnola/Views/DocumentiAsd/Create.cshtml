@@ -1,0 +1,94 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.DocumentoAsdViewModel
+
+@{
+    ViewData["Title"] = "Carica Documento ASD";
+}
+
+<style>
+    /* Stili copiati da TessereAcsi/Index.cshtml per coerenza */
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .background-logo {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center; background-size: contain;
+        margin: 40px auto 20px auto;
+    }
+
+    .content-container {
+        background-color: white;
+        border-radius: 10px;
+        max-width: 900px; /* Larghezza del contenitore principale */
+        margin: 0 auto 40px auto;
+        padding: 30px 40px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .content-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+    /* Stili per i form */
+    form {
+        max-width: 600px; /* Larghezza della form, centra anche questa */
+        margin: 0 auto;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+    }
+
+    .text-danger {
+        font-size: 0.875em;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="content-container">
+    <h2>Carica Documento ASD</h2>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="file" class="form-label">Seleziona file (PDF o Word)</label>
+            <input type="file" name="file" id="file" class="form-control" accept=".pdf,.doc,.docx" required />
+            <span asp-validation-for="File" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Descrizione" class="form-label"></label>
+            <input asp-for="Descrizione" class="form-control" required maxlength="255" />
+            <span asp-validation-for="Descrizione" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Carica</button>
+        <a asp-action="Index" class="btn btn-secondary">Annulla</a>
+    </form>
+
+</div> @* Chiusura di .content-container *@
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
