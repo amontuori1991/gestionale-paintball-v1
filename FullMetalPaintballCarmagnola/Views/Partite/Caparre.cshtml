@@ -118,7 +118,9 @@
                             <td>@partita.Data.ToString("dddd")</td>
                             <td>@partita.Data.ToString("dd/MM/yyyy")</td>
                             <td>@partita.Riferimento</td>
-                            <td>@partita.Caparra.ToString("C")</td>
+                            <td>
+                                @($"{partita.Caparra:0.00}€")
+                            </td>
                             <td>@(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "N/D" : partita.MetodoPagamentoCaparra)</td>
                             <td>@(partita.CaparraConfermata ? "SI" : "NO")</td>
                                             <td>
