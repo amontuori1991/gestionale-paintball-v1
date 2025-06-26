@@ -257,7 +257,30 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return RedirectToAction("TesseratiPerPartita", new { id = partitaId });
         }
 
-        // PartiteController.cs (estratto con nuova Action)
+        [HttpPost]
+        public async Task<IActionResult> AggiornaStaff(int id, string campo, string valore)
+        {
+            var partita = await _dbContext.Partite.FindAsync(id);
+            if (partita == null)
+                return Json(new { success = false, message = "Partita non trovata." });
+
+            try
+            {
+                var prop = typeof(Partita).GetProperty(campo);
+                if (prop == null)
+                    return Json(new { success = false, message = "Campo non valido." });
+
+                prop.SetValue(partita, valore);
+                _dbContext.Update(partita);
+                await _dbContext.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
         [HttpGet]
         public IActionResult GeneraMessaggioPrenotazione(int id)
