@@ -21,13 +21,13 @@
             <a class="btn btn-success" href="@Url.Action("Create", "Partite")">➕ Aggiungi Partita</a>
         </p>
 
-        <h4>📅 Prossime Partite</h4>
+
         @Html.Partial("_PartiteTable", partiteFuture, new ViewDataDictionary(ViewData) { { "Titolo", "📅 Prossime Partite" } })
 
-        <h4 class="mt-5">✅ Partite Disputate</h4>
+
         @Html.Partial("_PartiteTable", partitePassate, new ViewDataDictionary(ViewData) { { "Titolo", "✅ Partite Disputate" } })
 
-        <h4 class="mt-5 text-danger">❌ Partite Annullate</h4>
+
         @Html.Partial("_PartiteTable", partiteCancellate, new ViewDataDictionary(ViewData) { { "Titolo", "❌ Partite Annullate" } })
 
 
