@@ -46,7 +46,9 @@
                 <td>@partita.Durata</td>
                 <td>@partita.NumeroPartecipanti</td>
                 <td>@(partita.Tesseramenti?.Count ?? 0)</td>
-                <td>@partita.Caparra.ToString("C")</td>
+                <td>
+                    @($"{partita.Caparra:0.00}€")
+                </td>
                 <td class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
                 <td class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
                 <td class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
