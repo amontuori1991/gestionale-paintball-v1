@@ -98,6 +98,7 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 // SEED iniziale ruoli e dati
+// SEED iniziale ruoli e dati
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -132,4 +133,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Imposta lingua italiana globale
+var cultureInfo = new System.Globalization.CultureInfo("it-IT");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
 app.Run();
+
