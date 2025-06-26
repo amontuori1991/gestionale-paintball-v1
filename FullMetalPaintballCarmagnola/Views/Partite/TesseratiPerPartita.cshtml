@@ -117,7 +117,7 @@
                             <form asp-action="RimuoviTesserato" asp-controller="Partite" method="post" class="d-inline">
                                 <input type="hidden" name="id" value="@t.Id" />
                                 <input type="hidden" name="partitaId" value="@partitaId" />
-                                <button type="submit" class="btn btn-sm btn-danger">❌ Rimuovi</button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="apriConfermaEliminazione('@t.Nome', '@t.Cognome', this.closest('form'))">❌ Rimuovi</button>
                             </form>
                         </td>
                     </tr>
@@ -126,3 +126,37 @@
         </table>
     }
 </div>
+
+<!-- Modale Bootstrap -->
+<div class="modal fade" id="confermaEliminazioneModal" tabindex="-1" aria-labelledby="confermaEliminazioneLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confermaEliminazioneLabel">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body">
+                <p id="testoConferma">Sei sicuro di voler eliminare il tesserato?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" id="btnConfermaElimina">Elimina</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let formDaInviare = null;
+
+    function apriConfermaEliminazione(nome, cognome, form) {
+        formDaInviare = form;
+        document.getElementById('testoConferma').innerText = `Vuoi davvero eliminare il tesserato ${nome} ${cognome} dal database? Questa operazione è definitiva.`;
+        const modal = new bootstrap.Modal(document.getElementById('confermaEliminazioneModal'));
+        modal.show();
+    }
+
+    document.getElementById('btnConfermaElimina').addEventListener('click', function () {
+        if (formDaInviare) formDaInviare.submit();
+    });
+</script>

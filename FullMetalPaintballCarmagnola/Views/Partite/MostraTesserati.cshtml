@@ -23,15 +23,51 @@
                 <td>@t.Cognome</td>
                 <td>@t.DataCreazione.ToString("dd/MM/yyyy")</td>
                 <td>
-                    <form asp-action="EliminaTesserato" asp-controller="Partite" method="post" onsubmit="return confirm('Sei sicuro di voler rimuovere questo tesserato?');">
+                    <form asp-action="EliminaTesserato" asp-controller="Partite" method="post" class="d-inline">
                         <input type="hidden" name="id" value="@t.Id" />
                         <input type="hidden" name="partitaId" value="@ViewBag.PartitaId" />
-                        <button type="submit" class="btn btn-danger btn-sm">Rimuovi</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="apriConfermaEliminazione('@t.Nome', '@t.Cognome', this.closest('form'))">Rimuovi</button>
                     </form>
+
                 </td>
             </tr>
         }
     </tbody>
+    <script>
+        let formDaInviare = null;
+
+        function apriConfermaEliminazione(nome, cognome, form) {
+            formDaInviare = form;
+            document.getElementById('testoConferma').innerText = `Vuoi davvero eliminare il tesserato ${nome} ${cognome} dal database? Questa operazione è definitiva.`;
+            let modal = new bootstrap.Modal(document.getElementById('confermaEliminazioneModal'));
+            modal.show();
+        }
+
+        document.getElementById('btnConfermaElimina').addEventListener('click', function () {
+            if (formDaInviare) formDaInviare.submit();
+        });
+    </script>
+
 </table>
 
 <a class="btn btn-secondary" asp-action="Index">Torna alla lista partite</a>
+
+<!-- Modale di conferma eliminazione -->
+<div class="modal fade" id="confermaEliminazioneModal" tabindex="-1" aria-labelledby="confermaEliminazioneLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confermaEliminazioneLabel">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body">
+                <p id="testoConferma">Sei sicuro di voler eliminare il tesserato?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" id="btnConfermaElimina">Elimina</button>
+            </div>
+        </div>
+    </div>
+</div>
+

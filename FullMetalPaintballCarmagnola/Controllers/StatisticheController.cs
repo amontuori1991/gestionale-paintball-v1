@@ -126,6 +126,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .Select(m => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m))
                 .ToList();
 
+
             var anni = anniTutti;
 
             ViewBag.Labels = mesi;

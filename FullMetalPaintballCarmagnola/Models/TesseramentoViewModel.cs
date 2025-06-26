@@ -19,7 +19,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
             Minorenne = "No";
             TerminiAccettati = false;
             Firma = string.Empty;
-            DataCreazione = DateTime.Now;
+            DataCreazione = DateTime.UtcNow;
         }
 
         public int Id { get; set; }
@@ -113,7 +113,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 Id = this.Id,
                 Nome = this.Nome,
                 Cognome = this.Cognome,
-                DataNascita = this.DataNascita.GetValueOrDefault(), // <<< USA GetValueOrDefault() ORA CHE È NULLABLE
+                DataNascita = DateTime.SpecifyKind(this.DataNascita.GetValueOrDefault(), DateTimeKind.Utc),
                 Genere = this.Genere,
                 ComuneNascita = this.ComuneNascita,
                 ComuneResidenza = this.ComuneResidenza,
@@ -124,9 +124,11 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 CognomeGenitore = this.CognomeGenitore,
                 TerminiAccettati = this.TerminiAccettati,
                 Firma = firmaPath,
-                DataCreazione = this.DataCreazione,
-                PartitaId = this.PartitaId
+                DataCreazione = DateTime.UtcNow,
+                PartitaId = this.PartitaId,
+                Tessera = this.Tessera
             };
+
         }
     }
 }

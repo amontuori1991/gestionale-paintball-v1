@@ -2,16 +2,15 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Full_Metal_Paintball_Carmagnola.Models;
-using Full_Metal_Paintball_Carmagnola.Services; // Per IEmailService
+using Full_Metal_Paintball_Carmagnola.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity; // Per UserManager (se invii email agli utenti registrati)
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration; // Per AdminNotifications
+using Microsoft.Extensions.Configuration;
 
 namespace Full_Metal_Paintball_Carmagnola.Controllers
 {
-    // Applicheremo una policy di autorizzazione per questa funzionalità
     [Authorize(Policy = "ToDoList")]
     public class ToDoListController : Controller
     {
@@ -28,7 +27,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _configuration = configuration;
         }
 
-        // Metodo privato per inviare notifiche a tutti gli utenti (copiato da PartiteController)
         private async Task SendNotificationToAllUsers(string subject, string messageHtml)
         {
             var users = await _userManager.Users.ToListAsync();
@@ -68,15 +66,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
         }
 
-
-        // GET: ToDoList/Index
         public async Task<IActionResult> Index()
         {
             var topics = await _dbContext.Topics.OrderBy(t => t.Name).ToListAsync();
-            var toDoItems = await _dbContext.ToDoItems
-                                    .Include(ti => ti.Topic)
-                                    .OrderBy(ti => ti.CreatedDate)
-                                    .ToListAsync();
+            var toDoItems = await _dbContext.ToDoItems.Include(ti => ti.Topic).OrderBy(ti => ti.CreatedDate).ToListAsync();
 
             var model = new ToDoListIndexViewModel
             {
@@ -87,14 +80,13 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     Id = ti.Id,
                     Description = ti.Description,
                     IsCompleted = ti.IsCompleted,
-                    CreatedDate = ti.CreatedDate,
+                    CreatedDate = DateTime.SpecifyKind(ti.CreatedDate, DateTimeKind.Utc),
                     TopicId = ti.TopicId,
                     TopicName = ti.Topic?.Name ?? "N/A",
                     Notes = ti.Notes
                 }).ToList()
             };
 
-            // Popola le attività per topic (non completate)
             foreach (var topic in topics)
             {
                 model.ToDoItemsByTopic[topic.Name] = toDoItems.Where(ti => ti.TopicId == topic.Id && !ti.IsCompleted).Select(ti => new ToDoItemViewModel
@@ -102,7 +94,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     Id = ti.Id,
                     Description = ti.Description,
                     IsCompleted = ti.IsCompleted,
-                    CreatedDate = ti.CreatedDate,
+                    CreatedDate = DateTime.SpecifyKind(ti.CreatedDate, DateTimeKind.Utc),
                     TopicId = ti.TopicId,
                     TopicName = ti.Topic?.Name ?? "N/A",
                     Notes = ti.Notes
@@ -112,7 +104,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return View(model);
         }
 
-        // POST: ToDoList/CreateItem
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateItem(ToDoListIndexViewModel model)
@@ -131,107 +122,67 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 _dbContext.ToDoItems.Add(newToDoItem);
                 await _dbContext.SaveChangesAsync();
 
-                // Invia email di notifica
                 var topic = await _dbContext.Topics.FindAsync(newToDoItem.TopicId);
                 var subject = $"Nuova Attività ToDo: [{topic?.Name}] {newToDoItem.Description}";
-                var messageHtml = $@"
-                    <html><body>
-                        <p>Ciao,</p>
-                        <p>È stata aggiunta una nuova attività alla ToDo List:</p>
-                        <p><strong>Topic:</strong> {topic?.Name}</p>
-                        <p><strong>Attività:</strong> {newToDoItem.Description}</p>
-                        <p><strong>Note:</strong> {newToDoItem.Notes ?? "Nessuna"}</p>
-                        <p>Data di creazione: {newToDoItem.CreatedDate:dd/MM/yyyy HH:mm}</p>
-                        <p>Verifica la ToDo List per maggiori dettagli.</p>
-                    </body></html>";
+                var messageHtml = $@"<html><body><p>Ciao,</p><p>È stata aggiunta una nuova attività alla ToDo List:</p><p><strong>Topic:</strong> {topic?.Name}</p><p><strong>Attività:</strong> {newToDoItem.Description}</p><p><strong>Note:</strong> {newToDoItem.Notes ?? "Nessuna"}</p><p>Data di creazione: {DateTime.UtcNow:dd/MM/yyyy HH:mm}</p><p>Verifica la ToDo List per maggiori dettagli.</p></body></html>";
                 await SendNotificationToAllUsers(subject, messageHtml);
-
 
                 TempData["SuccessMessage"] = "Attività aggiunta con successo!";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Se il ModelState non è valido, ricarica la pagina Index con i dati esistenti
-            // e il modello di creazione per mostrare gli errori di validazione.
-            return await Index(); // Ricarica Index per mostrare errori
+            return await Index();
         }
 
-        // POST: ToDoList/MarkAsCompleted/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsCompleted(int id)
         {
             var toDoItem = await _dbContext.ToDoItems.FindAsync(id);
             if (toDoItem == null)
-            {
                 return NotFound();
-            }
 
             toDoItem.IsCompleted = true;
             await _dbContext.SaveChangesAsync();
 
-            // Invia email di notifica (opzionale: notifica completamento)
             var topic = await _dbContext.Topics.FindAsync(toDoItem.TopicId);
             var subject = $"Attività ToDo Completata: [{topic?.Name}] {toDoItem.Description}";
-            var messageHtml = $@"
-                <html><body>
-                    <p>Ciao,</p>
-                    <p>Un'attività è stata contrassegnata come completata nella ToDo List:</p>
-                    <p><strong>Topic:</strong> {topic?.Name}</p>
-                    <p><strong>Attività:</strong> {toDoItem.Description}</p>
-                    <p>Data completamento: {DateTime.Now:dd/MM/yyyy HH:mm}</p>
-                    <p>Verifica la sezione 'Completate' della ToDo List.</p>
-                </body></html>";
+            var messageHtml = $@"<html><body><p>Ciao,</p><p>Un'attività è stata contrassegnata come completata nella ToDo List:</p><p><strong>Topic:</strong> {topic?.Name}</p><p><strong>Attività:</strong> {toDoItem.Description}</p><p>Data completamento: {DateTime.UtcNow:dd/MM/yyyy HH:mm}</p><p>Verifica la sezione 'Completate' della ToDo List.</p></body></html>";
             await SendNotificationToAllUsers(subject, messageHtml);
 
             TempData["SuccessMessage"] = "Attività contrassegnata come completata!";
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: ToDoList/AddNote/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddNote(int id, string note)
         {
             var toDoItem = await _dbContext.ToDoItems.FindAsync(id);
             if (toDoItem == null)
-            {
                 return NotFound();
-            }
 
             toDoItem.Notes = note;
             await _dbContext.SaveChangesAsync();
 
-            // Invia email di notifica (per aggiunta/modifica nota)
             var topic = await _dbContext.Topics.FindAsync(toDoItem.TopicId);
             var subject = $"Nota Aggiunta a ToDo: [{topic?.Name}] {toDoItem.Description}";
-            var messageHtml = $@"
-                <html><body>
-                    <p>Ciao,</p>
-                    <p>È stata aggiunta/modificata una nota a un'attività nella ToDo List:</p>
-                    <p><strong>Topic:</strong> {topic?.Name}</p>
-                    <p><strong>Attività:</strong> {toDoItem.Description}</p>
-                    <p><strong>Nuova Nota:</strong> {toDoItem.Notes}</p>
-                    <p>Verifica la ToDo List per maggiori dettagli.</p>
-                </body></html>";
+            var messageHtml = $@"<html><body><p>Ciao,</p><p>È stata aggiunta/modificata una nota a un'attività nella ToDo List:</p><p><strong>Topic:</strong> {topic?.Name}</p><p><strong>Attività:</strong> {toDoItem.Description}</p><p><strong>Nuova Nota:</strong> {toDoItem.Notes}</p><p>Verifica la ToDo List per maggiori dettagli.</p></body></html>";
             await SendNotificationToAllUsers(subject, messageHtml);
 
             TempData["SuccessMessage"] = "Nota aggiunta con successo!";
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: ToDoList/DeleteItem/5 (soft delete o hard delete)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteItem(int id)
         {
             var toDoItem = await _dbContext.ToDoItems.FindAsync(id);
             if (toDoItem == null)
-            {
                 return NotFound();
-            }
 
-            _dbContext.ToDoItems.Remove(toDoItem); // Elimina fisicamente
+            _dbContext.ToDoItems.Remove(toDoItem);
             await _dbContext.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Attività eliminata con successo!";

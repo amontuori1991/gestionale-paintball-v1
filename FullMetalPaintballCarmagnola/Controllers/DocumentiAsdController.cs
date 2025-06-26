@@ -92,8 +92,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 OriginalFileName = model.File.FileName,
                 StoredFileName = uniqueFileName,
                 Descrizione = model.Descrizione,
-                DataCaricamento = DateTime.Now
+                DataCaricamento = DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Utc)
             };
+
 
             _context.DocumentiAsd.Add(documento);
             await _context.SaveChangesAsync();

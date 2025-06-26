@@ -1,7 +1,6 @@
-using DocumentFormat.OpenXml.InkML; // Questo using sembra non essere utilizzato, potresti rimuoverlo.
 using Full_Metal_Paintball_Carmagnola.Authorization;
-using Full_Metal_Paintball_Carmagnola.Data; // Per TesseramentoDbContext
-using Full_Metal_Paintball_Carmagnola.Models; // Per Topic, ApplicationUser
+using Full_Metal_Paintball_Carmagnola.Data;
+using Full_Metal_Paintball_Carmagnola.Models;
 using Full_Metal_Paintball_Carmagnola.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,41 +10,34 @@ using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Aggiungi i servizi al contenitore
+// Stringa di connessione dal file appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
+// CONFIGURAZIONE POSTGRESQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Configura il TesseramentoDbContext con la stringa di connessione
 builder.Services.AddDbContext<TesseramentoDbContext>(options =>
-    options.UseSqlServer(connectionString)); // Configura per usare SQL Server
+    options.UseNpgsql(connectionString));
 
-// Configura l'autenticazione e l'autorizzazione con conferma account abilitata
+// Configura Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = true; // OBBLIGA conferma email
+    options.SignIn.RequireConfirmedAccount = true;
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Aggiungi il supporto per i controller con viste (MVC)
 builder.Services.AddControllersWithViews();
-
-// Aggiungi il supporto per le Razor Pages (necessario per Identity UI e _ValidationScriptsPartial)
 builder.Services.AddRazorPages();
-
-// Registra IEmailService come transient
 builder.Services.AddTransient<IEmailService, EmailSender>();
 
-// REGISTRAZIONE DEL SERVIZIO PER IL FEATURE AUTHORIZATION HANDLER
+// Autorizzazioni basate su Feature
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddScoped<IAuthorizationHandler, FeatureAuthorizationHandler>();
 
-// Definizione delle policy basate sulle feature
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Tesserati", policy =>
@@ -66,11 +58,11 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new FeatureRequirement("Calendario Assenze")));
     options.AddPolicy("ACSI", policy =>
         policy.Requirements.Add(new FeatureRequirement("ACSI")));
-    options.AddPolicy("ToDoList", policy => // Policy per la ToDoList
+    options.AddPolicy("ToDoList", policy =>
         policy.Requirements.Add(new FeatureRequirement("ToDoList")));
 });
 
-// Configura cookie
+// Cookie di autenticazione
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
@@ -82,7 +74,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Configura il pipeline delle richieste HTTP
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -90,15 +82,12 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // Il valore predefinito HSTS è di 30 giorni. Potresti volerlo cambiare per scenari di produzione.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -108,12 +97,12 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-// Creazione automatica dei ruoli e assegnazione Admin iniziale
+// SEED iniziale ruoli e dati
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var dbContext = scope.ServiceProvider.GetRequiredService<TesseramentoDbContext>(); // <<< SPOSTATO QUI, PRIMA DELL'USO
+    var dbContext = scope.ServiceProvider.GetRequiredService<TesseramentoDbContext>();
 
     string[] roles = { "Admin", "Staff" };
 
@@ -123,7 +112,6 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    // (Opzionale) assegna il ruolo Admin a un utente specifico
     var adminEmail = "alexmontuori1991@gmail.com";
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser != null && !await userManager.IsInRoleAsync(adminUser, "Admin"))
@@ -131,8 +119,7 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(adminUser, "Admin");
     }
 
-    // Logica di Seed per i Topic della ToDoList
-    if (!await dbContext.Topics.AnyAsync()) // Controlla se esistono già dei topic
+    if (!await dbContext.Topics.AnyAsync())
     {
         var topics = new List<Topic>
         {

@@ -4,7 +4,6 @@
 }
 
 <style>
-    /* Stili copiati per coerenza da altre pagine */
     body {
         background-color: #CED4B5 !important;
     }
@@ -21,10 +20,10 @@
     .content-container {
         background-color: white;
         border-radius: 10px;
-        max-width: 1200px; /* Adatta la larghezza per la ToDoList */
+        max-width: 1200px;
         margin: 0 auto 40px auto;
         padding: 30px 40px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
         .content-container h2 {
@@ -34,7 +33,6 @@
             margin-bottom: 20px;
         }
 
-    /* Stili specifici per la ToDoList */
     .topic-section {
         margin-bottom: 30px;
         padding: 20px;
@@ -49,7 +47,7 @@
             margin-bottom: 15px;
             border-bottom: 2px solid #0d6efd;
             padding-bottom: 5px;
-            display: inline-block; /* Per far sì che il bordo sia solo sotto il testo */
+            display: inline-block;
         }
 
     .todo-item {
@@ -77,12 +75,6 @@
             align-items: center;
         }
 
-            .todo-item .actions button, .todo-item .actions a {
-                font-size: 0.85rem;
-                padding: 5px 10px;
-                border-radius: 4px;
-            }
-
     .completed-section {
         margin-top: 40px;
         padding: 20px;
@@ -91,11 +83,6 @@
         background-color: #d4edda;
         color: #155724;
     }
-
-        .completed-section h3 {
-            color: #155724;
-            border-bottom-color: #28a745;
-        }
 
     .form-add-item {
         margin-top: 40px;
@@ -110,15 +97,6 @@
             color: #0d6efd;
             font-size: 1.5rem;
             margin-bottom: 20px;
-        }
-
-        .form-add-item .form-group label {
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .form-add-item .form-control, .form-add-item .form-select {
-            border-radius: 5px;
         }
 </style>
 
@@ -136,15 +114,12 @@
         <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
     }
 
-    @* Sezione per l'aggiunta di una nuova attività *@
     <div class="form-add-item">
         <h3>Aggiungi Nuova Attività</h3>
         <form asp-controller="ToDoList" asp-action="CreateItem" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="mb-3">
                 <label asp-for="NewItem.Description" class="form-label">Descrizione Attività</label>
                 <input asp-for="NewItem.Description" class="form-control" />
-                <span asp-validation-for="NewItem.Description" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="NewItem.TopicId" class="form-label">Topic</label>
@@ -155,12 +130,10 @@
                         <option value="@topic.Id">@topic.Name</option>
                     }
                 </select>
-                <span asp-validation-for="NewItem.TopicId" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="NewItem.Notes" class="form-label">Note (Opzionale)</label>
-                <textarea asp-for="NewItem.Notes" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="NewItem.Notes" class="text-danger"></span>
+                <textarea asp-for="NewItem.Notes" class="form-control"></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Crea Attività</button>
         </form>
@@ -168,7 +141,6 @@
 
     <hr />
 
-    @* Sezioni per i Topic (attività non completate) *@
     @if (Model.Topics.Any())
     {
         @foreach (var topic in Model.Topics)
@@ -191,37 +163,28 @@
                                 }
                             </div>
                             <div class="actions">
-                                <form asp-controller="ToDoList" asp-action="MarkAsCompleted" method="post" style="display:inline;">
+                                <form asp-action="MarkAsCompleted" method="post">
                                     <input type="hidden" name="id" value="@item.Id" />
-                                    <button type="submit" class="btn btn-success btn-sm">Completa</button>
+                                    <button class="btn btn-success btn-sm">Completa</button>
                                 </form>
-                                <form asp-controller="ToDoList" asp-action="AddNote" method="post" style="display:inline;">
+                                <form asp-action="AddNote" method="post">
                                     <input type="hidden" name="id" value="@item.Id" />
-                                    <input type="text" name="note" value="@item.Notes" placeholder="Aggiungi/modifica nota" class="form-control form-control-sm" style="width: 180px;" />
-                                    <button type="submit" class="btn btn-info btn-sm">Salva Nota</button>
+                                    <input type="text" name="note" value="@item.Notes" class="form-control form-control-sm" placeholder="Nota" style="width: 180px;" />
+                                    <button class="btn btn-info btn-sm">Salva Nota</button>
                                 </form>
-                                <form asp-controller="ToDoList" asp-action="DeleteItem" method="post" style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questa attività?');">
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <button type="submit" class="btn btn-danger btn-sm">Elimina</button>
-                                </form>
+                                <button class="btn btn-danger btn-sm" onclick="confermaElimina(@item.Id, '@item.Description')">Elimina</button>
                             </div>
                         </div>
                     }
                 }
                 else
                 {
-                    <p class="text-muted">Nessuna attività non completata per questo topic.</p>
+                    <p class="text-muted">Nessuna attività per questo topic.</p>
                 }
             </div>
         }
     }
-    else
-    {
-        <p class="text-muted">Nessun topic disponibile. Aggiungi i topic iniziali nel database (seeding).</p>
-    }
 
-
-    @* Sezione per le attività completate *@
     @if (Model.CompletedItems.Any())
     {
         <div class="completed-section">
@@ -240,10 +203,7 @@
                         }
                     </div>
                     <div class="actions">
-                        <form asp-controller="ToDoList" asp-action="DeleteItem" method="post" style="display:inline;" onsubmit="return confirm('Sei sicuro di voler eliminare questa attività completata?');">
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn btn-danger btn-sm">Elimina</button>
-                        </form>
+                        <button class="btn btn-danger btn-sm" onclick="confermaElimina(@item.Id, '@item.Description')">Elimina</button>
                     </div>
                 </div>
             }
@@ -251,6 +211,37 @@
     }
 </div>
 
+<!-- MODALE CENTRALE CONFERMA ELIMINAZIONE -->
+<div class="modal fade" id="confermaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Sei sicuro di voler eliminare l'attività: <strong id="attivitaNome"></strong>?
+            </div>
+            <div class="modal-footer">
+                <form id="formElimina" method="post">
+                    <input type="hidden" name="id" id="attivitaIdHidden" />
+                    <button type="submit" class="btn btn-danger">Elimina</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function confermaElimina(id, nome) {
+            document.getElementById('attivitaIdHidden').value = id;
+            document.getElementById('attivitaNome').innerText = nome;
+            document.getElementById('formElimina').action = '/ToDoList/DeleteItem';
+            const modal = new bootstrap.Modal(document.getElementById('confermaModal'));
+            modal.show();
+        }
+    </script>
 }

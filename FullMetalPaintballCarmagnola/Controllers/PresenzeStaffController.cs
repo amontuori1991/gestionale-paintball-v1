@@ -3,6 +3,7 @@ using Full_Metal_Paintball_Carmagnola.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 [Authorize(Policy = "Presenze Staff")]
 public class PresenzeStaffController : Controller
 {
@@ -15,12 +16,12 @@ public class PresenzeStaffController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var oggi = DateTime.Today;
+        var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
         var fine = oggi.AddMonths(3);
 
         var dateSalvate = _context.AssenzeCalendario.Select(r => r.Data).ToList();
         var weekendDates = Enumerable.Range(0, (fine - oggi).Days + 1)
-            .Select(offset => oggi.AddDays(offset))
+            .Select(offset => DateTime.SpecifyKind(oggi.AddDays(offset), DateTimeKind.Utc))
             .Where(date => date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
             .ToList();
 
@@ -75,12 +76,17 @@ public class PresenzeStaffController : Controller
     [HttpPost]
     public async Task<IActionResult> AggiornaPresenza(DateTime data, string nomeStaff, bool? presente)
     {
-        var presenza = await _context.PresenzaStaff.FirstOrDefaultAsync(p => p.Data == data && p.NomeStaff == nomeStaff);
+        data = DateTime.SpecifyKind(data, DateTimeKind.Utc);
+
+        var presenza = await _context.PresenzaStaff
+            .FirstOrDefaultAsync(p => p.Data == data && p.NomeStaff == nomeStaff);
+
         if (presenza != null)
         {
             presenza.Presente = presente;
             await _context.SaveChangesAsync();
         }
+
         return Ok();
     }
 
@@ -101,6 +107,8 @@ public class PresenzeStaffController : Controller
     {
         if (DateTime.TryParseExact(data, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataParsed))
         {
+            dataParsed = DateTime.SpecifyKind(dataParsed, DateTimeKind.Utc);
+
             var giorno = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(dataParsed.ToString("dddd"));
 
             if (!_context.AssenzeCalendario.Any(r => r.Data == dataParsed))
@@ -138,7 +146,8 @@ public class PresenzeStaffController : Controller
     {
         if (DateTime.TryParseExact(data, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataParsed))
         {
-            // Solo se non è weekend
+            dataParsed = DateTime.SpecifyKind(dataParsed, DateTimeKind.Utc);
+
             if (dataParsed.DayOfWeek != DayOfWeek.Saturday && dataParsed.DayOfWeek != DayOfWeek.Sunday)
             {
                 var presenze = _context.PresenzaStaff.Where(p => p.Data == dataParsed);

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Alex\\source_old\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj": {}
+    "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Alex\\source_old\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj": {
+    "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Alex\\source_old\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj",
+        "projectUniqueName": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj",
         "projectName": "FullMetalPaintballCarmagnola",
-        "projectPath": "C:\\Users\\Alex\\source_old\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj",
+        "projectPath": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj",
         "packagesPath": "C:\\Users\\Alex\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Alex\\source_old\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\obj\\",
+        "outputPath": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -85,6 +85,10 @@
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[8.0.7, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[9.0.4, )"
             }
           },
           "imports": [

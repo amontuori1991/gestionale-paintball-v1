@@ -1,0 +1,13 @@
+# Cartelle da ignorare
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+*.db
+*.DS_Store
+
+# Configurazioni locali
+*.local.json

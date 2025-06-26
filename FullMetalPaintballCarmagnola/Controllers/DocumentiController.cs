@@ -113,14 +113,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var documento = new Documento
             {
                 PdfFileName = uniqueFileName,
-                DataCaricamento = DateTime.Now,
+                DataCaricamento = DateTime.UtcNow,
                 TipoDocumento = TipoDocumento,
-                DataDocumento = DataDocumento,
+                DataDocumento = DateTime.SpecifyKind(DataDocumento, DateTimeKind.Utc),
                 NumeroDocumento = NumeroDocumento,
                 FornitoreId = FornitoreId,
                 Importo = Importo,
                 Note = Note
             };
+
 
             _context.Documenti.Add(documento);
             await _context.SaveChangesAsync();

@@ -57,7 +57,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models // Assicurati che il namespace 
         [StringLength(255)] // Salva il percorso del file
         public string Firma { get; set; } = string.Empty; // Inizializzato
 
-        public DateTime DataCreazione { get; set; } = DateTime.Now;
+        public DateTime DataCreazione { get; set; } = DateTime.UtcNow;
+
 
         public int? PartitaId { get; set; }  // Nullable perché non tutti i tesseramenti sono collegati a una partita
         public Partita? Partita { get; set; }  // Navigazione opzionale

@@ -16,12 +16,16 @@ public class CalendarioAssenzeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var oggi = DateTime.Today;
+        var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
         var fine = oggi.AddMonths(3);
+
         var weekendDates = Enumerable.Range(0, (fine - oggi).Days + 1)
             .Select(offset => oggi.AddDays(offset))
             .Where(date => date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
+            .Select(date => DateTime.SpecifyKind(date, DateTimeKind.Utc)) // Fondamentale su ogni data generata
             .ToList();
+    
+
 
         foreach (var data in weekendDates)
         {
