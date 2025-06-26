@@ -293,7 +293,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
 
             string messaggio = $@"
-Ciao! Ti confermo la prenotazione per il Paintball:<br><br>
+Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 📅 Data: {partita.Data:dd/MM/yyyy}<br>
 🕒 Orario: {partita.OraInizio}<br>
 👤 Referente: {partita.Riferimento}<br>
