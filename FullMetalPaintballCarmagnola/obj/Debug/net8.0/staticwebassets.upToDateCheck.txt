@@ -2,10 +2,13 @@ wwwroot\css\site.css
 wwwroot\favicon.ico
 wwwroot\Firme\firma_0e4a716a-a8ee-4505-9a4b-7e517b800124.png
 wwwroot\Firme\firma_23e48f90-7b73-4fa9-b585-d94de89615e8.png
+wwwroot\Firme\firma_24374a6c-9f9b-45e7-b42c-d41bd6712cac.png
 wwwroot\Firme\firma_265c060f-5c9d-4657-9dbf-068fb4f8b932.png
 wwwroot\Firme\firma_2aad628c-ca70-450a-96e0-1ee90db2c598.png
 wwwroot\Firme\firma_3727c948-c2b1-468b-94e2-79ca70319b27.png
 wwwroot\Firme\firma_3752d899-a9f8-4078-9323-f17ed4a0b8e2.png
+wwwroot\Firme\firma_4600f9f6-7c76-4ca4-98f6-e24465487f89.png
+wwwroot\Firme\firma_482aa70f-4c88-4b4e-bf64-25db1ddad988.png
 wwwroot\Firme\firma_4a6db2d8-e5e0-4f0e-b252-8cc22fefffc5.png
 wwwroot\Firme\firma_52194988-166b-4818-b7f8-7915458e4b4d.png
 wwwroot\Firme\firma_554b8b91-7d39-42f2-9aa5-58975172f1a8.png
@@ -23,6 +26,7 @@ wwwroot\Firme\firma_9828345c-8902-4f43-a563-f822dcc9fb79.png
 wwwroot\Firme\firma_9e25b61b-a6b9-4653-8cd5-0438d636b824.png
 wwwroot\Firme\firma_a034a242-5a03-49fd-8097-5ecfae669368.png
 wwwroot\Firme\firma_ab3d3ed1-bb01-4e43-8565-c55058b42901.png
+wwwroot\Firme\firma_b3ecf268-6a71-4907-b471-77817a8cc510.png
 wwwroot\Firme\firma_b5b601d8-58c1-4af3-ba5e-8e29d6dedf04.png
 wwwroot\Firme\firma_b705908d-eadf-47f5-b91b-605a21f9b796.png
 wwwroot\Firme\firma_bec1de93-a7d1-45a4-ade1-82596302a131.png
@@ -90,12 +94,8 @@ wwwroot\uploads\0d1b0ec9-f1a5-43d5-98e8-47079213dae0.pdf
 wwwroot\uploads\41d56b24-8ee0-4ec3-9e59-c48abb37e674.pdf
 wwwroot\uploads\83938a85-01e3-447f-bd33-df68a0120f0d.pdf
 wwwroot\uploads\9a0ab118-c60a-4c85-9533-3b715ac8c1a0.pdf
+wwwroot\uploads\b09a4be9-d135-476b-9035-fa87344ecfe5.pdf
 wwwroot\uploads\ce8953f1-f619-444b-a7b2-012edf9c0560.pdf
 wwwroot\uploads\ddc56576-c6d2-475c-9f9d-f0e9aefa5f14.pdf
 wwwroot\uploads\f4831d70-88ad-42b6-b2e5-352e381fff79.pdf
 wwwroot\uploads_asd\20e2cccf-669d-408f-b2e7-2ed0b95ba2a0.pdf
-wwwroot\Firme\firma_4600f9f6-7c76-4ca4-98f6-e24465487f89.png
-wwwroot\Firme\firma_24374a6c-9f9b-45e7-b42c-d41bd6712cac.png
-wwwroot\Firme\firma_482aa70f-4c88-4b4e-bf64-25db1ddad988.png
-wwwroot\uploads\b09a4be9-d135-476b-9035-fa87344ecfe5.pdf
-wwwroot\Firme\firma_b3ecf268-6a71-4907-b471-77817a8cc510.png
