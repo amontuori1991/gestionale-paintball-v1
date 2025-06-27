@@ -29,9 +29,8 @@ main {
     flex-grow: 1;
 }
 
-/* --- LOGO PRINCIPALE (per la pagina di Benvenuto) --- */
 .background-logo {
-    position: relative; /* Mantiene la posizione nel flusso del documento */
+    position: relative;
     width: 250px;
     height: 250px;
     background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
@@ -39,7 +38,7 @@ main {
     background-repeat: no-repeat;
     opacity: 1;
     pointer-events: none;
-    margin: 40px auto 20px auto; /* Centrato e con un po' di spazio sotto */
+    margin: 40px auto 20px auto;
     z-index: 1;
 }
 
@@ -77,8 +76,6 @@ footer.footer {
     margin-top: auto;
 }
 
-/* --- STILI GENERALI PER TUTTE LE TABELLE --- */
-
 .table {
     --bs-table-bg: transparent;
     --bs-table-striped-bg: transparent;
@@ -101,6 +98,7 @@ table thead {
         border: 1px solid #3e8e41;
         border-radius: 0;
         padding: 12px 15px;
+        text-align: center;
     }
 
 table tbody tr {
@@ -117,6 +115,7 @@ table tbody td {
     border: 1px solid #dee2e6;
     border-radius: 0;
     padding: 12px 15px;
+    text-align: center;
 }
 
 .table .table-success,
@@ -286,6 +285,150 @@ table.calendario-table {
     padding: 2px 6px;
     font-size: 0.8rem;
     margin-top: 4px;
+}
+
+/* STILI SPECIFICI PER LA PAGINA ToDoList */
+.topic-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fcfcfc;
+}
+
+    .topic-section h3 {
+        color: #495057;
+        font-size: 1.6rem;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 5px;
+        display: inline-block;
+    }
+
+.todo-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+    .todo-item.completed {
+        background-color: #e6ffe6; /* Sfondo verde chiaro */
+        border-color: #a3e6a3; /* Bordo verde più scuro */
+        text-decoration: line-through;
+        color: #6c757d; /* Testo grigio per sbarrato */
+    }
+
+    .todo-item .actions {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+.completed-section {
+    margin-top: 40px;
+    padding: 20px;
+    border: 1px solid #d4edda;
+    border-radius: 8px;
+    background-color: #d4edda; /* Sfondo verde chiaro per il box completato */
+    color: #155724; /* Testo più scuro per il box completato */
+}
+
+.form-add-item {
+    margin-top: 40px;
+    padding: 25px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+    .form-add-item h3 {
+        color: #0d6efd;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+/* STILI CUSTOM TOAST PER PAGINA GESTIONE PERMESSI */
+.custom-toast-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.custom-toast {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 20px 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    min-width: 250px;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+    .custom-toast.success .icon-circle {
+        background-color: #28a745;
+    }
+
+    .custom-toast.error .icon-circle {
+        background-color: #dc3545;
+    }
+
+.icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+    .icon-circle i.bi {
+        font-size: 1.8rem;
+    }
+
+.custom-toast p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.custom-toast .close-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1.5rem;
+    cursor: pointer;
+    align-self: flex-end;
+    line-height: 1;
+    padding: 0;
+}
+
+    .custom-toast .close-btn:hover {
+        color: #333;
+    }
+
+.custom-toast.show {
+    display: flex;
+    opacity: 1;
 }
 
 @media (max-width: 768px) {

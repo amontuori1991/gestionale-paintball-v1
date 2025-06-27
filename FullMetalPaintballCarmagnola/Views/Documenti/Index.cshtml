@@ -6,8 +6,6 @@
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<div class="background-logo"></div>
-
 <div class="content-container">
     <h2 class="text-center">Documenti</h2>
 
@@ -125,41 +123,6 @@
                 </form>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="modal fade" id="inserisciFornitoreModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form asp-action="InserisciFornitore" method="post" class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Inserisci nuovo fornitore</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="text" name="NomeFornitore" class="form-control" placeholder="Nome fornitore" required />
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Salva</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="modal fade" id="uploadPdfModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form asp-action="UploadPdf" method="post" enctype="multipart/form-data" class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Carica PDF Documento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Carica</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-            </div>
-        </form>
     </div>
 </div>
 

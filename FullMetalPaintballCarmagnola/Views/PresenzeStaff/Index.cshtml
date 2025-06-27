@@ -7,103 +7,19 @@
     var staff = new List<string> { "Simone", "Davide", "Andrea", "Federico", "Enrico" };
 }
 
-<style>
-    body {
-        background-color: #CED4B5;
-        font-family: Arial, sans-serif;
-    }
+<div class="content-container">
+    
+    <h2 class="text-center">Gestione Presenze Staff</h2> 
 
-    .container-custom {
-        padding-top: 120px;
-        padding-bottom: 50px;
-        max-width: 95%;
-        margin: auto;
-        position: relative;
-    }
+    <div class="mb-3 text-center">
 
-    .logo {
-        position: absolute;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 5;
-        height: 100px;
-    }
-
-    .table-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 20px;
-    }
-
-    table {
-        background-color: white;
-        border-collapse: collapse;
-        width: 100%;
-        min-width: 500px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        background-image: url('/img/splatter1.png'), url('/img/splatter2.png');
-        background-repeat: no-repeat, no-repeat;
-        background-position: right 30px top 20px, left 30px bottom 20px;
-        background-size: 120px, 120px;
-    }
-
-    th, td, select {
-        padding: 8px;
-        text-align: center;
-        border: 2px solid #ccc;
-    }
-
-    th {
-        background-color: #f8f8f8;
-        font-weight: bold;
-    }
-
-    select {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    h2 {
-        color: #0d6efd;
-        margin-bottom: 20px;
-    }
-
-    .bg-success {
-        background-color: #198754 !important;
-        color: white;
-    }
-
-    .bg-danger {
-        background-color: #dc3545 !important;
-        color: white;
-    }
-
-    .bg-warning {
-        background-color: #ffc107 !important;
-        color: black;
-    }
-
-    .btn-danger-small {
-        padding: 2px 6px;
-        font-size: 0.8rem;
-        margin-top: 4px;
-    }
-</style>
-
-<div class="background-logo"></div>
-
-<div class="container-custom">
-    <img src="https://i.imgur.com/K9Ugseg.gif" class="logo" />
-
-    <h2>Gestione Presenze Staff</h2>
-    <div class="mb-3">
         <button id="aggiungiInfrasettimanale" class="btn btn-warning">Inserisci data infrasettimanale</button>
     </div>
 
-    <div class="table-container">
-        <table>
+    <div class="table-responsive">
+
+        <table class="table">
+
             <thead>
                 <tr>
                     <th>Giorno</th>
@@ -142,9 +58,8 @@
                             currentSelection == "NO" ? "bg-danger" : "bg-warning";
 
                             <td class="@bgClass">
-                                <select class="presente-select form-select text-center"
-                                        data-data="@giorno.ToString("yyyy-MM-dd")"
-                                        data-nome="@membro">
+                                <select class="presente-select form-select">
+      
                                     <option value="In attesa" selected="@(currentSelection == "In attesa" ? "selected" : null)">In attesa</option>
                                     <option value="SI" selected="@(currentSelection == "SI" ? "selected" : null)">SI</option>
                                     <option value="NO" selected="@(currentSelection == "NO" ? "selected" : null)">NO</option>
@@ -155,7 +70,7 @@
                         <td>
                             @if (!isWeekend)
                             {
-                                <button class="btn btn-danger btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>
+                                <button class="btn btn-danger btn-sm btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>
                             }
                         </td>
                     </tr>

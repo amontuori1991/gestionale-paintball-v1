@@ -5,211 +5,110 @@
     Layout = "_Layout";
 }
 
-<style>
-    body {
-        background-color: #CED4B5;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        height: 100%;
-        overflow-x: hidden;
-    }
+<div class="content-container">
+    <h2 class="text-center">Elenco Tesseramenti</h2>
 
-    .background-logo {
-        position: fixed;
-        top: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 250px;
-        height: 250px;
-        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat top center;
-        background-size: contain;
-        background-repeat: no-repeat;
-        opacity: 1;
-        z-index: 1;
-        pointer-events: none;
-    }
+    <form method="get" asp-action="ListaTesseramenti" class="mb-3 d-flex justify-content-center flex-wrap gap-3">
+        <input type="number" name="partitaId" value="@ViewBag.PartitaId" placeholder="Filtra per ID Partita" class="form-control" style="width: 150px;" />
+        <input type="text" name="searchNome" value="@ViewBag.SearchNome" placeholder="Filtra per Nome" class="form-control" style="width: 150px;" />
+        <input type="text" name="searchCognome" value="@ViewBag.SearchCognome" placeholder="Filtra per Cognome" class="form-control" style="width: 150px;" />
+        <input type="date" name="dataDa" value="@ViewBag.DataDa" class="form-control" style="width: 150px;" />
+        <input type="date" name="dataA" value="@ViewBag.DataA" class="form-control" style="width: 150px;" />
+        <button type="submit" class="btn btn-primary">Filtra</button>
+        <a href="@Url.Action("ListaTesseramenti")" class="btn btn-secondary">Reset</a>
+    </form>
 
-    .container-list {
-        position: relative;
-        z-index: 2;
-        padding-top: 300px;
-        padding-bottom: 20px;
-        min-height: 100vh;
-        max-width: 90vw;
-        margin: 0 auto;
-        padding-left: 10px;
-        padding-right: 10px;
-        overflow-x: visible;
-    }
-
-    .list-container {
-        background-color: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding-top: 30px;
-        overflow-x: auto;
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-        .list-container h2 {
-            font-size: 2rem;
-            color: #0d6efd;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-    .tesseramenti-table {
-        min-width: 1200px;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-        .tesseramenti-table th,
-        .tesseramenti-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-            white-space: nowrap;
-            vertical-align: middle;
-        }
-
-        .tesseramenti-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .tesseramenti-table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        .tesseramenti-table tbody tr:hover {
-            background-color: #e9e9e9;
-        }
-
-    form.inline-form {
-        display: inline;
-        margin: 0;
-        padding: 0;
-    }
-
-        form.inline-form button {
-            padding: 2px 8px;
-            font-size: 0.85rem;
-            line-height: 1;
-        }
-</style>
-
-<div class="background-logo"></div>
-
-<div class="container-list">
-    <div class="list-container">
-        <h2>Elenco Tesseramenti</h2>
-
-        <form method="get" asp-action="ListaTesseramenti" class="mb-3">
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                <input type="number" name="partitaId" value="@ViewBag.PartitaId" placeholder="Filtra per ID Partita" class="form-control" style="width: 150px;" />
-                <input type="text" name="searchNome" value="@ViewBag.SearchNome" placeholder="Filtra per Nome" class="form-control" style="width: 150px;" />
-                <input type="text" name="searchCognome" value="@ViewBag.SearchCognome" placeholder="Filtra per Cognome" class="form-control" style="width: 150px;" />
-                <input type="date" name="dataDa" value="@ViewBag.DataDa" class="form-control" style="width: 150px;" />
-                <input type="date" name="dataA" value="@ViewBag.DataA" class="form-control" style="width: 150px;" />
-                <button type="submit" class="btn btn-primary">Filtra</button>
-                <a href="@Url.Action("ListaTesseramenti")" class="btn btn-secondary">Reset</a>
-            </div>
-        </form>
-        <form method="get" asp-action="ExportExcel" class="mb-3">
+    <div class="btn-toolbar justify-content-center mb-3">
+        <form method="get" asp-action="ExportExcel">
             <input type="hidden" name="searchNome" value="@ViewBag.SearchNome" />
             <input type="hidden" name="searchCognome" value="@ViewBag.SearchCognome" />
-            <button type="submit" class="btn btn-success mb-3">Esporta in Excel</button>
+            <button type="submit" class="btn btn-success">Esporta in Excel</button>
         </form>
-
         <form method="post" asp-action="AssegnaTessere">
-            <button type="submit" class="btn btn-primary mb-3">Assegna Tessere</button>
-
-            @if (Model != null && Model.Any())
-            {
-                <table class="tesseramenti-table">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" id="selectAll" /></th>
-                            <th>Partita Id</th>
-                            <th>@Html.DisplayNameFor(model => model.Nome)</th>
-                            <th>@Html.DisplayNameFor(model => model.Cognome)</th>
-                            <th>@Html.DisplayNameFor(model => model.DataNascita)</th>
-                            <th>@Html.DisplayNameFor(model => model.Genere)</th>
-                            <th>@Html.DisplayNameFor(model => model.ComuneNascita)</th>
-                            <th>@Html.DisplayNameFor(model => model.ComuneResidenza)</th>
-                            <th>@Html.DisplayNameFor(model => model.Email)</th>
-                            <th>@Html.DisplayNameFor(model => model.CodiceFiscale)</th>
-                            <th>Tessera</th>
-                            <th>AzioneTessera</th>
-                            <th>@Html.DisplayNameFor(model => model.Minorenne)</th>
-                            <th>@Html.DisplayNameFor(model => model.NomeGenitore)</th>
-                            <th>@Html.DisplayNameFor(model => model.CognomeGenitore)</th>
-                            <th>@Html.DisplayNameFor(model => model.DataCreazione)</th>
-                            <th>Data Scadenza</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tesseramento in Model)
-                        {
-                            var scadenza = new DateTime(tesseramento.DataCreazione.Year, 12, 31);
-                            <tr>
-                                <td><input type="checkbox" name="tesseratiIds" value="@tesseramento.Id" class="select-item" /></td>
-                                <td>@tesseramento.PartitaId</td>
-                                <td>@tesseramento.Nome</td>
-                                <td>@tesseramento.Cognome</td>
-                                <td>@(tesseramento.DataNascita?.ToString("dd/MM/yyyy") ?? "")</td>
-                                <td>@tesseramento.Genere</td>
-                                <td>@tesseramento.ComuneNascita</td>
-                                <td>@tesseramento.ComuneResidenza</td>
-                                <td>@tesseramento.Email</td>
-                                <td>@tesseramento.CodiceFiscale</td>
-                                <td>
-                                    @(string.IsNullOrEmpty(tesseramento.Tessera) ? "-" : tesseramento.Tessera)
-                                </td>
-
-                                <td>
-                                    @if (!string.IsNullOrEmpty(tesseramento.Tessera))
-                                    {
-                                        <form method="post" asp-action="DissociaTessera" class="inline-form" style="display:inline;">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="tesseratoId" value="@tesseramento.Id" />
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="dissociaTessera(@tesseramento.Id)">Dissocia</button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td>@tesseramento.Minorenne</td>
-                                <td>@tesseramento.NomeGenitore</td>
-                                <td>@tesseramento.CognomeGenitore</td>
-                                <td>@tesseramento.DataCreazione.ToShortDateString()</td>
-                                <td>@scadenza.ToShortDateString()</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p>Nessun tesseramento disponibile.</p>
-            }
+            <button type="submit" class="btn btn-primary">Assegna Tessere</button>
         </form>
-
-        <p style="margin-top: 30px; text-align: center;">
-            <a href="@Url.Action("Index", "Tesseramento")" class="btn btn-primary">Nuovo Tesseramento</a>
-            <a href="@Url.Action("Index", "Home")" class="btn btn-primary" style="margin-left: 10px;">Torna alla Home</a>
-        </p>
     </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped tesseramenti-table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" /></th>
+                        <th>Partita Id</th>
+                        <th>@Html.DisplayNameFor(model => model.Nome)</th>
+                        <th>@Html.DisplayNameFor(model => model.Cognome)</th>
+                        <th>@Html.DisplayNameFor(model => model.DataNascita)</th>
+                        <th>@Html.DisplayNameFor(model => model.Genere)</th>
+                        <th>@Html.DisplayNameFor(model => model.ComuneNascita)</th>
+                        <th>@Html.DisplayNameFor(model => model.ComuneResidenza)</th>
+                        <th>@Html.DisplayNameFor(model => model.Email)</th>
+                        <th>@Html.DisplayNameFor(model => model.CodiceFiscale)</th>
+                        <th>Tessera</th>
+                        <th>AzioneTessera</th>
+                        <th>@Html.DisplayNameFor(model => model.Minorenne)</th>
+                        <th>@Html.DisplayNameFor(model => model.NomeGenitore)</th>
+                        <th>@Html.DisplayNameFor(model => model.CognomeGenitore)</th>
+                        <th>@Html.DisplayNameFor(model => model.DataCreazione)</th>
+                        <th>Data Scadenza</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tesseramento in Model)
+                    {
+                        var scadenza = new DateTime(tesseramento.DataCreazione.Year, 12, 31);
+                        <tr>
+                            <td><input type="checkbox" name="tesseratiIds" value="@tesseramento.Id" class="select-item" /></td>
+                            <td>@tesseramento.PartitaId</td>
+                            <td>@tesseramento.Nome</td>
+                            <td>@tesseramento.Cognome</td>
+                            <td>@(tesseramento.DataNascita?.ToString("dd/MM/yyyy") ?? "")</td>
+                            <td>@tesseramento.Genere</td>
+                            <td>@tesseramento.ComuneNascita</td>
+                            <td>@tesseramento.ComuneResidenza</td>
+                            <td>@tesseramento.Email</td>
+                            <td>@tesseramento.CodiceFiscale</td>
+                            <td>
+                                @(string.IsNullOrEmpty(tesseramento.Tessera) ? "-" : tesseramento.Tessera)
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrEmpty(tesseramento.Tessera))
+                                {
+                                    <form method="post" asp-action="DissociaTessera" class="inline-form">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="tesseratoId" value="@tesseramento.Id" />
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="dissociaTessera(@tesseramento.Id)">Dissocia</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>@tesseramento.Minorenne</td>
+                            <td>@tesseramento.NomeGenitore</td>
+                            <td>@tesseramento.CognomeGenitore</td>
+                            <td>@tesseramento.DataCreazione.ToShortDateString()</td>
+                            <td>@scadenza.ToShortDateString()</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p>Nessun tesseramento disponibile.</p>
+    }
+
+    <p class="text-center" style="margin-top: 30px;">
+        <a href="@Url.Action("Index", "Tesseramento")" class="btn btn-primary">Nuovo Tesseramento</a>
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary" style="margin-left: 10px;">Torna alla Home</a>
+    </p>
 </div>
 
-<!-- Modal di conferma -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

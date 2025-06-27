@@ -4,138 +4,72 @@
     ViewData["Title"] = "Gestione Tessere ACSI";
 }
 
-<style>
-    body {
-        background-color: #CED4B5;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-    }
-
-    .background-logo {
-        position: relative;
-        width: 200px;
-        height: 200px;
-        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
-        background-size: contain;
-        margin: 40px auto 20px auto;
-    }
-
-    .content-container {
-        background-color: white;
-        border-radius: 10px;
-        max-width: 900px;
-        margin: 0 auto 40px auto;
-        padding: 30px 40px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-        .content-container h2 {
-            font-size: 2rem;
-            color: #0d6efd;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-    form.mb-4 {
-        max-width: 600px;
-        margin: 0 auto 30px auto;
-    }
-
-    table.table {
-        width: 100%;
-        margin-top: 20px;
-        border-collapse: separate;
-        border-spacing: 0 10px;
-    }
-
-        table.table th, table.table td {
-            vertical-align: middle;
-            text-align: center;
-            padding: 12px 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        table.table th {
-            background-color: #e9ecef;
-            font-weight: 600;
-        }
-
-    .input-group input {
-        border-radius: 5px 0 0 5px;
-        border: 1px solid #ced4da;
-    }
-
-    .input-group button, .input-group a {
-        border-radius: 0 5px 5px 0;
-    }
-
-</style>
-
-<div class="background-logo"></div>
-
 <div class="content-container">
-    <h2>Gestione Tessere ACSI</h2>
+    <h2 class="text-center">Gestione Tessere ACSI</h2>
 
     <form asp-action="AddRange" method="post" class="mb-4">
-        <div class="mb-3">
-            <label for="NumeroIniziale" class="form-label">Da Numero</label>
-            <input type="number" class="form-control" id="NumeroIniziale" name="NumeroIniziale" required />
+        <div class="row g-3 align-items-center justify-content-center">
+            <div class="col-auto">
+                <label for="NumeroIniziale" class="form-label">Da Numero</label>
+                <input type="number" class="form-control" id="NumeroIniziale" name="NumeroIniziale" required />
+            </div>
+            <div class="col-auto">
+                <label for="NumeroFinale" class="form-label">A Numero</label>
+                <input type="number" class="form-control" id="NumeroFinale" name="NumeroFinale" required />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary mt-3">Aggiungi Range</button>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="NumeroFinale" class="form-label">A Numero</label>
-            <input type="number" class="form-control" id="NumeroFinale" name="NumeroFinale" required />
-        </div>
-        <button type="submit" class="btn btn-primary">Aggiungi Range</button>
     </form>
 
     <hr />
 
-    <!-- Form filtro per numero tessera -->
     <form method="get" class="mb-4">
-        <div class="input-group">
-            <input type="number" name="numeroTessera" class="form-control" placeholder="Filtra per numero tessera" value="@Context.Request.Query["numeroTessera"]" />
+        <div class="input-group d-flex justify-content-center">
+            <input type="number" name="numeroTessera" class="form-control" placeholder="Filtra per numero tessera" value="@Context.Request.Query["numeroTessera"]" style="max-width: 250px;" />
             <button type="submit" class="btn btn-outline-secondary">Filtra</button>
-            <a href="@Url.Action("Index")" class="btn btn-outline-danger ms-2">Reset</a>
+            <a href="@Url.Action("Index")" class="btn btn-outline-danger">Reset</a>
         </div>
     </form>
 
-    <h3>Tessere a disposizione</h3>
+    <h3 class="text-center">Tessere a disposizione</h3>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Tessere Disponibili</th>
-                <th>Tessere Assegnate</th>
-            </tr>
-        </thead>
-        <tbody>
-            @{
-                var tessereDisponibili = new List<long>();
-                var tessereAssegnate = new List<long>();
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Tessere Disponibili</th>
+                    <th>Tessere Assegnate</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var tessereDisponibili = new List<long>();
+                    var tessereAssegnate = new List<long>();
 
-                foreach (var range in Model)
-                {
-                    for (long i = range.NumeroDa; i <= range.NumeroA; i++)
+                    foreach (var range in Model)
                     {
-                        if (range.Assegnata)
-                            tessereAssegnate.Add(i);
-                        else
-                            tessereDisponibili.Add(i);
+                        for (long i = range.NumeroDa; i <= range.NumeroA; i++)
+                        {
+                            if (range.Assegnata)
+                                tessereAssegnate.Add(i);
+                            else
+                                tessereDisponibili.Add(i);
+                        }
+                    }
+
+                    int maxRows = Math.Max(tessereDisponibili.Count, tessereAssegnate.Count);
+
+                    for (int row = 0; row < maxRows; row++)
+                    {
+                        <tr>
+                            <td>@(row<tessereDisponibili.Count? tessereDisponibili[row].ToString() : "")</td>
+                            <td>@(row<tessereAssegnate.Count? tessereAssegnate[row].ToString() : "")</td>
+                        </tr>
                     }
                 }
-
-                int maxRows = Math.Max(tessereDisponibili.Count, tessereAssegnate.Count);
-
-                for (int row = 0; row < maxRows; row++)
-                {
-                    <tr>
-                        <td>@(row<tessereDisponibili.Count? tessereDisponibili[row].ToString() : "")</td>
-                        <td>@(row<tessereAssegnate.Count? tessereAssegnate[row].ToString() : "")</td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>

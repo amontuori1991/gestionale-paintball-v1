@@ -2,149 +2,79 @@
     ViewData["Title"] = "Prezzi";
 }
 
-<style>
-    body {
-        background-color: #CED4B5;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-    }
-
-    .background-logo {
-        position: fixed;
-        top: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 250px;
-        height: 250px;
-        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat top center;
-        background-size: contain;
-        opacity: 1;
-        z-index: 0;
-        pointer-events: none;
-    }
-
-    .content-container {
-        position: relative;
-        z-index: 1;
-        padding-top: 300px;
-        padding-bottom: 50px;
-        max-width: 90%;
-        margin: 0 auto;
-    }
-
-    .list-container {
-        background-color: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        overflow-x: auto;
-        margin-bottom: 40px;
-    }
-
-        .list-container h2 {
-            font-size: 1.8rem;
-            color: #0d6efd;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-        background-color: white;
-    }
-
-    th, td {
-        padding: 12px;
-        border: 1px solid #ddd;
-        text-align: center;
-    }
-
-    th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    tr:hover {
-        background-color: #e9e9e9;
-    }
-</style>
-
-<div class="background-logo"></div>
-
 <div class="content-container">
     <div class="list-container">
-        <h2>Prezzi Partite</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Durata</th>
-                    <th>Colpi</th>
-                    <th>Prezzo Standard</th>
-                    <th>Prezzo Colpi Illimitati</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1 ora</td>
-                    <td>200</td>
-                    <td>22,00 €</td>
-                    <td>35,00 €</td>
-                </tr>
-                <tr>
-                    <td>1 ora e 30</td>
-                    <td>300</td>
-                    <td>27,00 €</td>
-                    <td>42,00 €</td>
-                </tr>
-                <tr>
-                    <td>2 ore</td>
-                    <td>400</td>
-                    <td>32,00 €</td>
-                    <td>NO</td>
-                </tr>
-            </tbody>
-        </table>
+        <h2 class="text-center">Prezzi Partite</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Durata</th>
+                        <th>Colpi</th>
+                        <th>Prezzo Standard</th>
+                        <th>Prezzo Colpi Illimitati</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1 ora</td>
+                        <td>200</td>
+                        <td>22,00 €</td>
+                        <td>35,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>1 ora e 30</td>
+                        <td>300</td>
+                        <td>27,00 €</td>
+                        <td>42,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>2 ore</td>
+                        <td>400</td>
+                        <td>32,00 €</td>
+                        <td>NO</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="list-container">
-        <h2>Prezzi Colpi Extra</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Quantità</th>
-                    <th>Prezzo</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>50</td><td>3,00 €</td></tr>
-                <tr><td>100</td><td>5,00 €</td></tr>
-                <tr><td>250</td><td>10,00 €</td></tr>
-                <tr><td>500</td><td>19,00 €</td></tr>
-                <tr><td>2000</td><td>50,00 €</td></tr>
-            </tbody>
-        </table>
+        <h2 class="text-center">Prezzi Colpi Extra</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Quantità</th>
+                        <th>Prezzo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>50</td><td>3,00 €</td></tr>
+                    <tr><td>100</td><td>5,00 €</td></tr>
+                    <tr><td>250</td><td>10,00 €</td></tr>
+                    <tr><td>500</td><td>19,00 €</td></tr>
+                    <tr><td>2000</td><td>50,00 €</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="list-container">
-        <h2>Caccia al Coniglio</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Opzione</th>
-                    <th>Prezzo</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td>1 costume</td><td>60,00 €</td></tr>
-                <tr><td>2 costumi</td><td>100,00 €</td></tr>
-            </tbody>
-        </table>
+        <h2 class="text-center">Caccia al Coniglio</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Opzione</th>
+                        <th>Prezzo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1 costume</td><td>60,00 €</td></tr>
+                    <tr><td>2 costumi</td><td>100,00 €</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>

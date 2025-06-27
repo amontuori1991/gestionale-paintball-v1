@@ -4,86 +4,10 @@
     ViewData["Title"] = "Gestione Ruoli";
 }
 
-<style>
-    body {
-        background-color: #CED4B5;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        height: 100%;
-        overflow-x: hidden;
-    }
+<div class="content-container">
+    <h2 class="text-center">Gestione Ruoli Utenti</h2>
 
-    .background-logo {
-        position: fixed;
-        top: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 250px;
-        height: 250px;
-        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat top center;
-        background-size: contain;
-        background-repeat: no-repeat;
-        opacity: 1;
-        z-index: 1;
-        pointer-events: none;
-    }
-
-    .container-list {
-        position: relative;
-        z-index: 2;
-        padding-top: 300px;
-        padding-bottom: 20px;
-        min-height: 100vh;
-        max-width: 90%;
-        margin: 0 auto;
-    }
-
-    .list-container {
-        background-color: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        overflow-x: auto;
-    }
-
-        .list-container h2 {
-            font-size: 2rem;
-            color: #0d6efd;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th, td {
-        padding: 12px;
-        border: 1px solid #ddd;
-        text-align: left;
-    }
-
-    th {
-        background-color: #f2f2f2;
-    }
-
-    tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    tr:hover {
-        background-color: #e9e9e9;
-    }
-</style>
-
-<div class="background-logo"></div>
-
-<div class="container-list">
-    <div class="list-container">
-        <h2 class="mb-4">Gestione Ruoli Utenti</h2>
-
+    <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -101,13 +25,13 @@
                         <td>@utente.Email</td>
                         <td>@utente.Ruolo</td>
                         <td>
-                            <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="form-inline">
+                            <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="d-flex align-items-center justify-content-start">
                                 <input type="hidden" name="userId" value="@utente.Id" />
-                                <select name="ruolo" class="form-control">
+                                <select name="ruolo" class="form-select w-auto me-2">
                                     <option value="Admin" selected="@(@utente.Ruolo == "Admin")">Admin</option>
                                     <option value="Staff" selected="@(@utente.Ruolo == "Staff")">Staff</option>
                                 </select>
-                                <button type="submit" class="btn btn-primary ml-2">Salva</button>
+                                <button type="submit" class="btn btn-primary">Salva</button>
                             </form>
                         </td>
                     </tr>
