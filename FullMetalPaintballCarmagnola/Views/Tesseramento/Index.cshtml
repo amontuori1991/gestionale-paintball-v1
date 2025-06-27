@@ -306,7 +306,6 @@
     }
 
     <script>
-        // Riferimenti agli elementi DOM
         const minorenneSelect = document.getElementById('Minorenne');
         const genitoreSection = document.getElementById('GenitoreSection');
         const nomeGenitoreInput = document.getElementById('NomeGenitore');
@@ -315,50 +314,41 @@
         const terminiAccettatiInput = document.getElementById('TerminiAccettatiInput');
         const signatureCanvas = document.getElementById("signatureCanvas");
         const ctx = signatureCanvas.getContext("2d");
-        const firmaInput = document.getElementById('FirmaInput'); // Riferimento all'input hidden della firma
+        const firmaInput = document.getElementById('FirmaInput');
 
-        // Configurazione del Canvas per la firma
-        signatureCanvas.width = 400; // Puoi adattare queste dimensioni
-        signatureCanvas.height = 100; // Puoi adattare queste dimensioni
-        ctx.lineWidth = 2; // Spessore della linea di disegno
-        ctx.lineCap = 'round'; // Estremità arrotondate per un tratto più morbido
-        ctx.strokeStyle = '#000'; // Colore del tratto (nero)
+        signatureCanvas.width = 400;
+        signatureCanvas.height = 100;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000';
 
-        let drawing = false; // Flag per indicare se l'utente sta disegnando
+        let drawing = false;
 
-        // Funzione per aggiornare la validazione lato client per un campo specifico
         function updateClientValidation(elementId, isRequired) {
             const inputElement = document.getElementById(elementId);
-            if (!inputElement || !$.validator) return; // Esci se l'elemento o jQuery Validation non esistono
+            if (!inputElement || !$.validator) return;
 
             const formValidator = $('#tesseramentoForm').validate();
-            const validationSpan = $(`span[data-valmsg-for="${inputElement.name}"]`); // Seleziona lo span di validazione
+            const validationSpan = $(`span[data-valmsg-for="${inputElement.name}"]`);
 
             if (isRequired) {
                 inputElement.setAttribute('required', 'required');
-                // Aggiungi/aggiorna la regola 'required' in jQuery Validation
                 $(inputElement).rules("add", {
                     required: true,
                     messages: {
-                        required: $(inputElement).data('val-required') || "Questo campo è obbligatorio." // Usa il messaggio da data-val-required
+                        required: $(inputElement).data('val-required') || "Questo campo è obbligatorio."
                     }
                 });
             } else {
-                inputElement.removeAttribute('required'); // Rimuovi l'attributo HTML5 'required'
-
-                // Rimuovi la regola 'required' in jQuery Validation
+                inputElement.removeAttribute('required');
                 $(inputElement).rules("remove", "required");
-
-                inputElement.value = ''; // Pulisci il valore se il campo non è più richiesto
-
-                // IMPORTANTE: Pulisci manualmente i messaggi di errore e lo stato di validazione.
-                validationSpan.empty(); // Pulisci lo span dei messaggi di errore
-                $(inputElement).removeClass("input-validation-error"); // Rimuovi la classe che mette il bordo rosso
-                formValidator.element(inputElement); // Forza la ri-validazione (utile per pulire lo stato interno)
+                inputElement.value = '';
+                validationSpan.empty();
+                $(inputElement).removeClass("input-validation-error");
+                formValidator.element(inputElement);
             }
         }
 
-        // Gestione della visibilità e obbligatorietà della sezione genitore
         function handleMinorenneChange() {
             if (minorenneSelect.value == 'No') {
                 genitoreSection.style.display = 'none';
@@ -368,112 +358,119 @@
                 genitoreSection.style.display = 'block';
                 updateClientValidation('NomeGenitore', true);
                 updateClientValidation('CognomeGenitore', true);
-            } else { // Gestisci il caso in cui sia "Seleziona..." o altro
+            } else {
                 genitoreSection.style.display = 'none';
                 updateClientValidation('NomeGenitore', false);
                 updateClientValidation('CognomeGenitore', false);
             }
         }
 
-        // Event listener per il cambio di Minorenne
         minorenneSelect.addEventListener('change', handleMinorenneChange);
 
-        // Gestione del click sulla casella per accettare i termini
-        termsCheckboxDiv.addEventListener('click', function() {
-            const isChecked = !this.classList.contains('checked'); // Calcola il nuovo stato
-            if (isChecked) {
-                this.classList.add('checked');
-            } else {
-                this.classList.remove('checked');
-            }
+        termsCheckboxDiv.addEventListener('click', function () {
+            const isChecked = !this.classList.contains('checked');
+            this.classList.toggle('checked', isChecked);
             terminiAccettatiInput.value = isChecked ? 'true' : 'false';
 
-            // Forza la ri-validazione lato client per il campo TerminiAccettati
             if ($.validator) {
                 const formValidator = $('#tesseramentoForm').validate();
                 formValidator.element(terminiAccettatiInput);
             }
         });
 
-        // Event listener per il disegno sul canvas (firma)
-        signatureCanvas.addEventListener("mousedown", function(e) {
+        // Eventi mouse per firma
+        signatureCanvas.addEventListener("mousedown", function (e) {
             drawing = true;
-            ctx.beginPath(); // Inizia un nuovo percorso
-            ctx.moveTo(e.offsetX, e.offsetY); // Sposta all'inizio del disegno
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
         });
 
-        signatureCanvas.addEventListener("mousemove", function(e) {
+        signatureCanvas.addEventListener("mousemove", function (e) {
             if (drawing) {
-                ctx.lineTo(e.offsetX, e.offsetY); // Disegna una linea fino alla posizione corrente
-                ctx.stroke(); // Esegui il tratto
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
             }
         });
 
-        signatureCanvas.addEventListener("mouseup", function() {
+        signatureCanvas.addEventListener("mouseup", function () {
             drawing = false;
-            validateAndSetSignature(); // Valida e salva la firma quando il disegno finisce
+            validateAndSetSignature();
         });
 
-        signatureCanvas.addEventListener("mouseleave", function() {
+        signatureCanvas.addEventListener("mouseleave", function () {
             drawing = false;
-            validateAndSetSignature(); // Valida e salva se il mouse esce dal canvas
+            validateAndSetSignature();
         });
 
-        // Funzione per cancellare la firma
-        document.getElementById('clearSignature').addEventListener('click', function() {
-            ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height); // Cancella il canvas
-            firmaInput.value = ''; // Pulisci l'input hidden della firma
+        // Eventi touch per dispositivi mobili
+        signatureCanvas.addEventListener("touchstart", function (e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = signatureCanvas.getBoundingClientRect();
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        });
 
-            // Forza la ri-validazione lato client del campo Firma
+        signatureCanvas.addEventListener("touchmove", function (e) {
+            e.preventDefault();
+            if (drawing) {
+                const touch = e.touches[0];
+                const rect = signatureCanvas.getBoundingClientRect();
+                ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                ctx.stroke();
+            }
+        });
+
+        signatureCanvas.addEventListener("touchend", function () {
+            drawing = false;
+            validateAndSetSignature();
+        });
+
+        document.getElementById('clearSignature').addEventListener('click', function () {
+            ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            firmaInput.value = '';
+
             if ($.validator) {
                 const formValidator = $('#tesseramentoForm').validate();
                 formValidator.element(firmaInput);
             }
         });
 
-        // Funzione per validare il canvas e impostare il valore dell'input hidden Firma
         function validateAndSetSignature() {
             const imageData = ctx.getImageData(0, 0, signatureCanvas.width, signatureCanvas.height);
             let isEmpty = true;
-            // Controlla se ci sono pixel disegnati (canale alfa diverso da 0)
             for (let i = 0; i < imageData.data.length; i += 4) {
-                if (imageData.data[i + 3] !== 0) { // Se il canale alfa non è 0, c'è qualcosa disegnato
+                if (imageData.data[i + 3] !== 0) {
                     isEmpty = false;
                     break;
                 }
             }
 
             if (isEmpty) {
-                firmaInput.value = ''; // Se il canvas è vuoto, l'input hidden deve essere vuoto
+                firmaInput.value = '';
             } else {
-                firmaInput.value = signatureCanvas.toDataURL("image/png"); // Altrimenti, converti e assegna
+                firmaInput.value = signatureCanvas.toDataURL("image/png");
             }
 
-            // Forza la ri-validazione lato client del campo Firma
             if ($.validator) {
                 const formValidator = $('#tesseramentoForm').validate();
                 formValidator.element(firmaInput);
             }
         }
 
-        // Inizializza lo stato dei campi al caricamento della pagina
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inizializza lo stato della checkbox TerminiAccettati in base al valore del model
+        document.addEventListener('DOMContentLoaded', function () {
             if (terminiAccettatiInput.value === 'true') {
                 termsCheckboxDiv.classList.add('checked');
             } else {
                 termsCheckboxDiv.classList.remove('checked');
             }
 
-            // Importante: ri-parsare la validazione unobtrusive dopo che tutti gli elementi sono nel DOM
             if ($.validator) {
-                // Rimuovi i dati di validazione esistenti per forzare una re-analisi
                 $('#tesseramentoForm').removeData('validator');
                 $('#tesseramentoForm').removeData('unobtrusiveValidation');
-                // Parsa nuovamente il form
                 $.validator.unobtrusive.parse('#tesseramentoForm');
 
-                // Assicurati che l'input hidden per TerminiAccettati abbia gli attributi di validazione corretti
                 if (!$(terminiAccettatiInput).attr('data-val')) {
                     $(terminiAccettatiInput).attr('data-val', 'true');
                     $(terminiAccettatiInput).attr('data-val-range', 'Devi accettare i termini e le condizioni');
@@ -481,20 +478,12 @@
                     $(terminiAccettatiInput).attr('data-val-range-max', 'True');
                 }
 
-                const formValidator = $('#tesseramentoForm').validate(); // Ottieni il validatore dopo il parse
-
-                // Forza una validazione iniziale del campo TerminiAccettati
-                if (formValidator) {
-                    formValidator.element(terminiAccettatiInput);
-                }
-
-                // Forza la validazione iniziale della firma
-                validateAndSetSignature(); // Per assicurarsi che lo stato iniziale sia correttamente validato
-
-                // CHIAMATA FONDAMENTALE: imposta lo stato iniziale dei campi genitore
+                const formValidator = $('#tesseramentoForm').validate();
+                formValidator.element(terminiAccettatiInput);
+                validateAndSetSignature();
                 handleMinorenneChange();
             }
         });
-
     </script>
+
 }

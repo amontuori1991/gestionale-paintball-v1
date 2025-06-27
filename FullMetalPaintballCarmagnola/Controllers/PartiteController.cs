@@ -260,27 +260,50 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [HttpPost]
         public async Task<IActionResult> AggiornaStaff(int id, string campo, string valore)
         {
-            var partita = await _dbContext.Partite.FindAsync(id);
+            var partita = await _dbContext.Partite.FirstOrDefaultAsync(p => p.Id == id);
+
             if (partita == null)
+            {
                 return Json(new { success = false, message = "Partita non trovata." });
+            }
 
             try
             {
-                var prop = typeof(Partita).GetProperty(campo);
-                if (prop == null)
+                // Forza Data a UTC per evitare problemi con PostgreSQL
+                partita.Data = DateTime.SpecifyKind(partita.Data, DateTimeKind.Utc);
+
+                // Reflection: aggiorna dinamicamente il campo Staff1, Staff2, etc.
+                var property = typeof(Partita).GetProperty(campo);
+                if (property != null && property.PropertyType == typeof(string))
+                {
+                    property.SetValue(partita, valore);
+                    _dbContext.Partite.Update(partita);
+                    await _dbContext.SaveChangesAsync();
+
+                    return Json(new { success = true });
+                }
+                else
+                {
                     return Json(new { success = false, message = "Campo non valido." });
-
-                prop.SetValue(partita, valore);
-                _dbContext.Update(partita);
-                await _dbContext.SaveChangesAsync();
-
-                return Json(new { success = true });
+                }
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                Console.WriteLine("ERRORE durante il salvataggio: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("Dettaglio: " + ex.InnerException.Message);
+                }
+
+                return Json(new
+                {
+                    success = false,
+                    message = "Errore durante il salvataggio: " + ex.Message + " - Dettaglio: " + ex.InnerException?.Message
+                });
             }
         }
+
+
 
         [HttpGet]
         public IActionResult GeneraMessaggioPrenotazione(int id)

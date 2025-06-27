@@ -5,7 +5,6 @@
     var partiteFuture = ViewBag.PartiteFuture as List<Partita>;
     var partitePassate = ViewBag.PartitePassate as List<Partita>;
     var partiteCancellate = ViewBag.PartiteCancellate as List<Partita>;
-    var staffList = new List<string> { "Simone", "Enrico", "Federico", "Davide", "Andrea" };
 }
 
 <!-- SweetAlert2 CSS e JS -->
@@ -21,15 +20,11 @@
             <a class="btn btn-success" href="@Url.Action("Create", "Partite")">➕ Aggiungi Partita</a>
         </p>
 
-
         @Html.Partial("_PartiteTable", partiteFuture, new ViewDataDictionary(ViewData) { { "Titolo", "📅 Prossime Partite" } })
-
 
         @Html.Partial("_PartiteTable", partitePassate, new ViewDataDictionary(ViewData) { { "Titolo", "✅ Partite Disputate" } })
 
-
         @Html.Partial("_PartiteTable", partiteCancellate, new ViewDataDictionary(ViewData) { { "Titolo", "❌ Partite Annullate" } })
-
 
     </div>
 </div>
@@ -65,15 +60,27 @@
                 var partitaId = select.data('partita');
                 var valore = select.val();
 
+                console.log("Invio al server:", {
+                    id: partitaId,
+                    campo: campo,
+                    valore: valore
+                });
+
                 $.ajax({
                     url: '@Url.Action("AggiornaStaff", "Partite")',
                     method: 'POST',
                     data: { id: partitaId, campo: campo, valore: valore },
-                    success: function () {
-                        console.log('Aggiornamento Staff riuscito');
+                    success: function (response) {
+                        if (response.success) {
+                            console.log('✔️ Staff aggiornato correttamente');
+                        } else {
+                            alert(response.message || "Errore durante l'aggiornamento dello staff");
+                            console.error("Errore dal server:", response);
+                        }
                     },
-                    error: function () {
+                    error: function (xhr, status, error) {
                         alert('Errore durante l\'aggiornamento dello staff');
+                        console.error("Dettaglio errore:", error, xhr.responseText);
                     }
                 });
             });
@@ -95,43 +102,43 @@
                             data: { id: partitaId },
                             success: function (response) {
                                 if (response.success) {
-                                    Swal.fire('Inviato!', response.message || 'Email inviate con successo!', 'success')
+                                    Swal.fire('Inviato!', response.message || 'Email inviate con successo!', 'success');
                                 } else {
-                                    Swal.fire('Errore', response.message || 'Errore nell\'invio delle email.', 'error')
+                                    Swal.fire('Errore', response.message || 'Errore nell\'invio delle email.', 'error');
                                 }
                             },
                             error: function () {
-                                Swal.fire('Errore', 'Errore nell\'invio delle email.', 'error')
+                                Swal.fire('Errore', 'Errore nell\'invio delle email.', 'error');
                             }
                         });
                     }
                 });
             });
 
-                    $('.btn-messaggio-prenotazione').on('click', function () {
-            var partitaId = $(this).data('id');
+            $('.btn-messaggio-prenotazione').on('click', function () {
+                var partitaId = $(this).data('id');
 
-            $.ajax({
-                url: '@Url.Action("GeneraMessaggioPrenotazione", "Partite")',
-                method: 'GET',
-                data: { id: partitaId },
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            title: 'Messaggio Prenotazione',
-                            html: `<textarea style="width:100%; height:200px;" readonly>${response.messaggio.replace(/<br>/g, '\n')}</textarea>`,
-                            icon: 'info',
-                            confirmButtonText: 'Chiudi'
-                        });
-                    } else {
-                        Swal.fire('Errore', response.messaggio || 'Impossibile generare il messaggio.', 'error');
+                $.ajax({
+                    url: '@Url.Action("GeneraMessaggioPrenotazione", "Partite")',
+                    method: 'GET',
+                    data: { id: partitaId },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Messaggio Prenotazione',
+                                html: `<textarea style="width:100%; height:200px;" readonly>${response.messaggio.replace(/<br>/g, '\n')}</textarea>`,
+                                icon: 'info',
+                                confirmButtonText: 'Chiudi'
+                            });
+                        } else {
+                            Swal.fire('Errore', response.messaggio || 'Impossibile generare il messaggio.', 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Errore', 'Errore durante la generazione del messaggio.', 'error');
                     }
-                },
-                error: function () {
-                    Swal.fire('Errore', 'Errore durante la generazione del messaggio.', 'error');
-                }
+                });
             });
-        });
 
         });
     </script>
