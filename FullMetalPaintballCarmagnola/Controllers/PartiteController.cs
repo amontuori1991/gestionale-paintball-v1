@@ -342,6 +342,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 📅 Data: {partita.Data:dd/MM/yyyy}<br>
 🕒 Orario: {partita.OraInizio}<br>
+⏳ Durata: {partita.Durata} ore<br> 
 👤 Referente: {partita.Riferimento}<br>
 💶 Caparra: {partita.Caparra:0.00}€<br>
 💰 {prezzo} a testa<br>

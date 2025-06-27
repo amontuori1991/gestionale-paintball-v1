@@ -126,9 +126,55 @@
                         if (response.success) {
                             Swal.fire({
                                 title: 'Messaggio Prenotazione',
-                                html: `<textarea style="width:100%; height:200px;" readonly>${response.messaggio.replace(/<br>/g, '\n')}</textarea>`,
+                                // MODIFICA QUI: Usiamo un div con contenteditable="true" e senza replace dei <br>
+                                html: `<div id="messaggioTestoSelezionabile" style="width:100%; height:auto; max-height:400px; overflow-y:auto; border:1px solid #ccc; padding:10px; text-align:left; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; white-space: pre-wrap; word-break: break-word;">${response.messaggio}</div>`,
                                 icon: 'info',
-                                confirmButtonText: 'Chiudi'
+                                confirmButtonText: 'Chiudi',
+                                // Opzionale: Aggiungi un pulsante "Copia"
+                                showConfirmButton: true, // Mostra il bottone "Chiudi"
+                                showDenyButton: true, // Mostra un secondo bottone per "Copia"
+                                denyButtonText: 'Copia Testo',
+                                allowOutsideClick: false, // Per evitare chiusure accidentali durante la selezione
+                                didOpen: () => {
+                                    // Focus sul div per aiutare la selezione, se necessario
+                                    document.getElementById('messaggioTestoSelezionabile').focus();
+                                },
+                                preDeny: () => { // Funzione eseguita prima di premere il bottone "Copia Testo"
+                                    const textElement = document.getElementById('messaggioTestoSelezionabile');
+                                    if (textElement) {
+                                        const range = document.createRange();
+                                        range.selectNodeContents(textElement);
+                                        const selection = window.getSelection();
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);
+
+                                        try {
+                                            const successful = document.execCommand('copy');
+                                            if (successful) {
+                                                Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success');
+                                            } else {
+                                                // Fallback per browser che non supportano execCommand (o se fallisce)
+                                                console.warn('execCommand fallback fallito, usando navigator.clipboard');
+                                                navigator.clipboard.writeText(textElement.innerText).then(() => {
+                                                    Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success');
+                                                }).catch(err => {
+                                                    Swal.fire('Errore', 'Impossibile copiare il testo automaticamente. Seleziona manualmente.', 'error');
+                                                    console.error('Errore durante la copia tramite clipboard API:', err);
+                                                });
+                                            }
+                                        } catch (err) {
+                                            // Fallback per browser che non supportano execCommand
+                                            console.warn('execCommand non supportato, usando navigator.clipboard');
+                                            navigator.clipboard.writeText(textElement.innerText).then(() => {
+                                                Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success');
+                                            }).catch(err => {
+                                                Swal.fire('Errore', 'Impossibile copiare il testo automaticamente. Seleziona manualmente.', 'error');
+                                                console.error('Errore durante la copia tramite clipboard API:', err);
+                                            });
+                                        }
+                                    }
+                                    return false; // Impedisce la chiusura automatica della modale dopo la copia
+                                }
                             });
                         } else {
                             Swal.fire('Errore', response.messaggio || 'Impossibile generare il messaggio.', 'error');

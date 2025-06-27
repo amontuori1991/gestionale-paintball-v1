@@ -1,22 +1,263 @@
+/* wwwroot/css/site.css */
+
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #CED4B5;
+}
+
+main {
+    flex-grow: 1;
+}
+
+.background-logo {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 1;
+    pointer-events: none;
+    margin: 120px auto 0 auto;
+    z-index: 1;
+}
+
+.welcome-container {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    margin-top: 50px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 15px;
+}
+
+    .welcome-container h1 {
+        font-size: 2.5rem;
+        color: #0d6efd;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .welcome-container p {
+        font-size: 1.25rem;
+        color: #333;
+    }
+
+footer.footer {
+    width: 100%;
+    text-align: center;
+    padding: 20px 0;
+    background-color: #e9ecef;
+    color: #6c757d;
+    margin-top: auto;
+}
+
+/* --- STILI GENERALI PER TUTTE LE TABELLE (Partite, Documenti, Documenti ASD) --- */
+
+/* Azzeriamo le variabili CSS di Bootstrap per i colori della tabella per evitare sovrapposizioni indesiderate */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: transparent;
+    --bs-table-color: inherit;
+    --bs-table-border-color: #dee2e6; /* Bordo standard Bootstrap */
+    /* Regole per unire i bordi e rimuovere la spaziatura tra le celle */
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/* Intestazione (thead) - colore di sfondo più scuro */
+table thead {
+    background-color: #4CAF50; /* Verde scuro per l'intestazione delle Partite */
+    color: #fff; /* Testo bianco per un buon contrasto */
+    /* Assicurati che non ci sia trasparenza o patina */
+    opacity: 1;
+    box-shadow: none;
+}
+
+    /* Intestazioni delle singole celle (th) */
+    table thead th {
+        color: #fff; /* Testo bianco */
+        background-color: #4CAF50; /* Ripeti il colore per sicurezza */
+        border: 1px solid #3e8e41; /* Un bordo leggermente più scuro per separare le celle dell'intestazione */
+        border-bottom: 1px solid #3e8e41; /* Forza il bordo inferiore per uniformità con il resto delle celle */
+        /* Rimuovi angoli arrotondati se li avevi */
+        border-radius: 0;
+        /* padding-top e padding-bottom possono essere utili qui se vuoi più altezza */
+        padding: 12px 15px; /* Mantieni il padding standard o personalizza */
+    }
+
+
+/* Righe del corpo della tabella (tbody tr) - colore di sfondo chiaro e definito */
+table tbody tr {
+    background-color: #f8f9fa; /* Sfondo grigio molto chiaro per le righe pari */
+    color: #212529; /* Testo scuro */
+}
+
+    /* Righe alternate (dispari) per effetto "zebrato" */
+    table tbody tr:nth-child(odd) {
+        background-color: #e9ecef; /* Grigio leggermente più scuro per le righe dispari */
+    }
+
+/* Stili per le singole celle (td) nel corpo della tabella */
+table tbody td {
+    background-color: inherit; /* Eredita il colore dal TR genitore (che è striato) */
+    border: 1px solid #dee2e6; /* Bordo sottile per separare le celle */
+    border-radius: 0; /* Rimuove angoli arrotondati */
+    padding: 12px 15px; /* Padding standard per le celle */
+}
+
+
+/* Stili per le righe di stato "Confermata" (sovrascrivono i colori striati se applicati) */
+.table .table-success,
+.bg-success {
+    background-color: #d4edda !important;
+    color: #155724 !important;
+}
+
+/* Stili per la riga "Gestito da" nelle tabelle Partite (con spaziatura bianca) */
+table tbody tr.managed-by-row {
+    background-color: #f8f9fa; /* Sfondo chiaro per questa riga */
+    color: #212529;
+    /* Crea uno spazio bianco sotto la riga tramite un bordo trasparente */
+    border-bottom: 20px solid transparent;
+    display: table-row;
+}
+
+    /* Stili per il bordo rosso del separatore di weekend (si applica alla cella td specifica) */
+    table tbody tr.managed-by-row.weekend-separator td {
+        border-bottom: 2px solid red;
+        padding-bottom: 15px;
+    }
+
+
+/* --- STILI SPECIFICI PER LE PAGINE DOCUMENTI E DOCUMENTI ASD (Sovrascrivono selettori generici se necessario) --- */
+
+/* Contenitore bianco principale */
+.content-container {
+    background-color: white;
+    border-radius: 10px;
+    max-width: 1200px; /* Larghezza usata in Documenti/Index.cshtml */
+    margin: 0 auto 40px auto;
+    padding: 30px 40px; /* Questo padding crea spazio tra il bordo bianco e il contenuto */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+    .content-container h2 {
+        font-size: 2rem;
+        color: #0d6efd;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+form.mb-4, form.mb-3 {
+    margin: 0 auto 30px auto;
+}
+
+.btn-toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.input-group input {
+    border-radius: 5px 0 0 5px;
+    border: 1px solid #ced4da;
+}
+
+.input-group button, .input-group a {
+    border-radius: 0 5px 5px 0;
+}
+
+    .input-group a.ms-2 {
+        border-radius: 5px !important;
+    }
+
+p .btn-success {
+    display: block;
+    width: fit-content;
+    margin: 20px auto 30px auto;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+table.table .btn-sm {
+    margin: 0 2px;
+    border-radius: 5px;
+}
+
+table.table i.bi {
+    margin-right: 5px;
+}
+
+#messaggioTestoSelezionabile {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Modifiche per il riquadro bianco attorno alle tabelle Documenti/ASD (se vuoi che la tabella si estenda ai bordi del content-container) */
+.table-responsive {
+    /* Questi margini negativi e la larghezza calcolata spingono la tabella fino ai bordi del content-container,
+       eliminando il padding del content-container sui lati della tabella. */
+    margin-left: -40px;
+    margin-right: -40px;
+    width: calc(100% + 80px);
+}
+
+/* --- MEDIA QUERIES (Per la responsività) --- */
+
+@media (max-width: 768px) {
+    .background-logo {
+        width: 180px;
+        height: 180px;
+        margin-top: 80px;
+    }
+
+    .welcome-container {
+        margin-top: 30px;
+    }
+
+        .welcome-container h1 {
+            font-size: 1.8rem;
+        }
+
+    /* Ridotto il padding del content-container su schermi piccoli per ottimizzare lo spazio */
+    .content-container {
+        padding: 20px;
+    }
+
+    /* Rimuovi i margini negativi del table-responsive su schermi piccoli per uno scroll interno più pulito */
+    .table-responsive {
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+    }
 }

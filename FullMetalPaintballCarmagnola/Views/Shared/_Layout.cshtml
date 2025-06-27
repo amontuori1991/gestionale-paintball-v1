@@ -1,13 +1,11 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Full Metal Paintball Carmagnola</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    @* Rimuovi questa riga se non hai file CSS isolati (NomeVista.cshtml.css) *@
-    @* <link rel="stylesheet" href="~/Full_Metal_Paintball_Carmagnola.styles.css" asp-append-version="true" /> *@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
@@ -30,26 +28,21 @@
             </div>
         </nav>
     </header>
-    <div class="container-fluid">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
+    <main role="main" class="pb-3">
+        @RenderBody()
+    </main>
 
     <footer class="footer text-muted">
-        <div style="text-align: left; padding-left: 1rem;">
-            &copy; 2025 - Full Metal Paintball Carmagnola
+        <div class="container">
+            &copy; 2025 - Full Metal Paintball Carmagnola - Tutti i diritti riservati.
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    @* AGGIUNGI QUESTI DUE SCRIPT PER LA VALIDAZIONE CLIENT-SIDE *@
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

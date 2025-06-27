@@ -3,112 +3,13 @@
     ViewData["Title"] = "Documenti";
 }
 
-<style>
-    body {
-        background-color: #CED4B5;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-    }
-
-    .background-logo {
-        position: relative;
-        width: 200px;
-        height: 200px;
-        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
-        background-size: contain;
-        margin: 40px auto 20px auto;
-    }
-
-    .content-container {
-        background-color: white;
-        border-radius: 10px;
-        max-width: 1200px;
-        margin: 0 auto 40px auto;
-        padding: 30px 40px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-        .content-container h2 {
-            font-size: 2rem;
-            color: #0d6efd;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-    form.mb-4 {
-        max-width: 800px;
-        margin: 0 auto 30px auto;
-    }
-
-    table.table {
-        width: 100%;
-        margin-top: 20px;
-        border-collapse: separate;
-        border-spacing: 0 10px;
-    }
-
-        table.table th, table.table td {
-            vertical-align: middle;
-            text-align: center;
-            padding: 12px 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        table.table th {
-            background-color: #e9ecef;
-            font-weight: 600;
-        }
-
-    .row.g-3.align-items-center {
-        justify-content: center;
-        margin-bottom: 20px;
-    }
-
-    .col-auto {
-        flex: 0 0 auto;
-        margin-right: 10px;
-    }
-
-        .col-auto:last-child {
-            margin-right: 0;
-        }
-
-    .form-select, .form-control {
-        border-radius: 5px;
-    }
-
-    .btn-toolbar {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .modal-content {
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-
-    .modal-header {
-        background-color: #0d6efd;
-        color: white;
-    }
-
-    .modal-footer {
-        border-top: none;
-    }
-
-    table.table .btn-sm {
-        margin: 0 2px;
-    }
-</style>
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="background-logo"></div>
 
 <div class="content-container">
-    <h2>Documenti</h2>
+    <h2 class="text-center">Documenti</h2>
 
     @if (TempData["SuccessoFornitore"] != null)
     {
@@ -128,7 +29,7 @@
     }
 
     <form method="get" class="mb-4">
-        <div class="row g-3 align-items-center">
+        <div class="row g-3 align-items-center justify-content-center">
             <div class="col-auto">
                 <select name="filtroTipoDocumento" class="form-select">
                     <option value="">Tutti i tipi</option>
@@ -158,52 +59,54 @@
         </div>
     </form>
 
-    <div class="btn-toolbar">
+    <div class="btn-toolbar justify-content-center">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inserisciFornitoreModal">Inserisci Fornitore</button>
         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadPdfModal">Carica PDF</button>
     </div>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>PDF</th>
-                <th>Data Caricamento</th>
-                <th>Tipo Documento</th>
-                <th>Data Documento</th>
-                <th>Numero Documento</th>
-                <th>Fornitore</th>
-                <th>Importo (€)</th>
-                <th>Note</th>
-                <th>Azioni</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var doc in Model.Documenti)
-            {
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>
-                        <a href="@Url.Action("DownloadPdf", "Documenti", new { id = doc.Id })" target="_blank">
-                            <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: red;"></i>
-                        </a>
-                    </td>
-                    <td>@doc.DataCaricamento.ToString("dd/MM/yyyy")</td>
-                    <td>@doc.TipoDocumento</td>
-                    <td>@doc.DataDocumento.ToString("dd/MM/yyyy")</td>
-                    <td>@doc.NumeroDocumento</td>
-                    <td>@doc.FornitoreNome</td>
-                    <td>@doc.Importo.ToString("F2")</td>
-                    <td>@doc.Note</td>
-                    <td>
-                        <a class="btn btn-sm btn-warning" href="@Url.Action("ModificaDocumento", new { id = doc.Id })">Modifica</a>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="confermaElimina('@doc.Id', '@doc.NumeroDocumento')">Elimina</button>
-                    </td>
+                    <th>PDF</th>
+                    <th>Data Caricamento</th>
+                    <th>Tipo Documento</th>
+                    <th>Data Documento</th>
+                    <th>Numero Documento</th>
+                    <th>Fornitore</th>
+                    <th>Importo (€)</th>
+                    <th>Note</th>
+                    <th>Azioni</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var doc in Model.Documenti)
+                {
+                    <tr>
+                        <td>
+                            <a href="@Url.Action("DownloadPdf", "Documenti", new { id = doc.Id })" target="_blank">
+                                <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: red;"></i>
+                            </a>
+                        </td>
+                        <td>@doc.DataCaricamento.ToString("dd/MM/yyyy")</td>
+                        <td>@doc.TipoDocumento</td>
+                        <td>@doc.DataDocumento.ToString("dd/MM/yyyy")</td>
+                        <td>@doc.NumeroDocumento</td>
+                        <td>@doc.FornitoreNome</td>
+                        <td>@doc.Importo.ToString("F2")</td>
+                        <td>@doc.Note</td>
+                        <td>
+                            <a class="btn btn-sm btn-warning" href="@Url.Action("ModificaDocumento", new { id = doc.Id })">Modifica</a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="confermaElimina('@doc.Id', '@doc.NumeroDocumento')">Elimina</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
-<!-- MODALE CENTRALE DI CONFERMA ELIMINAZIONE -->
 <div class="modal fade" id="confermaModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -225,7 +128,6 @@
     </div>
 </div>
 
-<!-- MODALI GIA' PRESENTI (INSERISCI FORNITORE / CARICA PDF) -->
 <div class="modal fade" id="inserisciFornitoreModal" tabindex="-1">
     <div class="modal-dialog">
         <form asp-action="InserisciFornitore" method="post" class="modal-content">
@@ -252,7 +154,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- CAMPI FORM GIA' PRESENTI QUI... -->
             </div>
             <div class="modal-footer">
                 <button type="submit" class="btn btn-primary">Carica</button>
@@ -262,12 +163,14 @@
     </div>
 </div>
 
-<script>
-    function confermaElimina(id, numeroDoc) {
-        document.getElementById('nomeDocumento').innerText = numeroDoc;
-        document.getElementById('documentoIdHidden').value = id;
-        const modal = new bootstrap.Modal(document.getElementById('confermaModal'));
-        modal.show();
-        document.getElementById('formElimina').action = '/Documenti/EliminaDocumento';
-    }
-</script>
+@section Scripts {
+    <script>
+        function confermaElimina(id, numeroDoc) {
+            document.getElementById('nomeDocumento').innerText = numeroDoc;
+            document.getElementById('documentoIdHidden').value = id;
+            const modal = new bootstrap.Modal(document.getElementById('confermaModal'));
+            modal.show();
+            document.getElementById('formElimina').action = '/Documenti/EliminaDocumento';
+        }
+    </script>
+}
