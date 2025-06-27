@@ -1,5 +1,5 @@
 wwwroot\css\site.css
-wwwroot\favicon.ico
+wwwroot\favicon.png
 wwwroot\Firme\firma_0e4a716a-a8ee-4505-9a4b-7e517b800124.png
 wwwroot\Firme\firma_23e48f90-7b73-4fa9-b585-d94de89615e8.png
 wwwroot\Firme\firma_24374a6c-9f9b-45e7-b42c-d41bd6712cac.png
