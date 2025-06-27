@@ -27,7 +27,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             if (!string.IsNullOrEmpty(filtroTipoDocumento))
                 query = query.Where(d => d.TipoDocumento == filtroTipoDocumento);
             if (filtroDataDocumento.HasValue)
-                query = query.Where(d => d.DataDocumento.Date == filtroDataDocumento.Value.Date);
+            {
+                var dataInizio = DateTime.SpecifyKind(filtroDataDocumento.Value.Date, DateTimeKind.Utc);
+                var dataFine = dataInizio.AddDays(1);
+
+                query = query.Where(d => d.DataDocumento >= dataInizio && d.DataDocumento < dataFine);
+            }
+
+
             if (filtroFornitoreId.HasValue)
                 query = query.Where(d => d.FornitoreId == filtroFornitoreId.Value);
             if (!string.IsNullOrEmpty(filtroNote))
