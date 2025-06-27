@@ -22,14 +22,16 @@ body {
     display: flex;
     flex-direction: column;
     background-color: #CED4B5;
+    font-family: Arial, sans-serif;
 }
 
 main {
     flex-grow: 1;
 }
 
+/* --- LOGO PRINCIPALE (per la pagina di Benvenuto) --- */
 .background-logo {
-    position: relative;
+    position: relative; /* Mantiene la posizione nel flusso del documento */
     width: 250px;
     height: 250px;
     background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
@@ -37,7 +39,7 @@ main {
     background-repeat: no-repeat;
     opacity: 1;
     pointer-events: none;
-    margin: 120px auto 0 auto;
+    margin: 40px auto 20px auto; /* Centrato e con un po' di spazio sotto */
     z-index: 1;
 }
 
@@ -75,93 +77,72 @@ footer.footer {
     margin-top: auto;
 }
 
-/* --- STILI GENERALI PER TUTTE LE TABELLE (Partite, Documenti, Documenti ASD) --- */
+/* --- STILI GENERALI PER TUTTE LE TABELLE --- */
 
-/* Azzeriamo le variabili CSS di Bootstrap per i colori della tabella per evitare sovrapposizioni indesiderate */
 .table {
     --bs-table-bg: transparent;
     --bs-table-striped-bg: transparent;
     --bs-table-color: inherit;
-    --bs-table-border-color: #dee2e6; /* Bordo standard Bootstrap */
-    /* Regole per unire i bordi e rimuovere la spaziatura tra le celle */
+    --bs-table-border-color: #dee2e6;
     border-collapse: collapse;
     border-spacing: 0;
 }
 
-/* Intestazione (thead) - colore di sfondo più scuro */
 table thead {
-    background-color: #4CAF50; /* Verde scuro per l'intestazione delle Partite */
-    color: #fff; /* Testo bianco per un buon contrasto */
-    /* Assicurati che non ci sia trasparenza o patina */
+    background-color: #4CAF50;
+    color: #fff;
     opacity: 1;
     box-shadow: none;
 }
 
-    /* Intestazioni delle singole celle (th) */
     table thead th {
-        color: #fff; /* Testo bianco */
-        background-color: #4CAF50; /* Ripeti il colore per sicurezza */
-        border: 1px solid #3e8e41; /* Un bordo leggermente più scuro per separare le celle dell'intestazione */
-        border-bottom: 1px solid #3e8e41; /* Forza il bordo inferiore per uniformità con il resto delle celle */
-        /* Rimuovi angoli arrotondati se li avevi */
+        color: #fff;
+        background-color: #4CAF50;
+        border: 1px solid #3e8e41;
         border-radius: 0;
-        /* padding-top e padding-bottom possono essere utili qui se vuoi più altezza */
-        padding: 12px 15px; /* Mantieni il padding standard o personalizza */
+        padding: 12px 15px;
     }
 
-
-/* Righe del corpo della tabella (tbody tr) - colore di sfondo chiaro e definito */
 table tbody tr {
-    background-color: #f8f9fa; /* Sfondo grigio molto chiaro per le righe pari */
-    color: #212529; /* Testo scuro */
+    background-color: #f8f9fa;
+    color: #212529;
 }
 
-    /* Righe alternate (dispari) per effetto "zebrato" */
     table tbody tr:nth-child(odd) {
-        background-color: #e9ecef; /* Grigio leggermente più scuro per le righe dispari */
+        background-color: #e9ecef;
     }
 
-/* Stili per le singole celle (td) nel corpo della tabella */
 table tbody td {
-    background-color: inherit; /* Eredita il colore dal TR genitore (che è striato) */
-    border: 1px solid #dee2e6; /* Bordo sottile per separare le celle */
-    border-radius: 0; /* Rimuove angoli arrotondati */
-    padding: 12px 15px; /* Padding standard per le celle */
+    background-color: inherit;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+    padding: 12px 15px;
 }
 
-
-/* Stili per le righe di stato "Confermata" (sovrascrivono i colori striati se applicati) */
 .table .table-success,
 .bg-success {
     background-color: #d4edda !important;
     color: #155724 !important;
 }
 
-/* Stili per la riga "Gestito da" nelle tabelle Partite (con spaziatura bianca) */
 table tbody tr.managed-by-row {
-    background-color: #f8f9fa; /* Sfondo chiaro per questa riga */
+    background-color: #f8f9fa;
     color: #212529;
-    /* Crea uno spazio bianco sotto la riga tramite un bordo trasparente */
     border-bottom: 20px solid transparent;
     display: table-row;
 }
 
-    /* Stili per il bordo rosso del separatore di weekend (si applica alla cella td specifica) */
     table tbody tr.managed-by-row.weekend-separator td {
         border-bottom: 2px solid red;
         padding-bottom: 15px;
     }
 
-
-/* --- STILI SPECIFICI PER LE PAGINE DOCUMENTI E DOCUMENTI ASD (Sovrascrivono selettori generici se necessario) --- */
-
-/* Contenitore bianco principale */
 .content-container {
     background-color: white;
     border-radius: 10px;
-    max-width: 1200px; /* Larghezza usata in Documenti/Index.cshtml */
+    max-width: 1200px;
     margin: 0 auto 40px auto;
-    padding: 30px 40px; /* Questo padding crea spazio tra il bordo bianco e il contenuto */
+    padding: 30px 40px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -223,16 +204,89 @@ table.table i.bi {
     word-break: break-word;
 }
 
-/* Modifiche per il riquadro bianco attorno alle tabelle Documenti/ASD (se vuoi che la tabella si estenda ai bordi del content-container) */
 .table-responsive {
-    /* Questi margini negativi e la larghezza calcolata spingono la tabella fino ai bordi del content-container,
-       eliminando il padding del content-container sui lati della tabella. */
     margin-left: -40px;
     margin-right: -40px;
     width: calc(100% + 80px);
 }
 
-/* --- MEDIA QUERIES (Per la responsività) --- */
+.container-custom {
+    padding-top: 50px;
+    padding-bottom: 50px;
+    max-width: 95%;
+    margin: auto;
+    position: relative;
+}
+
+.logo {
+    position: relative;
+    display: block;
+    margin: 10px auto;
+    z-index: 5;
+    height: 100px;
+    width: auto;
+}
+
+.calendario-table-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+table.calendario-table {
+    background-color: white;
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 500px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-image: url('/img/splatter1.png'), url('/img/splatter2.png');
+    background-repeat: no-repeat, no-repeat;
+    background-position: right 30px top 20px, left 30px bottom 20px;
+    background-size: 120px, 120px;
+}
+
+    table.calendario-table th {
+        background-color: #4CAF50;
+        color: #fff;
+        font-weight: bold;
+        border: 2px solid #3e8e41;
+        padding: 8px;
+        text-align: center;
+    }
+
+    table.calendario-table td, table.calendario-table select {
+        padding: 8px;
+        text-align: center;
+        border: 2px solid #ccc;
+    }
+
+    table.calendario-table select {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+.calendario-bg-success {
+    background-color: #198754 !important;
+    color: white;
+}
+
+.calendario-bg-danger {
+    background-color: #dc3545 !important;
+    color: white;
+}
+
+.calendario-bg-warning {
+    background-color: #ffc107 !important;
+    color: black;
+}
+
+.btn-danger-small {
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
 
 @media (max-width: 768px) {
     .background-logo {
@@ -249,12 +303,10 @@ table.table i.bi {
             font-size: 1.8rem;
         }
 
-    /* Ridotto il padding del content-container su schermi piccoli per ottimizzare lo spazio */
     .content-container {
         padding: 20px;
     }
 
-    /* Rimuovi i margini negativi del table-responsive su schermi piccoli per uno scroll interno più pulito */
     .table-responsive {
         margin-left: 0;
         margin-right: 0;

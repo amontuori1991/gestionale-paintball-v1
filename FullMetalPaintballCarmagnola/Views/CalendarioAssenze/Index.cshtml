@@ -6,153 +6,66 @@
     ViewData["Title"] = "Calendario Assenze";
 }
 
-<style>
-    body {
-        background-color: #CED4B5;
-        font-family: Arial, sans-serif;
-    }
-
-    .container-custom {
-        padding-top: 120px;
-        padding-bottom: 50px;
-        max-width: 95%;
-        margin: auto;
-        position: relative;
-    }
-
-    .logo {
-        position: absolute;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 5;
-        height: 100px;
-    }
-
-    .table-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 20px;
-    }
-
-    table {
-        background-color: white;
-        border-collapse: collapse;
-        width: 100%;
-        min-width: 500px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        background-image: url('/img/splatter1.png'), url('/img/splatter2.png');
-        background-repeat: no-repeat, no-repeat;
-        background-position: right 30px top 20px, left 30px bottom 20px;
-        background-size: 120px, 120px;
-    }
-
-    th, td, select {
-        padding: 8px;
-        text-align: center;
-        border: 2px solid #ccc;
-    }
-
-    th {
-        background-color: #f8f8f8;
-        font-weight: bold;
-    }
-
-    select {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    h2 {
-        color: #0d6efd;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .bg-success {
-        background-color: #198754 !important;
-        color: white;
-    }
-
-    .bg-danger {
-        background-color: #dc3545 !important;
-        color: white;
-    }
-
-    .bg-warning {
-        background-color: #ffc107 !important;
-        color: black;
-    }
-
-    .btn-danger-small {
-        padding: 2px 6px;
-        font-size: 0.8rem;
-        margin-top: 4px;
-    }
-</style>
-
-<div class="background-logo"></div>
-
 <div class="container-custom">
-    <img src="https://i.imgur.com/K9Ugseg.gif" class="logo" />
-    <h2>Calendario Assenze</h2>
+    <h2 class="text-center">Calendario Assenze</h2>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Giorno</th>
-                <th>Data</th>
-                <th>Reperibile</th>
-                <th>Montuo</th>
-                <th>Flavio</th>
-                <th>Bosax</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var giorno in Model)
-            {
-                var giornoSet = giorno.Data.ToString("dddd", new CultureInfo("it-IT"));
-                var repClass = giorno.Reperibile == "In attesa" ? "bg-warning"
-                : giorno.Reperibile == "Nessuno" ? "bg-danger" : "bg-success";
-
+    <div class="table-responsive calendario-table-wrapper">
+        <table class="calendario-table">
+            <thead>
                 <tr>
-                    <td>@giornoSet</td>
-                    <td>@giorno.Data.ToString("dd/MM/yyyy")</td>
+                    <th>Giorno</th>
+                    <th>Data</th>
+                    <th>Reperibile</th>
+                    <th>Montuo</th>
+                    <th>Flavio</th>
+                    <th>Bosax</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var giorno in Model)
+                {
+                    var giornoSet = giorno.Data.ToString("dddd", new CultureInfo("it-IT"));
+                    var repClass = giorno.Reperibile == "In attesa" ? "calendario-bg-warning"
+                    : giorno.Reperibile == "Nessuno" ? "calendario-bg-danger" : "calendario-bg-success";
 
-                    <td class="@repClass">
-                        <select class="reperibile-select" data-id="@giorno.Id">
-                            <option value="In attesa" selected="@(giorno.Reperibile == "In attesa" ? "selected" : null)">In attesa</option>
-                            <option value="Montuo" selected="@(giorno.Reperibile == "Montuo" ? "selected" : null)">Montuo</option>
-                            <option value="Flavio" selected="@(giorno.Reperibile == "Flavio" ? "selected" : null)">Flavio</option>
-                            <option value="Bosax" selected="@(giorno.Reperibile == "Bosax" ? "selected" : null)">Bosax</option>
-                            <option value="Nessuno" selected="@(giorno.Reperibile == "Nessuno" ? "selected" : null)">Nessuno</option>
-                        </select>
-                    </td>
+                    <tr>
+                        <td>@giornoSet</td>
+                        <td>@giorno.Data.ToString("dd/MM/yyyy")</td>
 
-                    @foreach (var membro in new[] { "Montuo", "Flavio", "Bosax" })
-                    {
-                        var assenza = membro switch
-                        {
-                            "Montuo" => giorno.Montuo,
-                            "Flavio" => giorno.Flavio,
-                            "Bosax" => giorno.Bosax,
-                            _ => null
-                        };
-
-                        var bgClass = assenza == "assente" ? "bg-danger" : "bg-warning";
-
-                        <td class="@bgClass">
-                            <select class="assenza-select" data-id="@giorno.Id" data-nome="@membro">
-                                <option value="" selected="@(string.IsNullOrWhiteSpace(assenza) ? "selected" : null)"></option>
-                                <option value="assente" selected="@(assenza == "assente" ? "selected" : null)">assente</option>
+                        <td class="@repClass">
+                            <select class="reperibile-select" data-id="@giorno.Id">
+                                <option value="In attesa" selected="@(giorno.Reperibile == "In attesa" ? "selected" : null)">In attesa</option>
+                                <option value="Montuo" selected="@(giorno.Reperibile == "Montuo" ? "selected" : null)">Montuo</option>
+                                <option value="Flavio" selected="@(giorno.Reperibile == "Flavio" ? "selected" : null)">Flavio</option>
+                                <option value="Bosax" selected="@(giorno.Reperibile == "Bosax" ? "selected" : null)">Bosax</option>
+                                <option value="Nessuno" selected="@(giorno.Reperibile == "Nessuno" ? "selected" : null)">Nessuno</option>
                             </select>
                         </td>
-                    }
-                </tr>
-            }
-        </tbody>
-    </table>
+
+                        @foreach (var membro in new[] { "Montuo", "Flavio", "Bosax" })
+                        {
+                            var assenza = membro switch
+                            {
+                                "Montuo" => giorno.Montuo,
+                                "Flavio" => giorno.Flavio,
+                                "Bosax" => giorno.Bosax,
+                                _ => null
+                            };
+
+                            var bgClass = assenza == "assente" ? "calendario-bg-danger" : "calendario-bg-warning";
+
+                            <td class="@bgClass">
+                                <select class="assenza-select" data-id="@giorno.Id" data-nome="@membro">
+                                    <option value="" selected="@(string.IsNullOrWhiteSpace(assenza) ? "selected" : null)"></option>
+                                    <option value="assente" selected="@(assenza == "assente" ? "selected" : null)">assente</option>
+                                </select>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @section Scripts {
@@ -166,10 +79,10 @@
 
                 $.post('/CalendarioAssenze/AggiornaReperibile', { id: id, reperibile: val })
                     .done(() => {
-                        td.removeClass('bg-success bg-danger bg-warning');
-                        if (val === 'Nessuno') td.addClass('bg-danger');
-                        else if (val === 'In attesa') td.addClass('bg-warning');
-                        else td.addClass('bg-success');
+                        td.removeClass('calendario-bg-success calendario-bg-danger calendario-bg-warning');
+                        if (val === 'Nessuno') td.addClass('calendario-bg-danger');
+                        else if (val === 'In attesa') td.addClass('calendario-bg-warning');
+                        else td.addClass('calendario-bg-success');
                     })
                     .fail(() => alert("Errore durante il salvataggio della reperibilità."));
             });
@@ -183,9 +96,9 @@
 
                 $.post('/CalendarioAssenze/AggiornaAssenza', { id: id, nome: nome, stato: val })
                     .done(() => {
-                        td.removeClass('bg-success bg-danger bg-warning');
-                        if (val === "assente") td.addClass('bg-danger');
-                        else td.addClass('bg-warning');
+                        td.removeClass('calendario-bg-success calendario-bg-danger calendario-bg-warning');
+                        if (val === "assente") td.addClass('calendario-bg-danger');
+                        else td.addClass('calendario-bg-warning');
                     })
                     .fail(() => alert("Errore durante il salvataggio dell'assenza."));
             });
