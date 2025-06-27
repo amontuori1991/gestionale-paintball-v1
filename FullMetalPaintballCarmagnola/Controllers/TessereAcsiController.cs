@@ -17,17 +17,24 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         public async Task<IActionResult> Index(long? numeroTessera)
         {
-            // Prendi tutte le tessere (assegnate e non)
             var allRanges = await _dbContext.RangeTessereAcsi.ToListAsync();
 
-            // Se c'è un filtro per numero tessera, filtriamo
             if (numeroTessera.HasValue)
             {
                 allRanges = allRanges.Where(r => numeroTessera.Value >= r.NumeroDa && numeroTessera.Value <= r.NumeroA).ToList();
             }
 
+            // Trova le tessere già assegnate a un tesseramento
+            var tessereAssegnate = await _dbContext.Tesseramenti
+                .Where(t => !string.IsNullOrEmpty(t.Tessera))
+                .Select(t => t.Tessera)
+                .ToListAsync();
+
+            ViewBag.TessereAssegnate = tessereAssegnate;
+
             return View(allRanges);
         }
+
 
 
 

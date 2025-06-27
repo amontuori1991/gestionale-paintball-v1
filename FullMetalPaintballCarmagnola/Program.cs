@@ -33,6 +33,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddTransient<IEmailService, EmailSender>();
+builder.Services.AddTransient<IEmailSender, EmailSender>(); // Fondamentale per Identity
+
 
 // Autorizzazioni basate su Feature
 builder.Services.AddHttpContextAccessor();

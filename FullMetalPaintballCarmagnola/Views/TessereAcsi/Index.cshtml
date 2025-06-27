@@ -1,7 +1,11 @@
 ﻿@model List<Full_Metal_Paintball_Carmagnola.Models.RangeTessereAcsi>
+@using Full_Metal_Paintball_Carmagnola.Models
 
 @{
     ViewData["Title"] = "Gestione Tessere ACSI";
+    var tessereAssegnate = new HashSet<string>(
+        ViewBag.TessereAssegnate ?? new List<string>()
+    );
 }
 
 <div class="content-container">
@@ -45,27 +49,16 @@
             </thead>
             <tbody>
                 @{
-                    var tessereDisponibili = new List<long>();
-                    var tessereAssegnate = new List<long>();
+                    var disponibili = Model.Where(t => !tessereAssegnate.Contains(t.NumeroDa.ToString())).Select(t => t.NumeroDa).ToList();
+                    var assegnate = Model.Where(t => tessereAssegnate.Contains(t.NumeroDa.ToString())).Select(t => t.NumeroDa).ToList();
 
-                    foreach (var range in Model)
-                    {
-                        for (long i = range.NumeroDa; i <= range.NumeroA; i++)
-                        {
-                            if (range.Assegnata)
-                                tessereAssegnate.Add(i);
-                            else
-                                tessereDisponibili.Add(i);
-                        }
-                    }
+                    int maxRows = Math.Max(disponibili.Count, assegnate.Count);
 
-                    int maxRows = Math.Max(tessereDisponibili.Count, tessereAssegnate.Count);
-
-                    for (int row = 0; row < maxRows; row++)
+                    for (int i = 0; i < maxRows; i++)
                     {
                         <tr>
-                            <td>@(row<tessereDisponibili.Count? tessereDisponibili[row].ToString() : "")</td>
-                            <td>@(row<tessereAssegnate.Count? tessereAssegnate[row].ToString() : "")</td>
+                            <td>@(i<disponibili.Count? disponibili[i].ToString() : "")</td>
+                            <td>@(i<assegnate.Count? assegnate[i].ToString() : "")</td>
                         </tr>
                     }
                 }

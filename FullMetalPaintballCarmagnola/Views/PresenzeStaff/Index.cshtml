@@ -58,13 +58,13 @@
                             currentSelection == "NO" ? "bg-danger" : "bg-warning";
 
                             <td class="@bgClass">
-                                <select class="presente-select form-select">
-      
+                                <select class="presente-select form-select" data-data="@giorno.ToString("yyyy-MM-dd")" data-nome="@membro">
                                     <option value="In attesa" selected="@(currentSelection == "In attesa" ? "selected" : null)">In attesa</option>
                                     <option value="SI" selected="@(currentSelection == "SI" ? "selected" : null)">SI</option>
                                     <option value="NO" selected="@(currentSelection == "NO" ? "selected" : null)">NO</option>
                                 </select>
                             </td>
+
                         }
 
                         <td>

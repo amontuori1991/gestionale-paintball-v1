@@ -104,6 +104,95 @@
     </div>
 
 </div>
+<!-- MODALE INSERISCI FORNITORE -->
+<div class="modal fade" id="inserisciFornitoreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-action="InserisciFornitore">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuovo Fornitore</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="NomeFornitore" class="form-label">Nome Fornitore</label>
+                        <input type="text" name="NomeFornitore" id="NomeFornitore" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE CARICA DOCUMENTO -->
+<div class="modal fade" id="uploadPdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-action="UploadPdf" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title">Carica Documento PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="PdfFile" class="form-label">Seleziona PDF</label>
+                        <input type="file" name="PdfFile" id="PdfFile" class="form-control" accept=".pdf" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TipoDocumento" class="form-label">Tipo Documento</label>
+                        <select name="TipoDocumento" id="TipoDocumento" class="form-select" required>
+                            <option value="">Seleziona...</option>
+                            <option value="Ordine">Ordine</option>
+                            <option value="Fattura">Fattura</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="DataDocumento" class="form-label">Data Documento</label>
+                        <input type="date" name="DataDocumento" id="DataDocumento" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="NumeroDocumento" class="form-label">Numero Documento</label>
+                        <input type="text" name="NumeroDocumento" id="NumeroDocumento" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="FornitoreId" class="form-label">Fornitore</label>
+                        <select name="FornitoreId" id="FornitoreId" class="form-select" required>
+                            <option value="">Seleziona...</option>
+                            @foreach (var f in Model.Fornitori)
+                            {
+                                <option value="@f.Id">@f.Nome</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Importo" class="form-label">Importo (€)</label>
+                        <input type="number" step="0.01" name="Importo" id="Importo" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Note" class="form-label">Note</label>
+                        <textarea name="Note" id="Note" class="form-control"></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Carica</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="confermaModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

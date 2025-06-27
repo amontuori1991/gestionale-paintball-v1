@@ -137,7 +137,7 @@
         let tesseraDaDissociare = null;
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 
-        function dissociaTessera(id) {
+                function dissociaTessera(id) {
             tesseraDaDissociare = id;
             confirmModal.show();
         }
@@ -157,15 +157,18 @@
                     body: `tesseratoId=${tesseraDaDissociare}`
                 });
 
-                if (response.ok) {
+                const data = await response.json();
+
+                if (data.success) {
                     confirmModal.hide();
                     location.reload();
                 } else {
-                    alert('Errore nella dissociazione tessera.');
+                    alert(data.message || 'Errore nella dissociazione tessera.');
                 }
             } catch (error) {
                 alert('Errore nella dissociazione tessera.');
             }
         });
+
     </script>
 }

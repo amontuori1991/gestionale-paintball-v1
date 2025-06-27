@@ -182,6 +182,68 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             return View(viewModels);
         }
+        [HttpPost]
+        public async Task<IActionResult> AssegnaTessere()
+        {
+            var intervalli = await _dbContext.RangeTessereAcsi.Where(r => r.NumeroDa <= r.NumeroA).ToListAsync();
+
+            var tutteLeTessere = intervalli
+                .SelectMany(r => Enumerable.Range((int)r.NumeroDa, (int)(r.NumeroA - r.NumeroDa + 1)))
+                .ToList();
+
+            var tessereAssegnate = await _dbContext.Tesseramenti
+                .Where(t => !string.IsNullOrEmpty(t.Tessera))
+                .Select(t => long.Parse(t.Tessera))
+                .ToListAsync();
+
+            var prossimaTessera = tutteLeTessere
+                .Where(numero => !tessereAssegnate.Contains(numero))
+                .OrderBy(numero => numero)
+                .FirstOrDefault();
+
+            if (prossimaTessera == 0)
+            {
+                TempData["Messaggio"] = "Nessuna tessera disponibile.";
+                return RedirectToAction("ListaTesseramenti");
+            }
+
+            var tesserato = await _dbContext.Tesseramenti
+                .Where(t => string.IsNullOrEmpty(t.Tessera))
+                .OrderBy(t => t.DataCreazione)
+                .FirstOrDefaultAsync();
+
+            if (tesserato == null)
+            {
+                TempData["Messaggio"] = "Nessun tesserato in attesa di tessera.";
+                return RedirectToAction("ListaTesseramenti");
+            }
+
+            tesserato.Tessera = prossimaTessera.ToString();
+            await _dbContext.SaveChangesAsync();
+
+            TempData["Messaggio"] = $"Tessera {prossimaTessera} assegnata a {tesserato.Nome} {tesserato.Cognome}.";
+            return RedirectToAction("ListaTesseramenti");
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DissociaTessera(int tesseratoId)
+        {
+            var tesserato = await _dbContext.Tesseramenti.FirstOrDefaultAsync(t => t.Id == tesseratoId);
+
+            if (tesserato == null)
+                return Json(new { success = false, message = "Tesserato non trovato." });
+
+            if (string.IsNullOrEmpty(tesserato.Tessera))
+                return Json(new { success = false, message = "Il tesserato non ha una tessera assegnata." });
+
+            tesserato.Tessera = null;
+            await _dbContext.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> ExportExcel(string searchNome, string searchCognome, DateTime? dataDa, DateTime? dataA)
