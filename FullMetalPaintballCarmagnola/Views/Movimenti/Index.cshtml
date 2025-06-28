@@ -9,6 +9,12 @@
 
 @Html.AntiForgeryToken()
 
+<div class="mb-3">
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#aggiungiMovimentoModal">
+        Aggiungi Movimento Manuale
+    </button>
+</div>
+
 <div class="table-responsive" style="overflow-x: auto;">
     <table id="tabellaMovimenti" class="table table-bordered align-middle">
         <thead>
@@ -53,6 +59,10 @@
                     <td>@item.AvereBis?.ToString("0.00")</td>
                     <td>@item.Note</td>
                     <td>
+                        @if (item.Stato == "Movimento Manuale" && item.ExtraId.HasValue)
+                        {
+                            <button class="btn btn-sm btn-danger" onclick="confermaElimina(@item.ExtraId.Value)">Elimina</button>
+                        }
                         <button class="btn btn-sm btn-primary"
                                 onclick="modificaMovimento(
                                         @item.PartitaId,
@@ -72,60 +82,50 @@
     </table>
 </div>
 
-<div class="mt-4">
-    <h4>Totali Movimenti</h4>
-    <div class="row">
-        <div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
-        <div class="col-md-3"><strong>Dare Totale:</strong> <span id="totalDare">0.00 €</span></div>
-        <div class="col-md-3"><strong>Avere Totale:</strong> <span id="totalAvere">0.00 €</span></div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
-        <div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
-    </div>
-</div>
-
-<div class="modal fade" id="modificaMovimentoModal" tabindex="-1" aria-labelledby="modificaMovimentoModalLabel" aria-hidden="true">
+<!-- MODALE INSERIMENTO MANUALE -->
+<div class="modal fade" id="aggiungiMovimentoModal" tabindex="-1" aria-labelledby="aggiungiMovimentoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modificaMovimentoModalLabel">Modifica Movimento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Nuovo Movimento Manuale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="formModificaMovimento">
+                <form id="formNuovoMovimento">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" id="modalPartitaId" name="PartitaId" />
-
                     <div class="mb-3">
-                        <label for="modalDare" class="form-label">Dare (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalDare" name="Dare">
+                        <label for="data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="data" required />
                     </div>
                     <div class="mb-3">
-                        <label for="modalAvere" class="form-label">Avere (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalAvere" name="Avere">
+                        <label for="ora" class="form-label">Ora</label>
+                        <input type="time" class="form-control" id="ora" required />
                     </div>
                     <div class="mb-3">
-                        <label for="modalMetodoCaparra" class="form-label">Metodo Caparra</label>
-                        <input type="text" class="form-control" id="modalMetodoCaparra" name="MetodoCaparra">
+                        <label for="dare" class="form-label">Dare (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="dare" />
                     </div>
                     <div class="mb-3">
-                        <label for="modalDareBis" class="form-label">Dare Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalDareBis" name="DareBis">
+                        <label for="avere" class="form-label">Avere (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="avere" />
                     </div>
                     <div class="mb-3">
-                        <label for="modalAvereBis" class="form-label">Avere Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalAvereBis" name="AvereBis">
+                        <label for="darebis" class="form-label">Dare Bis (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="darebis" />
                     </div>
                     <div class="mb-3">
-                        <label for="modalNote" class="form-label">Note</label>
-                        <textarea class="form-control" id="modalNote" name="Note" rows="3"></textarea>
+                        <label for="averebis" class="form-label">Avere Bis (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="averebis" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Note</label>
+                        <textarea class="form-control" id="note"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button type="button" class="btn btn-primary" id="salvaModificheBtn">Salva Modifiche</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button class="btn btn-primary" id="salvaNuovoMovimento">Salva</button>
             </div>
         </div>
     </div>
@@ -142,77 +142,35 @@
                 info: true,
                 language: {
                     url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json"
-                },
-                initComplete: function () {
-                    calculateTotals(table);
                 }
             });
-
-            table.on('draw', function () {
-                calculateTotals(table);
-            });
-
-            function calculateTotals(dataTable) {
-                var totalCaparra = 0;
-                var totalDare = 0;
-                var totalAvere = 0;
-                var totalDareBis = 0;
-                var totalAvereBis = 0;
-
-                dataTable.rows({ search: 'applied' }).every(function () {
-                    var data = this.data();
-                    totalCaparra += parseFloat(data[2]) || 0;
-                    totalDare += parseFloat(data[4]) || 0;
-                    totalAvere += parseFloat(data[5]) || 0;
-                    totalDareBis += parseFloat(data[6]) || 0;
-                    totalAvereBis += parseFloat(data[7]) || 0;
-                });
-
-                $('#totalCaparra').text(totalCaparra.toFixed(2) + ' €');
-                $('#totalDare').text(totalDare.toFixed(2) + ' €');
-                $('#totalAvere').text(totalAvere.toFixed(2) + ' €');
-                $('#totalDareBis').text(totalDareBis.toFixed(2) + ' €');
-                $('#totalAvereBis').text(totalAvereBis.toFixed(2) + ' €');
-            }
-
 
             $('#tabellaMovimenti').on('click', '.apply-filter-btn', function () {
                 var columnIndex = $(this).data('columnIndex');
-                var filterInput = $(this).siblings('.column-filter-input');
-                var filterValue = filterInput.val();
-
-                var column = table.column(columnIndex);
-                if (column.search() !== filterValue) {
-                    column.search(filterValue).draw();
-                }
+                var filterValue = $(this).siblings('.column-filter-input').val();
+                table.column(columnIndex).search(filterValue).draw();
             });
 
             $('#tabellaMovimenti').on('keypress', '.column-filter-input', function (e) {
                 if (e.which == 13) {
                     var columnIndex = $(this).data('columnIndex');
                     var filterValue = $(this).val();
-
-                    var column = table.column(columnIndex);
-                    if (column.search() !== filterValue) {
-                        column.search(filterValue).draw();
-                    }
+                    table.column(columnIndex).search(filterValue).draw();
                 }
             });
 
-            $('#salvaModificheBtn').on('click', function () {
-                var movimento = {
-                    PartitaId: $('#modalPartitaId').val(),
-                    Dare: $('#modalDare').val() === "" ? null : parseFloat($('#modalDare').val()),
-                    Avere: $('#modalAvere').val() === "" ? null : parseFloat($('#modalAvere').val()),
-                    DareBis: $('#modalDareBis').val() === "" ? null : parseFloat($('#modalDareBis').val()),
-                    AvereBis: $('#modalAvereBis').val() === "" ? null : parseFloat($('#modalAvereBis').val()),
-                    Note: $('#modalNote').val(),
-                    MetodoCaparra: $('#modalMetodoCaparra').val()
+            $('#salvaNuovoMovimento').on('click', function () {
+                const movimento = {
+                    Data: new Date($('#data').val() + 'T00:00:00Z').toISOString(),
+                    Ora: $('#ora').val(),
+                    Dare: $('#dare').val() === "" ? null : parseFloat($('#dare').val()),
+                    Avere: $('#avere').val() === "" ? null : parseFloat($('#avere').val()),
+                    DareBis: $('#darebis').val() === "" ? null : parseFloat($('#darebis').val()),
+                    AvereBis: $('#averebis').val() === "" ? null : parseFloat($('#averebis').val()),
+                    Note: $('#note').val()
                 };
 
-                console.log("Dati inviati per la modifica:", movimento);
-
-                fetch('/Movimenti/Salva', {
+                fetch('/Movimenti/AggiungiExtra', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -221,47 +179,34 @@
                     body: JSON.stringify(movimento)
                 })
                 .then(response => {
-                    console.log("Risposta del server (raw):", response);
                     if (response.ok) {
-                        $('#modificaMovimentoModal').modal('hide');
+                        $('#aggiungiMovimentoModal').modal('hide');
                         location.reload();
                     } else {
-                        response.text().then(text => {
-                            console.error("Errore risposta server (testo):", text);
-                            try {
-                                const errorData = JSON.parse(text);
-                                let errorMessage = "Errore nel salvataggio: ";
-                                if (errorData.message) {
-                                    errorMessage += errorData.message;
-                                }
-                                if (errorData.errors && Array.isArray(errorData.errors)) {
-                                    errorMessage += "\nDettagli: " + errorData.errors.join(", ");
-                                }
-                                alert(errorMessage);
-                            } catch {
-                                alert("Errore nel salvataggio. Status: " + response.status + ". Controlla la console del browser per maggiori dettagli.");
-                            }
-                        });
+                        alert('Errore durante il salvataggio.');
                     }
                 })
-                .catch(error => {
-                    console.error('Errore durante la richiesta fetch (rete o altro):', error);
-                    alert("Errore di rete durante il salvataggio. Controlla la console per i dettagli.");
-                });
+                .catch(() => alert('Errore durante il salvataggio.'));
             });
         });
 
-        function modificaMovimento(partitaId, dare, avere, dareBis, avereBis, note, metodoCaparra) {
-            $('#modalPartitaId').val(partitaId);
-            $('#modalDare').val(dare !== null && dare !== 'null' ? parseFloat(dare) : '');
-            $('#modalAvere').val(avere !== null && avere !== 'null' ? parseFloat(avere) : '');
-            $('#modalDareBis').val(dareBis !== null && dareBis !== 'null' ? parseFloat(dareBis) : '');
-            $('#modalAvereBis').val(avereBis !== null && avereBis !== 'null' ? parseFloat(avereBis) : '');
-            $('#modalNote').val(note ?? '');
-            $('#modalMetodoCaparra').val(metodoCaparra ?? '');
-
-            var modificaModal = new bootstrap.Modal(document.getElementById('modificaMovimentoModal'));
-            modificaModal.show();
+        function confermaElimina(extraId) {
+            if (confirm("⚠️ Sei sicuro di voler eliminare questo movimento manuale? L'operazione è irreversibile.")) {
+                fetch('/Movimenti/EliminaExtra/' + extraId, {
+                    method: 'DELETE',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert("Errore durante l'eliminazione.");
+                    }
+                })
+                .catch(() => alert("Errore durante l'eliminazione."));
+            }
         }
     </script>
 }

@@ -1,10 +1,11 @@
-﻿using Full_Metal_Paintball_Carmagnola.Models;
+﻿using System; // Per Exception
+using System.Linq; // Per SelectMany in ModelState
+using System.Threading.Tasks; // Assicurati di avere questo using
+using Full_Metal_Paintball_Carmagnola.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks; // Assicurati di avere questo using
-using System; // Per Exception
-using System.Linq; // Per SelectMany in ModelState
+using System.Text.Json;
 
 namespace Full_Metal_Paintball_Carmagnola.Controllers
 {
@@ -18,58 +19,144 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _db = db;
         }
 
-        public async Task<IActionResult> Index(int? annoFiltro, int? meseFiltro)
+        public async Task<IActionResult> Index()
         {
             var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
 
-            var query = _db.Partite
+            // Recupera partite confermate e non cancellate
+            var partite = await _db.Partite
                 .Where(p => p.CaparraConfermata == true && p.Data.Date <= oggi.Date)
                 .OrderByDescending(p => p.Data)
-                .AsQueryable();
+                .ToListAsync();
 
-            if (annoFiltro.HasValue)
-            {
-                query = query.Where(p => p.Data.Year == annoFiltro.Value);
-            }
+            var movimentiPartita = await _db.MovimentiPartita.ToListAsync();
+            var movimentiExtra = await _db.MovimentiExtra.ToListAsync();
 
-            if (meseFiltro.HasValue)
-            {
-                query = query.Where(p => p.Data.Month == meseFiltro.Value);
-            }
-
-            var partite = await query.ToListAsync();
-            var movimenti = await _db.MovimentiPartita.ToListAsync();
-
-            var model = partite.Select(p => new MovimentiViewModel
+            // Mappa le partite
+            var listaPartite = partite.Select(p => new MovimentiViewModel
             {
                 PartitaId = p.Id,
-                Stato = p.IsDeleted ? "Cancellata" : "Confermata",
                 Data = p.Data,
                 Ora = p.OraInizio,
                 Caparra = p.Caparra,
                 MetodoCaparra = p.MetodoPagamentoCaparra,
-                // Recupera i valori dal movimento associato, se esiste
-                Dare = movimenti.FirstOrDefault(m => m.PartitaId == p.Id)?.Dare,
-                Avere = movimenti.FirstOrDefault(m => m.PartitaId == p.Id)?.Avere,
-                DareBis = movimenti.FirstOrDefault(m => m.PartitaId == p.Id)?.DareBis,
-                AvereBis = movimenti.FirstOrDefault(m => m.PartitaId == p.Id)?.AvereBis,
-                Note = movimenti.FirstOrDefault(m => m.PartitaId == p.Id)?.Note
+                Dare = movimentiPartita.FirstOrDefault(m => m.PartitaId == p.Id)?.Dare,
+                Avere = movimentiPartita.FirstOrDefault(m => m.PartitaId == p.Id)?.Avere,
+                DareBis = movimentiPartita.FirstOrDefault(m => m.PartitaId == p.Id)?.DareBis,
+                AvereBis = movimentiPartita.FirstOrDefault(m => m.PartitaId == p.Id)?.AvereBis,
+                Note = movimentiPartita.FirstOrDefault(m => m.PartitaId == p.Id)?.Note,
+                Stato = p.IsDeleted ? "Cancellata" : "Confermata"
             }).ToList();
 
-            ViewBag.AnniDisponibili = _db.Partite
-                .Where(p => p.Data < oggi && p.CaparraConfermata == true)
-                .Select(p => p.Data.Year)
-                .Distinct()
-                .OrderByDescending(y => y)
-                .ToList();
+            // Mappa i movimenti extra
+            var listaExtra = movimentiExtra.Select(m => new MovimentiViewModel
+            {
+                PartitaId = 0,
+                ExtraId = m.Id,
+                Data = m.Data,
+                Ora = m.Ora,
+                Caparra = 0,
+                MetodoCaparra = string.Empty,
+                Dare = m.Dare,
+                Avere = m.Avere,
+                DareBis = m.DareBis,
+                AvereBis = m.AvereBis,
+                Note = m.Note,
+                Stato = "Movimento Manuale"
+            }).ToList();
 
-            ViewBag.AnnoFiltro = annoFiltro;
-            ViewBag.MeseFiltro = meseFiltro;
+
+            // Unisci e ordina
+            var model = listaPartite.Concat(listaExtra)
+                .OrderByDescending(m => m.Data)
+                .ThenByDescending(m => m.Ora)
+                .ToList();
 
             return View(model);
         }
 
-        // --- Modifiche qui ---
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AggiungiExtra([FromBody] JsonElement movimento)
+        {
+            try
+            {
+                Console.WriteLine($"JSON grezzo ricevuto: {movimento}");
+
+                // Parsing dei campi
+                var dataString = movimento.GetProperty("Data").GetString();
+                var oraString = movimento.GetProperty("Ora").GetString();
+                var note = movimento.GetProperty("Note").GetString();
+
+                DateTime data = DateTime.SpecifyKind(DateTime.Parse(dataString), DateTimeKind.Utc);
+                TimeSpan ora = TimeSpan.Parse(oraString);
+
+                decimal? dare = movimento.TryGetProperty("Dare", out JsonElement dareEl) && dareEl.ValueKind != JsonValueKind.Null
+                                ? dareEl.GetDecimal()
+                                : (decimal?)null;
+
+                decimal? avere = movimento.TryGetProperty("Avere", out JsonElement avereEl) && avereEl.ValueKind != JsonValueKind.Null
+                                ? avereEl.GetDecimal()
+                                : (decimal?)null;
+
+                decimal? dareBis = movimento.TryGetProperty("DareBis", out JsonElement dareBisEl) && dareBisEl.ValueKind != JsonValueKind.Null
+                                ? dareBisEl.GetDecimal()
+                                : (decimal?)null;
+
+                decimal? avereBis = movimento.TryGetProperty("AvereBis", out JsonElement avereBisEl) && avereBisEl.ValueKind != JsonValueKind.Null
+                                ? avereBisEl.GetDecimal()
+                                : (decimal?)null;
+
+                var nuovo = new MovimentoExtra
+                {
+                    Data = data,
+                    Ora = ora,
+                    Dare = dare,
+                    Avere = avere,
+                    DareBis = dareBis,
+                    AvereBis = avereBis,
+                    Note = note
+                };
+
+                _db.MovimentiExtra.Add(nuovo);
+                await _db.SaveChangesAsync();
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERRORE durante l'inserimento di MovimentoExtra: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                return StatusCode(500, new { message = "Errore interno durante il salvataggio.", error = ex.Message });
+            }
+        }
+
+
+        [HttpDelete]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> EliminaExtra(int id)
+{
+    try
+    {
+        var movimento = await _db.MovimentiExtra.FindAsync(id);
+        if (movimento == null)
+            return NotFound();
+
+        _db.MovimentiExtra.Remove(movimento);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"ERRORE eliminazione MovimentoExtra: {ex.Message}");
+        return StatusCode(500, new { message = "Errore interno durante l'eliminazione." });
+    }
+}
+
+
+
         [HttpPost]
         [ValidateAntiForgeryToken] // RICHIESTO per il token anti-forgery
         public async Task<IActionResult> Salva([FromBody] MovimentiViewModel movimento) // RICHIESTO per ricevere JSON

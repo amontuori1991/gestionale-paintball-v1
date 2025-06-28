@@ -1,20 +1,21 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Full_Metal_Paintball_Carmagnola.Models
 {
-    public class MovimentiViewModel
+    public class MovimentoExtra
     {
-        public int PartitaId { get; set; }
-        public int? ExtraId { get; set; }  // <--- Questo deve esserci
-        public DateTime Data { get; set; }
+        public int Id { get; set; }
+        public DateTime Data { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+
         public TimeSpan Ora { get; set; }
-        public decimal Caparra { get; set; }
-        public string? MetodoCaparra { get; set; }
+
         public decimal? Dare { get; set; }
         public decimal? Avere { get; set; }
         public decimal? DareBis { get; set; }
         public decimal? AvereBis { get; set; }
+
         public string? Note { get; set; }
-        public string Stato { get; set; } = string.Empty;
     }
+
 }
