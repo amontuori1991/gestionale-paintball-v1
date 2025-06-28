@@ -16,7 +16,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var feature in Model.Permessi.Select(m => m.FeatureName).Distinct())
+                    @{
+                        // Recupero tutte le feature uniche e aggiungo Movimenti e Spese forzatamente
+                        var tutteLeFeature = Model.Permessi.Select(m => m.FeatureName).Distinct().ToList();
+
+                        if (!tutteLeFeature.Contains("Movimenti"))
+                        {
+                            tutteLeFeature.Add("Movimenti");
+                        }
+                        if (!tutteLeFeature.Contains("Spese"))
+                        {
+                            tutteLeFeature.Add("Spese");
+                        }
+                    }
+
+                    @foreach (var feature in tutteLeFeature)
                     {
                         <tr>
                             <td>@feature</td>
@@ -88,6 +102,7 @@
         </table>
     </div>
 </div>
+
 
 <div id="customToastContainer" class="custom-toast-container">
     <div class="custom-toast">

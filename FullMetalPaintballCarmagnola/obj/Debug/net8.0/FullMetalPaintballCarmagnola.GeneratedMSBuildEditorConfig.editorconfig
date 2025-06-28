@@ -228,6 +228,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Movimenti/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTW92aW1lbnRpXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Partite/Caparre.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGFydGl0ZVxDYXBhcnJlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -290,6 +294,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Spese/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3Blc2VcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Statistiche/Index.cshtml]

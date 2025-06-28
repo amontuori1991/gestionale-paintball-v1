@@ -62,6 +62,10 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new FeatureRequirement("ACSI")));
     options.AddPolicy("ToDoList", policy =>
         policy.Requirements.Add(new FeatureRequirement("ToDoList")));
+    options.AddPolicy("Movimenti", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Movimenti")));
+    options.AddPolicy("Spese", policy =>
+    policy.Requirements.Add(new FeatureRequirement("Spese")));
 });
 
 // Cookie di autenticazione

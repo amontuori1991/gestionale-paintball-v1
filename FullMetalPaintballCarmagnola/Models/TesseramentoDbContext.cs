@@ -24,7 +24,9 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         public DbSet<Topic> Topics { get; set; }
         public DbSet<ToDoItem> ToDoItems { get; set; }
+        public DbSet<MovimentoPartita> MovimentiPartita { get; set; }
 
+        public DbSet<Spesa> Spese { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

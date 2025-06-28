@@ -1,0 +1,230 @@
+﻿@model List<Full_Metal_Paintball_Carmagnola.Models.Spesa>
+
+@{
+    ViewData["Title"] = "Gestione Spese";
+}
+
+<h2 class="text-center">Gestione Spese</h2>
+
+@Html.AntiForgeryToken()
+
+<button class="btn btn-success mb-3" onclick="apriModaleInserimento()">Aggiungi Spesa</button>
+
+<div class="table-responsive">
+    <table id="tabellaSpese" class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Ora</th>
+                <th>Descrizione</th>
+                <th>Importo (€)</th>
+                <th>Rimborsato</th>
+                <th>Riferimento</th>
+                <th>Azioni</th>
+            </tr>
+            <tr>
+                @for (int i = 0; i < 6; i++)
+                {
+                    <th><input type="text" placeholder="Filtra" class="form-control column-filter-input" data-column-index="@i" /></th>
+                }
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr data-id="@item.Id">
+                    <td>@item.Data.ToString("dd/MM/yyyy")</td>
+                    <td>@item.Ora.ToString(@"hh\:mm")</td>
+                    <td>@item.Descrizione</td>
+                    <td>@item.Importo.ToString("0.00")</td>
+                    <td>
+                        <input type="checkbox" class="form-check-input rimborsato-checkbox" @(item.Rimborsato ? "checked" : "") />
+                    </td>
+                    <td>@item.Riferimento</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="eliminaSpesa(@item.Id)">Elimina</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4">
+    <h4>Totale Spese:</h4>
+    <div><strong>Importo Totale:</strong> <span id="totaleImporto">0.00 €</span></div>
+</div>
+
+<!-- Modale Inserimento -->
+<div class="modal fade" id="modaleSpesa" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aggiungi Spesa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formSpesa">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-control" id="spesaData" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ora</label>
+                        <input type="time" class="form-control" id="spesaOra" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrizione</label>
+                        <input type="text" class="form-control" id="spesaDescrizione" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Importo (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="spesaImporto" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Riferimento</label>
+                        <select class="form-select" id="spesaRiferimento">
+                            <option value="">-- Nessuno --</option>
+                            <option value="Montuo">Montuo</option>
+                            <option value="Bosax">Bosax</option>
+                            <option value="Flavio">Flavio</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="salvaSpesaBtn">Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var table = $('#tabellaSpese').DataTable({
+                orderCellsTop: true,
+                fixedHeader: true,
+                paging: true,
+                searching: true,
+                info: true,
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json"
+                },
+                initComplete: function () {
+                    aggiornaTotale(table);
+                }
+            });
+
+            table.on('draw', function () {
+                aggiornaTotale(table);
+            });
+
+            $('.column-filter-input').on('keyup change', function () {
+                var colIdx = $(this).data('columnIndex');
+                table.column(colIdx).search(this.value).draw();
+            });
+
+            $('#tabellaSpese').on('change', '.rimborsato-checkbox', function () {
+                var id = $(this).closest('tr').data('id');
+                var nuovoValore = $(this).is(':checked');
+                aggiornaRimborsato(id, nuovoValore);
+            });
+
+                    $('#salvaSpesaBtn').on('click', function () {
+            const dataInserita = $('#spesaData').val(); // Deve essere yyyy-MM-dd
+            const oraInserita = $('#spesaOra').val();   // Deve essere HH:mm
+
+            if (!dataInserita || !oraInserita) {
+                alert("Data e ora sono obbligatorie.");
+                return;
+            }
+
+            const nuovaSpesa = {
+                Data: dataInserita,                          // formato yyyy-MM-dd
+                Ora: oraInserita + ":00",                   // Completiamo come HH:mm:ss
+                Descrizione: $('#spesaDescrizione').val(),
+                Importo: parseFloat($('#spesaImporto').val()),
+                Riferimento: $('#spesaRiferimento').val()
+            };
+
+            fetch('/Spese/Aggiungi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(nuovaSpesa)
+            })
+            .then(r => {
+                if (r.ok) {
+                    location.reload();
+                } else {
+                    r.text().then(t => console.error("Risposta server:", t));
+                    alert('Errore nell\'inserimento. Controlla i dati.');
+                }
+            })
+            .catch(() => alert('Errore nella richiesta.'));
+        });
+
+        });
+
+                function aggiornaRimborsato(id, stato) {
+            const payload = {
+                Id: id,
+                Rimborsato: stato
+            };
+
+            fetch('/Spese/AggiornaRimborsato', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(r => {
+                if (!r.ok) {
+                    r.text().then(t => console.error("Errore risposta server:", t));
+                    alert('Errore nel salvataggio.');
+                }
+            })
+            .catch(() => alert('Errore nella richiesta.'));
+        }
+
+
+        function apriModaleInserimento() {
+            $('#formSpesa')[0].reset();
+            var modal = new bootstrap.Modal(document.getElementById('modaleSpesa'));
+            modal.show();
+        }
+
+        function aggiornaTotale(dataTable) {
+            var totale = 0;
+            dataTable.rows({ search: 'applied' }).every(function () {
+                var data = this.data();
+                totale += parseFloat(data[3]) || 0;
+            });
+            $('#totaleImporto').text(totale.toFixed(2) + ' €');
+        }
+
+        function eliminaSpesa(id) {
+            if (confirm("Sei sicuro di voler eliminare questa spesa?")) {
+                fetch('/Spese/Elimina/' + id, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(r => {
+                    if (r.ok) location.reload();
+                    else alert('Errore nell\'eliminazione.');
+                })
+                .catch(() => alert('Errore nella richiesta.'));
+            }
+        }
+    </script>
+}

@@ -15,7 +15,9 @@
             "ACSI",
             "Documenti",
             "Documenti ASD",
-            "ToDoList"
+            "ToDoList",
+            "Movimenti",
+            "Spese"
         };
     }
 }
