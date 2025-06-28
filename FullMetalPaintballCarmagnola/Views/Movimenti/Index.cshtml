@@ -41,7 +41,7 @@
                         </div>
                     </th>
                 }
-                <th></th>
+                <th></th> @* Colonna per le azioni, senza filtro *@
             </tr>
         </thead>
         <tbody>
@@ -63,19 +63,7 @@
                         {
                             <button class="btn btn-sm btn-danger" onclick="confermaElimina(@item.ExtraId.Value)">Elimina</button>
                         }
-                        <button class="btn btn-sm btn-primary"
-                                onclick="modificaMovimento(
-                                                @item.PartitaId,
-                                                @(item.ExtraId ?? 0),
-                                                @(item.Dare.HasValue? item.Dare.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                                @(item.Avere.HasValue? item.Avere.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                                @(item.DareBis.HasValue? item.DareBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                                @(item.AvereBis.HasValue? item.AvereBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                                '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))',
-                                                '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))'
-                                            )">
-                            Modifica
-                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="apriModale(@item.PartitaId, @item.ExtraId.GetValueOrDefault(0), @(item.Dare ?? 0), @(item.Avere ?? 0), @(item.DareBis ?? 0), @(item.AvereBis ?? 0), '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))', '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))')">Modifica</button>
                     </td>
                 </tr>
             }
@@ -83,8 +71,20 @@
     </table>
 </div>
 
-<!-- MODALE MODIFICA MOVIMENTO -->
-<div class="modal fade" id="modificaMovimentoModal" tabindex="-1">
+<div class="mt-4">
+    <h4>Totali Movimenti</h4>
+    <div class="row">
+        <div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
+        <div class="col-md-3"><strong>Dare Totale:</strong> <span id="totalDare">0.00 €</span></div>
+        <div class="col-md-3"><strong>Avere Totale:</strong> <span id="totalAvere">0.00 €</span></div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
+        <div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
+    </div>
+</div>
+
+<div class="modal fade" id="modificaMovimentoModal" tabindex="-1" aria-labelledby="modificaMovimentoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -94,8 +94,8 @@
             <div class="modal-body">
                 <form id="formModificaMovimento">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" id="modalPartitaId" name="PartitaId" />
-                    <input type="hidden" id="modalExtraId" name="ExtraId" />
+                    <input type="hidden" id="modalPartitaId" />
+                    <input type="hidden" id="modalExtraId" />
 
                     <div class="mb-3">
                         <label for="modalDare" class="form-label">Dare (€)</label>
@@ -106,16 +106,16 @@
                         <input type="number" step="0.01" class="form-control" id="modalAvere" />
                     </div>
                     <div class="mb-3">
-                        <label for="modalMetodoCaparra" class="form-label">Metodo Caparra</label>
-                        <input type="text" class="form-control" id="modalMetodoCaparra" />
-                    </div>
-                    <div class="mb-3">
                         <label for="modalDareBis" class="form-label">Dare Bis (€)</label>
                         <input type="number" step="0.01" class="form-control" id="modalDareBis" />
                     </div>
                     <div class="mb-3">
                         <label for="modalAvereBis" class="form-label">Avere Bis (€)</label>
                         <input type="number" step="0.01" class="form-control" id="modalAvereBis" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalMetodoCaparra" class="form-label">Metodo Caparra</label>
+                        <input type="text" class="form-control" id="modalMetodoCaparra" />
                     </div>
                     <div class="mb-3">
                         <label for="modalNote" class="form-label">Note</label>
@@ -125,7 +125,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button class="btn btn-primary" id="salvaModificheBtn">Salva Modifiche</button>
+                <button class="btn btn-primary" id="salvaModificheBtn">Salva</button>
             </div>
         </div>
     </div>
@@ -133,6 +133,60 @@
 
 @section Scripts {
     <script>
+        // Definisci la funzione calculateTotals qui, prima di document.ready
+        function calculateTotals(dataTable) {
+            var totalCaparra = 0, totalDare = 0, totalAvere = 0, totalDareBis = 0, totalAvereBis = 0;
+
+            // Itera solo sulle righe attualmente visualizzate e filtrate
+            dataTable.rows({ search: 'applied' }).every(function () {
+                var cells = $(this.node()).find('td'); // Ottiene le celle della riga corrente
+
+                // Estrai il testo, pulisci i caratteri non numerici e converti in float
+                // Il .replace(',', '.') è cruciale per la formattazione italiana
+                var caparraText = cells.eq(3).text().trim(); // Caparra (indice 3)
+                var caparraValue = parseFloat(caparraText.replace('€', '').replace(',', '.')) || 0;
+                totalCaparra += caparraValue;
+                console.log('Caparra Raw:', caparraText, 'Parsed Caparra:', caparraValue);
+
+                var dareText = cells.eq(5).text().trim(); // Dare (€) (indice 5)
+                var dareValue = parseFloat(dareText.replace('€', '').replace(',', '.')) || 0;
+                totalDare += dareValue;
+                console.log('Dare Raw:', dareText, 'Parsed Dare:', dareValue);
+
+                var avereText = cells.eq(6).text().trim(); // Avere (€) (indice 6)
+                var avereValue = parseFloat(avereText.replace('€', '').replace(',', '.')) || 0;
+                totalAvere += avereValue;
+                console.log('Avere Raw:', avereText, 'Parsed Avere:', avereValue);
+
+                var dareBisText = cells.eq(7).text().trim(); // Dare Bis (€) (indice 7)
+                var dareBisValue = parseFloat(dareBisText.replace('€', '').replace(',', '.')) || 0;
+                totalDareBis += dareBisValue;
+                console.log('DareBis Raw:', dareBisText, 'Parsed DareBis:', dareBisValue);
+
+                var avereBisText = cells.eq(8).text().trim(); // Avere Bis (€) (indice 8)
+                var avereBisValue = parseFloat(avereBisText.replace('€', '').replace(',', '.')) || 0;
+                totalAvereBis += avereBisValue;
+                console.log('AvereBis Raw:', avereBisText, 'Parsed AvereBis:', avereBisValue);
+            });
+
+            // Stampa i totali finali nella console
+            console.log('--- Totali Finali ---');
+            console.log('FINAL Total Caparra:', totalCaparra.toFixed(2));
+            console.log('FINAL Total Dare:', totalDare.toFixed(2));
+            console.log('FINAL Total Avere:', totalAvere.toFixed(2));
+            console.log('FINAL Total Dare Bis:', totalDareBis.toFixed(2));
+            console.log('FINAL Total Avere Bis:', totalAvereBis.toFixed(2));
+            console.log('---------------------');
+
+
+            // Aggiorna gli elementi HTML con i totali
+            $('#totalCaparra').text(totalCaparra.toFixed(2) + ' €');
+            $('#totalDare').text(totalDare.toFixed(2) + ' €');
+            $('#totalAvere').text(totalAvere.toFixed(2) + ' €');
+            $('#totalDareBis').text(totalDareBis.toFixed(2) + ' €');
+            $('#totalAvereBis').text(totalAvereBis.toFixed(2) + ' €');
+        }
+
         $(document).ready(function () {
             var table = $('#tabellaMovimenti').DataTable({
                 orderCellsTop: true,
@@ -140,77 +194,84 @@
                 paging: true,
                 searching: true,
                 info: true,
-                language: {
-                    url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json"
-                }
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json" },
+                // Chiama calculateTotals al completamento dell'inizializzazione della tabella
+                initComplete: function () { calculateTotals(this); }
             });
 
+            // Chiama calculateTotals ogni volta che la tabella viene ridisegnata (es. dopo filtro/ordinamento)
+            table.on('draw', function () { calculateTotals(table); });
+
+            // Logica per i filtri delle colonne
             $('#tabellaMovimenti').on('click', '.apply-filter-btn', function () {
-                var idx = $(this).data('columnIndex');
-                table.column(idx).search($(this).siblings('.column-filter-input').val()).draw();
+                var columnIndex = $(this).data('columnIndex');
+                var filterValue = $(this).siblings('.column-filter-input').val();
+                table.column(columnIndex).search(filterValue).draw();
             });
 
             $('#tabellaMovimenti').on('keypress', '.column-filter-input', function (e) {
-                if (e.which == 13) {
-                    var idx = $(this).data('columnIndex');
-                    table.column(idx).search($(this).val()).draw();
+                if (e.which == 13) { // Se l'utente preme Enter
+                    var columnIndex = $(this).data('columnIndex');
+                    var filterValue = $(this).val();
+                    table.column(columnIndex).search(filterValue).draw();
                 }
             });
 
+            // Gestione del salvataggio modifiche dal modale
             $('#salvaModificheBtn').on('click', function () {
                 const movimento = {
                     PartitaId: $('#modalPartitaId').val(),
                     ExtraId: $('#modalExtraId').val(),
-                    Dare: $('#modalDare').val() || null,
-                    Avere: $('#modalAvere').val() || null,
-                    DareBis: $('#modalDareBis').val() || null,
-                    AvereBis: $('#modalAvereBis').val() || null,
-                    Note: $('#modalNote').val(),
-                    MetodoCaparra: $('#modalMetodoCaparra').val()
+                    Dare: $('#modalDare').val() === "" ? null : parseFloat($('#modalDare').val()),
+                    Avere: $('#modalAvere').val() === "" ? null : parseFloat($('#modalAvere').val()),
+                    DareBis: $('#modalDareBis').val() === "" ? null : parseFloat($('#modalDareBis').val()),
+                    AvereBis: $('#modalAvereBis').val() === "" ? null : parseFloat($('#modalAvereBis').val()),
+                    MetodoCaparra: $('#modalMetodoCaparra').val(),
+                    Note: $('#modalNote').val()
                 };
 
-                if (movimento.PartitaId > 0) {
-                    fetch('/Movimenti/Salva', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                        },
-                        body: JSON.stringify(movimento)
-                    })
-                    .then(r => r.ok ? location.reload() : alert('Errore nel salvataggio.'))
-                    .catch(() => alert('Errore di rete.'));
-                }
-                else {
-                    alert("Modifica consentita solo per le partite effettive.");
-                }
+                fetch('/Movimenti/Salva', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                    body: JSON.stringify(movimento)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        $('#modificaMovimentoModal').modal('hide');
+                        location.reload(); // Ricarica la pagina per aggiornare i dati e i totali
+                    } else {
+                        alert("Errore durante il salvataggio.");
+                    }
+                })
+                .catch(() => alert("Errore durante il salvataggio."));
             });
         });
 
-        function modificaMovimento(partitaId, extraId, dare, avere, dareBis, avereBis, note, metodoCaparra) {
+        // Funzione per aprire il modale di modifica
+        function apriModale(partitaId, extraId, dare, avere, dareBis, avereBis, note, metodoCaparra) {
             $('#modalPartitaId').val(partitaId);
             $('#modalExtraId').val(extraId);
-            $('#modalDare').val(dare !== 'null' ? dare : '');
-            $('#modalAvere').val(avere !== 'null' ? avere : '');
-            $('#modalDareBis').val(dareBis !== 'null' ? dareBis : '');
-            $('#modalAvereBis').val(avereBis !== 'null' ? avereBis : '');
-            $('#modalNote').val(note);
+            $('#modalDare').val(dare);
+            $('#modalAvere').val(avere);
+            $('#modalDareBis').val(dareBis);
+            $('#modalAvereBis').val(avereBis);
             $('#modalMetodoCaparra').val(metodoCaparra);
-
-            var modificaModal = new bootstrap.Modal(document.getElementById('modificaMovimentoModal'));
-            modificaModal.show();
+            $('#modalNote').val(note);
+            $('#modificaMovimentoModal').modal('show');
         }
 
+        // Funzione per la conferma ed eliminazione di un movimento manuale
         function confermaElimina(extraId) {
-            if (confirm("⚠️ Sei sicuro di voler eliminare questo movimento manuale?")) {
+            if (confirm("⚠️ Sei sicuro di voler eliminare questo movimento manuale? L'operazione è irreversibile.")) {
                 fetch('/Movimenti/EliminaExtra/' + extraId, {
                     method: 'DELETE',
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    }
+                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
                 })
-                .then(r => r.ok ? location.reload() : alert('Errore durante l\'eliminazione.'))
-                .catch(() => alert('Errore durante l\'eliminazione.'));
+                .then(response => {
+                    if (response.ok) location.reload(); // Ricarica la pagina dopo l'eliminazione
+                    else alert("Errore durante l'eliminazione.");
+                })
+                .catch(() => alert("Errore durante l'eliminazione."));
             }
         }
     </script>
