@@ -344,6 +344,7 @@ Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 🕒 Orario: {partita.OraInizio}<br>
 ⏳ Durata: {partita.Durata} ore<br> 
 👤 Referente: {partita.Riferimento}<br>
+👥 Nr. Partecipanti: {partita.NumeroPartecipanti}<br>
 💶 Caparra: {partita.Caparra:0.00}€<br>
 💰 {prezzo} a testa<br>
 🎯 Colpi a disposizione: {colpi}<br>
