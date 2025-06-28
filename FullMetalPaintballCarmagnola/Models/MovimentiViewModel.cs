@@ -5,7 +5,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
     public class MovimentiViewModel
     {
         public int PartitaId { get; set; }
-        public int? ExtraId { get; set; }  // <--- Questo deve esserci
+        public int? ExtraId { get; set; }
         public DateTime Data { get; set; }
         public TimeSpan Ora { get; set; }
         public decimal Caparra { get; set; }

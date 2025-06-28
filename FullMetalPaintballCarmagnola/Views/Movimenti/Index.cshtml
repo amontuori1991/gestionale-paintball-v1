@@ -65,14 +65,15 @@
                         }
                         <button class="btn btn-sm btn-primary"
                                 onclick="modificaMovimento(
-                                        @item.PartitaId,
-                                        @(item.Dare.HasValue? item.Dare.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                        @(item.Avere.HasValue? item.Avere.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                        @(item.DareBis.HasValue? item.DareBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                        @(item.AvereBis.HasValue? item.AvereBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
-                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))',
-                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))'
-                                    )">
+                                                @item.PartitaId,
+                                                @(item.ExtraId ?? 0),
+                                                @(item.Dare.HasValue? item.Dare.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
+                                                @(item.Avere.HasValue? item.Avere.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
+                                                @(item.DareBis.HasValue? item.DareBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
+                                                @(item.AvereBis.HasValue? item.AvereBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"),
+                                                '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))',
+                                                '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))'
+                                            )">
                             Modifica
                         </button>
                     </td>
@@ -82,50 +83,49 @@
     </table>
 </div>
 
-<!-- MODALE INSERIMENTO MANUALE -->
-<div class="modal fade" id="aggiungiMovimentoModal" tabindex="-1" aria-labelledby="aggiungiMovimentoModalLabel" aria-hidden="true">
+<!-- MODALE MODIFICA MOVIMENTO -->
+<div class="modal fade" id="modificaMovimentoModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nuovo Movimento Manuale</h5>
+                <h5 class="modal-title">Modifica Movimento</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="formNuovoMovimento">
+                <form id="formModificaMovimento">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" id="modalPartitaId" name="PartitaId" />
+                    <input type="hidden" id="modalExtraId" name="ExtraId" />
+
                     <div class="mb-3">
-                        <label for="data" class="form-label">Data</label>
-                        <input type="date" class="form-control" id="data" required />
+                        <label for="modalDare" class="form-label">Dare (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="modalDare" />
                     </div>
                     <div class="mb-3">
-                        <label for="ora" class="form-label">Ora</label>
-                        <input type="time" class="form-control" id="ora" required />
+                        <label for="modalAvere" class="form-label">Avere (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="modalAvere" />
                     </div>
                     <div class="mb-3">
-                        <label for="dare" class="form-label">Dare (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="dare" />
+                        <label for="modalMetodoCaparra" class="form-label">Metodo Caparra</label>
+                        <input type="text" class="form-control" id="modalMetodoCaparra" />
                     </div>
                     <div class="mb-3">
-                        <label for="avere" class="form-label">Avere (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="avere" />
+                        <label for="modalDareBis" class="form-label">Dare Bis (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="modalDareBis" />
                     </div>
                     <div class="mb-3">
-                        <label for="darebis" class="form-label">Dare Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="darebis" />
+                        <label for="modalAvereBis" class="form-label">Avere Bis (€)</label>
+                        <input type="number" step="0.01" class="form-control" id="modalAvereBis" />
                     </div>
                     <div class="mb-3">
-                        <label for="averebis" class="form-label">Avere Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="averebis" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="note" class="form-label">Note</label>
-                        <textarea class="form-control" id="note"></textarea>
+                        <label for="modalNote" class="form-label">Note</label>
+                        <textarea class="form-control" id="modalNote"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button class="btn btn-primary" id="salvaNuovoMovimento">Salva</button>
+                <button class="btn btn-primary" id="salvaModificheBtn">Salva Modifiche</button>
             </div>
         </div>
     </div>
@@ -146,66 +146,71 @@
             });
 
             $('#tabellaMovimenti').on('click', '.apply-filter-btn', function () {
-                var columnIndex = $(this).data('columnIndex');
-                var filterValue = $(this).siblings('.column-filter-input').val();
-                table.column(columnIndex).search(filterValue).draw();
+                var idx = $(this).data('columnIndex');
+                table.column(idx).search($(this).siblings('.column-filter-input').val()).draw();
             });
 
             $('#tabellaMovimenti').on('keypress', '.column-filter-input', function (e) {
                 if (e.which == 13) {
-                    var columnIndex = $(this).data('columnIndex');
-                    var filterValue = $(this).val();
-                    table.column(columnIndex).search(filterValue).draw();
+                    var idx = $(this).data('columnIndex');
+                    table.column(idx).search($(this).val()).draw();
                 }
             });
 
-            $('#salvaNuovoMovimento').on('click', function () {
+            $('#salvaModificheBtn').on('click', function () {
                 const movimento = {
-                    Data: new Date($('#data').val() + 'T00:00:00Z').toISOString(),
-                    Ora: $('#ora').val(),
-                    Dare: $('#dare').val() === "" ? null : parseFloat($('#dare').val()),
-                    Avere: $('#avere').val() === "" ? null : parseFloat($('#avere').val()),
-                    DareBis: $('#darebis').val() === "" ? null : parseFloat($('#darebis').val()),
-                    AvereBis: $('#averebis').val() === "" ? null : parseFloat($('#averebis').val()),
-                    Note: $('#note').val()
+                    PartitaId: $('#modalPartitaId').val(),
+                    ExtraId: $('#modalExtraId').val(),
+                    Dare: $('#modalDare').val() || null,
+                    Avere: $('#modalAvere').val() || null,
+                    DareBis: $('#modalDareBis').val() || null,
+                    AvereBis: $('#modalAvereBis').val() || null,
+                    Note: $('#modalNote').val(),
+                    MetodoCaparra: $('#modalMetodoCaparra').val()
                 };
 
-                fetch('/Movimenti/AggiungiExtra', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    body: JSON.stringify(movimento)
-                })
-                .then(response => {
-                    if (response.ok) {
-                        $('#aggiungiMovimentoModal').modal('hide');
-                        location.reload();
-                    } else {
-                        alert('Errore durante il salvataggio.');
-                    }
-                })
-                .catch(() => alert('Errore durante il salvataggio.'));
+                if (movimento.PartitaId > 0) {
+                    fetch('/Movimenti/Salva', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        body: JSON.stringify(movimento)
+                    })
+                    .then(r => r.ok ? location.reload() : alert('Errore nel salvataggio.'))
+                    .catch(() => alert('Errore di rete.'));
+                }
+                else {
+                    alert("Modifica consentita solo per le partite effettive.");
+                }
             });
         });
 
+        function modificaMovimento(partitaId, extraId, dare, avere, dareBis, avereBis, note, metodoCaparra) {
+            $('#modalPartitaId').val(partitaId);
+            $('#modalExtraId').val(extraId);
+            $('#modalDare').val(dare !== 'null' ? dare : '');
+            $('#modalAvere').val(avere !== 'null' ? avere : '');
+            $('#modalDareBis').val(dareBis !== 'null' ? dareBis : '');
+            $('#modalAvereBis').val(avereBis !== 'null' ? avereBis : '');
+            $('#modalNote').val(note);
+            $('#modalMetodoCaparra').val(metodoCaparra);
+
+            var modificaModal = new bootstrap.Modal(document.getElementById('modificaMovimentoModal'));
+            modificaModal.show();
+        }
+
         function confermaElimina(extraId) {
-            if (confirm("⚠️ Sei sicuro di voler eliminare questo movimento manuale? L'operazione è irreversibile.")) {
+            if (confirm("⚠️ Sei sicuro di voler eliminare questo movimento manuale?")) {
                 fetch('/Movimenti/EliminaExtra/' + extraId, {
                     method: 'DELETE',
                     headers: {
                         'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                     }
                 })
-                .then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert("Errore durante l'eliminazione.");
-                    }
-                })
-                .catch(() => alert("Errore durante l'eliminazione."));
+                .then(r => r.ok ? location.reload() : alert('Errore durante l\'eliminazione.'))
+                .catch(() => alert('Errore durante l\'eliminazione.'));
             }
         }
     </script>
