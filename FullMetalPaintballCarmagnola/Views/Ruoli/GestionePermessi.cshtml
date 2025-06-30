@@ -1,11 +1,13 @@
 ﻿@model Full_Metal_Paintball_Carmagnola.Models.GestionePermessiViewModel
 
+<link href="~/css/permessi-responsive.css" rel="stylesheet" />
+
 <div class="content-container">
     <h2 class="text-center">Gestione Permessi</h2>
 
     <form asp-action="SalvaPermessi" method="post">
         <div class="table-responsive">
-            <table class="table table-bordered">
+            <table class="responsive-table">
                 <thead>
                     <tr>
                         <th>Funzionalità</th>
@@ -17,37 +19,28 @@
                 </thead>
                 <tbody>
                     @{
-                        // Recupero tutte le feature uniche e aggiungo Movimenti e Spese forzatamente
                         var tutteLeFeature = Model.Permessi.Select(m => m.FeatureName).Distinct().ToList();
-
-                        if (!tutteLeFeature.Contains("Movimenti"))
-                        {
-                            tutteLeFeature.Add("Movimenti");
-                        }
-                        if (!tutteLeFeature.Contains("Spese"))
-                        {
-                            tutteLeFeature.Add("Spese");
-                        }
+                        if (!tutteLeFeature.Contains("Movimenti")) tutteLeFeature.Add("Movimenti");
+                        if (!tutteLeFeature.Contains("Spese")) tutteLeFeature.Add("Spese");
                     }
-
                     @foreach (var feature in tutteLeFeature)
                     {
                         <tr>
-                            <td>@feature</td>
+                            <td data-label="Funzionalità">@feature</td>
                             @{
                                 var consentiAdmin = Model.Permessi.FirstOrDefault(x => x.RoleName == "Admin" && x.FeatureName == feature);
                                 var consentiStaff = Model.Permessi.FirstOrDefault(x => x.RoleName == "Staff" && x.FeatureName == feature);
                             }
-                            <td>
+                            <td data-label="Consenti Admin">
                                 <input type="radio" name="permessi[@feature]_Admin" value="consenti" @(consentiAdmin?.IsAllowed == true ? "checked" : "") />
                             </td>
-                            <td>
+                            <td data-label="Nega Admin">
                                 <input type="radio" name="permessi[@feature]_Admin" value="nega" @(consentiAdmin?.IsAllowed == false ? "checked" : "") />
                             </td>
-                            <td>
+                            <td data-label="Consenti Staff">
                                 <input type="radio" name="permessi[@feature]_Staff" value="consenti" @(consentiStaff?.IsAllowed == true ? "checked" : "") />
                             </td>
-                            <td>
+                            <td data-label="Nega Staff">
                                 <input type="radio" name="permessi[@feature]_Staff" value="nega" @(consentiStaff?.IsAllowed == false ? "checked" : "") />
                             </td>
                         </tr>
@@ -63,7 +56,7 @@
     <h2 class="text-center">Gestione Ruoli Utenti</h2>
 
     <div class="table-responsive">
-        <table class="table table-bordered">
+        <table class="responsive-table">
             <thead>
                 <tr>
                     <th>Nome Completo</th>
@@ -77,16 +70,16 @@
                 @foreach (var utente in Model.Utenti)
                 {
                     <tr>
-                        <td>@utente.NomeCompleto</td>
-                        <td>@utente.Email</td>
-                        <td>@utente.Ruolo</td>
-                        <td>
+                        <td data-label="Nome Completo">@utente.NomeCompleto</td>
+                        <td data-label="Email">@utente.Email</td>
+                        <td data-label="Ruolo Attuale">@utente.Ruolo</td>
+                        <td data-label="Approvato">
                             <form asp-action="CambiaApprovazione" asp-controller="Ruoli" method="post" class="d-inline">
                                 <input type="hidden" name="userId" value="@utente.Id" />
                                 <input type="checkbox" name="isApproved" onchange="this.form.submit()" @(utente.IsApproved ? "checked" : "") />
                             </form>
                         </td>
-                        <td>
+                        <td data-label="Assegna Ruolo">
                             <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="d-flex align-items-center justify-content-start">
                                 <input type="hidden" name="userId" value="@utente.Id" />
                                 <select name="ruolo" class="form-select w-auto me-2">
@@ -102,7 +95,6 @@
         </table>
     </div>
 </div>
-
 
 <div id="customToastContainer" class="custom-toast-container">
     <div class="custom-toast">

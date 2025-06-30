@@ -3,6 +3,7 @@
     ViewData["Title"] = "Documenti";
 }
 
+<link href="~/css/documenti-responsive.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -81,19 +82,19 @@
                 @foreach (var doc in Model.Documenti)
                 {
                     <tr>
-                        <td>
+                        <td data-label="PDF">
                             <a href="@Url.Action("DownloadPdf", "Documenti", new { id = doc.Id })" target="_blank">
                                 <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: red;"></i>
                             </a>
                         </td>
-                        <td>@doc.DataCaricamento.ToString("dd/MM/yyyy")</td>
-                        <td>@doc.TipoDocumento</td>
-                        <td>@doc.DataDocumento.ToString("dd/MM/yyyy")</td>
-                        <td>@doc.NumeroDocumento</td>
-                        <td>@doc.FornitoreNome</td>
-                        <td>@doc.Importo.ToString("F2")</td>
-                        <td>@doc.Note</td>
-                        <td>
+                        <td data-label="Data Caricamento">@doc.DataCaricamento.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Tipo Documento">@doc.TipoDocumento</td>
+                        <td data-label="Data Documento">@doc.DataDocumento.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Numero Documento">@doc.NumeroDocumento</td>
+                        <td data-label="Fornitore">@doc.FornitoreNome</td>
+                        <td data-label="Importo">@doc.Importo.ToString("F2")</td>
+                        <td data-label="Note">@doc.Note</td>
+                        <td data-label="Azioni">
                             <a class="btn btn-sm btn-warning" href="@Url.Action("ModificaDocumento", new { id = doc.Id })">Modifica</a>
                             <button type="button" class="btn btn-sm btn-danger" onclick="confermaElimina('@doc.Id', '@doc.NumeroDocumento')">Elimina</button>
                         </td>
@@ -102,9 +103,9 @@
             </tbody>
         </table>
     </div>
-
 </div>
-<!-- MODALE INSERISCI FORNITORE -->
+
+
 <div class="modal fade" id="inserisciFornitoreModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

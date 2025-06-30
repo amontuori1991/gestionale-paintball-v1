@@ -1,0 +1,104 @@
+﻿.responsive-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+    .responsive-table th, .responsive-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        word-break: break-word;
+    }
+
+    .responsive-table th {
+        background-color: #f2f2f2;
+        color: #333;
+        font-weight: bold;
+    }
+
+/* Responsive design per schermi piccoli */
+@media (max-width: 768px) {
+    .responsive-table thead {
+        display: none;
+    }
+
+    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+        display: block;
+        width: 100%;
+    }
+
+        .responsive-table tr {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        .responsive-table td {
+            text-align: left;
+            padding: 10px 8px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                display: block;
+                margin-bottom: 5px;
+                color: #333;
+            }
+}
+
+/* Migliorie generali */
+.responsive-table .btn {
+    margin: 2px 0;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+}
+
+.responsive-table .icon-link {
+    font-size: 1.2rem;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.responsive-table .ref-icon {
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+/* Miglioramento visualizzazione su desktop */
+@media (min-width: 769px) {
+    .responsive-table {
+        table-layout: auto;
+    }
+
+        .responsive-table td, .responsive-table th {
+            white-space: nowrap;
+        }
+}
+
+/* Stile mobile specifico per Gestione Partite */
+@media (max-width: 768px) {
+    .responsive-table td[colspan="14"] {
+        display: block;
+        border: 1px solid #ddd;
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        grid-column: 1 / -1;
+    }
+
+    .responsive-table select {
+        width: 100%;
+        margin: 5px 0;
+    }
+}

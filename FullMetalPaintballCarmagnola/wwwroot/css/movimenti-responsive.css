@@ -1,0 +1,149 @@
+﻿/* MOVIMENTI RESPONSIVE CSS DEFINITIVO */
+
+.responsive-mov-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+    .responsive-mov-table th, .responsive-mov-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        word-break: break-word;
+    }
+
+    .responsive-mov-table th {
+        background-color: #f2f2f2;
+        color: #333;
+        font-weight: bold;
+    }
+
+/* MOBILE & TABLET: Card Style with Grid/Flex inside */
+/* This media query covers screens up to 1100px */
+@media (max-width: 1100px) {
+    .responsive-mov-table thead {
+        display: none; /* Hide table headers on small screens */
+    }
+
+    /* Important: Override DataTables' default table display */
+    .responsive-mov-table {
+        border-collapse: separate; /* Allows margin/padding on tr/td if needed */
+        border-spacing: 0 10px; /* RIDOTTO: Spazio tra le "card" (righe) da 15px a 10px */
+        width: 100%; /* Ensure it takes full width */
+        display: block; /* Treat the entire table as a block for wrapping */
+    }
+
+        .responsive-mov-table tbody {
+            display: block; /* Treat tbody as a block */
+            width: 100%;
+        }
+
+        .responsive-mov-table tr {
+            display: grid; /* Make each row a grid container */
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Arrange cells in multiple columns */
+            gap: 8px; /* RIDOTTO: Spazio tra i campi all'interno della card (TDs) da 10px a 8px */
+
+            margin-bottom: 10px; /* RIDOTTO: Spazio tra le righe (se border-spacing non bastasse, utile come fallback) */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px; /* RIDOTTO: Padding per l'intera card da 15px a 10px */
+            background-color: #fff;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+    /* Specific adjustments for smaller mobile screens (single column per card) */
+    @media (max-width: 768px) {
+        .responsive-mov-table tr {
+            grid-template-columns: 1fr; /* Single column layout for very small screens */
+            gap: 0; /* Remove gap if only one column */
+        }
+
+        .responsive-mov-table td {
+            border-bottom: 1px solid #eee; /* Keep separator for readability */
+            padding-bottom: 8px; /* RIDOTTO: Padding inferiore del TD */
+            margin-bottom: 8px; /* RIDOTTO: Margine inferiore del TD */
+        }
+
+            .responsive-mov-table td:last-child {
+                border-bottom: none; /* No border for the last item in the card */
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+    }
+
+    .responsive-mov-table td {
+        text-align: left;
+        padding: 0; /* Reset padding here as it's controlled by the parent 'tr' padding and td content */
+        border: none; /* No individual cell borders */
+        position: relative;
+    }
+
+        .responsive-mov-table td::before {
+            content: attr(data-label);
+            font-weight: bold;
+            display: block;
+            margin-bottom: 3px; /* RIDOTTO: Spazio tra etichetta e valore da 5px a 3px */
+            color: #333;
+        }
+}
+
+/* DESKTOP: Classic Table */
+@media (min-width: 1101px) {
+    .responsive-movimenti-wrapper {
+        display: block;
+    }
+
+    .responsive-mov-table {
+        display: table; /* Revert to standard table display */
+        width: 100%;
+        table-layout: auto;
+        border-collapse: collapse; /* Restore collapse for desktop */
+        border-spacing: 0; /* Reset spacing */
+    }
+
+        .responsive-mov-table thead {
+            display: table-header-group;
+        }
+
+        .responsive-mov-table tbody {
+            display: table-row-group;
+        }
+
+        .responsive-mov-table tr {
+            display: table-row; /* Revert to standard table row display */
+            margin-bottom: 0; /* Reset margin */
+            padding: 0; /* Reset padding */
+            box-shadow: none; /* Remove shadow */
+            border: none; /* Remove border */
+        }
+
+        .responsive-mov-table td {
+            display: table-cell; /* Revert to standard table cell display */
+            border: 1px solid #ddd; /* Restore cell borders */
+            padding: 8px; /* Restore cell padding */
+        }
+
+            .responsive-mov-table td::before {
+                display: none; /* Hide data-label on desktop */
+            }
+}
+
+/* General Improvements */
+.responsive-mov-table .btn {
+    margin: 2px 0;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+}
+
+.responsive-mov-table td {
+    vertical-align: middle;
+}
+
+/* Totals at the bottom for mobile */
+@media (max-width: 768px) {
+    .row.mt-2 .col-md-3 {
+        margin-bottom: 10px;
+        text-align: center;
+    }
+}

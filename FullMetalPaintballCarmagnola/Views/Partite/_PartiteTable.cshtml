@@ -1,11 +1,13 @@
 ﻿@model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.Partita>
+
 @{
     var staffList = new List<string> { "Simone", "Enrico", "Federico", "Davide", "Andrea" };
     var titolo = ViewData["Titolo"]?.ToString();
 }
 
 <h4>@titolo</h4>
-<table class="table table-bordered">
+
+<table class="table table-bordered responsive-table">
     <thead>
         <tr>
             <th>Stato</th>
@@ -28,7 +30,7 @@
         @foreach (var partita in Model)
         {
             <tr>
-                <td>
+                <td data-label="Stato">
                     @if (partita.CaparraConfermata)
                     {
                         <span style="background-color: #d4edda; padding: 4px 8px; border-radius: 5px;">Confermata</span>
@@ -38,35 +40,29 @@
                         <span style="background-color: #fff3cd; padding: 4px 8px; border-radius: 5px;">In Attesa</span>
                     }
                 </td>
-                <td>@partita.Data.ToString("dddd dd/MM/yyyy")</td>
-                <td>@partita.OraInizio</td>
-                <td>
-                    <span class="ref-icon" style="cursor:pointer" onclick="showRiferimento('@partita.Riferimento')">📇</span>
+                <td data-label="Data">@partita.Data.ToString("dddd dd/MM/yyyy")</td>
+                <td data-label="Ora Inizio">@partita.OraInizio</td>
+                <td data-label="Riferimento">
+                    <span class="ref-icon" onclick="showRiferimento('@partita.Riferimento')">📇</span>
                 </td>
-                <td>@partita.Durata</td>
-                <td>@partita.NumeroPartecipanti</td>
-                <td>@(partita.Tesseramenti?.Count ?? 0)</td>
-                <td>
-                    @($"{partita.Caparra:0.00}€")
-                </td>
-                <td class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
-                <td class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
-                <td class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
-                <td>
+                <td data-label="Durata">@partita.Durata</td>
+                <td data-label="Partecipanti">@partita.NumeroPartecipanti</td>
+                <td data-label="Iscritti">@(partita.Tesseramenti?.Count ?? 0)</td>
+                <td data-label="Caparra">@($"{partita.Caparra:0.00}€")</td>
+                <td data-label="Torneo" class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
+                <td data-label="Illimitati" class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
+                <td data-label="Caccia" class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
+                <td data-label="Link">
                     <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
                 </td>
-                <td>
+                <td data-label="Tesserati">
                     <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
                 </td>
-                <td>
+                <td data-label="Azioni">
                     <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
                     <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", "Partite", new { id = partita.Id })">🗑️</a>
-                    <button class="btn btn-sm btn-primary btn-invia-recensione" data-id="@partita.Id" title="Invia richiesta recensione">
-                        📧
-                    </button>
-                    <button class="btn btn-sm btn-secondary btn-messaggio-prenotazione" data-id="@partita.Id" title="Genera messaggio prenotazione">
-                        📄
-                    </button>
+                    <button class="btn btn-sm btn-primary btn-invia-recensione" data-id="@partita.Id" title="Invia richiesta recensione">📧</button>
+                    <button class="btn btn-sm btn-secondary btn-messaggio-prenotazione" data-id="@partita.Id" title="Genera messaggio prenotazione">📄</button>
                 </td>
             </tr>
             <tr>

@@ -1,6 +1,7 @@
 ﻿@using System.Globalization
 @{
     ViewData["Title"] = "Presenze Staff";
+    <link href="~/css/presenze-responsive.css" rel="stylesheet" />
     var dateList = ViewBag.DateList as List<DateTime>;
     var reperibilitaList = ViewBag.ReperibilitaList as List<Full_Metal_Paintball_Carmagnola.Models.AssenzaCalendario>;
     var presenzaList = ViewBag.PresenzaList as List<Full_Metal_Paintball_Carmagnola.Models.PresenzaStaff>;
@@ -17,9 +18,7 @@
     </div>
 
     <div class="table-responsive">
-
-        <table class="table">
-
+        <table class="responsive-table">
             <thead>
                 <tr>
                     <th>Giorno</th>
@@ -40,13 +39,12 @@
                     var rep = reperibilitaList.FirstOrDefault(r => r.Data.Date == giorno.Date);
                     var sceltaRep = string.IsNullOrWhiteSpace(rep?.Reperibile) ? "In attesa" : rep.Reperibile.Trim();
                     var repClass = sceltaRep == "Nessuno" ? "bg-danger" :
-                    sceltaRep == "In attesa" ? "bg-warning" :
-                    "bg-success";
+                    sceltaRep == "In attesa" ? "bg-warning" : "bg-success";
 
                     <tr data-data="@giorno.ToString("yyyy-MM-dd")">
-                        <td>@giornoSet</td>
-                        <td>@giorno.ToString("dd/MM/yyyy")</td>
-                        <td class="@repClass">@sceltaRep</td>
+                        <td data-label="Giorno">@giornoSet</td>
+                        <td data-label="Data">@giorno.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Reperibile" class="@repClass">@sceltaRep</td>
 
                         @foreach (var membro in staff)
                         {
@@ -57,17 +55,16 @@
                             var bgClass = currentSelection == "SI" ? "bg-success" :
                             currentSelection == "NO" ? "bg-danger" : "bg-warning";
 
-                            <td class="@bgClass">
+                            <td data-label="@membro" class="@bgClass">
                                 <select class="presente-select form-select" data-data="@giorno.ToString("yyyy-MM-dd")" data-nome="@membro">
                                     <option value="In attesa" selected="@(currentSelection == "In attesa" ? "selected" : null)">In attesa</option>
                                     <option value="SI" selected="@(currentSelection == "SI" ? "selected" : null)">SI</option>
                                     <option value="NO" selected="@(currentSelection == "NO" ? "selected" : null)">NO</option>
                                 </select>
                             </td>
-
                         }
 
-                        <td>
+                        <td data-label="Azioni">
                             @if (!isWeekend)
                             {
                                 <button class="btn btn-danger btn-sm btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>
@@ -78,6 +75,7 @@
             </tbody>
         </table>
     </div>
+
 </div>
 
 @section Scripts {

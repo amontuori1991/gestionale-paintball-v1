@@ -5,6 +5,8 @@
     ViewData["Title"] = "Movimenti";
 }
 
+<link href="~/css/movimenti-responsive.css" rel="stylesheet" />
+
 <h2 class="text-center">Gestione Movimenti</h2>
 
 @Html.AntiForgeryToken()
@@ -15,8 +17,8 @@
     </button>
 </div>
 
-<div class="table-responsive" style="overflow-x: auto;">
-    <table id="tabellaMovimenti" class="table table-bordered align-middle">
+<div class="table-responsive responsive-movimenti-wrapper">
+    <table id="tabellaMovimenti" class="table table-bordered align-middle responsive-mov-table">
         <thead>
             <tr>
                 <th>Data</th>
@@ -31,49 +33,37 @@
                 <th>Note</th>
                 <th>Azioni</th>
             </tr>
-            <tr>
-                @for (int i = 0; i < 10; i++)
-                {
-                    <th>
-                        <div class="input-group input-group-sm">
-                            <input type="text" placeholder="Filtra" class="form-control column-filter-input" data-column-index="@i" />
-                            <button class="btn btn-primary apply-filter-btn" type="button" data-column-index="@i">Applica</button>
-                        </div>
-                    </th>
-                }
-                <th></th>
-            </tr>
         </thead>
         <tbody>
             @foreach (var item in Model)
             {
                 <tr>
-                    <td>@item.Data.ToString("dd/MM/yyyy")</td>
-                    <td>@item.Ora.ToString(@"hh\:mm")</td>
-                    <td>@item.Stato</td>
-                    <td>@item.Caparra.ToString("0.00")</td>
-                    <td>@item.MetodoCaparra</td>
-                    <td>@item.Dare?.ToString("0.00")</td>
-                    <td>@item.Avere?.ToString("0.00")</td>
-                    <td>@item.DareBis?.ToString("0.00")</td>
-                    <td>@item.AvereBis?.ToString("0.00")</td>
-                    <td>@item.Note</td>
-                    <td>
+                    <td data-label="Data">@item.Data.ToString("dd/MM/yyyy")</td>
+                    <td data-label="Ora">@item.Ora.ToString(@"hh\:mm")</td>
+                    <td data-label="Stato">@item.Stato</td>
+                    <td data-label="Caparra">@item.Caparra.ToString("0.00")</td>
+                    <td data-label="Metodo Caparra">@item.MetodoCaparra</td>
+                    <td data-label="Dare">@item.Dare?.ToString("0.00")</td>
+                    <td data-label="Avere">@item.Avere?.ToString("0.00")</td>
+                    <td data-label="Dare Bis">@item.DareBis?.ToString("0.00")</td>
+                    <td data-label="Avere Bis">@item.AvereBis?.ToString("0.00")</td>
+                    <td data-label="Note">@item.Note</td>
+                    <td data-label="Azioni">
                         @if (item.Stato == "Movimento Manuale" && item.ExtraId.HasValue)
                         {
                             <button class="btn btn-sm btn-danger" onclick="confermaElimina(@item.ExtraId.Value)">Elimina</button>
                         }
                         <button class="btn btn-sm btn-primary"
                                 onclick="apriModale(
-                                    @item.PartitaId,
-                                    @(item.ExtraId.HasValue? item.ExtraId.Value : 0),
-                                    @(item.Dare.HasValue? item.Dare.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                    @(item.Avere.HasValue? item.Avere.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                    @(item.DareBis.HasValue? item.DareBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                    @(item.AvereBis.HasValue? item.AvereBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                    '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))',
-                                    '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))'
-                                )">
+                                        @item.PartitaId,
+                                        @(item.ExtraId.HasValue? item.ExtraId.Value : 0),
+                                        @(item.Dare.HasValue? item.Dare.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+                                        @(item.Avere.HasValue? item.Avere.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+                                        @(item.DareBis.HasValue? item.DareBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+                                        @(item.AvereBis.HasValue? item.AvereBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))',
+                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))'
+                                    )">
                             Modifica
                         </button>
                     </td>
@@ -81,6 +71,19 @@
             }
         </tbody>
     </table>
+</div>
+
+<div class="mt-4">
+    <h4>Totali Movimenti</h4>
+    <div class="row">
+        <div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
+        <div class="col-md-3"><strong>Dare Totale:</strong> <span id="totalDare">0.00 €</span></div>
+        <div class="col-md-3"><strong>Avere Totale:</strong> <span id="totalAvere">0.00 €</span></div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
+        <div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
+    </div>
 </div>
 
 <div class="mt-4">

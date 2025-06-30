@@ -1,0 +1,111 @@
+﻿/* Stile base tabella */
+.responsive-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+    .responsive-table th, .responsive-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        word-break: break-word;
+    }
+
+    .responsive-table th {
+        background-color: #f2f2f2;
+        color: #333;
+        font-weight: bold;
+    }
+
+/* MOBILE - Visualizzazione a blocchi */
+@media (max-width: 768px) {
+    .responsive-table thead {
+        display: none;
+    }
+
+    .responsive-table,
+    .responsive-table tbody,
+    .responsive-table tr,
+    .responsive-table td {
+        display: block;
+        width: 100%;
+    }
+
+        .responsive-table tr {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        .responsive-table td {
+            text-align: left;
+            padding: 10px 8px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                display: block;
+                margin-bottom: 5px;
+                color: #333;
+            }
+}
+
+/* Migliorie generali */
+.responsive-table .total-column {
+    background-color: #eaf3ff;
+    font-weight: bold;
+}
+
+/* DESKTOP Miglioramento */
+@media (min-width: 769px) {
+    .responsive-table {
+        table-layout: auto;
+    }
+
+        .responsive-table td, .responsive-table th {
+            white-space: nowrap;
+        }
+}
+
+/* Nuova griglia a colonne dinamiche per MOBILE e TABLET */
+@media (max-width: 768px) {
+    .responsive-table tr {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .responsive-table td {
+        border: 1px solid #ddd;
+        background: #f9f9f9;
+        border-radius: 5px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+@media (max-width: 768px) {
+    .responsive-table .total-row th::before {
+        content: "Totale Anno";
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .responsive-table .total-row td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+}

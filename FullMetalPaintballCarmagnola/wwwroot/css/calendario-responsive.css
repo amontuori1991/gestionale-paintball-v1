@@ -1,0 +1,46 @@
+﻿/* Responsive Calendario Assenze */
+
+@media (max-width: 768px) {
+
+    .calendario-table thead {
+        display: none;
+    }
+
+    .calendario-table,
+    .calendario-table tbody,
+    .calendario-table tr,
+    .calendario-table td {
+        display: block;
+        width: 100%;
+    }
+
+        .calendario-table tr {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendario-table td {
+            text-align: left;
+            padding: 10px 8px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+            .calendario-table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                display: block;
+                margin-bottom: 5px;
+                color: #333;
+            }
+
+        .calendario-table select {
+            width: 100%;
+            margin-top: 5px;
+        }
+}

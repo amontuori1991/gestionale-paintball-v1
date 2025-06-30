@@ -5,12 +5,14 @@
 }
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="~/css/caparre-responsive.css" rel="stylesheet" />
+
 
 <div class="content-container">
     <h2 class="text-center">📄 Riepilogo Caparre</h2>
 
     <div class="table-responsive">
-        <table class="table table-bordered">
+        <table class="responsive-table">
             <thead>
                 <tr>
                     <th>Stato</th>
@@ -31,7 +33,7 @@
                     if (partita.Caparra > 0)
                     {
                         <tr>
-                            <td>
+                            <td data-label="Stato">
                                 @if (partita.IsDeleted)
                                 {
                                     <span style="color: red; font-weight: bold;">Cancellata</span>
@@ -41,25 +43,27 @@
                                     <span>Attiva</span>
                                 }
                             </td>
-                            <td>@partita.Data.ToString("dddd")</td>
-                            <td>@partita.Data.ToString("dd/MM/yyyy")</td>
-                            <td>@partita.Riferimento</td>
-                            <td>
+                            <td data-label="Giorno">@partita.Data.ToString("dddd")</td>
+                            <td data-label="Data">@partita.Data.ToString("dd/MM/yyyy")</td>
+                            <td data-label="Riferimento">@partita.Riferimento</td>
+                            <td data-label="Importo Caparra">
                                 @($"{partita.Caparra:0.00}€")
                             </td>
-                            <td>@(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "N/D" : partita.MetodoPagamentoCaparra)</td>
-                            <td>@(partita.CaparraConfermata ? "SI" : "NO")</td>
-                            <td>
+                            <td data-label="Metodo di Pagamento">
+                                @(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "N/D" : partita.MetodoPagamentoCaparra)
+                            </td>
+                            <td data-label="Ricevuta">@((partita.CaparraConfermata) ? "SI" : "NO")</td>
+                            <td data-label="Annotazioni">
                                 <input type="text" class="form-control" name="annotazioni" value="@partita.Annotazioni" data-partita-id="@partita.Id" />
                             </td>
-                            <td>
+                            <td data-label="Rimborso">
                                 <select class="form-select" name="rimborso" data-partita-id="@partita.Id">
                                     <option value="">--</option>
                                     <option value="SI" selected="@(partita.Rimborso == "SI" ? "selected" : null)">SI</option>
                                     <option value="NO" selected="@(partita.Rimborso == "NO" ? "selected" : null)">NO</option>
                                 </select>
                             </td>
-                            <td>
+                            <td data-label="Azioni">
                                 <button class="btn btn-danger btn-sm btn-cancella-caparra" data-id="@partita.Id">🗑️ Cancella</button>
                             </td>
                         </tr>
@@ -69,6 +73,7 @@
         </table>
     </div>
 </div>
+
 
 @section Scripts {
     <script>

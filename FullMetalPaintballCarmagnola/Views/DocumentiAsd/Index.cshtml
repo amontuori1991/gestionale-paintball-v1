@@ -3,6 +3,8 @@
     ViewData["Title"] = "Documenti ASD";
 }
 
+<link href="~/css/documenti-asd-responsive.css" rel="stylesheet" />
+
 <div class="content-container">
     <h2 class="text-center">Documenti ASD</h2>
 
@@ -24,7 +26,7 @@
     }
 
     <div class="table-responsive">
-        <table class="table table-striped">
+        <table class="table table-striped responsive-table">
             <thead>
                 <tr>
                     <th>File</th>
@@ -37,7 +39,7 @@
                 @foreach (var doc in Model.Documenti)
                 {
                     <tr>
-                        <td>
+                        <td data-label="File">
                             <a asp-action="Download" asp-route-id="@doc.Id" target="_blank" style="text-decoration:none;">
                                 @if (doc.OriginalFileName != null && doc.OriginalFileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
                                 {
@@ -50,9 +52,9 @@
                                 @doc.OriginalFileName
                             </a>
                         </td>
-                        <td>@doc.Descrizione</td>
-                        <td>@(doc.DataCaricamento?.ToString("dd/MM/yyyy") ?? "")</td>
-                        <td>
+                        <td data-label="Descrizione">@doc.Descrizione</td>
+                        <td data-label="Data Caricamento">@(doc.DataCaricamento?.ToString("dd/MM/yyyy") ?? "")</td>
+                        <td data-label="Azioni">
                             <a asp-action="Edit" asp-route-id="@doc.Id" class="btn btn-sm btn-warning">Modifica</a>
                             <button type="button" class="btn btn-sm btn-danger" onclick="confermaElimina('@doc.Id', '@doc.OriginalFileName')">Elimina</button>
                         </td>

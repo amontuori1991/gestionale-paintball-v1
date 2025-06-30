@@ -29,10 +29,10 @@
                     : giorno.Reperibile == "Nessuno" ? "calendario-bg-danger" : "calendario-bg-success";
 
                     <tr>
-                        <td>@giornoSet</td>
-                        <td>@giorno.Data.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Giorno">@giornoSet</td>
+                        <td data-label="Data">@giorno.Data.ToString("dd/MM/yyyy")</td>
 
-                        <td class="@repClass">
+                        <td data-label="Reperibile" class="@repClass">
                             <select class="reperibile-select" data-id="@giorno.Id">
                                 <option value="In attesa" selected="@(giorno.Reperibile == "In attesa" ? "selected" : null)">In attesa</option>
                                 <option value="Montuo" selected="@(giorno.Reperibile == "Montuo" ? "selected" : null)">Montuo</option>
@@ -54,7 +54,7 @@
 
                             var bgClass = assenza == "assente" ? "calendario-bg-danger" : "calendario-bg-warning";
 
-                            <td class="@bgClass">
+                            <td data-label="@membro" class="@bgClass">
                                 <select class="assenza-select" data-id="@giorno.Id" data-nome="@membro">
                                     <option value="" selected="@(string.IsNullOrWhiteSpace(assenza) ? "selected" : null)"></option>
                                     <option value="assente" selected="@(assenza == "assente" ? "selected" : null)">assente</option>
@@ -64,9 +64,12 @@
                     </tr>
                 }
             </tbody>
+
         </table>
     </div>
 </div>
+
+<link href="~/css/calendario-responsive.css" rel="stylesheet" />
 
 @section Scripts {
     <script>
