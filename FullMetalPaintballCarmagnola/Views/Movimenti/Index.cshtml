@@ -1,331 +1,661 @@
 ﻿@model List<Full_Metal_Paintball_Carmagnola.Models.MovimentiViewModel>
+
 @using System.Text.Encodings.Web
 
+
+
 @{
-    ViewData["Title"] = "Movimenti";
+
+	ViewData["Title"] = "Movimenti";
+
 }
+
+
 
 <link href="~/css/movimenti-responsive.css" rel="stylesheet" />
 
+
+
 <h2 class="text-center">Gestione Movimenti</h2>
+
+
 
 @Html.AntiForgeryToken()
 
+
+
 <div class="mb-3">
-    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#aggiungiMovimentoModal">
-        Aggiungi Movimento Manuale
-    </button>
+
+	<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#aggiungiMovimentoModal">
+
+		Aggiungi Movimento Manuale
+
+	</button>
+
 </div>
+
+
 
 <div class="table-responsive responsive-movimenti-wrapper">
-    <table id="tabellaMovimenti" class="table table-bordered align-middle responsive-mov-table">
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Ora</th>
-                <th>Stato</th>
-                <th>Caparra</th>
-                <th>Metodo Caparra</th>
-                <th>Dare (€)</th>
-                <th>Avere (€)</th>
-                <th>Dare Bis (€)</th>
-                <th>Avere Bis (€)</th>
-                <th>Note</th>
-                <th>Azioni</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td data-label="Data">@item.Data.ToString("dd/MM/yyyy")</td>
-                    <td data-label="Ora">@item.Ora.ToString(@"hh\:mm")</td>
-                    <td data-label="Stato">@item.Stato</td>
-                    <td data-label="Caparra">@item.Caparra.ToString("0.00")</td>
-                    <td data-label="Metodo Caparra">@item.MetodoCaparra</td>
-                    <td data-label="Dare">@item.Dare?.ToString("0.00")</td>
-                    <td data-label="Avere">@item.Avere?.ToString("0.00")</td>
-                    <td data-label="Dare Bis">@item.DareBis?.ToString("0.00")</td>
-                    <td data-label="Avere Bis">@item.AvereBis?.ToString("0.00")</td>
-                    <td data-label="Note">@item.Note</td>
-                    <td data-label="Azioni">
-                        @if (item.Stato == "Movimento Manuale" && item.ExtraId.HasValue)
-                        {
-                            <button class="btn btn-sm btn-danger" onclick="confermaElimina(@item.ExtraId.Value)">Elimina</button>
-                        }
-                        <button class="btn btn-sm btn-primary"
-                                onclick="apriModale(
-                                        @item.PartitaId,
-                                        @(item.ExtraId.HasValue? item.ExtraId.Value : 0),
-                                        @(item.Dare.HasValue? item.Dare.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                        @(item.Avere.HasValue? item.Avere.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                        @(item.DareBis.HasValue? item.DareBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                        @(item.AvereBis.HasValue? item.AvereBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
-                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))',
-                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))'
-                                    )">
-                            Modifica
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+
+	<table id="tabellaMovimenti" class="table table-bordered align-middle responsive-mov-table">
+
+		<thead>
+
+			<tr>
+
+				<th>Data</th>
+
+				<th>Ora</th>
+
+				<th>Stato</th>
+
+				<th>Caparra</th>
+
+				<th>Metodo Caparra</th>
+
+				<th>Dare (€)</th>
+
+				<th>Avere (€)</th>
+
+				<th>Dare Bis (€)</th>
+
+				<th>Avere Bis (€)</th>
+
+				<th>Note</th>
+
+				<th>Azioni</th>
+
+			</tr>
+
+		</thead>
+
+		<tbody>
+
+			@foreach (var item in Model)
+
+			{
+
+				<tr>
+
+					<td data-label="Data">@item.Data.ToString("dd/MM/yyyy")</td>
+
+					<td data-label="Ora">@item.Ora.ToString(@"hh\:mm")</td>
+
+					<td data-label="Stato">@item.Stato</td>
+
+					<td data-label="Caparra">@item.Caparra.ToString("0.00")</td>
+
+					<td data-label="Metodo Caparra">@item.MetodoCaparra</td>
+
+					<td data-label="Dare">@item.Dare?.ToString("0.00")</td>
+
+					<td data-label="Avere">@item.Avere?.ToString("0.00")</td>
+
+					<td data-label="Dare Bis">@item.DareBis?.ToString("0.00")</td>
+
+					<td data-label="Avere Bis">@item.AvereBis?.ToString("0.00")</td>
+
+					<td data-label="Note">@item.Note</td>
+
+					<td data-label="Azioni">
+
+						@if (item.Stato == "Movimento Manuale" && item.ExtraId.HasValue)
+
+						{
+
+							<button class="btn btn-sm btn-danger" onclick="confermaElimina(@item.ExtraId.Value)">Elimina</button>
+
+						}
+
+						<button class="btn btn-sm btn-primary"
+								                onclick="apriModale(
+
+	                                        @item.PartitaId,
+
+	                                        @(item.ExtraId.HasValue? item.ExtraId.Value : 0),
+
+	                                        @(item.Dare.HasValue? item.Dare.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+
+	                                        @(item.Avere.HasValue? item.Avere.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+
+	                                        @(item.DareBis.HasValue? item.DareBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+
+	                                        @(item.AvereBis.HasValue? item.AvereBis.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "'null'"),
+
+	                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.Note ?? string.Empty))',
+
+	                                        '@Html.Raw(JavaScriptEncoder.Default.Encode(item.MetodoCaparra ?? string.Empty))'
+
+	                                    )">
+
+							Modifica
+
+						</button>
+
+					</td>
+
+				</tr>
+
+			}
+
+		</tbody>
+
+	</table>
+
 </div>
 
-<div class="mt-4">
-    <h4>Totali Movimenti</h4>
-    <div class="row">
-        <div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
-        <div class="col-md-3"><strong>Dare Totale:</strong> <span id="totalDare">0.00 €</span></div>
-        <div class="col-md-3"><strong>Avere Totale:</strong> <span id="totalAvere">0.00 €</span></div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
-        <div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
-    </div>
-</div>
+
 
 <div class="mt-4">
-    <h4>Totali Movimenti</h4>
-    <div class="row">
-        <div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
-        <div class="col-md-3"><strong>Dare Totale:</strong> <span id="totalDare">0.00 €</span></div>
-        <div class="col-md-3"><strong>Avere Totale:</strong> <span id="totalAvere">0.00 €</span></div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
-        <div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
-    </div>
+
+	<h4>Totali Movimenti</h4>
+
+	<div class="row">
+
+		<div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
+
+		<div class="col-md-3"><strong>Dare Totale:</strong> <span id="totalDare">0.00 €</span></div>
+
+		<div class="col-md-3"><strong>Avere Totale:</strong> <span id="totalAvere">0.00 €</span></div>
+
+	</div>
+
+	<div class="row mt-2">
+
+		<div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
+
+		<div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
+
+	</div>
+
 </div>
+
+
+
+<div class="mt-4">
+
+	<h4>Totali Movimenti</h4>
+
+	<div class="row">
+
+		<div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
+
+		<div class="col-md-3"><strong>Dare Totale:</strong> <span id="totalDare">0.00 €</span></div>
+
+		<div class="col-md-3"><strong>Avere Totale:</strong> <span id="totalAvere">0.00 €</span></div>
+
+	</div>
+
+	<div class="row mt-2">
+
+		<div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
+
+		<div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
+
+	</div>
+
+</div>
+
+
 
 <div class="modal fade" id="modificaMovimentoModal" tabindex="-1" aria-labelledby="modificaMovimentoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Modifica Movimento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formModificaMovimento">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" id="modalPartitaId" />
-                    <input type="hidden" id="modalExtraId" />
 
-                    <div class="mb-3">
-                        <label for="modalDare" class="form-label">Dare (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalDare" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="modalAvere" class="form-label">Avere (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalAvere" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="modalDareBis" class="form-label">Dare Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalDareBis" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="modalAvereBis" class="form-label">Avere Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="modalAvereBis" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="modalMetodoCaparra" class="form-label">Metodo Caparra</label>
-                        <input type="text" class="form-control" id="modalMetodoCaparra" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="modalNote" class="form-label">Note</label>
-                        <textarea class="form-control" id="modalNote"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button class="btn btn-primary" id="salvaModificheBtn">Salva</button>
-            </div>
-        </div>
-    </div>
+	<div class="modal-dialog">
+
+		<div class="modal-content">
+
+			<div class="modal-header">
+
+				<h5 class="modal-title">Modifica Movimento</h5>
+
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+			</div>
+
+			<div class="modal-body">
+
+				<form id="formModificaMovimento">
+
+					@Html.AntiForgeryToken()
+
+					<input type="hidden" id="modalPartitaId" />
+
+					<input type="hidden" id="modalExtraId" />
+
+
+
+					<div class="mb-3">
+
+						<label for="modalDare" class="form-label">Dare (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="modalDare" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="modalAvere" class="form-label">Avere (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="modalAvere" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="modalDareBis" class="form-label">Dare Bis (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="modalDareBis" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="modalAvereBis" class="form-label">Avere Bis (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="modalAvereBis" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="modalMetodoCaparra" class="form-label">Metodo Caparra</label>
+
+						<input type="text" class="form-control" id="modalMetodoCaparra" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="modalNote" class="form-label">Note</label>
+
+						<textarea class="form-control" id="modalNote"></textarea>
+
+					</div>
+
+				</form>
+
+			</div>
+
+			<div class="modal-footer">
+
+				<button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+
+				<button class="btn btn-primary" id="salvaModificheBtn">Salva</button>
+
+			</div>
+
+		</div>
+
+	</div>
+
 </div>
+
+
 
 <div class="modal fade" id="aggiungiMovimentoModal" tabindex="-1" aria-labelledby="aggiungiMovimentoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nuovo Movimento Manuale</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    @Html.AntiForgeryToken()
-                    <div class="mb-3">
-                        <label for="data" class="form-label">Data</label>
-                        <input type="date" class="form-control" id="data" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="ora" class="form-label">Ora</label>
-                        <input type="time" class="form-control" id="ora" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="dare" class="form-label">Dare (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="dare" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="avere" class="form-label">Avere (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="avere" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="darebis" class="form-label">Dare Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="darebis" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="averebis" class="form-label">Avere Bis (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="averebis" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="note" class="form-label">Note</label>
-                        <textarea class="form-control" id="note"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button class="btn btn-primary" id="salvaNuovoMovimento">Salva</button>
-            </div>
-        </div>
-    </div>
+
+	<div class="modal-dialog">
+
+		<div class="modal-content">
+
+			<div class="modal-header">
+
+				<h5 class="modal-title">Nuovo Movimento Manuale</h5>
+
+				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+			</div>
+
+			<div class="modal-body">
+
+				<form>
+
+					@Html.AntiForgeryToken()
+
+					<div class="mb-3">
+
+						<label for="data" class="form-label">Data</label>
+
+						<input type="date" class="form-control" id="data" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="ora" class="form-label">Ora</label>
+
+						<input type="time" class="form-control" id="ora" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="dare" class="form-label">Dare (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="dare" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="avere" class="form-label">Avere (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="avere" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="darebis" class="form-label">Dare Bis (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="darebis" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="averebis" class="form-label">Avere Bis (€)</label>
+
+						<input type="number" step="0.01" class="form-control" id="averebis" />
+
+					</div>
+
+					<div class="mb-3">
+
+						<label for="note" class="form-label">Note</label>
+
+						<textarea class="form-control" id="note"></textarea>
+
+					</div>
+
+				</form>
+
+			</div>
+
+			<div class="modal-footer">
+
+				<button class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+
+				<button class="btn btn-primary" id="salvaNuovoMovimento">Salva</button>
+
+			</div>
+
+		</div>
+
+	</div>
+
 </div>
 
+
+
 @section Scripts {
-    <script>
-        $(document).ready(function () {
-            var table = $('#tabellaMovimenti').DataTable({
-                orderCellsTop: true,
-                fixedHeader: true,
-                paging: true,
-                searching: true,
-                info: true,
-                language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json" },
-                initComplete: function () { calculateTotals(this); }
-            });
 
-            table.on('draw', function () { calculateTotals(table); });
+	<script>
 
-            $('#tabellaMovimenti').on('click', '.apply-filter-btn', function () {
-                var columnIndex = $(this).data('columnIndex');
-                var filterValue = $(this).siblings('.column-filter-input').val();
-                table.column(columnIndex).search(filterValue).draw();
-            });
+		$(document).ready(function () {
 
-            $('#tabellaMovimenti').on('keypress', '.column-filter-input', function (e) {
-                if (e.which == 13) {
-                    var columnIndex = $(this).data('columnIndex');
-                    var filterValue = $(this).val();
-                    table.column(columnIndex).search(filterValue).draw();
-                }
-            });
+			var table = $('#tabellaMovimenti').DataTable({
 
-            $('#salvaModificheBtn').on('click', function () {
-                const movimento = {
-                    PartitaId: $('#modalPartitaId').val(),
-                    ExtraId: $('#modalExtraId').val(),
-                    Dare: $('#modalDare').val() === "" ? null : parseFloat($('#modalDare').val()),
-                    Avere: $('#modalAvere').val() === "" ? null : parseFloat($('#modalAvere').val()),
-                    DareBis: $('#modalDareBis').val() === "" ? null : parseFloat($('#modalDareBis').val()),
-                    AvereBis: $('#modalAvereBis').val() === "" ? null : parseFloat($('#modalAvereBis').val()),
-                    MetodoCaparra: $('#modalMetodoCaparra').val(),
-                    Note: $('#modalNote').val()
-                };
+				orderCellsTop: true,
 
-                fetch('/Movimenti/Salva', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    body: JSON.stringify(movimento)
-                })
-                .then(response => {
-                    if (response.ok) {
-                        $('#modificaMovimentoModal').modal('hide');
-                        location.reload();
-                    } else {
-                        alert("Errore durante il salvataggio.");
-                    }
-                })
-                .catch(() => alert("Errore durante il salvataggio."));
-            });
+				fixedHeader: true,
 
-            $('#salvaNuovoMovimento').on('click', function () {
-                const movimento = {
-                    Data: new Date($('#data').val() + 'T00:00:00Z').toISOString(),
-                    Ora: $('#ora').val(),
-                    Dare: $('#dare').val() === "" ? null : parseFloat($('#dare').val()),
-                    Avere: $('#avere').val() === "" ? null : parseFloat($('#avere').val()),
-                    DareBis: $('#darebis').val() === "" ? null : parseFloat($('#darebis').val()),
-                    AvereBis: $('#averebis').val() === "" ? null : parseFloat($('#averebis').val()),
-                    Note: $('#note').val()
-                };
+				paging: true,
 
-                fetch('/Movimenti/AggiungiExtra', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    body: JSON.stringify(movimento)
-                })
-                .then(response => {
-                    if (response.ok) {
-                        $('#aggiungiMovimentoModal').modal('hide');
-                        location.reload();
-                    } else {
-                        alert("Errore durante il salvataggio.");
-                    }
-                })
-                .catch(() => alert("Errore durante il salvataggio."));
-            });
-        });
+				searching: true,
 
-        function calculateTotals(dataTable) {
-            var totalCaparra = 0, totalDare = 0, totalAvere = 0, totalDareBis = 0, totalAvereBis = 0;
-            dataTable.rows({ search: 'applied' }).every(function () {
-                var cells = $(this.node()).find('td');
-                totalCaparra += parseFloat(cells.eq(3).text().replace(',', '.')) || 0;
-                totalDare += parseFloat(cells.eq(5).text().replace(',', '.')) || 0;
-                totalAvere += parseFloat(cells.eq(6).text().replace(',', '.')) || 0;
-                totalDareBis += parseFloat(cells.eq(7).text().replace(',', '.')) || 0;
-                totalAvereBis += parseFloat(cells.eq(8).text().replace(',', '.')) || 0;
-            });
-            $('#totalCaparra').text(totalCaparra.toFixed(2) + ' €');
-            $('#totalDare').text(totalDare.toFixed(2) + ' €');
-            $('#totalAvere').text(totalAvere.toFixed(2) + ' €');
-            $('#totalDareBis').text(totalDareBis.toFixed(2) + ' €');
-            $('#totalAvereBis').text(totalAvereBis.toFixed(2) + ' €');
-        }
+				info: true,
 
-        function apriModale(partitaId, extraId, dare, avere, dareBis, avereBis, note, metodoCaparra) {
-            $('#modalPartitaId').val(partitaId);
-            $('#modalExtraId').val(extraId);
-            $('#modalDare').val(dare !== 'null' ? dare : '');
-            $('#modalAvere').val(avere !== 'null' ? avere : '');
-            $('#modalDareBis').val(dareBis !== 'null' ? dareBis : '');
-            $('#modalAvereBis').val(avereBis !== 'null' ? avereBis : '');
-            $('#modalMetodoCaparra').val(metodoCaparra);
-            $('#modalNote').val(note);
-            $('#modificaMovimentoModal').modal('show');
-        }
+				language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/it-IT.json" },
 
-        function confermaElimina(extraId) {
-            if (confirm("⚠️ Sei sicuro di voler eliminare questo movimento manuale? L'operazione è irreversibile.")) {
-                fetch('/Movimenti/EliminaExtra/' + extraId, {
-                    method: 'DELETE',
-                    headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
-                })
-                .then(response => {
-                    if (response.ok) location.reload();
-                    else alert("Errore durante l'eliminazione.");
-                })
-                .catch(() => alert("Errore durante l'eliminazione."));
-            }
-        }
-    </script>
+				initComplete: function () { calculateTotals(this); }
+
+			});
+
+
+
+			table.on('draw', function () { calculateTotals(table); });
+
+
+
+			$('#tabellaMovimenti').on('click', '.apply-filter-btn', function () {
+
+				var columnIndex = $(this).data('columnIndex');
+
+				var filterValue = $(this).siblings('.column-filter-input').val();
+
+				table.column(columnIndex).search(filterValue).draw();
+
+			});
+
+
+
+			$('#tabellaMovimenti').on('keypress', '.column-filter-input', function (e) {
+
+				if (e.which == 13) {
+
+					var columnIndex = $(this).data('columnIndex');
+
+					var filterValue = $(this).val();
+
+					table.column(columnIndex).search(filterValue).draw();
+
+				}
+
+			});
+
+
+
+			$('#salvaModificheBtn').on('click', function () {
+
+				const movimento = {
+
+					PartitaId: $('#modalPartitaId').val(),
+
+					ExtraId: $('#modalExtraId').val(),
+
+					Dare: $('#modalDare').val() === "" ? null : parseFloat($('#modalDare').val()),
+
+					Avere: $('#modalAvere').val() === "" ? null : parseFloat($('#modalAvere').val()),
+
+					DareBis: $('#modalDareBis').val() === "" ? null : parseFloat($('#modalDareBis').val()),
+
+					AvereBis: $('#modalAvereBis').val() === "" ? null : parseFloat($('#modalAvereBis').val()),
+
+					MetodoCaparra: $('#modalMetodoCaparra').val(),
+
+					Note: $('#modalNote').val()
+
+				};
+
+
+
+				fetch('/Movimenti/Salva', {
+
+					method: 'POST',
+
+					headers: {
+
+						'Content-Type': 'application/json',
+
+						'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+
+					},
+
+					body: JSON.stringify(movimento)
+
+				})
+
+				.then(response => {
+
+					if (response.ok) {
+
+						$('#modificaMovimentoModal').modal('hide');
+
+						location.reload();
+
+					} else {
+
+						alert("Errore durante il salvataggio.");
+
+					}
+
+				})
+
+				.catch(() => alert("Errore durante il salvataggio."));
+
+			});
+
+
+
+			$('#salvaNuovoMovimento').on('click', function () {
+
+				const movimento = {
+
+					Data: new Date($('#data').val() + 'T00:00:00Z').toISOString(),
+
+					Ora: $('#ora').val(),
+
+					Dare: $('#dare').val() === "" ? null : parseFloat($('#dare').val()),
+
+					Avere: $('#avere').val() === "" ? null : parseFloat($('#avere').val()),
+
+					DareBis: $('#darebis').val() === "" ? null : parseFloat($('#darebis').val()),
+
+					AvereBis: $('#averebis').val() === "" ? null : parseFloat($('#averebis').val()),
+
+					Note: $('#note').val()
+
+				};
+
+
+
+				fetch('/Movimenti/AggiungiExtra', {
+
+					method: 'POST',
+
+					headers: {
+
+						'Content-Type': 'application/json',
+
+						'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+
+					},
+
+					body: JSON.stringify(movimento)
+
+				})
+
+				.then(response => {
+
+					if (response.ok) {
+
+						$('#aggiungiMovimentoModal').modal('hide');
+
+						location.reload();
+
+					} else {
+
+						alert("Errore durante il salvataggio.");
+
+					}
+
+				})
+
+				.catch(() => alert("Errore durante il salvataggio."));
+
+			});
+
+		});
+
+
+
+		function calculateTotals(dataTable) {
+
+			var totalCaparra = 0, totalDare = 0, totalAvere = 0, totalDareBis = 0, totalAvereBis = 0;
+
+			dataTable.rows({ search: 'applied' }).every(function () {
+
+				var cells = $(this.node()).find('td');
+
+				totalCaparra += parseFloat(cells.eq(3).text().replace(',', '.')) || 0;
+
+				totalDare += parseFloat(cells.eq(5).text().replace(',', '.')) || 0;
+
+				totalAvere += parseFloat(cells.eq(6).text().replace(',', '.')) || 0;
+
+				totalDareBis += parseFloat(cells.eq(7).text().replace(',', '.')) || 0;
+
+				totalAvereBis += parseFloat(cells.eq(8).text().replace(',', '.')) || 0;
+
+			});
+
+			$('#totalCaparra').text(totalCaparra.toFixed(2) + ' €');
+
+			$('#totalDare').text(totalDare.toFixed(2) + ' €');
+
+			$('#totalAvere').text(totalAvere.toFixed(2) + ' €');
+
+			$('#totalDareBis').text(totalDareBis.toFixed(2) + ' €');
+
+			$('#totalAvereBis').text(totalAvereBis.toFixed(2) + ' €');
+
+		}
+
+
+
+		function apriModale(partitaId, extraId, dare, avere, dareBis, avereBis, note, metodoCaparra) {
+
+			$('#modalPartitaId').val(partitaId);
+
+			$('#modalExtraId').val(extraId);
+
+			$('#modalDare').val(dare !== 'null' ? dare : '');
+
+			$('#modalAvere').val(avere !== 'null' ? avere : '');
+
+			$('#modalDareBis').val(dareBis !== 'null' ? dareBis : '');
+
+			$('#modalAvereBis').val(avereBis !== 'null' ? avereBis : '');
+
+			$('#modalMetodoCaparra').val(metodoCaparra);
+
+			$('#modalNote').val(note);
+
+			$('#modificaMovimentoModal').modal('show');
+
+		}
+
+
+
+		function confermaElimina(extraId) {
+
+			if (confirm("⚠️ Sei sicuro di voler eliminare questo movimento manuale? L'operazione è irreversibile.")) {
+
+				fetch('/Movimenti/EliminaExtra/' + extraId, {
+
+					method: 'DELETE',
+
+					headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() }
+
+				})
+
+				.then(response => {
+
+					if (response.ok) location.reload();
+
+					else alert("Errore durante l'eliminazione.");
+
+				})
+
+				.catch(() => alert("Errore durante l'eliminazione."));
+
+			}
+
+		}
+
+	</script>
+
 }
+

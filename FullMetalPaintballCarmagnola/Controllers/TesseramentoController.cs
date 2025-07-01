@@ -25,6 +25,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _emailSender = emailSender;
         }
 
+        [AllowAnonymous]
         public IActionResult Index(int? partitaId = null)
         {
             var model = new TesseramentoViewModel();
@@ -35,6 +36,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(TesseramentoViewModel model)
         {
@@ -117,12 +119,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return View(model);
         }
 
+        [AllowAnonymous]
         public IActionResult Successo()
         {
             ViewBag.NomeUtente = TempData["NomeUtente"] as string;
             return View();
         }
 
+        [AllowAnonymous]
         public IActionResult Duplicato()
         {
             ViewBag.NomeUtente = TempData["NomeUtente"] as string;
@@ -182,6 +186,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             return View(viewModels);
         }
+
         [HttpPost]
         public async Task<IActionResult> AssegnaTessere()
         {
@@ -225,7 +230,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return RedirectToAction("ListaTesseramenti");
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DissociaTessera(int tesseratoId)
@@ -243,7 +247,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             return Json(new { success = true });
         }
-
 
         [HttpGet]
         public async Task<IActionResult> ExportExcel(string searchNome, string searchCognome, DateTime? dataDa, DateTime? dataA)
