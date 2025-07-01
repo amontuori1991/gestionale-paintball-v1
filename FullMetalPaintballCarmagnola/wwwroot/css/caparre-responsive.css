@@ -6,7 +6,8 @@
     margin-bottom: 20px;
 }
 
-    .responsive-table th, .responsive-table td {
+    .responsive-table th,
+    .responsive-table td {
         border: 1px solid #ddd;
         padding: 8px;
         text-align: center;
@@ -19,34 +20,45 @@
         font-weight: bold;
     }
 
-/* Design responsive per smartphone */
+/* Layout responsive mobile */
 @media (max-width: 768px) {
+
     .responsive-table thead {
         display: none;
     }
 
-    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+    .responsive-table,
+    .responsive-table tbody,
+    .responsive-table tr,
+    .responsive-table td {
         display: block;
         width: 100%;
     }
 
         .responsive-table tr {
+            display: grid;
+            grid-template-areas:
+                "stato giorno"
+                "data importo"
+                "riferimento riferimento"
+                "pagamento ricevuta"
+                "rimborso annotazioni"
+                "azioni azioni";
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 10px;
             background-color: #fff;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            text-align: left;
         }
 
         .responsive-table td {
-            text-align: left;
-            padding: 10px 8px;
             border: none;
             border-bottom: 1px solid #eee;
+            padding: 10px 8px;
             position: relative;
         }
 
@@ -58,24 +70,62 @@
                 color: #333;
             }
 
-        .responsive-table input, .responsive-table select {
+            .responsive-table td[data-label="Stato"] {
+                grid-area: stato;
+            }
+
+            .responsive-table td[data-label="Giorno"] {
+                grid-area: giorno;
+            }
+
+            .responsive-table td[data-label="Data"] {
+                grid-area: data;
+            }
+
+            .responsive-table td[data-label="Importo Caparra"] {
+                grid-area: importo;
+            }
+
+            .responsive-table td[data-label="Riferimento"] {
+                grid-area: riferimento;
+                text-align: center;
+            }
+
+            .responsive-table td[data-label="Metodo di Pagamento"] {
+                grid-area: pagamento;
+            }
+
+            .responsive-table td[data-label="Ricevuta"] {
+                grid-area: ricevuta;
+            }
+
+            .responsive-table td[data-label="Rimborso"] {
+                grid-area: rimborso;
+            }
+
+            .responsive-table td[data-label="Annotazioni"] {
+                grid-area: annotazioni;
+            }
+
+            .responsive-table td[data-label="Azioni"] {
+                grid-area: azioni;
+                text-align: center;
+            }
+
+        .responsive-table input,
+        .responsive-table select {
             width: 100%;
         }
 }
 
-/* Migliorie generali */
-.responsive-table .btn {
-    margin: 2px 0;
-    padding: 6px 10px;
-    font-size: 0.9rem;
-}
-
+/* Desktop migliorie */
 @media (min-width: 769px) {
     .responsive-table {
         table-layout: auto;
     }
 
-        .responsive-table td, .responsive-table th {
+        .responsive-table td,
+        .responsive-table th {
             white-space: nowrap;
         }
 }

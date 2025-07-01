@@ -34,24 +34,13 @@
                     {
                         <tr>
                             <td data-label="Stato">
-                                @if (partita.IsDeleted)
-                                {
-                                    <span style="color: red; font-weight: bold;">Cancellata</span>
-                                }
-                                else
-                                {
-                                    <span>Attiva</span>
-                                }
+                                @(partita.IsDeleted ? "<span style='color:red;font-weight:bold;'>Cancellata</span>" : "Attiva")
                             </td>
                             <td data-label="Giorno">@partita.Data.ToString("dddd")</td>
                             <td data-label="Data">@partita.Data.ToString("dd/MM/yyyy")</td>
                             <td data-label="Riferimento">@partita.Riferimento</td>
-                            <td data-label="Importo Caparra">
-                                @($"{partita.Caparra:0.00}€")
-                            </td>
-                            <td data-label="Metodo di Pagamento">
-                                @(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "N/D" : partita.MetodoPagamentoCaparra)
-                            </td>
+                            <td data-label="Importo Caparra">@($"{partita.Caparra:0.00}€")</td>
+                            <td data-label="Metodo di Pagamento">@(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "N/D" : partita.MetodoPagamentoCaparra)</td>
                             <td data-label="Ricevuta">@((partita.CaparraConfermata) ? "SI" : "NO")</td>
                             <td data-label="Annotazioni">
                                 <input type="text" class="form-control" name="annotazioni" value="@partita.Annotazioni" data-partita-id="@partita.Id" />
@@ -72,6 +61,7 @@
             </tbody>
         </table>
     </div>
+
 </div>
 
 
