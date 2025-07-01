@@ -19,89 +19,90 @@
         <a href="@Url.Action("ListaTesseramenti")" class="btn btn-secondary">Reset</a>
     </form>
 
-    <div class="btn-toolbar justify-content-center mb-3">
-        <form method="get" asp-action="ExportExcel">
-            <input type="hidden" name="searchNome" value="@ViewBag.SearchNome" />
-            <input type="hidden" name="searchCognome" value="@ViewBag.SearchCognome" />
-            <button type="submit" class="btn btn-success">Esporta in Excel</button>
-        </form>
-        <form method="post" asp-action="AssegnaTessere">
-            <button type="submit" class="btn btn-primary">Assegna Tessere</button>
-        </form>
-    </div>
+    <form method="post">
+        @Html.AntiForgeryToken()
 
-    @if (Model != null && Model.Any())
-    {
-        <div class="table-responsive">
-            <table class="table table-striped tesseramenti-table">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAll" /></th>
-                        <th>Partita Id</th>
-                        <th>Nome</th>
-                        <th>Cognome</th>
-                        <th>Data Nascita</th>
-                        <th>Genere</th>
-                        <th>Comune Nascita</th>
-                        <th>Comune Residenza</th>
-                        <th>Email</th>
-                        <th>Codice Fiscale</th>
-                        <th>Tessera</th>
-                        <th>Azione Tessera</th>
-                        <th>Minorenne</th>
-                        <th>Nome Genitore</th>
-                        <th>Cognome Genitore</th>
-                        <th>Data Creazione</th>
-                        <th>Data Scadenza</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var tesseramento in Model)
-                    {
-                        var scadenza = new DateTime(tesseramento.DataCreazione.Year, 12, 31);
-                        <tr>
-                            <td data-label="Seleziona"><input type="checkbox" name="tesseratiIds" value="@tesseramento.Id" class="select-item" /></td>
-                            <td data-label="Partita Id">@tesseramento.PartitaId</td>
-                            <td data-label="Nome">@tesseramento.Nome</td>
-                            <td data-label="Cognome">@tesseramento.Cognome</td>
-                            <td data-label="Data Nascita">@(tesseramento.DataNascita?.ToString("dd/MM/yyyy") ?? "")</td>
-                            <td data-label="Genere">@tesseramento.Genere</td>
-                            <td data-label="Comune Nascita">@tesseramento.ComuneNascita</td>
-                            <td data-label="Comune Residenza">@tesseramento.ComuneResidenza</td>
-                            <td data-label="Email">@tesseramento.Email</td>
-                            <td data-label="Codice Fiscale">@tesseramento.CodiceFiscale</td>
-                            <td data-label="Tessera">
-                                @(string.IsNullOrEmpty(tesseramento.Tessera) ? "-" : tesseramento.Tessera)
-                            </td>
-                            <td data-label="Azione Tessera">
-                                @if (!string.IsNullOrEmpty(tesseramento.Tessera))
-                                {
-                                    <form method="post" asp-action="DissociaTessera" class="inline-form">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="tesseratoId" value="@tesseramento.Id" />
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="dissociaTessera(@tesseramento.Id)">Dissocia</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td data-label="Minorenne">@tesseramento.Minorenne</td>
-                            <td data-label="Nome Genitore">@tesseramento.NomeGenitore</td>
-                            <td data-label="Cognome Genitore">@tesseramento.CognomeGenitore</td>
-                            <td data-label="Data Creazione">@tesseramento.DataCreazione.ToShortDateString()</td>
-                            <td data-label="Data Scadenza">@scadenza.ToShortDateString()</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <div class="btn-toolbar justify-content-center mb-3 gap-2">
+            <button type="submit" class="btn btn-success" formaction="@Url.Action("ExportExcel")">
+                Esporta Selezionati in Excel
+            </button>
+            <button type="submit" class="btn btn-primary" formaction="@Url.Action("AssegnaTessere")">
+                Assegna Tessere ai Selezionati
+            </button>
+            <button type="submit" class="btn btn-danger" formaction="@Url.Action("DissociaTessereSelezionate")">
+                Dissocia Tessere ai Selezionati
+            </button>
         </div>
-    }
-    else
-    {
-        <p>Nessun tesseramento disponibile.</p>
-    }
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped tesseramenti-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" /></th>
+                            <th>Partita Id</th>
+                            <th>Nome</th>
+                            <th>Cognome</th>
+                            <th>Data Nascita</th>
+                            <th>Genere</th>
+                            <th>Comune Nascita</th>
+                            <th>Comune Residenza</th>
+                            <th>Email</th>
+                            <th>Codice Fiscale</th>
+                            <th>Tessera</th>
+                            <th>Azione Tessera</th>
+                            <th>Minorenne</th>
+                            <th>Nome Genitore</th>
+                            <th>Cognome Genitore</th>
+                            <th>Data Creazione</th>
+                            <th>Data Scadenza</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tesseramento in Model)
+                        {
+                            var scadenza = new DateTime(tesseramento.DataCreazione.Year, 12, 31);
+                            <tr>
+                                <td data-label="Seleziona"><input type="checkbox" name="tesseratiIds" value="@tesseramento.Id" class="select-item" /></td>
+                                <td data-label="Partita Id">@tesseramento.PartitaId</td>
+                                <td data-label="Nome">@tesseramento.Nome</td>
+                                <td data-label="Cognome">@tesseramento.Cognome</td>
+                                <td data-label="Data Nascita">@(tesseramento.DataNascita?.ToString("dd/MM/yyyy") ?? "")</td>
+                                <td data-label="Genere">@tesseramento.Genere</td>
+                                <td data-label="Comune Nascita">@tesseramento.ComuneNascita</td>
+                                <td data-label="Comune Residenza">@tesseramento.ComuneResidenza</td>
+                                <td data-label="Email">@tesseramento.Email</td>
+                                <td data-label="Codice Fiscale">@tesseramento.CodiceFiscale</td>
+                                <td data-label="Tessera">
+                                    @(string.IsNullOrEmpty(tesseramento.Tessera) ? "-" : tesseramento.Tessera)
+                                </td>
+                                <td data-label="Azione Tessera">
+                                    @if (!string.IsNullOrEmpty(tesseramento.Tessera))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="dissociaTessera(@tesseramento.Id)">Dissocia</button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td data-label="Minorenne">@tesseramento.Minorenne</td>
+                                <td data-label="Nome Genitore">@tesseramento.NomeGenitore</td>
+                                <td data-label="Cognome Genitore">@tesseramento.CognomeGenitore</td>
+                                <td data-label="Data Creazione">@tesseramento.DataCreazione.ToShortDateString()</td>
+                                <td data-label="Data Scadenza">@scadenza.ToShortDateString()</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p>Nessun tesseramento disponibile.</p>
+        }
+    </form>
 
     <p class="text-center" style="margin-top: 30px;">
         <a href="@Url.Action("Index", "Tesseramento")" class="btn btn-primary">Nuovo Tesseramento</a>
@@ -145,7 +146,7 @@
         document.getElementById('confirmBtn').addEventListener('click', async () => {
             if (!tesseraDaDissociare) return;
 
-            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const token = document.querySelector('form[method="post"] input[name="__RequestVerificationToken"]').value;
 
             try {
                 const response = await fetch('@Url.Action("DissociaTessera", "Tesseramento")', {
@@ -166,9 +167,9 @@
                     alert(data.message || 'Errore nella dissociazione tessera.');
                 }
             } catch (error) {
-                alert('Errore nella dissociazione tessera.');
+                console.error('Errore fetch:', error);
+                alert('Errore di connessione durante la dissociazione della tessera.');
             }
         });
-
     </script>
 }

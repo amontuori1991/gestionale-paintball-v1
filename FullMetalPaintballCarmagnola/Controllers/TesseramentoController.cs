@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,8 +9,6 @@ using Full_Metal_Paintball_Carmagnola.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
 
 namespace Full_Metal_Paintball_Carmagnola.Controllers
 {
@@ -188,45 +187,55 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AssegnaTessere()
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssegnaTessere(List<int> tesseratiIds)
         {
-            var intervalli = await _dbContext.RangeTessereAcsi.Where(r => r.NumeroDa <= r.NumeroA).ToListAsync();
+            if (tesseratiIds == null || !tesseratiIds.Any())
+            {
+                TempData["Messaggio"] = "Nessun tesserato selezionato.";
+                return RedirectToAction("ListaTesseramenti");
+            }
 
-            var tutteLeTessere = intervalli
-                .SelectMany(r => Enumerable.Range((int)r.NumeroDa, (int)(r.NumeroA - r.NumeroDa + 1)))
-                .ToList();
+            var tesseratiDaAggiornare = await _dbContext.Tesseramenti
+                .Where(t => tesseratiIds.Contains(t.Id) && string.IsNullOrEmpty(t.Tessera))
+                .OrderBy(t => t.DataCreazione)
+                .ToListAsync();
 
-            var tessereAssegnate = await _dbContext.Tesseramenti
+            if (!tesseratiDaAggiornare.Any())
+            {
+                TempData["Messaggio"] = "I tesserati selezionati hanno già una tessera o non sono stati trovati.";
+                return RedirectToAction("ListaTesseramenti");
+            }
+
+            var intervalli = await _dbContext.RangeTessereAcsi.ToListAsync();
+            var tessereAssegnateDb = await _dbContext.Tesseramenti
                 .Where(t => !string.IsNullOrEmpty(t.Tessera))
                 .Select(t => long.Parse(t.Tessera))
                 .ToListAsync();
 
-            var prossimaTessera = tutteLeTessere
-                .Where(numero => !tessereAssegnate.Contains(numero))
+            var tessereDisponibili = intervalli
+                .SelectMany(r => Enumerable.Range((int)r.NumeroDa, (int)(r.NumeroA - r.NumeroDa + 1)))
+                .Where(numero => !tessereAssegnateDb.Contains(numero))
                 .OrderBy(numero => numero)
-                .FirstOrDefault();
+                .Select(n => (long)n)
+                .ToList();
 
-            if (prossimaTessera == 0)
+            if (tessereDisponibili.Count < tesseratiDaAggiornare.Count)
             {
-                TempData["Messaggio"] = "Nessuna tessera disponibile.";
+                TempData["Messaggio"] = $"Tessere disponibili insufficienti. Selezionati: {tesseratiDaAggiornare.Count}, Disponibili: {tessereDisponibili.Count}.";
                 return RedirectToAction("ListaTesseramenti");
             }
 
-            var tesserato = await _dbContext.Tesseramenti
-                .Where(t => string.IsNullOrEmpty(t.Tessera))
-                .OrderBy(t => t.DataCreazione)
-                .FirstOrDefaultAsync();
-
-            if (tesserato == null)
+            int tessereAssegnateCount = 0;
+            for (int i = 0; i < tesseratiDaAggiornare.Count; i++)
             {
-                TempData["Messaggio"] = "Nessun tesserato in attesa di tessera.";
-                return RedirectToAction("ListaTesseramenti");
+                tesseratiDaAggiornare[i].Tessera = tessereDisponibili[i].ToString();
+                tessereAssegnateCount++;
             }
 
-            tesserato.Tessera = prossimaTessera.ToString();
             await _dbContext.SaveChangesAsync();
 
-            TempData["Messaggio"] = $"Tessera {prossimaTessera} assegnata a {tesserato.Nome} {tesserato.Cognome}.";
+            TempData["Messaggio"] = $"{tessereAssegnateCount} tessere assegnate con successo.";
             return RedirectToAction("ListaTesseramenti");
         }
 
@@ -248,29 +257,53 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return Json(new { success = true });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ExportExcel(string searchNome, string searchCognome, DateTime? dataDa, DateTime? dataA)
+        // ### NUOVA AZIONE PER LA DISSOCIAZIONE MASSIVA ###
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DissociaTessereSelezionate(List<int> tesseratiIds)
         {
-            var query = _dbContext.Tesseramenti.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(searchNome))
-                query = query.Where(t => t.Nome.Contains(searchNome));
-
-            if (!string.IsNullOrWhiteSpace(searchCognome))
-                query = query.Where(t => t.Cognome.Contains(searchCognome));
-
-            if (dataDa.HasValue)
-                query = query.Where(t => t.DataCreazione >= DateTime.SpecifyKind(dataDa.Value.Date, DateTimeKind.Utc));
-
-            if (dataA.HasValue)
+            if (tesseratiIds == null || !tesseratiIds.Any())
             {
-                var dataAEnd = DateTime.SpecifyKind(dataA.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
-                query = query.Where(t => t.DataCreazione <= dataAEnd);
+                TempData["Messaggio"] = "Nessun tesserato selezionato per la dissociazione.";
+                return RedirectToAction("ListaTesseramenti");
             }
 
-            var tesseramenti = await query.ToListAsync();
+            var tesseratiDaDissociare = await _dbContext.Tesseramenti
+                .Where(t => tesseratiIds.Contains(t.Id) && !string.IsNullOrEmpty(t.Tessera))
+                .ToListAsync();
 
-            using (var workbook = new ClosedXML.Excel.XLWorkbook())
+            if (!tesseratiDaDissociare.Any())
+            {
+                TempData["Messaggio"] = "I tesserati selezionati non hanno tessere da dissociare o non sono stati trovati.";
+                return RedirectToAction("ListaTesseramenti");
+            }
+
+            foreach (var tesserato in tesseratiDaDissociare)
+            {
+                tesserato.Tessera = null;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            TempData["Messaggio"] = $"{tesseratiDaDissociare.Count} tessere dissociate con successo.";
+            return RedirectToAction("ListaTesseramenti");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExportExcel(List<int> tesseratiIds)
+        {
+            if (tesseratiIds == null || !tesseratiIds.Any())
+            {
+                TempData["Messaggio"] = "Nessun tesserato selezionato per l'export.";
+                return RedirectToAction("ListaTesseramenti");
+            }
+
+            var tesseramenti = await _dbContext.Tesseramenti
+                                       .Where(t => tesseratiIds.Contains(t.Id))
+                                       .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("Tesseramenti");
 
