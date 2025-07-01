@@ -1,13 +1,17 @@
-﻿.responsive-table {
+﻿/* PRESENZE RESPONSIVE COMPLETO */
+
+.responsive-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
+    text-align: center; /* Testo centrato per tutto il contenuto */
 }
 
-    .responsive-table th, .responsive-table td {
+    .responsive-table th,
+    .responsive-table td {
         border: 1px solid #ddd;
         padding: 8px;
-        text-align: center;
+        text-align: center; /* Assicura il centramento */
         word-break: break-word;
     }
 
@@ -23,9 +27,13 @@
         display: none;
     }
 
-    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+    .responsive-table,
+    .responsive-table tbody,
+    .responsive-table tr,
+    .responsive-table td {
         display: block;
         width: 100%;
+        text-align: center;
     }
 
         .responsive-table tr {
@@ -34,15 +42,16 @@
             border-radius: 8px;
             padding: 10px;
             background-color: #fff;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            text-align: center;
         }
 
         .responsive-table td {
-            text-align: left;
-            padding: 10px 8px;
+            text-align: center;
+            padding: 6px 6px;
             border: none;
             border-bottom: 1px solid #eee;
             position: relative;
@@ -52,9 +61,28 @@
                 content: attr(data-label);
                 font-weight: bold;
                 display: block;
-                margin-bottom: 5px;
+                margin-bottom: 3px;
                 color: #333;
+                text-align: center;
             }
+
+        .responsive-table select {
+            width: 100%;
+        }
+
+        /* Giorno e Ora affiancati */
+        .responsive-table td[data-label="Giorno"] {
+            grid-column: span 1;
+        }
+
+        .responsive-table td[data-label="Ora"] {
+            grid-column: span 1;
+        }
+
+        /* Reperibile su tutta la larghezza */
+        .responsive-table td[data-label="Reperibile"] {
+            grid-column: span 2;
+        }
 }
 
 /* Migliorie generali */
@@ -67,6 +95,7 @@
 .responsive-table select {
     width: 100%;
     margin-top: 5px;
+    text-align: center;
 }
 
 /* Miglioramento visualizzazione su desktop */
@@ -75,7 +104,9 @@
         table-layout: auto;
     }
 
-        .responsive-table td, .responsive-table th {
+        .responsive-table td,
+        .responsive-table th {
             white-space: nowrap;
+            text-align: center;
         }
 }
