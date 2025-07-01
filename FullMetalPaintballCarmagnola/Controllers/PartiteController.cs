@@ -69,9 +69,21 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 partita.Reperibile = assenza != null ? assenza.Reperibile : "In attesa";
             }
 
-            var partiteFuture = partite.Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= oggi && !p.IsDeleted).OrderBy(p => p.Data + p.OraInizio).ToList();
-            var partitePassate = partite.Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) < oggi && !p.IsDeleted).OrderBy(p => p.Data + p.OraInizio).ToList();
-            var partiteCancellate = partite.Where(p => p.IsDeleted).OrderBy(p => p.Data + p.OraInizio).ToList();
+            var partiteFuture = partite
+                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= oggi && !p.IsDeleted)
+                .OrderBy(p => p.Data + p.OraInizio)
+                .ToList();
+
+            var partitePassate = partite
+                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) < oggi && !p.IsDeleted)
+                .OrderByDescending(p => p.Data + p.OraInizio)
+                .ToList();
+
+            var partiteCancellate = partite
+                .Where(p => p.IsDeleted)
+                .OrderByDescending(p => p.Data + p.OraInizio)
+                .ToList();
+
 
             ViewBag.PartiteCancellate = partiteCancellate;
             ViewBag.PartiteFuture = partiteFuture;
@@ -227,15 +239,33 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var partita = await _dbContext.Partite.Include(p => p.Tesseramenti).FirstOrDefaultAsync(p => p.Id == id);
             if (partita == null) return Json(new { success = false, message = "Partita non trovata." });
 
-            var emailList = partita.Tesseramenti.Where(t => !string.IsNullOrEmpty(t.Email)).Select(t => t.Email).Distinct().ToList();
+            var emailList = partita.Tesseramenti
+                .Where(t => !string.IsNullOrWhiteSpace(t.Email))
+                .Select(t => t.Email.Replace(" ", "").ToLowerInvariant())
+                .Distinct()
+                .ToList();
+
             if (!emailList.Any()) return Json(new { success = false, message = "Nessuna email trovata per i tesserati." });
 
             try
             {
                 var subject = "FMP Carmagnola - La tua opinione è importante!";
-                var bodyHtml = $@"<div style='font-family: Arial, sans-serif; text-align: center; background-color: #f7f7f7; padding: 30px;'><div style='max-width: 600px; margin: auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'><img src='https://i.imgur.com/K9Ugseg.gif' alt='FMP Carmagnola Logo' style='max-width: 150px; margin-bottom: 20px;' /><h2 style='color: #28a745;'>Ciao,</h2><p>Grazie per aver scelto A.S.D. Full Metal Paintball Carmagnola. Speriamo che la tua esperienza con noi sia stata positiva e che tu sia soddisfatto del nostro servizio.</p><p>Ci farebbe molto piacere ricevere una tua recensione. Il tuo feedback è estremamente importante per noi e ci aiuta a migliorare continuamente.</p><p>Se hai qualche minuto, ti invitiamo a cliccare sul link qui sotto per lasciare una recensione:</p><a href='https://g.page/r/CSY7ElrZDaxMEBM/review' style='display: inline-block; background-color: #28a745; color: white; padding: 12px 24px; border-radius: 6px; font-weight: bold; text-decoration: none; margin: 20px 0;'>Lascia una Recensione</a><div><img src='https://i.imgur.com/KXwOi1b.png' alt='Google Reviews' style='max-width: 120px; margin: 20px auto;' /></div><p>Grazie mille per il tuo tempo e la tua collaborazione.</p><p>Cordiali saluti,<br>Il Team di A.S.D. Full Metal Paintball Carmagnola</p></div></div>";
+                var bodyHtml = $@"<div style='font-family: Arial, sans-serif; text-align: center; background-color: #f7f7f7; padding: 30px;'>
+                            <div style='max-width: 600px; margin: auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+                                <img src='https://i.imgur.com/K9Ugseg.gif' alt='FMP Carmagnola Logo' style='max-width: 150px; margin-bottom: 20px;' />
+                                <h2 style='color: #28a745;'>Ciao,</h2>
+                                <p>Grazie per aver scelto A.S.D. Full Metal Paintball Carmagnola. Speriamo che la tua esperienza con noi sia stata positiva.</p>
+                                <p>Ci farebbe piacere ricevere una tua recensione:</p>
+                                <a href='https://g.page/r/CSY7ElrZDaxMEBM/review' style='display: inline-block; background-color: #28a745; color: white; padding: 12px 24px; border-radius: 6px; font-weight: bold; text-decoration: none; margin: 20px 0;'>Lascia una Recensione</a>
+                                <p>Grazie mille per il tuo tempo!</p>
+                                <p>Il Team di A.S.D. Full Metal Paintball Carmagnola</p>
+                            </div>
+                        </div>";
 
-                foreach (var email in emailList) { await _emailService.SendEmailAsync(email, subject, bodyHtml); }
+                foreach (var email in emailList)
+                {
+                    await _emailService.SendEmailAsync(email, subject, bodyHtml);
+                }
 
                 return Json(new { success = true, message = "Email inviate con successo!" });
             }
@@ -244,6 +274,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return Json(new { success = false, message = "Errore durante l’invio delle email di recensione." });
             }
         }
+
         [HttpPost]
         public async Task<IActionResult> RimuoviTesserato(int id, int partitaId)
         {

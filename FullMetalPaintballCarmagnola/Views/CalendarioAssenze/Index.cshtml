@@ -9,6 +9,10 @@
 <div class="container-custom">
     <h2 class="text-center">Calendario Assenze</h2>
 
+    <div class="d-flex justify-content-center mb-3">
+        <input type="text" id="filtroCalendario" placeholder="Filtra per giorno, data o nome..." class="form-control" style="max-width: 300px;" />
+    </div>
+
     <div class="table-responsive calendario-table-wrapper">
         <table class="calendario-table">
             <thead>
@@ -64,12 +68,11 @@
                     </tr>
                 }
             </tbody>
-
         </table>
     </div>
 </div>
 
-<link href="~/css/calendario-responsive.css" rel="stylesheet" />
+<link href="~/css/assenze-calendario-responsive.css" rel="stylesheet" />
 
 @section Scripts {
     <script>
@@ -104,6 +107,14 @@
                         else td.addClass('calendario-bg-warning');
                     })
                     .fail(() => alert("Errore durante il salvataggio dell'assenza."));
+            });
+
+            $('#filtroCalendario').on('input', function () {
+                const filtro = $(this).val().toLowerCase();
+                $('.calendario-table tbody tr').each(function () {
+                    const testoRiga = $(this).text().toLowerCase();
+                    $(this).toggle(testoRiga.includes(filtro));
+                });
             });
         });
     </script>

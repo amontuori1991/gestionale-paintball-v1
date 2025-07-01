@@ -5,6 +5,8 @@
     Layout = "_Layout";
 }
 
+<link href="~/css/tesseramenti-responsive.css" rel="stylesheet" />
+
 <div class="content-container">
     <h2 class="text-center">Elenco Tesseramenti</h2>
 
@@ -37,20 +39,20 @@
                     <tr>
                         <th><input type="checkbox" id="selectAll" /></th>
                         <th>Partita Id</th>
-                        <th>@Html.DisplayNameFor(model => model.Nome)</th>
-                        <th>@Html.DisplayNameFor(model => model.Cognome)</th>
-                        <th>@Html.DisplayNameFor(model => model.DataNascita)</th>
-                        <th>@Html.DisplayNameFor(model => model.Genere)</th>
-                        <th>@Html.DisplayNameFor(model => model.ComuneNascita)</th>
-                        <th>@Html.DisplayNameFor(model => model.ComuneResidenza)</th>
-                        <th>@Html.DisplayNameFor(model => model.Email)</th>
-                        <th>@Html.DisplayNameFor(model => model.CodiceFiscale)</th>
+                        <th>Nome</th>
+                        <th>Cognome</th>
+                        <th>Data Nascita</th>
+                        <th>Genere</th>
+                        <th>Comune Nascita</th>
+                        <th>Comune Residenza</th>
+                        <th>Email</th>
+                        <th>Codice Fiscale</th>
                         <th>Tessera</th>
-                        <th>AzioneTessera</th>
-                        <th>@Html.DisplayNameFor(model => model.Minorenne)</th>
-                        <th>@Html.DisplayNameFor(model => model.NomeGenitore)</th>
-                        <th>@Html.DisplayNameFor(model => model.CognomeGenitore)</th>
-                        <th>@Html.DisplayNameFor(model => model.DataCreazione)</th>
+                        <th>Azione Tessera</th>
+                        <th>Minorenne</th>
+                        <th>Nome Genitore</th>
+                        <th>Cognome Genitore</th>
+                        <th>Data Creazione</th>
                         <th>Data Scadenza</th>
                     </tr>
                 </thead>
@@ -59,21 +61,20 @@
                     {
                         var scadenza = new DateTime(tesseramento.DataCreazione.Year, 12, 31);
                         <tr>
-                            <td><input type="checkbox" name="tesseratiIds" value="@tesseramento.Id" class="select-item" /></td>
-                            <td>@tesseramento.PartitaId</td>
-                            <td>@tesseramento.Nome</td>
-                            <td>@tesseramento.Cognome</td>
-                            <td>@(tesseramento.DataNascita?.ToString("dd/MM/yyyy") ?? "")</td>
-                            <td>@tesseramento.Genere</td>
-                            <td>@tesseramento.ComuneNascita</td>
-                            <td>@tesseramento.ComuneResidenza</td>
-                            <td>@tesseramento.Email</td>
-                            <td>@tesseramento.CodiceFiscale</td>
-                            <td>
+                            <td data-label="Seleziona"><input type="checkbox" name="tesseratiIds" value="@tesseramento.Id" class="select-item" /></td>
+                            <td data-label="Partita Id">@tesseramento.PartitaId</td>
+                            <td data-label="Nome">@tesseramento.Nome</td>
+                            <td data-label="Cognome">@tesseramento.Cognome</td>
+                            <td data-label="Data Nascita">@(tesseramento.DataNascita?.ToString("dd/MM/yyyy") ?? "")</td>
+                            <td data-label="Genere">@tesseramento.Genere</td>
+                            <td data-label="Comune Nascita">@tesseramento.ComuneNascita</td>
+                            <td data-label="Comune Residenza">@tesseramento.ComuneResidenza</td>
+                            <td data-label="Email">@tesseramento.Email</td>
+                            <td data-label="Codice Fiscale">@tesseramento.CodiceFiscale</td>
+                            <td data-label="Tessera">
                                 @(string.IsNullOrEmpty(tesseramento.Tessera) ? "-" : tesseramento.Tessera)
                             </td>
-
-                            <td>
+                            <td data-label="Azione Tessera">
                                 @if (!string.IsNullOrEmpty(tesseramento.Tessera))
                                 {
                                     <form method="post" asp-action="DissociaTessera" class="inline-form">
@@ -87,11 +88,11 @@
                                     <span class="text-muted">-</span>
                                 }
                             </td>
-                            <td>@tesseramento.Minorenne</td>
-                            <td>@tesseramento.NomeGenitore</td>
-                            <td>@tesseramento.CognomeGenitore</td>
-                            <td>@tesseramento.DataCreazione.ToShortDateString()</td>
-                            <td>@scadenza.ToShortDateString()</td>
+                            <td data-label="Minorenne">@tesseramento.Minorenne</td>
+                            <td data-label="Nome Genitore">@tesseramento.NomeGenitore</td>
+                            <td data-label="Cognome Genitore">@tesseramento.CognomeGenitore</td>
+                            <td data-label="Data Creazione">@tesseramento.DataCreazione.ToShortDateString()</td>
+                            <td data-label="Data Scadenza">@scadenza.ToShortDateString()</td>
                         </tr>
                     }
                 </tbody>
@@ -137,7 +138,7 @@
         let tesseraDaDissociare = null;
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 
-                function dissociaTessera(id) {
+        function dissociaTessera(id) {
             tesseraDaDissociare = id;
             confirmModal.show();
         }
