@@ -167,21 +167,27 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var partita = await _dbContext.Partite.Include(p => p.Tesseramenti).FirstOrDefaultAsync(p => p.Id == id);
             if (partita == null) return NotFound();
 
-            ViewBag.DataPartita = partita.Data.ToString("dd/MM/yyyy");
-            ViewBag.OraPartita = partita.OraInizio;
-            ViewBag.PartitaId = partita.Id;
+            string oraPartitaFormattata = partita.OraInizio == TimeSpan.Zero
+                ? "Orario non impostato"
+                : partita.OraInizio.ToString(@"hh\:mm");
 
-            var tesserati = partita.Tesseramenti.Select(t => new TesseramentoViewModel
+            var viewModel = new TesseratiPerPartitaViewModel
             {
-                Id = t.Id,
-                Nome = t.Nome,
-                Cognome = t.Cognome,
-                DataNascita = t.DataNascita,
-                PartitaId = t.PartitaId
-            }).ToList();
+                DataPartita = partita.Data,
+                OraPartita = oraPartitaFormattata,
+                Tesserati = partita.Tesseramenti.Select(t => new TesseramentoViewModel
+                {
+                    Id = t.Id,
+                    Nome = t.Nome,
+                    Cognome = t.Cognome,
+                    DataNascita = t.DataNascita,
+                    PartitaId = t.PartitaId
+                }).ToList()
+            };
 
-            return View(tesserati);
+            return View(viewModel);
         }
+
 
         [AllowAnonymous]
         public async Task<IActionResult> VisualizzaTesseratiPubblico(int id)
@@ -200,11 +206,13 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 PartitaId = partita.Id,
                 DataPartita = partita.Data,
                 OraPartita = partita.OraInizio,
+                NumeroPartecipanti = partita.NumeroPartecipanti, // << aggiunto
                 Tesserati = tesseratiPubblici
             };
 
             return View(model);
         }
+
 
         public async Task<IActionResult> Caparre()
         {

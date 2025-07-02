@@ -1,4 +1,5 @@
-﻿@model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.TesseramentoViewModel>
+﻿@model Full_Metal_Paintball_Carmagnola.Models.TesseratiPerPartitaViewModel
+
 @{
     ViewData["Title"] = "Tesserati della Partita";
     var partitaId = ViewBag.PartitaId;
@@ -85,13 +86,13 @@
 <div class="background-logo"></div>
 
 <div class="container-list list-container">
-    <h2 class="mb-4">Tesserati per la partita del giorno @ViewBag.DataPartita alle ore @ViewBag.OraInizio</h2>
+    <h2 class="mb-4">Tesserati per la partita del giorno @Model.DataPartita.ToString("dd/MM/yyyy") alle ore @Model.OraPartita</h2>
 
     <p>
         <a class="btn btn-secondary" href="@Url.Action("Index", "Partite")">🔙 Torna alle Partite</a>
     </p>
 
-    @if (!Model.Any())
+    @if (!Model.Tesserati.Any())
     {
         <div class="alert alert-info">
             Nessun tesserato registrato per questa partita.
@@ -108,7 +109,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var t in Model)
+                @foreach (var t in Model.Tesserati)
                 {
                     <tr>
                         <td>@t.Nome</td>

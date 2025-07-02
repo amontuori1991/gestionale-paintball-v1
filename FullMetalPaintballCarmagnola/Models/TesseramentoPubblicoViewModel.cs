@@ -11,6 +11,7 @@
         public int PartitaId { get; set; }
         public DateTime DataPartita { get; set; }
         public TimeSpan OraPartita { get; set; }
+        public int NumeroPartecipanti { get; set; }  // << Aggiunto questo campo
         public List<TesseramentoPubblicoViewModel> Tesserati { get; set; } = new List<TesseramentoPubblicoViewModel>();
     }
 }

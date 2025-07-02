@@ -93,6 +93,26 @@
         <h1>Iscritti alla Partita</h1>
         <h2>Del @Model.DataPartita.ToString("dd/MM/yyyy") alle @Model.OraPartita.ToString("hh\\:mm")</h2>
 
+        @if (Model.Tesserati.Count < Model.NumeroPartecipanti)
+        {
+            <p style="color:red; font-weight:bold;">
+                * Mancano ancora @(Model.NumeroPartecipanti - Model.Tesserati.Count) iscrizioni
+            </p>
+        }
+        else if (Model.Tesserati.Count > Model.NumeroPartecipanti)
+        {
+            <p style="color:red; font-weight:bold;">
+                * Il numero di iscritti ha superato il numero dei prenotati, contattare Full Metal Paintball Carmagnola per indicare eventuali variazioni
+            </p>
+        }
+        else if (Model.Tesserati.Count == Model.NumeroPartecipanti)
+        {
+            <p style="color:green; font-weight:bold;">
+                * Complimenti, tutti i partecipanti si sono iscritti
+            </p>
+        }
+
+
         @if (!Model.Tesserati.Any())
         {
             <div class="no-tesserati-message">

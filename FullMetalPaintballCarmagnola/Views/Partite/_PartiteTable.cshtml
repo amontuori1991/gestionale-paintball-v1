@@ -29,7 +29,8 @@
     <tbody>
         @foreach (var partita in Model)
         {
-            <tr>
+            <tr style="@(partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday ? "background-color: #ffeeba;" : "")">
+
                 <td data-label="Stato">
                     @if (partita.CaparraConfermata)
                     {
@@ -65,8 +66,9 @@
                     <button class="btn btn-sm btn-secondary btn-messaggio-prenotazione" data-id="@partita.Id" title="Genera messaggio prenotazione">📄</button>
                 </td>
             </tr>
-            <tr>
-                <td colspan="14" style="background-color: #f0f0f0;">
+            <tr style="@(partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday ? "background-color: #ffeeba;" : "")">
+                <td colspan="14" style="background-color: inherit;">
+
                     <strong>Gestita da:</strong>
                     @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
                     {

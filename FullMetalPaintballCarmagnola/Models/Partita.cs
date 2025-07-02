@@ -1,7 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System; // Assicurati che System sia importato per TimeSpan e DateTime
+using System.ComponentModel.DataAnnotations;
 using Full_Metal_Paintball_Carmagnola.Models;
 using Microsoft.EntityFrameworkCore;
-using System; // Assicurati che System sia importato per TimeSpan e DateTime
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Full_Metal_Paintball_Carmagnola.Models;
 
