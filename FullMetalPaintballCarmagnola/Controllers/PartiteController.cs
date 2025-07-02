@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.InkML;
@@ -19,14 +20,22 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IWebHostEnvironment _env;
 
-        public PartiteController(TesseramentoDbContext dbContext, IConfiguration configuration, IEmailService emailService, UserManager<ApplicationUser> userManager)
+        public PartiteController(
+    TesseramentoDbContext dbContext,
+    IConfiguration configuration,
+    IEmailService emailService,
+    UserManager<ApplicationUser> userManager,
+    IWebHostEnvironment env)
         {
             _dbContext = dbContext;
             _configuration = configuration;
             _emailService = emailService;
             _userManager = userManager;
+            _env = env;
         }
+
 
         private async Task SendNotificationToAllUsers(string subject, string messageHtml)
         {
@@ -101,18 +110,55 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             {
                 partita.Data = DateTime.SpecifyKind(partita.Data, DateTimeKind.Utc);
                 _dbContext.Add(partita);
+
+                // INSERIMENTO AUTOMATICO PER PARTITE INFRASETTIMANALI
+                if (partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    var data = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
+                    var giorno = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(data.ToString("dddd"));
+
+                    if (!_dbContext.AssenzeCalendario.Any(r => r.Data == data))
+                    {
+                        _dbContext.AssenzeCalendario.Add(new AssenzaCalendario
+                        {
+                            Data = data,
+                            Giorno = giorno,
+                            Reperibile = "In attesa"
+                        });
+                    }
+
+                    foreach (var nome in new[] { "Simone", "Davide", "Andrea", "Federico", "Enrico" })
+                    {
+                        if (!_dbContext.PresenzaStaff.Any(p => p.Data == data && p.NomeStaff == nome))
+                        {
+                            _dbContext.PresenzaStaff.Add(new PresenzaStaff
+                            {
+                                Data = data,
+                                Giorno = giorno,
+                                NomeStaff = nome,
+                                Presente = null
+                            });
+                        }
+                    }
+                }
+
                 await _dbContext.SaveChangesAsync();
 
                 string oraFormattata = $"{(int)partita.OraInizio.TotalHours:D2}:{partita.OraInizio.Minutes:D2}";
                 var subject = $"NUOVA PARTITA: {partita.Data:dd/MM/yyyy} - {oraFormattata}";
 
                 var messageHtml = $@"<html><body><p>Ciao,</p><p>È stata inserita una nuova partita!</p><p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}</p><p><strong>Orario:</strong> {oraFormattata}</p><p><strong>Annotazioni:</strong> {partita.Annotazioni}</p><p>Controlla il calendario per maggiori dettagli.</p><p>Il team di Full Metal Paintball Carmagnola</p></body></html>";
-                await SendNotificationToAllUsers(subject, messageHtml);
+
+                if (!_env.IsDevelopment())
+                {
+                    await SendNotificationToAllUsers(subject, messageHtml);
+                }
 
                 return RedirectToAction(nameof(Index));
             }
             return View(partita);
         }
+
 
         public async Task<IActionResult> Edit(int? id)
         {
@@ -157,10 +203,34 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 var subject = $"PARTITA CANCELLATA: {partita.Data:dd/MM/yyyy} - {oraFormattata}";
 
                 var messageHtml = $@"<html><body><p>Ciao,</p><p>Una partita è stata cancellata.</p><p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}</p><p><strong>Orario:</strong> {oraFormattata}</p><p><strong>Annotazioni:</strong> {partita.Annotazioni}</p><p>Controlla il calendario per gli aggiornamenti.</p><p>Il team di Full Metal Paintball Carmagnola</p></body></html>";
-                await SendNotificationToAllUsers(subject, messageHtml);
+
+                if (!string.Equals(_env.EnvironmentName, "Development", StringComparison.OrdinalIgnoreCase))
+                {
+                    await SendNotificationToAllUsers(subject, messageHtml);
+                }
+
+                // ✅ Gestione cancellazione riga infrasettimanale, solo se NON ci sono altre partite confermate lo stesso giorno
+                var dataGiorno = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
+
+                bool altreConfermate = _dbContext.Partite
+                    .Any(p => p.Id != id && p.Data.Date == dataGiorno && !p.IsDeleted && p.CaparraConfermata);
+
+                if (!altreConfermate && dataGiorno.DayOfWeek != DayOfWeek.Saturday && dataGiorno.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    var assenza = _dbContext.AssenzeCalendario.FirstOrDefault(a => a.Data.Date == dataGiorno);
+                    if (assenza != null) _dbContext.AssenzeCalendario.Remove(assenza);
+
+                    var presenze = _dbContext.PresenzaStaff.Where(p => p.Data.Date == dataGiorno);
+                    _dbContext.PresenzaStaff.RemoveRange(presenze);
+
+                    await _dbContext.SaveChangesAsync();
+                }
             }
+
             return RedirectToAction(nameof(Index));
         }
+
+
 
         public async Task<IActionResult> TesseratiPerPartita(int id)
         {
