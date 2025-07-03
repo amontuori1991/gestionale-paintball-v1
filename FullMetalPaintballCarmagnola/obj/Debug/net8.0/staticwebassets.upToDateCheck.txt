@@ -41,6 +41,8 @@ wwwroot\Firme\firma_b3ecf268-6a71-4907-b471-77817a8cc510.png
 wwwroot\Firme\firma_b5b601d8-58c1-4af3-ba5e-8e29d6dedf04.png
 wwwroot\Firme\firma_b705908d-eadf-47f5-b91b-605a21f9b796.png
 wwwroot\Firme\firma_bec1de93-a7d1-45a4-ade1-82596302a131.png
+wwwroot\img\icon-192.png
+wwwroot\img\icon-512.png
 wwwroot\img\logo.gif
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
@@ -111,3 +113,5 @@ wwwroot\uploads\ce8953f1-f619-444b-a7b2-012edf9c0560.pdf
 wwwroot\uploads\ddc56576-c6d2-475c-9f9d-f0e9aefa5f14.pdf
 wwwroot\uploads\f4831d70-88ad-42b6-b2e5-352e381fff79.pdf
 wwwroot\uploads_asd\20e2cccf-669d-408f-b2e7-2ed0b95ba2a0.pdf
+wwwroot\manifest.json
+wwwroot\service-worker.js

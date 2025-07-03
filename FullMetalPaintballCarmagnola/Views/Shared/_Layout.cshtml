@@ -10,6 +10,8 @@
 
 	<title>@ViewData["Title"] - Full Metal Paintball Carmagnola</title>
 
+	<link rel="manifest" href="/manifest.json">
+	<meta name="theme-color" content="#0d6efd">
 
 
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
@@ -102,6 +104,19 @@
 	<script src="~/js/site.js" asp-append-version="true"></script>
 
 	@await RenderSectionAsync("Scripts", required: false)
+
+	<script>
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/service-worker.js')
+				.then(function (registration) {
+					console.log('✅ Service Worker registrato con successo:', registration);
+				})
+				.catch(function (error) {
+					console.error('❌ Errore durante la registrazione del Service Worker:', error);
+				});
+		}
+	</script>
+
 
 </body>
 
