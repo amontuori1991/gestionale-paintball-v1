@@ -188,5 +188,21 @@
             });
 
         });
+                $(document).on('click', '.btn-verifica-presenze', function () {
+            var data = $(this).data('data');
+            $.get('/Partite/PresenzeStaffPopup', { data: data })
+                .done(function (response) {
+                    Swal.fire({
+                        title: 'Presenze Staff',
+                        html: response,
+                        width: '600px',
+                        showConfirmButton: false
+                    });
+                })
+                .fail(function () {
+                    Swal.fire('Errore', 'Impossibile recuperare le presenze.', 'error');
+                });
+        });
+
     </script>
 }

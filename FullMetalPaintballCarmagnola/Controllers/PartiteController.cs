@@ -412,6 +412,36 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> PresenzeStaffPopup(string data)
+        {
+            if (!DateTime.TryParse(data, out var dataParsed))
+            {
+                return Content("<p>Data non valida.</p>");
+            }
+
+            var dataGiorno = DateTime.SpecifyKind(dataParsed.Date, DateTimeKind.Utc);
+
+            var presenze = await _dbContext.PresenzaStaff
+                .Where(p => p.Data.Date == dataGiorno && (p.Presente == true || p.Presente == null))
+                .OrderBy(p => p.NomeStaff)
+                .ToListAsync();
+
+            if (!presenze.Any())
+            {
+                return Content("<p>Nessun membro dello staff risulta disponibile o in attesa.</p>");
+            }
+
+            string html = "<ul style='text-align:left; padding-left:20px;'>";
+            foreach (var p in presenze)
+            {
+                string stato = p.Presente == true ? "✅ Disponibile" : "⏳ In attesa";
+                html += $"<li><strong>{p.NomeStaff}:</strong> {stato}</li>";
+            }
+            html += "</ul>";
+
+            return Content(html);
+        }
 
 
         [HttpGet]

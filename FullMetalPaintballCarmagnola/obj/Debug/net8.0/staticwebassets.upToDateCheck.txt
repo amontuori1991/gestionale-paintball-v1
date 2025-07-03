@@ -102,6 +102,8 @@ wwwroot\lib\jquery\dist\jquery.js
 wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
+wwwroot\manifest.json
+wwwroot\service-worker.js
 wwwroot\uploadsAsd\fbd51e0e-46e6-4205-82bb-432b35229120.pdf
 wwwroot\uploads\039817fd-cf3f-4bf1-9326-e01a5a4439e9.pdf
 wwwroot\uploads\0d1b0ec9-f1a5-43d5-98e8-47079213dae0.pdf
@@ -113,5 +115,3 @@ wwwroot\uploads\ce8953f1-f619-444b-a7b2-012edf9c0560.pdf
 wwwroot\uploads\ddc56576-c6d2-475c-9f9d-f0e9aefa5f14.pdf
 wwwroot\uploads\f4831d70-88ad-42b6-b2e5-352e381fff79.pdf
 wwwroot\uploads_asd\20e2cccf-669d-408f-b2e7-2ed0b95ba2a0.pdf
-wwwroot\manifest.json
-wwwroot\service-worker.js

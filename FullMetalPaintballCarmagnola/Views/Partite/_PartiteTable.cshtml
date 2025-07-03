@@ -68,7 +68,6 @@
             </tr>
             <tr style="@(partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday ? "background-color: #ffeeba;" : "")">
                 <td colspan="14" style="background-color: inherit;">
-
                     <strong>Gestita da:</strong>
                     @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
                     {
@@ -82,8 +81,14 @@
                             }
                         </select>
                     }
-                    <span style="float: right;"><strong>Reperibile:</strong> @partita.Reperibile</span>
+                    <span style="float: right;">
+                        <strong>Reperibile:</strong> @partita.Reperibile
+                        <button class="btn btn-sm btn-info btn-verifica-presenze mx-2" data-data="@partita.Data.ToString("yyyy-MM-dd")">
+                            Presenze Staff
+                        </button>
+                    </span>
                 </td>
+
             </tr>
         }
     </tbody>
