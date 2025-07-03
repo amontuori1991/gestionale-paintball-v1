@@ -1,14 +1,43 @@
-﻿/* Responsive design Archivio */
-@media (max-width: 768px) {
-    .table, .table thead, .table tbody, .table th, .table td, .table tr {
-        display: block;
+﻿/* Archivio responsive generale */
+.responsive-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+    .responsive-table th, .responsive-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        word-break: break-word;
     }
 
-        .table thead tr {
-            display: none;
-        }
+    .responsive-table th {
+        background-color: #f2f2f2;
+        color: #333;
+        font-weight: bold;
+    }
 
-        .table tr {
+.titolo-sezione-archivio {
+    background-color: #e9ecef;
+    padding: 8px 12px;
+    margin: 20px 0 10px 0;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Responsive smartphone */
+@media (max-width: 768px) {
+    .responsive-table thead {
+        display: none;
+    }
+
+    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+        display: block;
+        width: 100%;
+    }
+
+        .responsive-table tr {
             margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -17,31 +46,32 @@
             box-shadow: 0 0 8px rgba(0,0,0,0.1);
         }
 
-        .table td {
-            text-align: left;
-            padding: 10px;
+        .responsive-table td {
+            text-align: center;
+            padding: 8px 4px;
             border: none;
-            border-bottom: 1px solid #eee;
-            position: relative;
+            display: inline-block;
+            width: 48%;
         }
 
-            .table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: block;
-                margin-bottom: 5px;
-                color: #333;
+            .responsive-table td::before {
+                display: none;
             }
-}
 
-/* Migliorie titoli sezioni Archivio */
-.titolo-sezione-archivio {
-    font-size: 1.1rem;
-    font-weight: bold;
-    background-color: #f8f9fa;
-    padding: 8px 12px;
-    border-left: 4px solid #0d6efd;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    color: #333;
+            .responsive-table td[data-label="Data"],
+            .responsive-table td[data-label="Ora"] {
+                width: 48%;
+                display: inline-block;
+            }
+
+            .responsive-table td:last-child {
+                display: block;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+    .btn {
+        width: 100%;
+        margin: 4px 0;
+    }
 }

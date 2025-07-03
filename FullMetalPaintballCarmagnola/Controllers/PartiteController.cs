@@ -233,6 +233,25 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return Json(new { success = true, messaggio });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> TesseratiPerPopup(int id)
+        {
+            var partita = await _dbContext.Partite.Include(p => p.Tesseramenti).FirstOrDefaultAsync(p => p.Id == id);
+
+            if (partita == null || partita.Tesseramenti == null || !partita.Tesseramenti.Any())
+            {
+                return Content("<p>Nessun tesserato registrato per questa partita.</p>");
+            }
+
+            string html = "<ul style='text-align:left; padding-left:20px;'>";
+            foreach (var t in partita.Tesseramenti.OrderBy(t => t.Nome).ThenBy(t => t.Cognome))
+            {
+                html += $"<li><strong>{t.Nome} {t.Cognome}</strong></li>";
+            }
+            html += "</ul>";
+
+            return Content(html);
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
