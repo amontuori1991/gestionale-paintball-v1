@@ -68,6 +68,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         {
             var partite = await _dbContext.Partite.Include(p => p.Tesseramenti).ToListAsync();
             var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+            var dueSettimaneFa = oggi.AddDays(-14);
 
             var datePartite = partite.Select(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc)).Distinct().ToList();
             var assenzeCalendario = await _dbContext.AssenzeCalendario.Where(a => datePartite.Contains(DateTime.SpecifyKind(a.Data.Date, DateTimeKind.Utc))).ToListAsync();
@@ -84,21 +85,21 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .ToList();
 
             var partitePassate = partite
-                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) < oggi && !p.IsDeleted)
+                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) < oggi && DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= dueSettimaneFa && !p.IsDeleted)
                 .OrderByDescending(p => p.Data + p.OraInizio)
                 .ToList();
 
             var partiteCancellate = partite
-                .Where(p => p.IsDeleted)
+                .Where(p => p.IsDeleted && DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= dueSettimaneFa)
                 .OrderByDescending(p => p.Data + p.OraInizio)
                 .ToList();
-
 
             ViewBag.PartiteCancellate = partiteCancellate;
             ViewBag.PartiteFuture = partiteFuture;
             ViewBag.PartitePassate = partitePassate;
             return View();
         }
+
 
         public IActionResult Create() => View();
 
@@ -166,6 +167,72 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var partita = await _dbContext.Partite.FindAsync(id);
             return partita == null ? NotFound() : View(partita);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Archivio()
+        {
+            var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+            var sogliaArchivio = oggi.AddDays(-14);
+
+            var partite = await _dbContext.Partite
+                .Where(p => p.Data < sogliaArchivio)
+                .OrderByDescending(p => p.Data)
+                .ToListAsync();
+
+            var archivio = new Dictionary<int, Dictionary<int, List<Partita>>>();
+
+            foreach (var partita in partite)
+            {
+                var anno = partita.Data.Year;
+                var mese = partita.Data.Month;
+
+                if (!archivio.ContainsKey(anno))
+                    archivio[anno] = new Dictionary<int, List<Partita>>();
+
+                if (!archivio[anno].ContainsKey(mese))
+                    archivio[anno][mese] = new List<Partita>();
+
+                archivio[anno][mese].Add(partita);
+            }
+
+            var model = new ArchivioViewModel
+            {
+                Archivio = archivio
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult GeneraMessaggioDettagli(int id)
+        {
+            var partita = _dbContext.Partite.FirstOrDefault(p => p.Id == id);
+
+            if (partita == null)
+            {
+                return Json(new { success = false, messaggio = "Partita non trovata." });
+            }
+
+            string messaggio = $@"
+<strong>Data:</strong> {partita.Data:dd/MM/yyyy}<br>
+<strong>Ora:</strong> {partita.OraInizio}<br>
+<strong>Riferimento:</strong> {partita.Riferimento}<br>
+<strong>Durata:</strong> {partita.Durata} ore<br>
+<strong>Partecipanti:</strong> {partita.NumeroPartecipanti}<br>
+<strong>Caparra:</strong> {partita.Caparra:0.00}€<br>";
+
+            if (partita.Torneo)
+                messaggio += "<strong>🏆 Torneo</strong><br>";
+
+            if (partita.ColpiIllimitati)
+                messaggio += "<strong>♾️ Colpi Illimitati</strong><br>";
+
+            if (partita.Caccia)
+                messaggio += "<strong>🐰 Caccia al Coniglio</strong><br>";
+
+            return Json(new { success = true, messaggio });
+        }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

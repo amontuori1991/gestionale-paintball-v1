@@ -1,0 +1,47 @@
+﻿/* Responsive design Archivio */
+@media (max-width: 768px) {
+    .table, .table thead, .table tbody, .table th, .table td, .table tr {
+        display: block;
+    }
+
+        .table thead tr {
+            display: none;
+        }
+
+        .table tr {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        .table td {
+            text-align: left;
+            padding: 10px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+            .table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                display: block;
+                margin-bottom: 5px;
+                color: #333;
+            }
+}
+
+/* Migliorie titoli sezioni Archivio */
+.titolo-sezione-archivio {
+    font-size: 1.1rem;
+    font-weight: bold;
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-left: 4px solid #0d6efd;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
