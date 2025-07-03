@@ -115,6 +115,32 @@
 					console.error('❌ Errore durante la registrazione del Service Worker:', error);
 				});
 		}
+
+		window.addEventListener('beforeinstallprompt', (e) => {
+
+			const url = window.location.href.toLowerCase();
+
+			if (url.includes('/tesseramento')) {
+				console.log("🔒 Banner PWA disattivato sulla pagina tesseramento");
+				return;
+			}
+
+			e.preventDefault();
+			let deferredPrompt = e;
+
+			setTimeout(() => {
+				deferredPrompt.prompt();
+
+				deferredPrompt.userChoice.then((choiceResult) => {
+					if (choiceResult.outcome === 'accepted') {
+						console.log('✅ App aggiunta alla schermata Home');
+					} else {
+						console.log('ℹ️ Utente ha ignorato il banner');
+					}
+					deferredPrompt = null;
+				});
+			}, 2000);
+		});
 	</script>
 
 
