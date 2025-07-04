@@ -74,6 +74,20 @@ footer.footer {
     margin-top: auto;
 }
 
+.container {
+    position: relative;
+    z-index: 2;
+    padding-top: 80px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
 .table {
     --bs-table-bg: transparent;
     --bs-table-striped-bg: transparent;

@@ -577,7 +577,7 @@ Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 📎 Link Tesseramento: <a href='{linkTesseramento}' target='_blank'>{linkTesseramento}</a><br><br>
 Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>
 Potrete visualizzare in tempo reale gli iscritti qui:<br>
-🔎 <a href='{linkTesseratiPubblico}' target='_blank'>Visualizza Iscritti</a><br><br>
+🔎 <a href='{linkTesseratiPubblico}' target='_blank'>{linkTesseratiPubblico}</a><br><br>
 Eventuali colpi extra potranno essere acquistati al campo.<br>
 È richiesto l'arrivo almeno 15 minuti prima della prenotazione.<br>
 Il tempo di gioco inizia alle {partita.OraInizio} anche in caso di ritardo.<br>
