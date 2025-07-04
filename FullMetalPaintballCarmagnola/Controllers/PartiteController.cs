@@ -558,10 +558,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             string extraCaccia = partita.Caccia ? "💥 Extra: Caccia al Coniglio 60€" : "";
 
-            // Costruzione del link al tesseramento dinamico per quella partita
+            // Costruzione dei link dinamici per la partita
             string baseUrl = $"{Request.Scheme}://{Request.Host}";
             string linkTesseramento = $"{baseUrl}/Tesseramento?partitaId={partita.Id}";
-
+            string linkTesseratiPubblico = $"{baseUrl}/Partite/VisualizzaTesseratiPubblico/{partita.Id}";
 
             string messaggio = $@"
 Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
@@ -574,9 +574,10 @@ Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 💰 {prezzo} a testa<br>
 🎯 Colpi a disposizione: {colpi}<br>
 {extraCaccia}<br><br>
-📎 Link Tesseramento: {linkTesseramento}<br><br>
+📎 Link Tesseramento: <a href='{linkTesseramento}' target='_blank'>{linkTesseramento}</a><br><br>
 Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>
-Tramite lo stesso link, in fondo alla pagina, potete visualizzare l'elenco dei tesserati già registrati.<br><br>
+Potrete visualizzare in tempo reale gli iscritti qui:<br>
+🔎 <a href='{linkTesseratiPubblico}' target='_blank'>Visualizza Iscritti</a><br><br>
 Eventuali colpi extra potranno essere acquistati al campo.<br>
 È richiesto l'arrivo almeno 15 minuti prima della prenotazione.<br>
 Il tempo di gioco inizia alle {partita.OraInizio} anche in caso di ritardo.<br>
@@ -590,6 +591,7 @@ Ti aspettiamo! 🎯";
 
             return Json(new { success = true, messaggio });
         }
+
 
     }
 }
