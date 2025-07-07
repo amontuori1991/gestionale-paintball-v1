@@ -29,6 +29,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         private async Task SendNotificationToAllUsers(string subject, string messageHtml)
         {
+            var emails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             var users = await _userManager.Users.ToListAsync();
             var adminEmails = _configuration.GetSection("AdminNotifications").Get<string[]>();
 
@@ -36,35 +38,34 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             {
                 if (!string.IsNullOrEmpty(user.Email))
                 {
-                    try
-                    {
-                        await _emailService.SendEmailAsync(user.Email, subject, messageHtml);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Errore nell'invio email a {user.Email}: {ex.Message}");
-                    }
+                    emails.Add(user.Email.Trim().ToLowerInvariant());
                 }
             }
 
-            if (adminEmails != null && adminEmails.Any())
+            if (adminEmails != null)
             {
                 foreach (var adminEmail in adminEmails)
                 {
                     if (!string.IsNullOrEmpty(adminEmail))
                     {
-                        try
-                        {
-                            await _emailService.SendEmailAsync(adminEmail, subject, messageHtml);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Errore nell'invio email all'admin {adminEmail}: {ex.Message}");
-                        }
+                        emails.Add(adminEmail.Trim().ToLowerInvariant());
                     }
                 }
             }
+
+            foreach (var email in emails)
+            {
+                try
+                {
+                    await _emailService.SendEmailAsync(email, subject, messageHtml);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Errore nell'invio email a {email}: {ex.Message}");
+                }
+            }
         }
+
 
         public async Task<IActionResult> Index()
         {
