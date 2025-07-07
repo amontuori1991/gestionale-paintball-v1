@@ -167,6 +167,30 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var partita = await _dbContext.Partite.FindAsync(id);
             return partita == null ? NotFound() : View(partita);
         }
+        // Nel controller PartiteController
+        [HttpGet]
+        public async Task<IActionResult> Semplificata()
+        {
+            var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+
+            var partite = await _dbContext.Partite
+                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= oggi && !p.IsDeleted)
+                .OrderBy(p => p.Data)
+                .ThenBy(p => p.OraInizio)
+                .ToListAsync();
+
+            var assenze = await _dbContext.AssenzeCalendario
+                .Where(a => DateTime.SpecifyKind(a.Data.Date, DateTimeKind.Utc) >= oggi)
+                .ToListAsync();
+
+            foreach (var partita in partite)
+            {
+                var assenza = assenze.FirstOrDefault(a => DateTime.SpecifyKind(a.Data.Date, DateTimeKind.Utc) == DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc));
+                partita.Reperibile = assenza != null ? assenza.Reperibile : "In attesa";
+            }
+
+            return View(partite);
+        }
 
         [HttpGet]
         public async Task<IActionResult> Archivio()

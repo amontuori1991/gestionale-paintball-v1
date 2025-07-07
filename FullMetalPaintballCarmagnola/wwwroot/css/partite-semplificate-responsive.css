@@ -1,0 +1,118 @@
+﻿
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+th {
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #CED4B5;
+    font-family: Arial, sans-serif;
+}
+
+.container-custom {
+    padding-top: 50px;
+    padding-bottom: 50px;
+    max-width: 95%;
+    margin: auto;
+    position: relative;
+}
+
+.tabella-semplificata {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+    .tabella-semplificata th,
+    .tabella-semplificata td {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .tabella-semplificata th {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+.calendario-bg-success {
+    background-color: #198754 !important;
+    color: white;
+}
+
+.calendario-bg-danger {
+    background-color: #dc3545 !important;
+    color: white;
+}
+
+.calendario-bg-warning {
+    background-color: #ffc107 !important;
+    color: black;
+}
+/*
+@media (max-width: 768px) {
+    .tabella-semplificata {
+        border: none;
+        width: 100%;
+    }
+
+        .tabella-semplificata thead {
+            display: none;
+        }
+
+        .tabella-semplificata tbody tr {
+            display: block;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tabella-semplificata td {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+        }
+
+            .tabella-semplificata td[data-label]:before {
+                content: attr(data-label);
+                font-weight: bold;
+                color: #333;
+            }
+
+            .tabella-semplificata td:last-child {
+                border-bottom: none;
+            }
+
+            .tabella-semplificata td.calendario-bg-success,
+            .tabella-semplificata td.calendario-bg-danger,
+            .tabella-semplificata td.calendario-bg-warning {
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+            }
+}
+    /*

@@ -21,8 +21,10 @@
             <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
                 <a class="btn btn-success" href="@Url.Action("Create", "Partite")">➕ Aggiungi Partita</a>
                 <a class="btn btn-secondary" href="@Url.Action("Archivio", "Partite")">📂 Archivio</a>
+                <a class="btn btn-primary" href="@Url.Action("Semplificata", "Partite")">✨ Visualizzazione Semplificata</a>
             </div>
         </p>
+
 
         @Html.Partial("_PartiteTable", partiteFuture, new ViewDataDictionary(ViewData) { { "Titolo", "📅 Prossime Partite" } })
 

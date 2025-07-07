@@ -260,6 +260,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGFydGl0ZVxNb3N0cmFUZXNzZXJhdGkuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Partite/Semplificata.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGFydGl0ZVxTZW1wbGlmaWNhdGEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Partite/TesseratiPerPartita.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGFydGl0ZVxUZXNzZXJhdGlQZXJQYXJ0aXRhLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

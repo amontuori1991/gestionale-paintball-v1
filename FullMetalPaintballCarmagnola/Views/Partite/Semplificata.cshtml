@@ -1,0 +1,69 @@
+﻿@model List<Full_Metal_Paintball_Carmagnola.Models.Partita>
+@using System.Globalization
+
+<link href="~/css/partite-semplificate-responsive.css" rel="stylesheet" />
+
+@{
+    ViewData["Title"] = "Visualizzazione Semplificata";
+}
+
+<div class="content-container">
+    <h2 class="text-center">Partite Future</h2>
+
+    <div class="d-flex justify-content-center mb-3">
+        <a class="btn btn-secondary" href="@Url.Action("Index", "Partite")">⬅ Torna alle Prenotazioni</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="tabella-semplificata table table-bordered">
+            <thead>
+                <tr>
+                    <th>Rep.</th>
+                    <th>Giorno</th>
+                    <th>Staff1</th>
+                    <th>Staff2</th>
+                    <th>Staff3</th>
+                    <th>Staff4</th>
+                    <th>Inizio</th>
+                    <th>Durata</th>
+                    <th>Nr. P.</th>
+                    <th>Caparra</th>
+                    <th>Torneo</th>
+                    <th>Illimit.</th>
+                    <th>Caccia</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var partita in Model)
+                {
+                    var giornoCompleto = partita.Data.ToString("dddd dd/MM/yyyy", new CultureInfo("it-IT"));
+                    var giornoClass = (partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday) ? "calendario-bg-warning" : "";
+                    var repClass = (partita.Reperibile == "Nessuno") ? "calendario-bg-danger" : "calendario-bg-success";
+
+                    <tr>
+                        <td data-label="Rep." class="@repClass">@partita.Reperibile</td>
+                        <td data-label="Giorno" class="@giornoClass">@giornoCompleto</td>
+                        <td data-label="Staff1">@partita.Staff1</td>
+                        <td data-label="Staff2">@partita.Staff2</td>
+                        <td data-label="Staff3">@partita.Staff3</td>
+                        <td data-label="Staff4">@partita.Staff4</td>
+                        <td data-label="Inizio">@partita.OraInizio.ToString(@"hh\:mm")</td>
+                        <td data-label="Durata">@partita.Durata</td>
+                        <td data-label="Nr. P.">@partita.NumeroPartecipanti</td>
+                        <td data-label="Caparra">@partita.Caparra.ToString("0.00") €</td>
+
+                        <td data-label="Torneo" class="@(partita.Torneo ? "calendario-bg-success" : "calendario-bg-danger")">
+                            @(partita.Torneo ? "SI" : "NO")
+                        </td>
+                        <td data-label="Illimit." class="@(partita.ColpiIllimitati ? "calendario-bg-success" : "calendario-bg-danger")">
+                            @(partita.ColpiIllimitati ? "SI" : "NO")
+                        </td>
+                        <td data-label="Caccia" class="@(partita.Caccia ? "calendario-bg-success" : "calendario-bg-danger")">
+                            @(partita.Caccia ? "SI" : "NO")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
