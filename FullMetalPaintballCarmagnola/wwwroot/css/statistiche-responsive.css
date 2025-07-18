@@ -108,4 +108,12 @@
         display: block;
         margin-bottom: 5px;
     }
+
+    /* Regola altezza del canvas su mobile */
+    @media screen and (max-width: 768px) {
+        #graficoMensile {
+            height: 350px !important;
+        }
+    }
+
 }

@@ -1,169 +1,129 @@
 ﻿@{
     ViewData["Title"] = "Statistiche";
-    var labels = ViewBag.Labels as List<string>;
     var anni = ViewBag.Anni as List<string>;
-    var dati = ViewBag.Dati as Dictionary<string, Dictionary<string, int>>;
-    var datiCancellati = ViewBag.DatiCancellati as Dictionary<string, Dictionary<string, int>>;
-
-    var colorsConfermate = new string[] { "#0d6efd", "#198754", "#ffc107", "#0dcaf0", "#6f42c1", "#fd7e14" };
-    var colorsCancellate = new string[] { "#dc3545", "#b02a37", "#a71d2a", "#870000", "#700000", "#5a0000" };
+    var datiMese = ViewBag.DatiMese as Dictionary<string, int>;
+    var datiCancellatiMese = ViewBag.DatiCancellatiMese as Dictionary<string, int>;
+    var annualTotals = ViewBag.AnnualTotals as Dictionary<string, ValueTuple<int, int>>;
+    int meseCorrente = ViewBag.MeseCorrente;
+    string labelMese = ViewBag.LabelMese;
+    var colors = new[] { "#0d6efd", "#198754", "#ffc107", "#0dcaf0", "#6f42c1", "#fd7e14", "#20c997", "#6610f2", "#e83e8c" };
 }
 
 <link href="~/css/statistiche-responsive.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="background-logo"></div>
 
 <div class="statistiche-container">
-    <h2>Statistiche Partite per Mese</h2>
+    <h2>Statistiche Partite – @labelMese</h2>
 
-    <canvas id="graficoPartite" width="800" height="400"></canvas>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary">← Mese Precedente</a>
+        <strong>@labelMese.ToUpper()</strong>
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary">Mese Successivo →</a>
+    </div>
 
-    <hr style="margin-top: 50px; margin-bottom: 50px;" />
+    <canvas id="graficoMensile" style="max-height: 300px; width: 100%;"></canvas>
 
-    <h2>Riepilogo Totali Partite</h2>
 
+    <hr style="margin-top: 50px; margin-bottom: 30px;" />
+
+    <h3>Riepilogo</h3>
     <table class="summary-table responsive-table">
         <thead>
             <tr>
-                <th rowspan="2">Mese</th>
-                @foreach (var anno in anni)
-                {
-                    <th colspan="2">@anno</th>
-                }
-                <th rowspan="2">Totale Mensile</th>
-            </tr>
-            <tr>
-                @foreach (var anno in anni)
-                {
-                    <th>Confermate</th>
-                    <th>Cancellate</th>
-                }
+                <th>Anno</th>
+                <th>Confermate (@labelMese)</th>
+                <th>Cancellate (@labelMese)</th>
+                <th>Totale Anno Confermate</th>
+                <th>Totale Anno Cancellate</th>
             </tr>
         </thead>
         <tbody>
-            @{
-                var annualTotalsConfermate = new Dictionary<string, int>();
-                var annualTotalsCancellate = new Dictionary<string, int>();
-                foreach (var anno in anni)
-                {
-                    annualTotalsConfermate[anno] = 0;
-                    annualTotalsCancellate[anno] = 0;
-                }
-            }
-
-            @for (int i = 0; i < labels.Count; i++)
+            @foreach (var anno in anni)
             {
-                var meseLabel = labels[i];
-                var meseKey = (i + 1).ToString("D2");
-                int monthlyGrandTotal = 0;
+                var conf = datiMese.ContainsKey(anno) ? datiMese[anno] : 0;
+                var canc = datiCancellatiMese.ContainsKey(anno) ? datiCancellatiMese[anno] : 0;
+                var annualConf = annualTotals.ContainsKey(anno) ? annualTotals[anno].Item1 : 0;
+                var annualCanc = annualTotals.ContainsKey(anno) ? annualTotals[anno].Item2 : 0;
 
                 <tr>
-                    <td data-label="Mese">@meseLabel</td>
-                    @foreach (var anno in anni)
-                    {
-                        var confermate = dati.ContainsKey(anno) && dati[anno].ContainsKey(meseKey) ? dati[anno][meseKey] : 0;
-                        var cancellate = datiCancellati != null && datiCancellati.ContainsKey(anno) && datiCancellati[anno].ContainsKey(meseKey) ? datiCancellati[anno][meseKey] : 0;
-
-                        <td data-label="Confermate @anno">@confermate</td>
-                        <td data-label="Cancellate @anno">@cancellate</td>
-
-                        annualTotalsConfermate[anno] += confermate;
-                        annualTotalsCancellate[anno] += cancellate;
-                        monthlyGrandTotal += (confermate + cancellate);
-                    }
-                    <td data-label="Totale Mensile" class="total-column">@monthlyGrandTotal</td>
+                    <td>@anno</td>
+                    <td>@conf</td>
+                    <td>@canc</td>
+                    <td>@annualConf</td>
+                    <td>@annualCanc</td>
                 </tr>
             }
-            <tr class="total-row">
-                <th data-label="Totale Anno">Totale Anno</th>
-                @foreach (var anno in anni)
-                {
-                    <td data-label="Confermate @anno">@annualTotalsConfermate[anno]</td>
-                    <td data-label="Cancellate @anno">@annualTotalsCancellate[anno]</td>
-                }
-                <td></td>
-            </tr>
-
         </tbody>
     </table>
-
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    const labels = @Html.Raw(Json.Serialize(labels));
-    const datasets = [];
+    const labels = @Html.Raw(Json.Serialize(anni));
+    const datiConfermate = @Html.Raw(Json.Serialize(datiMese));
+    const datiCancellate = @Html.Raw(Json.Serialize(datiCancellatiMese));
+    const colorList = @Html.Raw(Json.Serialize(colors));
+    const isMobile = window.innerWidth < 768;
 
-    @for (var i = 0; i < anni.Count; i++)
-    {
-            var anno = anni[i];
-            var confermateValues = new List<int>();
-            var cancellateValues = new List<int>();
+    const confermateData = labels.map((anno) => datiConfermate[anno] || 0);
+    const cancellateData = labels.map((anno) => datiCancellate[anno] || 0);
 
-            for (int mese = 1; mese <= 12; mese++)
+    const data = {
+        labels: labels,
+        datasets: [
             {
-                    var key = mese.ToString("D2");
-                    int confermate = dati.ContainsKey(anno) && dati[anno].ContainsKey(key) ? dati[anno][key] : 0;
-                    int cancellate = datiCancellati != null && datiCancellati.ContainsKey(anno) && datiCancellati[anno].ContainsKey(key) ? datiCancellati[anno][key] : 0;
-
-                    confermateValues.Add(confermate);
-                    cancellateValues.Add(cancellate);
+                label: 'Confermate',
+                data: confermateData,
+                backgroundColor: labels.map((_, i) => colorList[i % colorList.length]),
+                barThickness: isMobile ? 10 : 14
+            },
+            {
+                label: 'Cancellate',
+                data: cancellateData,
+                backgroundColor: '#dc3545',
+                barThickness: isMobile ? 10 : 14
             }
-
-            var colorIndex = i % colorsConfermate.Length;
-
-            <text>
-            datasets.push({
-                label: 'Anno @anno - Confermate',
-                data: [@string.Join(",", confermateValues)],
-                backgroundColor: '@colorsConfermate[colorIndex]',
-                stack: '@anno',
-                borderWidth: 1
-            });
-            datasets.push({
-                label: 'Anno @anno - Cancellate',
-                data: [@string.Join(",", cancellateValues)],
-                backgroundColor: '@colorsCancellate[colorIndex]',
-                stack: '@anno',
-                borderWidth: 1
-            });
-            </text>
-    }
+        ]
+    };
 
     const config = {
         type: 'bar',
-        data: {
-            labels: labels,
-            datasets: datasets
-        },
+        data: data,
         options: {
+            indexAxis: 'y',
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'top',
+                    position: 'bottom'
                 },
                 title: {
                     display: true,
-                    text: 'Confronto Partite Mese per Mese (Anni)'
+                    text: 'Confronto partite - @labelMese'
                 }
             },
             scales: {
                 x: {
-                    stacked: true
-                },
-                y: {
                     beginAtZero: true,
-                    stacked: true,
                     title: {
                         display: true,
                         text: 'Numero Partite'
+                    }
+                },
+                y: {
+                    ticks: {
+                        autoSkip: false
                     }
                 }
             }
         }
     };
 
-    const ctx = document.getElementById('graficoPartite').getContext('2d');
-    new Chart(ctx, config);
+    const canvas = document.getElementById('graficoMensile');
+    canvas.height = isMobile ? 280 : 220;
+
+    new Chart(canvas.getContext('2d'), config);
 </script>
+
+
