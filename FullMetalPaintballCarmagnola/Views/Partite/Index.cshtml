@@ -49,6 +49,24 @@
         </div>
     </div>
 </div>
+<!-- Overlay di attesa per invio recensione -->
+<div id="overlay-recensione" style="
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    font-weight: bold;
+">
+    Invio in corso, attendere...
+</div>
+
 
 @section Scripts {
     <script>
@@ -91,35 +109,41 @@
                 });
             });
 
-            $('.btn-invia-recensione').on('click', function () {
-                var partitaId = $(this).data('id');
-                Swal.fire({
-                    title: 'Sei sicuro?',
-                    text: "Vuoi inviare la richiesta di recensione per la partita selezionata?",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Invia',
-                    cancelButtonText: 'Annulla'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '@Url.Action("InviaRecensione", "Partite")',
-                            method: 'POST',
-                            data: { id: partitaId },
-                            success: function (response) {
-                                if (response.success) {
-                                    Swal.fire('Inviato!', response.message || 'Email inviate con successo!', 'success');
-                                } else {
-                                    Swal.fire('Errore', response.message || 'Errore nell\'invio delle email.', 'error');
-                                }
-                            },
-                            error: function () {
-                                Swal.fire('Errore', 'Errore nell\'invio delle email.', 'error');
+        $('.btn-invia-recensione').on('click', function () {
+            var partitaId = $(this).data('id');
+            Swal.fire({
+                title: 'Sei sicuro?',
+                text: "Vuoi inviare la richiesta di recensione per la partita selezionata?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Invia',
+                cancelButtonText: 'Annulla'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Mostra overlay
+                    $('#overlay-recensione').css('display', 'flex');
+
+                    $.ajax({
+                        url: '@Url.Action("InviaRecensione", "Partite")',
+                        method: 'POST',
+                        data: { id: partitaId },
+                        success: function (response) {
+                            $('#overlay-recensione').hide(); // Nascondi overlay
+                            if (response.success) {
+                                Swal.fire('Inviato!', response.message || 'Email inviate con successo!', 'success');
+                            } else {
+                                Swal.fire('Errore', response.message || 'Errore nell\'invio delle email.', 'error');
                             }
-                        });
-                    }
-                });
+                        },
+                        error: function () {
+                            $('#overlay-recensione').hide(); // Nascondi overlay in caso di errore
+                            Swal.fire('Errore', 'Errore nell\'invio delle email.', 'error');
+                        }
+                    });
+                }
             });
+        });
+
 
             $('.btn-messaggio-prenotazione').on('click', function () {
                 var partitaId = $(this).data('id');
