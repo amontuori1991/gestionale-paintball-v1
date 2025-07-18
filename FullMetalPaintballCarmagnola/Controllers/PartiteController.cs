@@ -282,13 +282,39 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         public async Task<IActionResult> Edit(int id, Partita partita)
         {
             if (id != partita.Id) return NotFound();
+
             if (ModelState.IsValid)
             {
-                partita.Data = DateTime.SpecifyKind(partita.Data, DateTimeKind.Utc);
-                try { _dbContext.Update(partita); await _dbContext.SaveChangesAsync(); }
-                catch (DbUpdateConcurrencyException) { if (!_dbContext.Partite.Any(p => p.Id == id)) return NotFound(); else throw; }
+                var existingPartita = await _dbContext.Partite.FindAsync(id);
+                if (existingPartita == null) return NotFound();
+
+                // Aggiorna solo i campi modificabili (escludendo Staff1–4)
+                existingPartita.Data = DateTime.SpecifyKind(partita.Data, DateTimeKind.Utc);
+                existingPartita.OraInizio = partita.OraInizio;
+                existingPartita.Durata = partita.Durata;
+                existingPartita.NumeroPartecipanti = partita.NumeroPartecipanti;
+                existingPartita.Caparra = partita.Caparra;
+                existingPartita.CaparraConfermata = partita.CaparraConfermata;
+                existingPartita.MetodoPagamentoCaparra = partita.MetodoPagamentoCaparra;
+                existingPartita.Torneo = partita.Torneo;
+                existingPartita.ColpiIllimitati = partita.ColpiIllimitati;
+                existingPartita.Caccia = partita.Caccia;
+                existingPartita.Riferimento = partita.Riferimento;
+                existingPartita.Annotazioni = partita.Annotazioni;
+
+                try
+                {
+                    await _dbContext.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_dbContext.Partite.Any(p => p.Id == id)) return NotFound();
+                    else throw;
+                }
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(partita);
         }
 
