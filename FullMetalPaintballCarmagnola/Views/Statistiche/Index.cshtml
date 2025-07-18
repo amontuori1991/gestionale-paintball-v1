@@ -60,31 +60,32 @@
 </div>
 
 <script>
-    const labels = @Html.Raw(Json.Serialize(anni));
+    const anni = @Html.Raw(Json.Serialize(anni));
     const datiConfermate = @Html.Raw(Json.Serialize(datiMese));
     const datiCancellate = @Html.Raw(Json.Serialize(datiCancellatiMese));
     const colorList = @Html.Raw(Json.Serialize(colors));
     const isMobile = window.innerWidth < 768;
 
-    const confermateData = labels.map((anno) => datiConfermate[anno] || 0);
-    const cancellateData = labels.map((anno) => datiCancellate[anno] || 0);
+    const datasets = [];
+
+    anni.forEach((anno, i) => {
+        datasets.push({
+            label: `${anno} - Confermate`,
+            data: [datiConfermate[anno] || 0],
+            backgroundColor: colorList[i % colorList.length],
+            barThickness: isMobile ? 10 : 14
+        });
+        datasets.push({
+            label: `${anno} - Cancellate`,
+            data: [datiCancellate[anno] || 0],
+            backgroundColor: '#dc3545',
+            barThickness: isMobile ? 10 : 14
+        });
+    });
 
     const data = {
-        labels: labels,
-        datasets: [
-            {
-                label: 'Confermate',
-                data: confermateData,
-                backgroundColor: labels.map((_, i) => colorList[i % colorList.length]),
-                barThickness: isMobile ? 10 : 14
-            },
-            {
-                label: 'Cancellate',
-                data: cancellateData,
-                backgroundColor: '#dc3545',
-                barThickness: isMobile ? 10 : 14
-            }
-        ]
+        labels: [''], // singola etichetta Y per impilare le barre
+        datasets: datasets
     };
 
     const config = {
@@ -96,7 +97,13 @@
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 14,
+                        font: {
+                            size: 12
+                        }
+                    }
                 },
                 title: {
                     display: true,
@@ -112,18 +119,14 @@
                     }
                 },
                 y: {
-                    ticks: {
-                        autoSkip: false
-                    }
+                    display: false // nasconde l'etichetta vuota
                 }
             }
         }
     };
 
-    const canvas = document.getElementById('graficoMensile');
-    canvas.height = isMobile ? 280 : 220;
-
-    new Chart(canvas.getContext('2d'), config);
+    new Chart(document.getElementById('graficoMensile').getContext('2d'), config);
 </script>
+
 
 
