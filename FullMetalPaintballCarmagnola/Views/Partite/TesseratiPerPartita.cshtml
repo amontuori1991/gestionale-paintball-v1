@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Tesserati della Partita";
-    var partitaId = ViewBag.PartitaId;
 }
 
 <style>
@@ -66,6 +65,7 @@
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            vertical-align: middle;
         }
 
         .partite-table th {
@@ -86,15 +86,15 @@
 <div class="background-logo"></div>
 
 <div class="container-list list-container">
-    <h2 class="mb-4">Tesserati per la partita del giorno @Model.DataPartita.ToString("dd/MM/yyyy") alle ore @Model.OraPartita</h2>
+    <h2 class="mb-4">Tesserati per la partita del @Model.DataPartita.ToString("dd/MM/yyyy") alle @Model.OraPartita</h2>
 
     <p>
-        <a class="btn btn-secondary" href="@Url.Action("Index", "Partite")">🔙 Torna alle Partite</a>
+        <a class="btn btn-secondary" asp-controller="Partite" asp-action="Index">🔙 Torna alle Partite</a>
     </p>
 
     @if (!Model.Tesserati.Any())
     {
-        <div class="alert alert-info">
+        <div class="alert alert-info mt-3">
             Nessun tesserato registrato per questa partita.
         </div>
     }
@@ -105,7 +105,7 @@
                 <tr>
                     <th>Nome</th>
                     <th>Cognome</th>
-                    <th>Azioni</th>
+                    <th style="width: 150px;">Azioni</th>
                 </tr>
             </thead>
             <tbody>
@@ -116,8 +116,9 @@
                         <td>@t.Cognome</td>
                         <td>
                             <form asp-action="RimuoviTesserato" asp-controller="Partite" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@t.Id" />
-                                <input type="hidden" name="partitaId" value="@partitaId" />
+                                <input type="hidden" name="partitaId" value="@Model.PartitaId" />
                                 <button type="button" class="btn btn-sm btn-danger" onclick="apriConfermaEliminazione('@t.Nome', '@t.Cognome', this.closest('form'))">❌ Rimuovi</button>
                             </form>
                         </td>
@@ -128,7 +129,6 @@
     }
 </div>
 
-<!-- Modale Bootstrap -->
 <div class="modal fade" id="confermaEliminazioneModal" tabindex="-1" aria-labelledby="confermaEliminazioneLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -147,17 +147,21 @@
     </div>
 </div>
 
-<script>
-    let formDaInviare = null;
+@section Scripts {
+    <script>
+        let formDaInviare = null;
 
-    function apriConfermaEliminazione(nome, cognome, form) {
-        formDaInviare = form;
-        document.getElementById('testoConferma').innerText = `Vuoi davvero eliminare il tesserato ${nome} ${cognome} dal database? Questa operazione è definitiva.`;
-        const modal = new bootstrap.Modal(document.getElementById('confermaEliminazioneModal'));
-        modal.show();
-    }
+        function apriConfermaEliminazione(nome, cognome, form) {
+            formDaInviare = form;
+            document.getElementById('testoConferma').innerText = `Vuoi davvero eliminare il tesserato ${nome} ${cognome}? Questa operazione è definitiva.`;
+            const modal = new bootstrap.Modal(document.getElementById('confermaEliminazioneModal'));
+            modal.show();
+        }
 
-    document.getElementById('btnConfermaElimina').addEventListener('click', function () {
-        if (formDaInviare) formDaInviare.submit();
-    });
-</script>
+        document.getElementById('btnConfermaElimina').addEventListener('click', function () {
+            if (formDaInviare) {
+                formDaInviare.submit();
+            }
+        });
+    </script>
+}

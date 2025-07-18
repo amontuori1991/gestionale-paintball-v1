@@ -284,6 +284,12 @@
             <button type="submit" class="btn btn-primary">Invia</button>
         </form>
 
+        <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+            <div style="color:white; font-size:1.8rem; font-weight:bold; text-align:center; width:100%;">Attendere…</div>
+        </div>
+
+
+
         
         @if (Model.PartitaId.HasValue)
         {
@@ -483,7 +489,14 @@
                 validateAndSetSignature();
                 handleMinorenneChange();
             }
+
+            // ✅ Mostra overlay durante l'invio
+            document.getElementById('tesseramentoForm').addEventListener('submit', function () {
+                document.getElementById('loadingOverlay').style.display = 'flex';
+            });
         });
+
+
     </script>
 
 }

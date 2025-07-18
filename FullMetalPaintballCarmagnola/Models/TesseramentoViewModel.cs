@@ -11,7 +11,6 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         {
             Nome = string.Empty;
             Cognome = string.Empty;
-            // DataNascita = DateTime.Today; // <<< Mantieni commentato o rimosso
             Genere = string.Empty;
             ComuneNascita = string.Empty;
             ComuneResidenza = string.Empty;
@@ -33,7 +32,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         [Required(ErrorMessage = "La data di nascita è obbligatoria")]
         [DataType(DataType.Date)]
         [Display(Name = "Data di Nascita")]
-        public DateTime? DataNascita { get; set; } // <<< MODIFICATO QUI: RESO NULLABLE CON '?'
+        public DateTime? DataNascita { get; set; }
 
         [Required(ErrorMessage = "Il genere è obbligatorio")]
         public string Genere { get; set; }
@@ -46,7 +45,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         [Display(Name = "Comune di Residenza")]
         public string ComuneResidenza { get; set; }
 
-        [Required(ErrorMessage = "La mail è obbligatoria")]
+        [Required(ErrorMessage = "L'email è obbligatoria")]
         [EmailAddress(ErrorMessage = "L'email non è valida")]
         public string Email { get; set; }
 
@@ -54,7 +53,6 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public string? CodiceFiscale { get; set; }
 
         public string? Tessera { get; set; }
-
 
         [Required(ErrorMessage = "Il campo 'Sei minorenne?' è obbligatorio")]
         [Display(Name = "Sei minorenne?")]
@@ -76,7 +74,6 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         [Display(Name = "Data Creazione")]
         public DateTime DataCreazione { get; set; }
 
-        // Campo invisibile al form, ma usato per associare il tesseramento alla partita
         [HiddenInput(DisplayValue = false)]
         public int? PartitaId { get; set; }
 
@@ -94,16 +91,10 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 }
             }
 
-            // AGGIUNTA VALIDAZIONE PER DataNascita, ORA CHE È NULLABLE
             if (!DataNascita.HasValue)
             {
                 yield return new ValidationResult("La data di nascita è obbligatoria.", new[] { nameof(DataNascita) });
             }
-            // Puoi aggiungere altre validazioni qui, ad esempio per età minima/massima.
-            // else if (DataNascita.Value > DateTime.Now.AddYears(-18))
-            // {
-            //     yield return new ValidationResult("Devi avere almeno 18 anni.", new[] { nameof(DataNascita) });
-            // }
         }
 
         public Tesseramento ToEntity(string firmaPath)
@@ -128,7 +119,6 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 PartitaId = this.PartitaId,
                 Tessera = this.Tessera
             };
-
         }
     }
 }

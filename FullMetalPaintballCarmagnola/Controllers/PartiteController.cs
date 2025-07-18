@@ -368,27 +368,40 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
 
 
+        // In PartiteController.cs
+        // Percorso: Controllers/PartiteController.cs
+
         public async Task<IActionResult> TesseratiPerPartita(int id)
         {
-            var partita = await _dbContext.Partite.Include(p => p.Tesseramenti).FirstOrDefaultAsync(p => p.Id == id);
-            if (partita == null) return NotFound();
+            var partita = await _dbContext.Partite
+                                        .Include(p => p.Tesseramenti)
+                                        .FirstOrDefaultAsync(p => p.Id == id);
 
-            string oraPartitaFormattata = partita.OraInizio == TimeSpan.Zero
-                ? "Orario non impostato"
-                : partita.OraInizio.ToString(@"hh\:mm");
+            if (partita == null)
+            {
+                return NotFound(); // Gestisce il caso in cui l'ID non esista
+            }
+
+            string oraPartitaFormattata = partita.OraInizio.ToString(@"hh\:mm");
 
             var viewModel = new TesseratiPerPartitaViewModel
             {
+                // ✅ CONTROLLA CHE QUESTA RIGA SIA PRESENTE E CORRETTA
+                PartitaId = partita.Id,
+
                 DataPartita = partita.Data,
                 OraPartita = oraPartitaFormattata,
-                Tesserati = partita.Tesseramenti.Select(t => new TesseramentoViewModel
-                {
-                    Id = t.Id,
-                    Nome = t.Nome,
-                    Cognome = t.Cognome,
-                    DataNascita = t.DataNascita,
-                    PartitaId = t.PartitaId
-                }).ToList()
+                Tesserati = partita.Tesseramenti
+                                   .OrderBy(t => t.Nome)
+                                   .ThenBy(t => t.Cognome)
+                                   .Select(t => new TesseramentoViewModel
+                                   {
+                                       Id = t.Id,
+                                       Nome = t.Nome,
+                                       Cognome = t.Cognome,
+                                       DataCreazione = t.DataCreazione,
+                                       PartitaId = t.PartitaId
+                                   }).ToList()
             };
 
             return View(viewModel);
@@ -489,18 +502,25 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
         }
 
+        // Percorso: Controllers/PartiteController.cs
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RimuoviTesserato(int id, int partitaId)
         {
             var tesserato = await _dbContext.Tesseramenti.FindAsync(id);
-            if (tesserato == null)
-                return NotFound();
+            if (tesserato != null)
+            {
+                _dbContext.Tesseramenti.Remove(tesserato);
+                await _dbContext.SaveChangesAsync();
+            }
 
-            _dbContext.Tesseramenti.Remove(tesserato);
-            await _dbContext.SaveChangesAsync();
-
+            // Reindirizza l'utente alla stessa pagina per vedere la lista aggiornata.
             return RedirectToAction("TesseratiPerPartita", new { id = partitaId });
         }
+
+
+
 
         [HttpPost]
         public async Task<IActionResult> AggiornaStaff(int id, string campo, string valore)

@@ -23,30 +23,74 @@
                 <td>@t.Cognome</td>
                 <td>@t.DataCreazione.ToString("dd/MM/yyyy")</td>
                 <td>
-                    <form asp-action="EliminaTesserato" asp-controller="Partite" method="post" class="d-inline">
-                        <input type="hidden" name="id" value="@t.Id" />
-                        <input type="hidden" name="partitaId" value="@ViewBag.PartitaId" />
-                        <button type="button" class="btn btn-danger btn-sm" onclick="apriConfermaEliminazione('@t.Nome', '@t.Cognome', this.closest('form'))">Rimuovi</button>
-                    </form>
+                    <button type="button"
+                            class="btn btn-danger btn-sm btn-rimuovi"
+                            data-id="@t.Id"
+                            data-partita-id="@ViewBag.PartitaId"
+                            data-nome="@t.Nome"
+                            data-cognome="@t.Cognome">
+                        Rimuovi
+                    </button>
+
 
                 </td>
             </tr>
         }
     </tbody>
     <script>
-        let formDaInviare = null;
+        let idDaEliminare = null;
+        let partitaId = null;
+        let rigaDaRimuovere = null;
 
-        function apriConfermaEliminazione(nome, cognome, form) {
-            formDaInviare = form;
-            document.getElementById('testoConferma').innerText = `Vuoi davvero eliminare il tesserato ${nome} ${cognome} dal database? Questa operazione è definitiva.`;
-            let modal = new bootstrap.Modal(document.getElementById('confermaEliminazioneModal'));
-            modal.show();
-        }
+        // Quando clicchi sul bottone "Rimuovi"
+        document.querySelectorAll('.btn-rimuovi').forEach(btn => {
+            btn.addEventListener('click', function () {
+                idDaEliminare = this.dataset.id;
+                partitaId = this.dataset.partitaId;
+                rigaDaRimuovere = this.closest('tr');
 
+                const nome = this.dataset.nome;
+                const cognome = this.dataset.cognome;
+                document.getElementById('testoConferma').innerText = `Vuoi davvero eliminare il tesserato ${nome} ${cognome} dal database? Questa operazione è definitiva.`;
+
+                let modal = new bootstrap.Modal(document.getElementById('confermaEliminazioneModal'));
+                modal.show();
+            });
+        });
+
+        // Quando confermi l'eliminazione
         document.getElementById('btnConfermaElimina').addEventListener('click', function () {
-            if (formDaInviare) formDaInviare.submit();
+            if (idDaEliminare && partitaId) {
+                fetch('/Partite/RimuoviTesserato', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: parseInt(idDaEliminare),
+                        partitaId: parseInt(partitaId)
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        rigaDaRimuovere?.remove();
+
+                        // Chiudi il modale dopo la rimozione
+                        let modal = bootstrap.Modal.getInstance(document.getElementById('confermaEliminazioneModal'));
+                        if (modal) modal.hide();
+                    } else {
+                        alert("Errore nella rimozione del tesserato.");
+                    }
+                })
+                .catch(err => {
+                    console.error("Errore:", err);
+                    alert("Errore di rete durante la rimozione.");
+                });
+            }
         });
     </script>
+
 
 </table>
 
