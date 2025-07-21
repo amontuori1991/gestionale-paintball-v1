@@ -20,6 +20,7 @@
                 <tr>
                     <th>Rep.</th>
                     <th>Giorno</th>
+                    <th>Tipo</th>
                     <th>Staff1</th>
                     <th>Staff2</th>
                     <th>Staff3</th>
@@ -43,6 +44,10 @@
                     <tr>
                         <td data-label="Rep." class="@repClass">@partita.Reperibile</td>
                         <td data-label="Giorno" class="@giornoClass">@giornoCompleto</td>
+                        <td data-label="Tipo" class="@(partita.Tipo == "Kids" ? "calendario-bg-info" : "")">
+                            @partita.Tipo
+                        </td>
+
                         <td data-label="Staff1">@partita.Staff1</td>
                         <td data-label="Staff2">@partita.Staff2</td>
                         <td data-label="Staff3">@partita.Staff3</td>

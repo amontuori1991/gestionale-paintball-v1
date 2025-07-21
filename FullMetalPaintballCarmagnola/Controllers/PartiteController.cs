@@ -301,6 +301,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 existingPartita.Caccia = partita.Caccia;
                 existingPartita.Riferimento = partita.Riferimento;
                 existingPartita.Annotazioni = partita.Annotazioni;
+                existingPartita.Tipo = partita.Tipo;
 
                 try
                 {
@@ -610,25 +611,46 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return Json(new { success = false, messaggio = "Partita non trovata." });
             }
 
-            string prezzo = partita.Torneo ? "22€" : partita.Durata switch
+            string tipo = partita.Tipo?.ToLowerInvariant() ?? "adulti";
+
+            string prezzo, colpi, extraCaccia, infoTesseramento;
+
+            if (tipo == "kids")
             {
-                1 => "22€",
-                1.5 => "27€",
-                2 => "32€",
-                _ => "-"
-            };
+                prezzo = partita.Durata switch
+                {
+                    1 => "17€",
+                    1.5 => "22€",
+                    2 => "27€",
+                    _ => "-"
+                };
 
-            string colpi = partita.ColpiIllimitati ? "Illimitati" : partita.Durata switch
+                colpi = "Illimitati";
+                extraCaccia = ""; // non prevista
+                infoTesseramento = "<strong>⚠️ Il prezzo include il tesseramento con validità fino al 31/12.</strong><br>";
+            }
+            else
             {
-                1 => "200",
-                1.5 => "300",
-                2 => "400",
-                _ => "-"
-            };
+                prezzo = partita.Torneo ? "22€" : partita.Durata switch
+                {
+                    1 => "22€",
+                    1.5 => "27€",
+                    2 => "32€",
+                    _ => "-"
+                };
 
-            string extraCaccia = partita.Caccia ? "💥 Extra: Caccia al Coniglio 60€" : "";
+                colpi = partita.ColpiIllimitati ? "Illimitati" : partita.Durata switch
+                {
+                    1 => "200",
+                    1.5 => "300",
+                    2 => "400",
+                    _ => "-"
+                };
 
-            // Costruzione dei link dinamici per la partita
+                extraCaccia = partita.Caccia ? "💥 Extra: Caccia al Coniglio 60€<br>" : "";
+                infoTesseramento = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>";
+            }
+
             string baseUrl = $"{Request.Scheme}://{Request.Host}";
             string linkTesseramento = $"{baseUrl}/Tesseramento?partitaId={partita.Id}";
             string linkTesseratiPubblico = $"{baseUrl}/Partite/VisualizzaTesseratiPubblico/{partita.Id}";
@@ -637,20 +659,31 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 📅 Data: {partita.Data:dd/MM/yyyy}<br>
 🕒 Orario: {partita.OraInizio}<br>
+👶 Tipologia: {(partita.Tipo?.ToUpperInvariant() == "KIDS" ? "KIDS" : "Adulti")}<br>
 ⏳ Durata: {partita.Durata} ore<br> 
 👤 Referente: {partita.Riferimento}<br>
 👥 Nr. Partecipanti: {partita.NumeroPartecipanti}<br>
 💶 Caparra: {partita.Caparra:0.00}€<br>
 💰 {prezzo} a testa<br>
 🎯 Colpi a disposizione: {colpi}<br>
-{extraCaccia}<br><br>
+{extraCaccia}
 📎 Link Tesseramento: <a href='{linkTesseramento}' target='_blank'>{linkTesseramento}</a><br><br>
-Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>
+{infoTesseramento}
 Potrete visualizzare in tempo reale gli iscritti qui:<br>
-🔎 <a href='{linkTesseratiPubblico}' target='_blank'>{linkTesseratiPubblico}</a><br><br>
-Eventuali colpi extra potranno essere acquistati al campo.<br>
-È richiesto l'arrivo almeno 15 minuti prima della prenotazione.<br>
-Il tempo di gioco inizia alle {partita.OraInizio} anche in caso di ritardo.<br>
+🔎 <a href='{linkTesseratiPubblico}' target='_blank'>{linkTesseratiPubblico}</a><br><br>";
+
+            // ✅ Solo se NON sono illimitati
+            if (colpi != "Illimitati")
+            {
+                messaggio += "Eventuali colpi extra potranno essere acquistati al campo.<br><br>"; // << aggiunto un <br> extra
+            }
+            else
+            {
+                messaggio += "<br>"; // << per mantenere lo stacco anche se non ci sono colpi extra
+            }
+
+            messaggio += @"È richiesto l'arrivo almeno 15 minuti prima della prenotazione.<br>
+Il tempo di gioco inizia alle " + partita.OraInizio + @" anche in caso di ritardo.<br>
 Comunicare variazioni di partecipanti entro 3 ore dall'inizio.<br>
 Il campo è all'aperto, senza spogliatoi o docce: abbigliamento sportivo consigliato.<br>
 Lenti a contatto consigliate, occhiali sconsigliati sotto la maschera.<br>

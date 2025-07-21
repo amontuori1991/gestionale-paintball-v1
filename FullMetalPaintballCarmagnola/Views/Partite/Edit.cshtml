@@ -22,6 +22,17 @@
     </div>
 
     <div class="form-group">
+        <label asp-for="Tipo" class="form-label">Tipo Partita</label>
+        <select asp-for="Tipo" class="form-control">
+            <option value="Adulti">Adulti</option>
+            <option value="Kids">Kids</option>
+        </select>
+
+        <span asp-validation-for="Tipo" class="text-danger"></span>
+    </div>
+
+
+    <div class="form-group">
         <label asp-for="Riferimento"></label>
         <input asp-for="Riferimento" class="form-control" />
         <span asp-validation-for="Riferimento" class="text-danger"></span>

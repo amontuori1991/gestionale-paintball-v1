@@ -32,6 +32,7 @@
                             <thead>
                                 <tr>
                                     <th>Data e Ora</th>
+                                    <th>Tipo</th>
                                     <th>Azioni</th>
                                 </tr>
                             </thead>
@@ -40,6 +41,7 @@
                                 {
                                     <tr>
                                         <td data-label="Data e Ora">@p.Data.ToString("dd/MM/yyyy") - @p.OraInizio</td>
+                                        <td data-label="Tipo">@p.Tipo</td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-info btn-dettagli" data-id="@p.Id">Dettagli</button>
                                         </td>

@@ -13,6 +13,7 @@
             <th>Stato</th>
             <th>Data</th>
             <th>Ora Inizio</th>
+            <th>Tipo</th>
             <th>Riferimento</th>
             <th>Durata</th>
             <th>Partecipanti</th>
@@ -43,6 +44,7 @@
                 </td>
                 <td data-label="Data">@partita.Data.ToString("dddd dd/MM/yyyy")</td>
                 <td data-label="Ora Inizio">@partita.OraInizio</td>
+                <td data-label="Tipo">@partita.Tipo</td>
                 <td data-label="Riferimento">
                     <span class="ref-icon" onclick="showRiferimento('@partita.Riferimento')">📇</span>
                 </td>

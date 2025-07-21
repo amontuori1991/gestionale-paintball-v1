@@ -36,6 +36,17 @@ public class Partita
 
     public string? MetodoPagamentoCaparra { get; set; }
 
+    public enum TipoPartita
+    {
+        Adulti,
+        Kids
+    }
+
+    [Required]
+    public string Tipo { get; set; } = "Adulti";
+
+
+
     public bool Torneo { get; set; }
     public bool ColpiIllimitati { get; set; }
     public bool Caccia { get; set; }
