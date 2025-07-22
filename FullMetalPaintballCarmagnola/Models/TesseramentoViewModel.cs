@@ -23,6 +23,10 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         public int Id { get; set; }
 
+        [Display(Name = "Data Partita")]
+        public DateTime? DataPartita { get; set; }
+
+
         [Required(ErrorMessage = "Il nome è obbligatorio")]
         public string Nome { get; set; }
 

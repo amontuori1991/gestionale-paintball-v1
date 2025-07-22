@@ -134,7 +134,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         public async Task<IActionResult> ListaTesseramenti(string searchNome, string searchCognome, DateTime? dataDa, DateTime? dataA, int? partitaId)
         {
-            var query = _dbContext.Tesseramenti.AsQueryable();
+            var query = _dbContext.Tesseramenti.Include(t => t.Partita).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchNome))
                 query = query.Where(t => t.Nome.Contains(searchNome));
@@ -154,11 +154,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             if (partitaId.HasValue)
                 query = query.Where(t => t.PartitaId == partitaId.Value);
 
+            query = query.OrderByDescending(t => t.Partita.Data);
+
+
             var tesseramenti = await query.ToListAsync();
 
             var viewModels = tesseramenti.Select(t => new TesseramentoViewModel
             {
                 Id = t.Id,
+                DataPartita = t.Partita?.Data,
                 Nome = t.Nome,
                 Cognome = t.Cognome,
                 DataNascita = t.DataNascita,
