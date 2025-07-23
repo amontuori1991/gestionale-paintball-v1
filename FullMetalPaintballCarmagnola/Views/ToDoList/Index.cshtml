@@ -134,15 +134,63 @@
     </div>
 </div>
 
+<div id="overlay-todo" style="
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    font-weight: bold;
+    text-align: center;">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        Elaborazione in corso, attendere...
+    </div>
+</div>
+
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
-        function confermaElimina(id, nome) {
-            document.getElementById('attivitaIdHidden').value = id;
-            document.getElementById('attivitaNome').innerText = nome;
-            document.getElementById('formElimina').action = '/ToDoList/DeleteItem';
-            const modal = new bootstrap.Modal(document.getElementById('confermaModal'));
-            modal.show();
-        }
+        document.addEventListener("DOMContentLoaded", function () {
+            // Mostra overlay solo al submit di questi form specifici
+            const overlay = document.getElementById('overlay-todo');
+
+            // Form creazione
+            const formCrea = document.querySelector('form[asp-action="CreateItem"]');
+            if (formCrea) {
+                formCrea.addEventListener('submit', () => {
+                    overlay.style.display = 'flex';
+                });
+            }
+
+            // Form completa
+            document.querySelectorAll('form[asp-action="MarkAsCompleted"]').forEach(form => {
+                form.addEventListener('submit', () => {
+                    overlay.style.display = 'flex';
+                });
+            });
+
+            // Form note
+            document.querySelectorAll('form[asp-action="AddNote"]').forEach(form => {
+                form.addEventListener('submit', () => {
+                    overlay.style.display = 'flex';
+                });
+            });
+
+            // Form elimina
+            const formElimina = document.getElementById('formElimina');
+            if (formElimina) {
+                formElimina.addEventListener('submit', () => {
+                    overlay.style.display = 'flex';
+                });
+            }
+        });
     </script>
 }

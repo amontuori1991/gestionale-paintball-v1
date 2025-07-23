@@ -20,6 +20,7 @@ wwwroot\Firme\firma_23e48f90-7b73-4fa9-b585-d94de89615e8.png
 wwwroot\Firme\firma_24374a6c-9f9b-45e7-b42c-d41bd6712cac.png
 wwwroot\Firme\firma_265c060f-5c9d-4657-9dbf-068fb4f8b932.png
 wwwroot\Firme\firma_2aad628c-ca70-450a-96e0-1ee90db2c598.png
+wwwroot\Firme\firma_3674599f-a404-430f-8376-81f9de5dbd12.png
 wwwroot\Firme\firma_3727c948-c2b1-468b-94e2-79ca70319b27.png
 wwwroot\Firme\firma_3752d899-a9f8-4078-9323-f17ed4a0b8e2.png
 wwwroot\Firme\firma_4600f9f6-7c76-4ca4-98f6-e24465487f89.png
