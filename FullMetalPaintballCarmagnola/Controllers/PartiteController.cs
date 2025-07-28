@@ -658,7 +658,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             string messaggio = $@"
 Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 📅 Data: {partita.Data:dd/MM/yyyy}<br>
-🕒 Orario: {partita.OraInizio}<br>
+🕒 Orario: {partita.OraInizio.ToString(@"hh\:mm")}<br>
 👶 Tipologia: {(partita.Tipo?.ToUpperInvariant() == "KIDS" ? "KIDS" : "Adulti")}<br>
 ⏳ Durata: {partita.Durata} ore<br> 
 👤 Referente: {partita.Riferimento}<br>
@@ -683,7 +683,7 @@ Potrete visualizzare in tempo reale gli iscritti qui:<br>
             }
 
             messaggio += @"È richiesto l'arrivo almeno 15 minuti prima della prenotazione.<br>
-Il tempo di gioco inizia alle " + partita.OraInizio + @" anche in caso di ritardo.<br>
+Il tempo di gioco inizia alle " + partita.OraInizio.ToString(@"hh\:mm") + @" anche in caso di ritardo.<br>
 Comunicare variazioni di partecipanti entro 3 ore dall'inizio.<br>
 Il campo è all'aperto, senza spogliatoi o docce: abbigliamento sportivo consigliato.<br>
 Lenti a contatto consigliate, occhiali sconsigliati sotto la maschera.<br>
