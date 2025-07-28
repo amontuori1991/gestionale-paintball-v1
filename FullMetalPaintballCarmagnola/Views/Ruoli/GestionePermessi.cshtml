@@ -80,15 +80,24 @@
                             </form>
                         </td>
                         <td data-label="Assegna Ruolo">
-                            <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="d-flex align-items-center justify-content-start">
-                                <input type="hidden" name="userId" value="@utente.Id" />
-                                <select name="ruolo" class="form-select w-auto me-2">
-                                    <option value="Admin" selected="@(@utente.Ruolo == "Admin")">Admin</option>
-                                    <option value="Staff" selected="@(@utente.Ruolo == "Staff")">Staff</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary">Salva</button>
-                            </form>
+                            <div class="d-flex align-items-center justify-content-start flex-wrap gap-1">
+                                <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="d-flex align-items-center">
+                                    <input type="hidden" name="userId" value="@utente.Id" />
+                                    <select name="ruolo" class="form-select w-auto me-2">
+                                        <option value="Admin" selected="@(@utente.Ruolo == "Admin")">Admin</option>
+                                        <option value="Staff" selected="@(@utente.Ruolo == "Staff")">Staff</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Salva</button>
+                                </form>
+
+                                <form asp-action="EliminaUtente" asp-controller="Ruoli" method="post"
+                                      onsubmit="return confirm('Sei sicuro di voler eliminare questo utente?');">
+                                    <input type="hidden" name="id" value="@utente.Id" />
+                                    <button type="submit" class="btn btn-danger" title="Elimina utente">🗑️</button>
+                                </form>
+                            </div>
                         </td>
+
                     </tr>
                 }
             </tbody>

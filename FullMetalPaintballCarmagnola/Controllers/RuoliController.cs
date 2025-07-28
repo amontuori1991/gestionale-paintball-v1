@@ -157,4 +157,28 @@ public class RuoliController : Controller
         return RedirectToAction(nameof(GestionePermessi));
     }
 
+    [HttpPost]
+    public async Task<IActionResult> EliminaUtente(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return BadRequest();
+
+        var utente = await _userManager.FindByIdAsync(id);
+        if (utente == null)
+            return NotFound();
+
+        var result = await _userManager.DeleteAsync(utente);
+        if (result.Succeeded)
+        {
+            TempData["SuccessMessage"] = "Utente eliminato con successo!";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = "Errore durante l'eliminazione dell'utente.";
+        }
+
+        return RedirectToAction(nameof(GestionePermessi));
+    }
+
+
 }
