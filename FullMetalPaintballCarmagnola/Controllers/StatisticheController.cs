@@ -21,7 +21,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         {
             int meseCorrente = mese ?? DateTime.Now.Month;
 
-            var partiteDb = await _dbContext.Partite.Where(p => !p.IsDeleted).ToListAsync();
+            var partiteDb = await _dbContext.Partite
+    .Where(p => p.CaparraConfermata && !p.IsDeleted)
+    .ToListAsync();
+
             var partiteCancellateDb = await _dbContext.Partite.Where(p => p.IsDeleted).ToListAsync();
 
             var datiStorici = new Dictionary<string, Dictionary<string, int>>
