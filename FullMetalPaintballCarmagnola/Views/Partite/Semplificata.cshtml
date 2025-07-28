@@ -20,6 +20,7 @@
                 <tr>
                     <th>Rep.</th>
                     <th>Giorno</th>
+                    <th>Stato</th>
                     <th>Tipo</th>
                     <th>Staff1</th>
                     <th>Staff2</th>
@@ -37,16 +38,23 @@
             <tbody>
                 @foreach (var partita in Model)
                 {
+                    if (partita.IsDeleted)
+                    {
+                        continue; // ignora partite cancellate
+                    }
+
                     var giornoCompleto = partita.Data.ToString("dddd dd/MM/yyyy", new CultureInfo("it-IT"));
                     var giornoClass = (partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday) ? "calendario-bg-warning" : "";
                     var repClass = (partita.Reperibile == "Nessuno") ? "calendario-bg-danger" : "calendario-bg-success";
 
+                    var stato = partita.CaparraConfermata ? "Confermata" : "In attesa";
+                    var statoClass = partita.CaparraConfermata ? "calendario-bg-success" : "calendario-bg-warning";
+
                     <tr>
                         <td data-label="Rep." class="@repClass">@partita.Reperibile</td>
                         <td data-label="Giorno" class="@giornoClass">@giornoCompleto</td>
-                        <td data-label="Tipo" class="@(partita.Tipo == "Kids" ? "calendario-bg-info" : "")">
-                            @partita.Tipo
-                        </td>
+                        <td data-label="Stato" class="@statoClass">@stato</td>
+                        <td data-label="Tipo" class="@(partita.Tipo == "Kids" ? "calendario-bg-info" : "")">@partita.Tipo</td>
 
                         <td data-label="Staff1">@partita.Staff1</td>
                         <td data-label="Staff2">@partita.Staff2</td>
@@ -68,6 +76,8 @@
                         </td>
                     </tr>
                 }
+
+
             </tbody>
         </table>
     </div>
