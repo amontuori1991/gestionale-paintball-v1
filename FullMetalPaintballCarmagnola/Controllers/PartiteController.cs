@@ -39,25 +39,33 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         private async Task SendNotificationToAllUsers(string subject, string messageHtml)
         {
-            var users = await _userManager.Users.ToListAsync();
-            var adminEmails = _configuration.GetSection("AdminNotifications").Get<string[]>()?.Select(e => e.ToLowerInvariant()).ToList() ?? new List<string>();
+            var allUsers = await _userManager.Users.ToListAsync();
+            var staffUsers = new List<ApplicationUser>();
 
-            foreach (var user in users)
+            foreach (var user in allUsers)
+            {
+                if (await _userManager.IsInRoleAsync(user, "Staff"))
+                {
+                    staffUsers.Add(user);
+                }
+            }
+
+            foreach (var user in staffUsers)
             {
                 if (!string.IsNullOrEmpty(user.Email))
                 {
-                    var email = user.Email.ToLowerInvariant();
-
-                    // ❌ Salta se è tra gli admin
-                    if (adminEmails.Contains(email))
-                        continue;
-
-                    // ✅ Invia solo se NON è admin
-                    try { await _emailService.SendEmailAsync(email, subject, messageHtml); }
-                    catch (Exception ex) { Console.WriteLine($"Errore nell'invio email a {email}: {ex.Message}"); }
+                    try
+                    {
+                        await _emailService.SendEmailAsync(user.Email, subject, messageHtml);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Errore nell'invio email a {user.Email}: {ex.Message}");
+                    }
                 }
             }
         }
+
 
         public async Task<IActionResult> Index()
         {
