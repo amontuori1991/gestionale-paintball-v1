@@ -1,0 +1,36 @@
+﻿.todo-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+    .todo-item.completed {
+        background-color: #eafaea;
+        text-decoration: line-through;
+        opacity: 0.8;
+    }
+
+    .todo-item .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    .todo-item form {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .todo-item input.form-control-sm {
+        width: auto;
+        min-width: 150px;
+    }

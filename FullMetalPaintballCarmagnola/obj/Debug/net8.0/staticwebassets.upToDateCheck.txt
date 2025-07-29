@@ -12,6 +12,7 @@ wwwroot\css\presenze-responsive.css
 wwwroot\css\site.css
 wwwroot\css\statistiche-responsive.css
 wwwroot\css\tesseramenti-responsive.css
+wwwroot\css\todo.css
 wwwroot\favicon.png
 wwwroot\Firme\firma_068f7da4-f4ae-491a-a892-bf7c675ce69e.png
 wwwroot\Firme\firma_0e4a716a-a8ee-4505-9a4b-7e517b800124.png
