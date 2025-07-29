@@ -1,12 +1,13 @@
 ﻿@using System.Globalization
 @{
     ViewData["Title"] = "Presenze Staff";
-    <link href="~/css/presenze-responsive.css" rel="stylesheet" />
     var dateList = ViewBag.DateList as List<DateTime>;
     var reperibilitaList = ViewBag.ReperibilitaList as List<Full_Metal_Paintball_Carmagnola.Models.AssenzaCalendario>;
     var presenzaList = ViewBag.PresenzaList as List<Full_Metal_Paintball_Carmagnola.Models.PresenzaStaff>;
     var staff = new List<string> { "Simone", "Davide", "Andrea", "Federico", "Enrico" };
 }
+
+<link href="~/css/presenze-responsive.css" rel="stylesheet" />
 
 <style>
     .riga-infrasettimanale {
