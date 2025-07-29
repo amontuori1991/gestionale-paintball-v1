@@ -1,7 +1,7 @@
 ﻿@model List<Full_Metal_Paintball_Carmagnola.Models.Partita>
 @using System.Globalization
 
-<link href="~/css/partite-semplificate-responsive.css" rel="stylesheet" />
+<link href="~/css/partite-semplificate-responsive.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
 
 @{
     ViewData["Title"] = "Visualizzazione Semplificata";
@@ -20,6 +20,7 @@
                 <tr>
                     <th>Rep.</th>
                     <th>Giorno</th>
+                    <th>Data</th>
                     <th>Stato</th>
                     <th>Tipo</th>
                     <th>Staff1</th>
@@ -28,7 +29,7 @@
                     <th>Staff4</th>
                     <th>Inizio</th>
                     <th>Durata</th>
-                    <th>Nr. P.</th>
+                    <th style="white-space: nowrap;">Nr. P.</th>
                     <th>Caparra</th>
                     <th>Torneo</th>
                     <th>Illimit.</th>
@@ -43,7 +44,8 @@
                         continue; // ignora partite cancellate
                     }
 
-                    var giornoCompleto = partita.Data.ToString("dddd dd/MM/yyyy", new CultureInfo("it-IT"));
+                    var giornoNome = partita.Data.ToString("ddd", new CultureInfo("it-IT"));
+                    var dataSolo = partita.Data.ToString("dd/MM/yyyy");
                     var giornoClass = (partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday) ? "calendario-bg-warning" : "";
                     var repClass = (partita.Reperibile == "Nessuno") ? "calendario-bg-danger" : "calendario-bg-success";
 
@@ -52,7 +54,8 @@
 
                     <tr>
                         <td data-label="Rep." class="@repClass">@partita.Reperibile</td>
-                        <td data-label="Giorno" class="@giornoClass">@giornoCompleto</td>
+                        <td data-label="Giorno" class="@giornoClass">@giornoNome</td>
+                        <td data-label="Data">@dataSolo</td>
                         <td data-label="Stato" class="@statoClass">@stato</td>
                         <td data-label="Tipo" class="@(partita.Tipo == "Kids" ? "calendario-bg-info" : "")">@partita.Tipo</td>
 
