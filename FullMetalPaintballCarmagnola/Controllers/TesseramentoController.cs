@@ -154,7 +154,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             if (partitaId.HasValue)
                 query = query.Where(t => t.PartitaId == partitaId.Value);
 
-            query = query.OrderByDescending(t => t.Partita.Data);
+            query = query
+    .OrderByDescending(t => t.Partita.Data)
+    .ThenByDescending(t => t.PartitaId);
+
 
 
             var tesseramenti = await query.ToListAsync();
