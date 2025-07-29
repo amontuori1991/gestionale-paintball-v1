@@ -67,6 +67,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .ThenByDescending(m => m.Ora)
                 .ToList();
 
+
             return View(model);
         }
 
