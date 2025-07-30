@@ -34,7 +34,10 @@ public class CodiciPromoController : Controller
 
         instagramAccount = instagramAccount.Trim().ToLower();
 
-        var esiste = await _db.codicipromozionali.AnyAsync(c => c.InstagramAccount == instagramAccount);
+        var esiste = await _db.codicipromozionali
+            .AnyAsync(c => c.InstagramAccount == instagramAccount && string.IsNullOrEmpty(c.Alias));
+
+
         if (esiste)
         {
             ViewBag.GiaRichiesto = true;
@@ -207,6 +210,7 @@ public class CodiciPromoController : Controller
 
         instagramHandle = instagramHandle.Trim().ToLower();
 
+        // ✅ Solo errore se già richiesto per *questa* promozione
         var esiste = await _db.codicipromozionali
             .AnyAsync(c => c.InstagramAccount == instagramHandle && c.Alias == promo.Alias);
 
@@ -223,18 +227,20 @@ public class CodiciPromoController : Controller
             InstagramAccount = instagramHandle,
             Codice = codice,
             DataCreazione = DateTime.UtcNow,
-            DataScadenza = DateTime.SpecifyKind(promo.DataScadenza, DateTimeKind.Utc), // ✅ forza UTC
+            DataScadenza = DateTime.SpecifyKind(promo.DataScadenza, DateTimeKind.Utc),
             Utilizzato = false,
             Alias = promo.Alias
         };
-
 
         _db.codicipromozionali.Add(promoCode);
         await _db.SaveChangesAsync();
 
         ViewBag.QRCode = GeneraQRCode(codice);
+        ViewBag.DescrizionePromo = promo.Descrizione;
+
         return View("CodiceGenerato", promoCode);
     }
+
 
     // --- Metodo QR code base64 ---
     private string GeneraQRCodeBase64(CodicePromozionale codice)

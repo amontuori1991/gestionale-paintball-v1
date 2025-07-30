@@ -15,12 +15,16 @@
         <!-- QR Code -->
         @if (ViewBag.QRCode != null)
         {
-            <img src="data:image/png;base64,@ViewBag.QRCode" alt="QR Code" style="width: 180px; height: 180px; margin-bottom: 20px;" />
+            <img id="qrImage" src="data:image/png;base64,@ViewBag.QRCode" alt="QR Code" style="width: 180px; height: 180px; margin-bottom: 20px;" />
+            <a id="apriQRCode" class="btn btn-sm btn-outline-secondary d-block mx-auto mb-3" target="_blank">
+                📷 Apri immagine in nuova scheda
+            </a>
         }
         else
         {
             <p class="text-danger">⚠️ Errore nella generazione del QR code.</p>
         }
+
 
 
         @if (ViewBag.DescrizionePromo != null)
@@ -59,4 +63,14 @@
             });
         });
     </script>
+    <script>
+        window.onload = function () {
+            const img = document.getElementById("qrImage");
+            const link = document.getElementById("apriQRCode");
+            if (img && link) {
+                link.href = img.src;
+            }
+        };
+    </script>
+
 }
