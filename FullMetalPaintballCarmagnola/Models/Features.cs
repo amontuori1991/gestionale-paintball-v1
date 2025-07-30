@@ -17,7 +17,8 @@
             "Documenti ASD",
             "ToDoList",
             "Movimenti",
-            "Spese"
+            "Spese",
+            "Codici Promo"
         };
     }
 }

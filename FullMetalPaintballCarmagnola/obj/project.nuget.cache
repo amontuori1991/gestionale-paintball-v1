@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "PF9ynhCT2H4=",
+  "dgSpecHash": "Mk/t3jMS+8Y=",
   "success": true,
   "projectFilePath": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola.csproj",
   "expectedPackageFiles": [
@@ -151,6 +151,7 @@
     "C:\\Users\\Alex\\.nuget\\packages\\nuget.projectmodel\\6.11.0\\nuget.projectmodel.6.11.0.nupkg.sha512",
     "C:\\Users\\Alex\\.nuget\\packages\\nuget.protocol\\6.11.0\\nuget.protocol.6.11.0.nupkg.sha512",
     "C:\\Users\\Alex\\.nuget\\packages\\nuget.versioning\\6.11.0\\nuget.versioning.6.11.0.nupkg.sha512",
+    "C:\\Users\\Alex\\.nuget\\packages\\qrcoder\\1.6.0\\qrcoder.1.6.0.nupkg.sha512",
     "C:\\Users\\Alex\\.nuget\\packages\\rbush.signed\\4.0.0\\rbush.signed.4.0.0.nupkg.sha512",
     "C:\\Users\\Alex\\.nuget\\packages\\sixlabors.fonts\\1.0.0\\sixlabors.fonts.1.0.0.nupkg.sha512",
     "C:\\Users\\Alex\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.6\\sqlitepclraw.bundle_e_sqlite3.2.1.6.nupkg.sha512",

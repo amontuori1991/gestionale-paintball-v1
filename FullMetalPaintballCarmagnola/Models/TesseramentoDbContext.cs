@@ -39,5 +39,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 .HasForeignKey(ti => ti.TopicId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
+
+        public DbSet<CodicePromozionale> codicipromozionali { get; set; }
+
     }
 }

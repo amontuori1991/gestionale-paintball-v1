@@ -313,3 +313,4 @@ C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmag
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\FullMetalPaintballCarmagnola.pdb
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\FullMetalPaintballCarmagnola.genruntimeconfig.cache
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\ref\FullMetalPaintballCarmagnola.dll
+C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\QRCoder.dll

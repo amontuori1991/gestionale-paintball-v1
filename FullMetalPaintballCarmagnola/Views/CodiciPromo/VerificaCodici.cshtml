@@ -1,0 +1,125 @@
+﻿@model List<Full_Metal_Paintball_Carmagnola.Models.ViewModels.CodicePromozionaleViewModel>
+@using Full_Metal_Paintball_Carmagnola.Models.ViewModels
+
+@{
+    ViewData["Title"] = "Verifica Codici Promozionali";
+}
+<div class="d-flex align-items-center gap-3 mb-3">
+    <input type="text" id="ricercaCodice" class="form-control" placeholder="🔎 Inserisci o scansiona un codice">
+    <button type="button" id="attivaScanner" class="btn btn-outline-success">📷 Scansiona QR</button>
+</div>
+<div id="qr-reader" style="width: 280px; display: none;"></div>
+
+
+<!-- Area per visualizzare la fotocamera -->
+<div id="qr-reader" style="width: 300px; margin: 0 auto; display: none;"></div>
+
+<div class="container mt-5">
+    <h2>Verifica Codici Promozionali</h2>
+    <table class="table table-bordered mt-4">
+        <thead>
+            <tr>
+                <th>Codice</th>
+                <th>Instagram</th>
+                <th>Generato</th>
+                <th>Scadenza</th>
+                <th>Utilizzato</th>
+                <th>Buono</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Codice</td>
+                    <td>@c.NomeInstagram</td>
+                    <td>@c.DataCreazione.ToString("dd/MM/yyyy")</td>
+                    <td>@c.DataScadenza.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
+                    </td>
+                    <td>
+                        <a href="@Url.Action("VisualizzaBuono", "CodiciPromo", new { id = c.Id })" class="btn btn-sm btn-outline-primary">
+                            📄 Visualizza
+                        </a>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script>
+        // ✅ Toggle "Utilizzato"
+        $('.toggle-utilizzato').on('change', function () {
+            const id = $(this).data('id');
+            const stato = $(this).is(':checked');
+
+            $.post('/CodiciPromo/SegnaUtilizzato', { id: id, utilizzato: stato })
+                .fail(() => alert("Errore nel salvataggio dello stato."));
+        });
+
+        // 📷 Attiva QR Scanner
+        let scannerAttivo = false;
+
+        $('#attivaScanner').on('click', function () {
+            if (scannerAttivo) return;
+
+            $('#qr-reader').show();
+            const qrScanner = new Html5Qrcode("qr-reader");
+
+            qrScanner.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                (decodedText) => {
+                    $('#ricercaCodice').val(decodedText);
+                    qrScanner.stop().then(() => {
+                        $('#qr-reader').hide();
+                        scannerAttivo = false;
+                        $('#ricercaCodice').trigger('input');
+                    });
+                },
+                (errorMessage) => {
+                    // Niente per ora
+                }
+            ).then(() => {
+                scannerAttivo = true;
+            });
+        });
+
+        // 🔍 Ricerca codice con feedback
+        $('#ricercaCodice').on('input', function () {
+            const valore = $(this).val().toLowerCase();
+            let trovato = false;
+
+            $('tbody tr').each(function () {
+                const codice = $(this).find('td:first').text().toLowerCase();
+                const match = codice.includes(valore);
+
+                $(this).toggle(match);
+
+                if (match) {
+                    trovato = true;
+                    $(this).addClass('table-warning');
+                    setTimeout(() => $(this).removeClass('table-warning'), 1500);
+                }
+            });
+
+            if (!trovato && valore !== '') {
+                if ($('#noMatchMsg').length === 0) {
+                    $('<div id="noMatchMsg" class="alert alert-danger mt-3">Codice non trovato.</div>').insertAfter('table');
+                }
+            } else {
+                $('#noMatchMsg').remove();
+            }
+        });
+    </script>
+}

@@ -353,6 +353,16 @@
                 </a>
             </div>
         }
+        @if (((List<string>)ViewBag.PermessiVisibili).Contains("Codici Promo"))
+        {
+            <div class="btn-container">
+                <a class="btn btn-outline-info" href="@Url.Action("VerificaCodici", "CodiciPromo")">
+                    <i class="bi bi-gift"></i>
+                    Codici Promo
+                </a>
+            </div>
+        }
+
 
     </div>
 </div>

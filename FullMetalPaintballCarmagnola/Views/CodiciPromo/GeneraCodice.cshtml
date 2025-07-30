@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Richiedi Codice Promozionale";
+}
+<div class="text-center mt-4">
+    <img src="~/img/logo.gif" alt="Logo" style="max-width: 200px; margin-bottom: 20px;" />
+</div>
+
+<div class="container mt-5 text-center">
+    <h2>Richiedi il tuo codice promozionale</h2>
+    <p>Inserisci il tuo account Instagram per ricevere un buono valido 12 mesi!</p>
+
+    @if (TempData["Errore"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Errore"]</div>
+    }
+
+    <form method="post" action="/promo" class="mt-4">
+        <input type="text" name="instagramHandle" class="form-control mb-3" placeholder="Tuo account Instagram" required />
+        <button type="submit" class="btn btn-success">Genera il mio codice</button>
+    </form>
+
+    <p class="mt-4 text-muted" style="font-size: 0.9rem;">
+        ⚠️ Per poter usufruire del buono, è necessario seguire la nostra pagina Instagram.
+    </p>
+</div>
