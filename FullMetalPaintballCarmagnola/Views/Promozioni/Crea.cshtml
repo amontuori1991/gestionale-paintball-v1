@@ -1,0 +1,35 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Promozione
+
+@{
+    ViewData["Title"] = "Crea Nuova Promozione";
+}
+
+<div class="container mt-5">
+    <h2>Crea una nuova promozione</h2>
+    <form asp-action="Crea" method="post" class="mt-4">
+
+        <div class="mb-3">
+            <label class="form-label">Nome Promozione</label>
+            <input asp-for="Nome" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Alias (per URL)</label>
+            <input asp-for="Alias" class="form-control" required />
+            <small class="text-muted">Esempio: estate2025</small>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Descrizione</label>
+            <textarea asp-for="Descrizione" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Data di Scadenza</label>
+            <input asp-for="DataScadenza" type="date" class="form-control" required />
+        </div>
+
+        <button type="submit" class="btn btn-success">Crea Promozione</button>
+        <a href="@Url.Action("Archivio")" class="btn btn-secondary ms-2">Annulla</a>
+    </form>
+</div>

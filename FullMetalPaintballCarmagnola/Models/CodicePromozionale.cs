@@ -17,8 +17,14 @@ public class CodicePromozionale
 
     [Column("codice")]
     public string Codice { get; set; }
+       
+        
+        [Column("alias")]
+        public string Alias { get; set; }
 
-    [Column("datagenerazione")]
+
+
+        [Column("datagenerazione")]
     public DateTime DataCreazione { get; set; }
 
     [Column("datascadenza")]

@@ -1,0 +1,45 @@
+﻿/* ✅ Layout responsive: card stile */
+.promo-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+    /* Etichetta per ogni campo nella card */
+    .promo-card > div::before {
+        content: attr(data-label) ": ";
+        font-weight: bold;
+        color: #333;
+        display: inline;
+    }
+
+/* ✅ Mobile: due colonne */
+@media (max-width: 768px) {
+    .responsive-table {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .promo-card {
+        height: 100%;
+    }
+
+    #attivaScanner {
+        display: block;
+        margin: 10px auto 20px auto;
+    }
+}
+
+/* ✅ Desktop: manteniamo tabella */
+@media (min-width: 769px) {
+    .responsive-table {
+        display: none;
+    }
+}

@@ -13,7 +13,21 @@
         <img src="~/img/logo.gif" alt="Logo" style="max-width: 150px; margin-bottom: 20px;" />
 
         <!-- QR Code -->
-        <img src="data:image/png;base64,@ViewBag.QRCode" alt="QR Code" style="width: 180px; height: 180px; margin-bottom: 20px;" />
+        @if (ViewBag.QRCode != null)
+        {
+            <img src="data:image/png;base64,@ViewBag.QRCode" alt="QR Code" style="width: 180px; height: 180px; margin-bottom: 20px;" />
+        }
+        else
+        {
+            <p class="text-danger">⚠️ Errore nella generazione del QR code.</p>
+        }
+
+
+        @if (ViewBag.DescrizionePromo != null)
+        {
+            <p class="mt-3"><strong>@ViewBag.DescrizionePromo</strong></p>
+        }
+
 
         <h3 class="text-success">@Model.Codice</h3>
         <p>Valido fino al <strong>@Model.DataScadenza.ToString("dd/MM/yyyy")</strong></p>

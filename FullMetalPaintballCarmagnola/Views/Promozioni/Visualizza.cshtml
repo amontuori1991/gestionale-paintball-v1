@@ -1,0 +1,12 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Promozione
+
+@{
+    ViewData["Title"] = "Promo " + Model.Nome;
+}
+
+<div class="container text-center mt-5">
+    <h2 class="mb-3">🎁 Promo: @Model.Nome</h2>
+    <p><strong>Descrizione:</strong> @Model.Descrizione</p>
+    <p><strong>Valida fino al:</strong> @Model.DataScadenza.ToString("dd/MM/yyyy")</p>
+    <p class="mt-4 text-muted"><em>Mostra questo codice per usufruire della promo: <strong>@Model.Alias</strong></em></p>
+</div>

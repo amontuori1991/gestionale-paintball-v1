@@ -13,6 +13,7 @@ wwwroot\css\site.css
 wwwroot\css\statistiche-responsive.css
 wwwroot\css\tesseramenti-responsive.css
 wwwroot\css\todo.css
+wwwroot\css\verifica-codici.css
 wwwroot\favicon.png
 wwwroot\Firme\firma_068f7da4-f4ae-491a-a892-bf7c675ce69e.png
 wwwroot\Firme\firma_0e4a716a-a8ee-4505-9a4b-7e517b800124.png
@@ -124,3 +125,4 @@ wwwroot\uploads\ce8953f1-f619-444b-a7b2-012edf9c0560.pdf
 wwwroot\uploads\ddc56576-c6d2-475c-9f9d-f0e9aefa5f14.pdf
 wwwroot\uploads\f4831d70-88ad-42b6-b2e5-352e381fff79.pdf
 wwwroot\uploads_asd\20e2cccf-669d-408f-b2e7-2ed0b95ba2a0.pdf
+wwwroot\css\archivio-promozioni.css

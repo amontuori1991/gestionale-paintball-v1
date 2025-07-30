@@ -208,6 +208,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29kaWNpUHJvbW9cR2VuZXJhQ29kaWNlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/CodiciPromo/RichiediCodicePromo.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29kaWNpUHJvbW9cUmljaGllZGlDb2RpY2VQcm9tby5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/CodiciPromo/VerificaCodici.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29kaWNpUHJvbW9cVmVyaWZpY2FDb2RpY2kuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -294,6 +298,22 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Prezzi/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJlenppXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Promozioni/Archivio.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvbW96aW9uaVxBcmNoaXZpby5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Promozioni/Crea.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvbW96aW9uaVxDcmVhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Promozioni/PromoNonValida.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvbW96aW9uaVxQcm9tb05vblZhbGlkYS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Promozioni/Visualizza.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvbW96aW9uaVxWaXN1YWxpenphLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Ruoli/GestionePermessi.cshtml]

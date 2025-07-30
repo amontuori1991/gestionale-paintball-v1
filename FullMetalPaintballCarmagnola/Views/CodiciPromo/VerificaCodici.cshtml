@@ -4,58 +4,86 @@
 @{
     ViewData["Title"] = "Verifica Codici Promozionali";
 }
-<div class="d-flex align-items-center gap-3 mb-3">
+<link rel="stylesheet" href="~/css/verifica-codici.css" />
+
+<div class="text-center mb-4">
+    <a href="@Url.Action("Archivio", "Promozioni")" class="btn btn-outline-secondary">
+        📚 Archivio Promozioni
+    </a>
+</div>
+
+<div class="d-flex align-items-center justify-content-center gap-3 mb-3 flex-wrap">
     <input type="text" id="ricercaCodice" class="form-control" placeholder="🔎 Inserisci o scansiona un codice">
     <button type="button" id="attivaScanner" class="btn btn-outline-success">📷 Scansiona QR</button>
 </div>
-<div id="qr-reader" style="width: 280px; display: none;"></div>
 
 
-<!-- Area per visualizzare la fotocamera -->
 <div id="qr-reader" style="width: 300px; margin: 0 auto; display: none;"></div>
 
 <div class="container mt-5">
-    <h2>Verifica Codici Promozionali</h2>
-    <table class="table table-bordered mt-4">
-        <thead>
-            <tr>
-                <th>Codice</th>
-                <th>Instagram</th>
-                <th>Generato</th>
-                <th>Scadenza</th>
-                <th>Utilizzato</th>
-                <th>Buono</th>
+    <h2 class="text-center">Verifica Codici Promozionali</h2>
 
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var c in Model)
-            {
+    <!-- ✅ VISUALIZZAZIONE DESKTOP: tabella -->
+    <div class="d-none d-md-block">
+        <table class="table table-bordered mt-4">
+            <thead>
                 <tr>
-                    <td>@c.Codice</td>
-                    <td>@c.NomeInstagram</td>
-                    <td>@c.DataCreazione.ToString("dd/MM/yyyy")</td>
-                    <td>@c.DataScadenza.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
-                    </td>
-                    <td>
-                        <a href="@Url.Action("VisualizzaBuono", "CodiciPromo", new { id = c.Id })" class="btn btn-sm btn-outline-primary">
-                            📄 Visualizza
-                        </a>
-                    </td>
-
+                    <th>Codice</th>
+                    <th>Instagram</th>
+                    <th>Generato</th>
+                    <th>Scadenza</th>
+                    <th>Utilizzato</th>
+                    <th>Buono</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>@c.Codice</td>
+                        <td>@c.NomeInstagram</td>
+                        <td>@c.DataCreazione.ToString("dd/MM/yyyy")</td>
+                        <td>@c.DataScadenza.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
+                        </td>
+                        <td>
+                            <a href="@Url.Action("VisualizzaBuono", "CodiciPromo", new { id = c.Id })" class="btn btn-sm btn-outline-primary">
+                                📄 Visualizza
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ✅ VISUALIZZAZIONE MOBILE: card -->
+    <div class="d-block d-md-none responsive-table">
+        @foreach (var c in Model)
+        {
+            <div class="promo-card">
+                <div data-label="Codice">@c.Codice</div>
+                <div data-label="Instagram">@c.NomeInstagram</div>
+                <div data-label="Generato">@c.DataCreazione.ToString("dd/MM/yyyy")</div>
+                <div data-label="Scadenza">@c.DataScadenza.ToString("dd/MM/yyyy")</div>
+                <div data-label="Utilizzato">
+                    <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
+                </div>
+                <div data-label="Buono">
+                    <a href="@Url.Action("VisualizzaBuono", "CodiciPromo", new { id = c.Id })" class="btn btn-sm btn-outline-primary">
+                        📄 Visualizza
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {
     <script src="https://unpkg.com/html5-qrcode"></script>
 
     <script>
-        // ✅ Toggle "Utilizzato"
         $('.toggle-utilizzato').on('change', function () {
             const id = $(this).data('id');
             const stato = $(this).is(':checked');
@@ -64,7 +92,6 @@
                 .fail(() => alert("Errore nel salvataggio dello stato."));
         });
 
-        // 📷 Attiva QR Scanner
         let scannerAttivo = false;
 
         $('#attivaScanner').on('click', function () {
@@ -87,15 +114,12 @@
                         $('#ricercaCodice').trigger('input');
                     });
                 },
-                (errorMessage) => {
-                    // Niente per ora
-                }
+                (errorMessage) => {}
             ).then(() => {
                 scannerAttivo = true;
             });
         });
 
-        // 🔍 Ricerca codice con feedback
         $('#ricercaCodice').on('input', function () {
             const valore = $(this).val().toLowerCase();
             let trovato = false;

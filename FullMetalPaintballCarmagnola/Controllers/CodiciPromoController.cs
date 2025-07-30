@@ -158,19 +158,83 @@ public class CodiciPromoController : Controller
     [HttpGet]
     public async Task<IActionResult> VisualizzaBuono(int id)
     {
-        var codice = await _db.codicipromozionali.FindAsync(id);
+        var codice = await _db.codicipromozionali.FirstOrDefaultAsync(c => c.Id == id);
         if (codice == null) return NotFound();
 
-        using var qrGenerator = new QRCodeGenerator();
-        var qrData = qrGenerator.CreateQrCode(codice.Codice, QRCodeGenerator.ECCLevel.Q);
-        var qrCode = new PngByteQRCode(qrData);
-        var qrBytes = qrCode.GetGraphic(20);
-        var base64 = Convert.ToBase64String(qrBytes);
-        ViewBag.QRCode = base64;
+        Promozione? promo = null;
+
+        if (!string.IsNullOrEmpty(codice.Alias))
+        {
+            promo = await _db.Promozioni.FirstOrDefaultAsync(p => p.Alias.ToLower() == codice.Alias.ToLower());
+        }
+
+        ViewBag.QRCode = GeneraQRCode(codice.Codice);
+        ViewBag.DescrizionePromo = promo?.Descrizione ?? "Offerta promozionale";
 
         return View("CodiceGenerato", codice);
     }
 
+    [AllowAnonymous]
+    [HttpGet("/promo/{alias}")]
+    public async Task<IActionResult> RichiediDaAlias(string alias)
+    {
+        var promo = await _db.Promozioni.FirstOrDefaultAsync(p => p.Alias.ToLower() == alias.ToLower());
+
+        if (promo == null || promo.DataScadenza < DateTime.UtcNow.Date)
+            return View("PromoNonValida");
+
+        return View("GeneraCodice", promo);
+    }
+
+
+
+    [AllowAnonymous]
+    [HttpPost]
+    public async Task<IActionResult> GeneraDaAlias(string alias, string instagramHandle)
+    {
+        if (string.IsNullOrWhiteSpace(instagramHandle))
+        {
+            TempData["Errore"] = "Inserisci il tuo account Instagram.";
+            return RedirectToAction("RichiediDaAlias", new { alias });
+        }
+
+        var promo = await _db.Promozioni.FirstOrDefaultAsync(p => p.Alias.ToLower() == alias.ToLower());
+
+        if (promo == null || promo.DataScadenza < DateTime.UtcNow.Date)
+        {
+            return View("PromoNonValida");
+        }
+
+        instagramHandle = instagramHandle.Trim().ToLower();
+
+        var esiste = await _db.codicipromozionali
+            .AnyAsync(c => c.InstagramAccount == instagramHandle && c.Alias == promo.Alias);
+
+        if (esiste)
+        {
+            TempData["Errore"] = "Hai già richiesto un codice per questa promozione.";
+            return RedirectToAction("RichiediDaAlias", new { alias });
+        }
+
+        var codice = GeneraCodice();
+
+        var promoCode = new CodicePromozionale
+        {
+            InstagramAccount = instagramHandle,
+            Codice = codice,
+            DataCreazione = DateTime.UtcNow,
+            DataScadenza = DateTime.SpecifyKind(promo.DataScadenza, DateTimeKind.Utc), // ✅ forza UTC
+            Utilizzato = false,
+            Alias = promo.Alias
+        };
+
+
+        _db.codicipromozionali.Add(promoCode);
+        await _db.SaveChangesAsync();
+
+        ViewBag.QRCode = GeneraQRCode(codice);
+        return View("CodiceGenerato", promoCode);
+    }
 
     // --- Metodo QR code base64 ---
     private string GeneraQRCodeBase64(CodicePromozionale codice)
@@ -184,4 +248,13 @@ public class CodiciPromoController : Controller
 
         return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
     }
+    private string GeneraQRCode(string codice)
+    {
+        var qrGenerator = new QRCoder.QRCodeGenerator();
+        var qrCodeData = qrGenerator.CreateQrCode(codice, QRCoder.QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new QRCoder.PngByteQRCode(qrCodeData);
+        var qrCodeBytes = qrCode.GetGraphic(20);
+        return Convert.ToBase64String(qrCodeBytes);
+    }
+
 }

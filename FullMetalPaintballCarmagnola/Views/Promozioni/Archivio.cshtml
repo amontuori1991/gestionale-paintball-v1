@@ -1,0 +1,40 @@
+﻿@model List<Full_Metal_Paintball_Carmagnola.Models.Promozione>
+
+
+@{
+    ViewData["Title"] = "Archivio Promozioni";
+}
+
+<div class="container mt-5">
+    <h2>📚 Archivio Promozioni</h2>
+    <a href="@Url.Action("Crea", "Promozioni")" class="btn btn-primary mt-3">➕ Crea nuova promo</a>
+
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Alias</th>
+                <th>Descrizione</th>
+                <th>Scadenza</th>
+                <th>Link</th>
+            </tr>
+        </thead>
+        <tbody>
+           @foreach (var promo in Model)
+{
+    <tr>
+        <td>@promo.Nome</td>
+        <td>@promo.Alias</td>
+        <td>@promo.Descrizione</td>
+        <td>@promo.DataScadenza.ToString("dd/MM/yyyy")</td>
+        <td>
+            <a href="@Url.Action("Visualizza", "Promozioni", new { alias = promo.Alias })" class="btn btn-sm btn-outline-primary">
+                📄 Link
+            </a>
+        </td>
+    </tr> <!-- 🟢 CHIUSURA NECESSARIA -->
+}
+
+        </tbody>
+    </table>
+</div>

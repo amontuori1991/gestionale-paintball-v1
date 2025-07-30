@@ -41,6 +41,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         }
 
         public DbSet<CodicePromozionale> codicipromozionali { get; set; }
+        public DbSet<Promozione> Promozioni { get; set; }
+
 
     }
 }
