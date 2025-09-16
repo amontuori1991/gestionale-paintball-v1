@@ -48,17 +48,21 @@ public class CodiciPromoController : Controller
 
     private async Task SendVoucherEmailAsync(string toEmail, CodicePromozionale cp, Promozione promo, byte[] pngBytes)
     {
-        var cfg = HttpContext.RequestServices.GetRequiredService<IConfiguration>(); // <-- () mancavano
-        var host = cfg["Smtp:Host"];
-        var portStr = cfg["Smtp:Port"];
-        var user = cfg["Smtp:User"];
-        var pass = cfg["Smtp:Pass"];
-        var fromAddr = cfg["Smtp:FromAddress"];
-        var fromName = cfg["Smtp:FromName"] ?? "Full Metal Paintball";
-        var enableSsl = (cfg["Smtp:EnableSsl"] ?? "true").Equals("true", StringComparison.OrdinalIgnoreCase);
+        // 🔧 Legge da "SmtpSettings" (come nel tuo appsettings.json)
+        var cfg = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+        var host = cfg["SmtpSettings:Host"];
+        var portText = cfg["SmtpSettings:Port"];
+        var enableSslStr = cfg["SmtpSettings:EnableSsl"];
+        var user = cfg["SmtpSettings:User"];
+        var pass = cfg["SmtpSettings:Password"];
 
-        int.TryParse(portStr, out var port);
-        if (port == 0) port = 587;
+        // Se non hai un "From" separato, usa l'utente come mittente
+        var fromAddr = user;
+        var fromName = "Full Metal Paintball";
+
+        int port = 587;
+        int.TryParse(portText, out port);
+        bool enableSsl = string.Equals(enableSslStr, "true", StringComparison.OrdinalIgnoreCase);
 
         using var msg = new MailMessage();
         msg.From = new MailAddress(fromAddr!, fromName);
@@ -67,30 +71,27 @@ public class CodiciPromoController : Controller
         msg.IsBodyHtml = true;
 
         var scadenza = cp.DataScadenza.ToUniversalTime().ToString("dd/MM/yyyy");
-        var nome = WebUtility.HtmlEncode(cp.Nome ?? "");
-        var cognome = WebUtility.HtmlEncode(cp.Cognome ?? "");
-        var promoName = WebUtility.HtmlEncode(promo.Nome ?? "");
-        var codice = WebUtility.HtmlEncode(cp.Codice);
-
+        // Corpo HTML
         msg.Body = $@"
-            <p>Ciao {nome} {cognome},</p>
-            <p>ecco il tuo buono per <strong>{promoName}</strong>.</p>
-            <p><strong>Codice:</strong> {codice}<br/>
-               <strong>Valido fino al:</strong> {scadenza}</p>
-            <p>In allegato trovi il QR del buono. Mostralo alla cassa.</p>
-            <p>Grazie!<br/>Full Metal Paintball</p>
-        ";
+        <p>Ciao {WebUtility.HtmlEncode(cp.Nome ?? "")} {WebUtility.HtmlEncode(cp.Cognome ?? "")},</p>
+        <p>ecco il tuo buono per <strong>{WebUtility.HtmlEncode(promo.Nome ?? "")}</strong>.</p>
+        <p><strong>Codice:</strong> {WebUtility.HtmlEncode(cp.Codice)}<br/>
+           <strong>Valido fino al:</strong> {scadenza}</p>
+        <p>In allegato trovi il QR del buono. Mostralo alla cassa.</p>
+        <p>Grazie!<br/>Full Metal Paintball</p>";
 
+        // Allegato PNG del QR
         using var ms = new MemoryStream(pngBytes);
         var attachment = new Attachment(ms, $"buono-{cp.Codice}.png", "image/png");
         msg.Attachments.Add(attachment);
 
         using var client = new SmtpClient(host, port)
         {
-            EnableSsl = enableSsl,
+            EnableSsl = enableSsl,                                 // Gmail 587 = STARTTLS
             Credentials = new NetworkCredential(user, pass)
         };
 
+        // Invio
         await client.SendMailAsync(msg);
     }
 
@@ -218,6 +219,7 @@ public class CodiciPromoController : Controller
         return View("GeneraCodice", promo);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> GeneraDaAlias(
         string alias,
@@ -227,20 +229,29 @@ public class CodiciPromoController : Controller
         DateTime? dataNascita,
         string? comuneNascita,
         string? comuneResidenza,
-        string? email) // NEW
+        string? email)
     {
+        // --- recupero promo ---
+        if (string.IsNullOrWhiteSpace(alias))
+            return View("PromoNonValida");
+
         var promo = await _db.Promozioni.FirstOrDefaultAsync(p => p.Alias.ToLower() == alias.ToLower());
         if (promo == null || promo.DataScadenza < DateTime.UtcNow.Date)
             return View("PromoNonValida");
 
         bool requiresPersonal = string.Equals(promo.PromotionType ?? "Instagram", "EventoRichiedeDati", StringComparison.OrdinalIgnoreCase);
 
+        // scadenza del codice = fine del giorno di scadenza promo, UTC
         var nowUtc = DateTime.UtcNow;
         var codiceScadenzaUtc = new DateTime(
             promo.DataScadenza.Year, promo.DataScadenza.Month, promo.DataScadenza.Day, 23, 59, 59, DateTimeKind.Utc);
 
         if (requiresPersonal)
         {
+            // --- IDEMPOTENZA su persona (Nome+Cognome+DataNascita+Email) per QUELLA promo ---
+            const bool RESEND_EMAIL_ON_DUPLICATE = true;
+
+            // validazione
             if (string.IsNullOrWhiteSpace(nome) ||
                 string.IsNullOrWhiteSpace(cognome) ||
                 !dataNascita.HasValue ||
@@ -252,27 +263,56 @@ public class CodiciPromoController : Controller
                 return RedirectToAction("RichiediDaAlias", new { alias });
             }
 
+            // normalizza
             nome = nome!.Trim();
             cognome = cognome!.Trim();
             comuneNascita = comuneNascita!.Trim();
             comuneResidenza = comuneResidenza!.Trim();
             email = email!.Trim();
 
-            var giaPresente = await _db.codicipromozionali.AnyAsync(c =>
-                c.Alias != null && c.Alias.ToLower() == promo.Alias.ToLower() &&
-                c.Nome != null && c.Cognome != null && c.DataNascita != null &&
-                c.Nome.ToLower() == nome.ToLower() &&
-                c.Cognome.ToLower() == cognome.ToLower() &&
-                c.DataNascita == dataNascita);
+            var aliasLower = promo.Alias.ToLower();
+            var nomeLower = nome.ToLower();
+            var cognomeLower = cognome.ToLower();
+            var emailLower = email.ToLower();
+            var dataOnly = dataNascita.Value.Date;
 
-            if (giaPresente)
+            // cerca se esiste già
+            var esistente = await _db.codicipromozionali
+                .Where(c => c.Alias != null && c.Nome != null && c.Cognome != null && c.Email != null && c.DataNascita != null)
+                .FirstOrDefaultAsync(c =>
+                    c.Alias!.ToLower() == aliasLower &&
+                    c.Nome!.ToLower() == nomeLower &&
+                    c.Cognome!.ToLower() == cognomeLower &&
+                    c.Email!.ToLower() == emailLower &&
+                    c.DataNascita == dataOnly);
+
+            if (esistente != null)
             {
-                TempData["Errore"] = "Hai già richiesto un codice per questa promozione.";
-                return RedirectToAction("RichiediDaAlias", new { alias });
+                // ripresento lo stesso codice
+                var qrBytes = GenerateQrPngBytes(esistente.Codice);
+                ViewBag.QRCode = Convert.ToBase64String(qrBytes);
+                ViewBag.DescrizionePromo = promo.Descrizione;
+                ViewBag.PromotionType = promo.PromotionType;
+                TempData["Info"] = "Hai già un buono attivo per questa promozione: ecco il tuo codice.";
+
+                if (RESEND_EMAIL_ON_DUPLICATE)
+                {
+                    try
+                    {
+                        await SendVoucherEmailAsync(email, esistente, promo, qrBytes);
+                        TempData["EmailEsito"] = "Ti abbiamo reinviato il buono via email.";
+                    }
+                    catch
+                    {
+                        TempData["EmailEsito"] = "Codice già presente. Invio email non riuscito.";
+                    }
+                }
+
+                return View("CodiceGenerato", esistente);
             }
 
+            // genera nuovo
             var codice = GeneraCodice();
-
             var promoCode = new CodicePromozionale
             {
                 InstagramAccount = null,
@@ -284,23 +324,47 @@ public class CodiciPromoController : Controller
 
                 Nome = nome,
                 Cognome = cognome,
-                DataNascita = dataNascita,        // date
+                DataNascita = dataOnly,           // date
                 ComuneNascita = comuneNascita,
                 ComuneResidenza = comuneResidenza,
-                Email = email                      // NEW
+                Email = email
             };
 
             _db.codicipromozionali.Add(promoCode);
-            await _db.SaveChangesAsync();
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // race condition possibile: recupera e mostra
+                esistente = await _db.codicipromozionali.FirstOrDefaultAsync(c =>
+                    c.Alias!.ToLower() == aliasLower &&
+                    c.Nome!.ToLower() == nomeLower &&
+                    c.Cognome!.ToLower() == cognomeLower &&
+                    c.Email!.ToLower() == emailLower &&
+                    c.DataNascita == dataOnly);
 
-            var qrBytes = GenerateQrPngBytes(codice);
-            ViewBag.QRCode = Convert.ToBase64String(qrBytes);
+                if (esistente != null)
+                {
+                    var qrDup = GenerateQrPngBytes(esistente.Codice);
+                    ViewBag.QRCode = Convert.ToBase64String(qrDup);
+                    ViewBag.DescrizionePromo = promo.Descrizione;
+                    ViewBag.PromotionType = promo.PromotionType;
+                    TempData["Info"] = "Hai già un buono attivo per questa promozione: ecco il tuo codice.";
+                    return View("CodiceGenerato", esistente);
+                }
+                throw;
+            }
+
+            var qrBytesNew = GenerateQrPngBytes(codice);
+            ViewBag.QRCode = Convert.ToBase64String(qrBytesNew);
             ViewBag.DescrizionePromo = promo.Descrizione;
             ViewBag.PromotionType = promo.PromotionType;
 
             try
             {
-                await SendVoucherEmailAsync(email, promoCode, promo, qrBytes);
+                await SendVoucherEmailAsync(email, promoCode, promo, qrBytesNew);
                 TempData["EmailEsito"] = "Ti abbiamo inviato il buono via email.";
             }
             catch
@@ -312,6 +376,7 @@ public class CodiciPromoController : Controller
         }
         else
         {
+            // --- ramo Instagram ---
             if (string.IsNullOrWhiteSpace(instagramHandle))
             {
                 TempData["Errore"] = "Inserisci il tuo account Instagram.";
@@ -320,18 +385,17 @@ public class CodiciPromoController : Controller
 
             instagramHandle = instagramHandle.Trim().ToLower();
 
-            var esiste = await _db.codicipromozionali.AnyAsync(c =>
+            var esisteIG = await _db.codicipromozionali.AnyAsync(c =>
                 c.Alias != null && c.Alias.ToLower() == promo.Alias.ToLower() &&
                 c.InstagramAccount != null && c.InstagramAccount.ToLower() == instagramHandle);
 
-            if (esiste)
+            if (esisteIG)
             {
                 TempData["Errore"] = "Hai già richiesto un codice per questa promozione.";
                 return RedirectToAction("RichiediDaAlias", new { alias });
             }
 
             var codice = GeneraCodice();
-
             var promoCode = new CodicePromozionale
             {
                 InstagramAccount = instagramHandle,
@@ -352,7 +416,12 @@ public class CodiciPromoController : Controller
 
             return View("CodiceGenerato", promoCode);
         }
+
+        // fallback teoricamente irraggiungibile, utile solo per il compilatore
+        // (tutti i rami sopra già ritornano)
+        // return RedirectToAction("RichiediDaAlias", new { alias });
     }
+
 
     // ========== Admin ==========
     [Authorize(Roles = "Admin")]
