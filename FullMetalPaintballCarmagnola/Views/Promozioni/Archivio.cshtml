@@ -2,93 +2,295 @@
 
 @{
     ViewData["Title"] = "Archivio Promozioni";
-    DateTime oggi = DateTime.UtcNow.Date;
+    var oggi = DateTime.UtcNow.Date;
 }
 
-<div class="container mt-5">
-    <h2>📚 Archivio Promozioni</h2>
-    <a href="@Url.Action("Crea", "Promozioni")" class="btn btn-primary mt-3">➕ Crea nuova promo</a>
+<div class="container mt-4 mb-5">
 
-    <table class="table table-striped mt-4">
-        <thead>
-            <tr>
-                <th rowspan="2">Nome</th>
-                <th rowspan="2">Alias</th>
-                <th rowspan="2">Tipo</th>
-                <th rowspan="2">Edizione</th>
-                <th rowspan="2">Descrizione</th>
-                <th rowspan="2">Scadenza</th>
-                <th rowspan="2">Stato</th>
-                <th rowspan="2">Link</th>
-                <th rowspan="2">Richiesta</th>
-                <th colspan="4" class="text-center">Azioni</th>
-            </tr>
-            <tr>
-                <th>Modifica</th>
-                <th>Elimina</th>
-                <th>Duplica</th>
-                <th>Poster QR</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var promo in Model)
-            {
-                var scaduta = promo.DataScadenza.Date < oggi;
-                <tr class="@(scaduta ? "table-warning" : "")">
-                    <td>@promo.Nome</td>
-                    <td><code>@promo.Alias</code></td>
-                    <td>@promo.PromotionType</td>
-                    <td>@(promo.EditionYear.HasValue? promo.EditionYear.Value.ToString() : "-")</td>
-                    <td>@promo.Descrizione</td>
-                    <td>@promo.DataScadenza.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        @if (scaduta)
-                        {
-                            <span class="badge bg-secondary">Scaduta</span>
-                        }
-                        else
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="m-0">📚 Archivio Promozioni</h2>
+        <a href="@Url.Action("Crea", "Promozioni")" class="btn btn-primary">➕ Crea nuova promo</a>
+    </div>
+
+    @if (TempData["Msg"] != null)
+    {
+        <div class="alert alert-success mt-3">@TempData["Msg"]</div>
+    }
+
+    <div class="mt-3 d-flex gap-2 align-items-center">
+        <input id="filterInput" type="text" class="form-control" placeholder="🔎 Cerca per nome, alias o descrizione…" />
+        <button id="clearFilter" type="button" class="btn btn-outline-secondary">✖︎</button>
+    </div>
+
+    <!-- ===== DESKTOP: tabella completa ===== -->
+    <div class="d-none d-md-block mt-3">
+        <div class="table-responsive">
+            <table id="promoTable" class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Nome</th>
+                        <th rowspan="2">Alias</th>
+                        <th rowspan="2">Tipo</th>
+                        <th rowspan="2">Edizione</th>
+                        <th rowspan="2">Descrizione</th>
+                        <th rowspan="2">Scadenza</th>
+                        <th rowspan="2">Stato</th>
+                        <th rowspan="2">Link</th>
+                        <th rowspan="2">Richiesta</th>
+                        <th colspan="4" class="text-center">Azioni</th>
+                    </tr>
+                    <tr>
+                        <th>Modifica</th>
+                        <th>Elimina</th>
+                        <th>Duplica</th>
+                        <th>Poster QR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var promo in Model)
+                    {
+                        var attiva = promo.DataScadenza.Date >= oggi;
+                        var type = string.IsNullOrWhiteSpace(promo.PromotionType) ? "Instagram" : promo.PromotionType;
+                        <tr data-name="@promo.Nome" data-alias="@promo.Alias" data-desc="@promo.Descrizione">
+                            <td class="fw-semibold">@promo.Nome</td>
+                            <td><code>@promo.Alias</code></td>
+                            <td>@type</td>
+                            <td>@(promo.EditionYear.HasValue? promo.EditionYear.ToString() : "-")</td>
+                            <td class="text-truncate" style="max-width: 380px;">@promo.Descrizione</td>
+                            <td>@promo.DataScadenza.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (attiva)
+                                {
+                                    <span class="badge bg-success">Attiva</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge bg-secondary">Scaduta</span>
+                                }
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-action="Visualizza" asp-route-alias="@promo.Alias">📄 Visualizza</a>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-success"
+                                   asp-controller="CodiciPromo" asp-action="RichiediDaAlias" asp-route-alias="@promo.Alias">🎟️ Richiedi</a>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-warning"
+                                   asp-action="Edit" asp-route-id="@promo.Id">✏️ Modifica</a>
+                            </td>
+                            <td>
+                                <form asp-action="Delete" method="post" class="d-inline"
+                                      onsubmit="return confirm('Confermi eliminazione della promozione “@promo.Nome”?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@promo.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Elimina</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form asp-action="Duplica" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@promo.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">🔁 Duplica</button>
+                                </form>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-dark"
+                                   asp-action="Poster" asp-route-alias="@promo.Alias">🖨️ Poster QR</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== MOBILE: card compatte ===== -->
+    <div id="mobileList" class="d-block d-md-none mt-3">
+        @foreach (var promo in Model)
+        {
+            var attiva = promo.DataScadenza.Date >= oggi;
+            var type = string.IsNullOrWhiteSpace(promo.PromotionType) ? "Instagram" : promo.PromotionType;
+            <div class="promo-card" data-name="@promo.Nome" data-alias="@promo.Alias" data-desc="@promo.Descrizione">
+                <div class="card-head">
+                    <div class="title">
+                        <div class="name">@promo.Nome</div>
+                        <div class="badges">
+                            <span class="pill">@type</span>
+                            @if (promo.EditionYear.HasValue)
+                            {
+                                <span class="pill muted">Ed. @promo.EditionYear.Value</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="alias"><code>@promo.Alias</code></div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(promo.Descrizione))
+                {
+                    <div class="desc">@promo.Descrizione</div>
+                }
+
+                <div class="row gx-2 gy-2 align-items-center small text-muted">
+                    <div class="col">
+                        Scade il <strong>@promo.DataScadenza.ToString("dd/MM/yyyy")</strong>
+                    </div>
+                    <div class="col-auto">
+                        @if (attiva)
                         {
                             <span class="badge bg-success">Attiva</span>
                         }
-                    </td>
-                    <td>
-                        <a href="@Url.Action("Visualizza", "Promozioni", new { alias = promo.Alias })" class="btn btn-sm btn-outline-primary">
-                            📄 Dettaglio
-                        </a>
-                    </td>
-                    <td>
-                        <a href="@Url.Action("RichiediDaAlias", "CodiciPromo", new { alias = promo.Alias })" class="btn btn-sm btn-outline-success">
-                            🎟️ Richiedi
-                        </a>
-                    </td>
-                    <td>
-                        <a class="btn btn-sm btn-outline-warning" asp-action="Edit" asp-route-id="@promo.Id">✏️ Modifica</a>
-                    </td>
-                    <td>
-                        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Confermi eliminazione?');">
-                        <input type="hidden" name="id" value="@promo.Id" />
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Elimina</button>
-                    </form>
-                    </td>
-                    <td>
-                        <form asp-action="Duplica" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@promo.Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Duplica">
-                                🔁 Duplica
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <a href="@Url.Action("Poster", "Promozioni", new { alias = promo.Alias })"
-                           class="btn btn-sm btn-outline-dark">
-                            🖨️ Poster QR
-                        </a>
-                    </td>
+                        else
+                        {
 
-                </tr>
-            }
-        </tbody>
-    </table>
+                            <span class="badge bg-secondary">Scaduta</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <a class="btn btn-sm btn-outline-primary w-100"
+                       asp-action="Visualizza" asp-route-alias="@promo.Alias">📄 Visualizza</a>
+                    <a class="btn btn-sm btn-outline-success w-100"
+                       asp-controller="CodiciPromo" asp-action="RichiediDaAlias" asp-route-alias="@promo.Alias">🎟️ Richiedi</a>
+                    <a class="btn btn-sm btn-outline-dark w-100"
+                       asp-action="Poster" asp-route-alias="@promo.Alias">🖨️ Poster</a>
+                </div>
+                <div class="btn-row">
+                    <a class="btn btn-sm btn-outline-warning w-100"
+                       asp-action="Edit" asp-route-id="@promo.Id">✏️ Modifica</a>
+                    <form asp-action="Duplica" method="post" class="w-100">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@promo.Id" />
+                        <button type="submit" class="btn btn-sm btn-outline-primary w-100">🔁 Duplica</button>
+                    </form>
+                    <form asp-action="Delete" method="post" class="w-100"
+                          onsubmit="return confirm('Confermi eliminazione della promozione “@promo.Nome”?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@promo.Id" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">🗑️ Elimina</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
 </div>
+
+@section Styles {
+    <style>
+        /* Mobile cards */
+        .promo-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 12px 12px 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px rgba(15,23,42,.06);
+        }
+
+            .promo-card .card-head {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 6px;
+            }
+
+            .promo-card .name {
+                font-weight: 700;
+                font-size: 1.05rem;
+                line-height: 1.1;
+            }
+
+            .promo-card .alias {
+                color: #475569;
+                font-size: .9rem;
+                white-space: nowrap;
+            }
+
+            .promo-card .badges {
+                display: flex;
+                gap: 6px;
+                margin-top: 4px;
+                flex-wrap: wrap;
+            }
+
+            .promo-card .pill {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 999px;
+                background: #eef2ff;
+                border: 1px solid #e2e8f0;
+                font-size: .72rem;
+                font-weight: 600;
+                color: #3730a3;
+            }
+
+                .promo-card .pill.muted {
+                    background: #f1f5f9;
+                    color: #475569;
+                }
+
+            .promo-card .desc {
+                color: #334155;
+                font-size: .95rem;
+                margin: 6px 0 10px;
+            }
+
+            .promo-card .btn-row {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                margin-top: 10px;
+            }
+        @@media (max-width: 380px) {
+            .promo-card .btn-row
+
+        {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function(){
+          const input = document.getElementById('filterInput');
+          const clear = document.getElementById('clearFilter');
+
+          function normalizza(s){ return (s || '').toString().toLowerCase(); }
+
+          function filtra(val){
+            const q = normalizza(val);
+
+            // Tabella (desktop)
+            document.querySelectorAll('#promoTable tbody tr').forEach(tr=>{
+              const name = normalizza(tr.getAttribute('data-name'));
+              const alias= normalizza(tr.getAttribute('data-alias'));
+              const desc = normalizza(tr.getAttribute('data-desc'));
+              const match = !q || name.includes(q) || alias.includes(q) || desc.includes(q);
+              tr.style.display = match ? '' : 'none';
+            });
+
+            // Card (mobile)
+            document.querySelectorAll('#mobileList .promo-card').forEach(card=>{
+              const name = normalizza(card.getAttribute('data-name'));
+              const alias= normalizza(card.getAttribute('data-alias'));
+              const desc = normalizza(card.getAttribute('data-desc'));
+              const match = !q || name.includes(q) || alias.includes(q) || desc.includes(q);
+              card.style.display = match ? '' : 'none';
+            });
+          }
+
+          input?.addEventListener('input', e=> filtra(e.target.value));
+          clear?.addEventListener('click', ()=>{
+            input.value=''; filtra('');
+            input.focus();
+          });
+        })();
+    </script>
+}
