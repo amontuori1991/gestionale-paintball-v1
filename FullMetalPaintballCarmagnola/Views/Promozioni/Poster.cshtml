@@ -1,0 +1,108 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Promozione
+@{
+    Layout = null; // poster pulito per la stampa
+    var qrSrc = $"data:image/png;base64,{ViewBag.QRBase64}";
+    var url = (string)ViewBag.UrlAssoluto;
+    var ed = Model.EditionYear.HasValue ? $" — Ed. {Model.EditionYear.Value}" : "";
+}
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<title>Poster QR — @Model.Nome</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  @@page { size: A4; margin: 14mm; }
+  html, body { height: 100%; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif; color: #111; background: #f5f7fb; }
+
+  .no-print { display: flex; gap: .5rem; justify-content: center; padding: 12px; position: sticky; top: 0; background: #f5f7fb; border-bottom: 1px solid #eaecef; }
+  @@media print { .no-print { display:none; } body { background: #fff; } }
+
+  .poster {
+    max-width: 800px; margin: 24px auto; background: #fff; border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(20,25,40,.08); border: 1px solid #eef1f6; padding: 28px;
+  }
+  .brand { display:flex; align-items:center; gap:16px; margin-bottom: 10px; }
+  .brand img { height: 60px; width: auto; }
+  .brand h1 { font-size: 28px; margin: 0; letter-spacing: .2px; }
+
+  .subtitle { color:#556; margin: 4px 0 16px; }
+  .grid { display:grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: center; }
+  .qrwrap {
+    display:flex; align-items:center; justify-content:center; background: #f8fafc; border:1px dashed #d6dbe6;
+    border-radius: 16px; padding: 16px;
+  }
+  .qrwrap img { width: 380px; height: 380px; image-rendering: crisp-edges; }
+
+  .cta { margin-top: 10px; font-size: 20px; font-weight: 600; color: #0f172a; }
+  .desc { color:#334155; line-height: 1.5; white-space: pre-line; }
+  .meta { margin-top: 14px; font-size: 14px; color:#475569; }
+  .pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; font-weight:600; font-size: 12px; border:1px solid #e5e7eb; }
+
+  .footer {
+    display:flex; justify-content: space-between; align-items:center; margin-top: 18px; padding-top: 12px; border-top:1px dashed #e2e8f0; color:#334155;
+  }
+  .url { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background:#f1f5f9; padding:6px 10px; border-radius:10px; border:1px solid #e2e8f0; }
+  @@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .qrwrap img { width: 320px; height: 320px; } }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  <button onclick="window.print()" class="btn">🖨️ Stampa</button>
+  <button id="dlPng" class="btn">⬇️ Scarica PNG</button>
+  <a href="@Url.Action("Archivio","Promozioni")" class="btn">⬅️ Torna all’archivio</a>
+  <style>.btn{padding:8px 12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;text-decoration:none;color:#111}</style>
+</div>
+
+<div id="poster" class="poster">
+  <div class="brand">
+    <img src="~/img/logo.gif" alt="Logo">
+    <div>
+      <h1>Promo: @Model.Nome</h1>
+      <div class="subtitle">
+        <span class="pill">@Model.PromotionType@ed</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="copy">
+      @if (!string.IsNullOrWhiteSpace(Model.Descrizione))
+      {
+        <p class="desc">@Model.Descrizione</p>
+      }
+      <p class="cta">Scansiona il QR per richiedere il tuo codice!</p>
+      <p class="meta">
+        Alias: <strong>@Model.Alias</strong><br/>
+        Valida fino al <strong>@Model.DataScadenza.ToString("dd/MM/yyyy")</strong>
+      </p>
+    </div>
+
+    <div class="qrwrap">
+      <img src="@qrSrc" alt="QR @Model.Alias" />
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Mostra il codice in cassa al momento dell’arrivo.</div>
+    <div class="url">@url</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+document.getElementById('dlPng').addEventListener('click', async function () {
+  const el = document.getElementById('poster');
+  const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+  const a = document.createElement('a');
+          a.download = '@($"poster-{Model.Alias}.png")';
+
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+});
+</script>
+</body>
+</html>

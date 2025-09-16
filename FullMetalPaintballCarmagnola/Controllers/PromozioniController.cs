@@ -132,6 +132,37 @@ public class PromozioniController : Controller
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Archivio));
     }
+    // In PromozioniController
+
+    [HttpGet]
+    public async Task<IActionResult> Poster(string alias)
+    {
+        if (string.IsNullOrWhiteSpace(alias)) return NotFound();
+
+        var promo = await _db.Promozioni
+            .FirstOrDefaultAsync(p => p.Alias.ToLower() == alias.ToLower());
+
+        if (promo == null) return NotFound();
+
+        // URL assoluto alla pagina di richiesta codice: /promo/{alias}
+        var urlAssoluto = Url.Action(
+            action: "RichiediDaAlias",
+            controller: "CodiciPromo",
+            values: new { alias = promo.Alias },
+            protocol: Request.Scheme,
+            host: Request.Host.Value
+        );
+
+        // Genera QR (PNG base64) dal link assoluto
+        using var qrGen = new QRCoder.QRCodeGenerator();
+        var qrData = qrGen.CreateQrCode(urlAssoluto, QRCoder.QRCodeGenerator.ECCLevel.Q);
+        var qrPng = new QRCoder.PngByteQRCode(qrData);
+        var qrBytes = qrPng.GetGraphic(20);
+        ViewBag.QRBase64 = Convert.ToBase64String(qrBytes);
+        ViewBag.UrlAssoluto = urlAssoluto;
+
+        return View("Poster", promo);
+    }
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
