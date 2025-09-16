@@ -11,7 +11,6 @@ C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmag
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\appsettings.json
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\FullMetalPaintballCarmagnola.staticwebassets.runtime.json
-C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\FullMetalPaintballCarmagnola.staticwebassets.endpoints.json
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\FullMetalPaintballCarmagnola.exe
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\FullMetalPaintballCarmagnola.deps.json
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\FullMetalPaintballCarmagnola.runtimeconfig.json
@@ -303,10 +302,7 @@ C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmag
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\scopedcss\bundle\FullMetalPaintballCarmagnola.styles.css
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\scopedcss\projectbundle\FullMetalPaintballCarmagnola.bundle.scp.css
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets.build.json
-C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets.development.json
-C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets.build.endpoints.json
-C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\FullMeta.BCE212EF.Up2Date
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\FullMetalPaintballCarmagnola.dll
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\refint\FullMetalPaintballCarmagnola.dll
@@ -314,3 +310,8 @@ C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmag
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\FullMetalPaintballCarmagnola.genruntimeconfig.cache
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\ref\FullMetalPaintballCarmagnola.dll
 C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\bin\Debug\net8.0\QRCoder.dll
+C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets\msbuild.FullMetalPaintballCarmagnola.Microsoft.AspNetCore.StaticWebAssets.props
+C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets\msbuild.build.FullMetalPaintballCarmagnola.props
+C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.FullMetalPaintballCarmagnola.props
+C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.FullMetalPaintballCarmagnola.props
+C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola\obj\Debug\net8.0\staticwebassets.pack.json

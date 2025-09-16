@@ -17,19 +17,20 @@
     <button type="button" id="attivaScanner" class="btn btn-outline-success">📷 Scansiona QR</button>
 </div>
 
-
 <div id="qr-reader" style="width: 300px; margin: 0 auto; display: none;"></div>
 
 <div class="container mt-5">
     <h2 class="text-center">Verifica Codici Promozionali</h2>
 
-    <!-- ✅ VISUALIZZAZIONE DESKTOP: tabella -->
+    <!-- ✅ DESKTOP: tabella -->
     <div class="d-none d-md-block">
         <table class="table table-bordered mt-4">
             <thead>
                 <tr>
                     <th>Codice</th>
-                    <th>Instagram</th>
+                    <th>Tipo</th>
+                    <th>Promo</th>
+                    <th>Richiedente</th>
                     <th>Generato</th>
                     <th>Scadenza</th>
                     <th>Utilizzato</th>
@@ -39,15 +40,63 @@
             <tbody>
                 @foreach (var c in Model)
                 {
+                    var isEvento = c.RequiresPersonalData;
                     <tr>
                         <td>@c.Codice</td>
-                        <td>@c.NomeInstagram</td>
-                        <td>@c.DataCreazione.ToString("dd/MM/yyyy")</td>
-                        <td>@c.DataScadenza.ToString("dd/MM/yyyy")</td>
+                        <td>@c.PromotionType</td>
                         <td>
-                            <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
+                            @if (!string.IsNullOrEmpty(c.PromozioneNome))
+                            {
+                                <span>@c.PromozioneNome</span>
+                                if (!string.IsNullOrEmpty(c.Alias))
+                                {
+
+                                    <span> — <code>@c.Alias</code></span>
+                                    ;
+                                }
+                                if (c.EditionYear.HasValue)
+                                {
+
+                                    <span> — Ed. @c.EditionYear</span>
+                                    ;
+                                }
+                            }
+                            else if (!string.IsNullOrEmpty(c.Alias))
+                            {
+                                <code>@c.Alias</code>
+                            }
                         </td>
                         <td>
+                            @if (!isEvento)
+                            {
+                                <!-- IG -->
+                                @(string.IsNullOrEmpty(c.InstagramHandle) ? "-" : c.InstagramHandle)
+                            }
+                            else
+                            {
+                                <!-- Evento: dati anagrafici -->
+                                <div><strong>@(string.IsNullOrEmpty(c.Cognome) ? "-" : c.Cognome) @(string.IsNullOrEmpty(c.Nome) ? "" : c.Nome)</strong></div>
+                                <div class="small text-muted">
+                                    @(c.DataNascita.HasValue? c.DataNascita.Value.ToString("dd/MM/yyyy") : "-")
+                                    @if (!string.IsNullOrEmpty(c.ComuneNascita))
+                                    {
+                                        <span> — Nasc.: @c.ComuneNascita</span>
+                                        ;
+                                    }
+                                    @if (!string.IsNullOrEmpty(c.ComuneResidenza))
+                                    {
+                                        <span> — Res.: @c.ComuneResidenza</span>
+                                        ;
+                                    }
+                                </div>
+                            }
+                        </td>
+                        <td>@c.DataCreazione.ToString("dd/MM/yyyy")</td>
+                        <td>@c.DataScadenza.ToString("dd/MM/yyyy")</td>
+                        <td class="text-center">
+                            <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
+                        </td>
+                        <td class="text-center">
                             <a href="@Url.Action("VisualizzaBuono", "CodiciPromo", new { id = c.Id })" class="btn btn-sm btn-outline-primary">
                                 📄 Visualizza
                             </a>
@@ -58,13 +107,61 @@
         </table>
     </div>
 
-    <!-- ✅ VISUALIZZAZIONE MOBILE: card -->
+    <!-- ✅ MOBILE: card -->
     <div class="d-block d-md-none responsive-table">
         @foreach (var c in Model)
         {
+            var isEvento = c.RequiresPersonalData;
             <div class="promo-card">
                 <div data-label="Codice">@c.Codice</div>
-                <div data-label="Instagram">@c.NomeInstagram</div>
+                <div data-label="Tipo">@c.PromotionType</div>
+                <div data-label="Promo">
+                    @if (!string.IsNullOrEmpty(c.PromozioneNome))
+                    {
+                        <span>@c.PromozioneNome</span>
+                        if (!string.IsNullOrEmpty(c.Alias))
+                        {
+
+                            <span> — <code>@c.Alias</code></span>
+                            ;
+                        }
+                        if (c.EditionYear.HasValue)
+                        {
+
+                            <span> — Ed. @c.EditionYear</span>
+                            ;
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(c.Alias))
+                    {
+                        <code>@c.Alias</code>
+                    }
+                </div>
+
+                @if (!isEvento)
+                {
+                    <div data-label="Instagram">@(!string.IsNullOrEmpty(c.InstagramHandle) ? c.InstagramHandle : "-")</div>
+                }
+                else
+                {
+                    <div data-label="Richiedente">
+                        <div><strong>@(string.IsNullOrEmpty(c.Cognome) ? "-" : c.Cognome) @(string.IsNullOrEmpty(c.Nome) ? "" : c.Nome)</strong></div>
+                        <div class="small text-muted">
+                            @(c.DataNascita.HasValue? c.DataNascita.Value.ToString("dd/MM/yyyy") : "-")
+                            @if (!string.IsNullOrEmpty(c.ComuneNascita))
+                            {
+                                <span> — Nasc.: @c.ComuneNascita</span>
+                                ;
+                            }
+                            @if (!string.IsNullOrEmpty(c.ComuneResidenza))
+                            {
+                                <span> — Res.: @c.ComuneResidenza</span>
+                                ;
+                            }
+                        </div>
+                    </div>
+                }
+
                 <div data-label="Generato">@c.DataCreazione.ToString("dd/MM/yyyy")</div>
                 <div data-label="Scadenza">@c.DataScadenza.ToString("dd/MM/yyyy")</div>
                 <div data-label="Utilizzato">
@@ -102,10 +199,7 @@
 
             qrScanner.start(
                 { facingMode: "environment" },
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 }
-                },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
                     $('#ricercaCodice').val(decodedText);
                     qrScanner.stop().then(() => {
@@ -114,16 +208,15 @@
                         $('#ricercaCodice').trigger('input');
                     });
                 },
-                (errorMessage) => {}
-            ).then(() => {
-                scannerAttivo = true;
-            });
+                () => {}
+            ).then(() => { scannerAttivo = true; });
         });
 
         $('#ricercaCodice').on('input', function () {
-            const valore = $(this).val().toLowerCase();
+            const valore = ($(this).val() || '').toString().toLowerCase();
             let trovato = false;
 
+            const $table = $('table');
             $('tbody tr').each(function () {
                 const codice = $(this).find('td:first').text().toLowerCase();
                 const match = codice.includes(valore);
@@ -139,7 +232,7 @@
 
             if (!trovato && valore !== '') {
                 if ($('#noMatchMsg').length === 0) {
-                    $('<div id="noMatchMsg" class="alert alert-danger mt-3">Codice non trovato.</div>').insertAfter('table');
+                    $('<div id="noMatchMsg" class="alert alert-danger mt-3">Codice non trovato.</div>').insertAfter($table);
                 }
             } else {
                 $('#noMatchMsg').remove();

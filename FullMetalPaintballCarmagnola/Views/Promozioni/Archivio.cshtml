@@ -1,8 +1,8 @@
 ﻿@model List<Full_Metal_Paintball_Carmagnola.Models.Promozione>
 
-
 @{
     ViewData["Title"] = "Archivio Promozioni";
+    DateTime oggi = DateTime.UtcNow.Date;
 }
 
 <div class="container mt-5">
@@ -14,27 +14,69 @@
             <tr>
                 <th>Nome</th>
                 <th>Alias</th>
+                <th>Tipo</th>
+                <th>Edizione</th>
                 <th>Descrizione</th>
                 <th>Scadenza</th>
+                <th>Stato</th>
                 <th>Link</th>
+                <th>Richiesta</th>
+                <th>Azioni</th>
             </tr>
         </thead>
         <tbody>
-           @foreach (var promo in Model)
-{
-    <tr>
-        <td>@promo.Nome</td>
-        <td>@promo.Alias</td>
-        <td>@promo.Descrizione</td>
-        <td>@promo.DataScadenza.ToString("dd/MM/yyyy")</td>
-        <td>
-            <a href="@Url.Action("Visualizza", "Promozioni", new { alias = promo.Alias })" class="btn btn-sm btn-outline-primary">
-                📄 Link
-            </a>
-        </td>
-    </tr> <!-- 🟢 CHIUSURA NECESSARIA -->
-}
+            @foreach (var promo in Model)
+            {
+                var scaduta = promo.DataScadenza.Date < oggi;
+                <tr class="@(scaduta ? "table-warning" : "")">
+                    <td>@promo.Nome</td>
+                    <td><code>@promo.Alias</code></td>
+                    <td>@promo.PromotionType</td>
+                    <td>@(promo.EditionYear.HasValue? promo.EditionYear.Value.ToString() : "-")</td>
+                    <td>@promo.Descrizione</td>
+                    <td>@promo.DataScadenza.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        @if (scaduta)
+                        {
+                            <span class="badge bg-secondary">Scaduta</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Attiva</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="@Url.Action("Visualizza", "Promozioni", new { alias = promo.Alias })" class="btn btn-sm btn-outline-primary">
+                            📄 Dettaglio
+                        </a>
+                    </td>
+                    <td>
+                        <a href="@Url.Action("RichiediDaAlias", "CodiciPromo", new { alias = promo.Alias })" class="btn btn-sm btn-outline-success">
+                            🎟️ Richiedi
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-warning" asp-action="Edit" asp-route-id="@promo.Id">✏️ Modifica</a>
+                    </td>
+                    <td>
+                        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Confermi eliminazione?');">
+                        <input type="hidden" name="id" value="@promo.Id" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Elimina</button>
+                    </form>
+                    </td>
+                    <td>
+                        <form asp-action="Duplica" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@promo.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Duplica">
+                                🔁 Duplica
+                            </button>
+                        </form>
+                    </td>
 
+                </tr>
+            }
         </tbody>
     </table>
 </div>

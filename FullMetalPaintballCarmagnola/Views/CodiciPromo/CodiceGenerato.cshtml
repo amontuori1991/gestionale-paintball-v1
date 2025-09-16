@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Codice Generato";
+    var pt = (ViewBag.PromotionType as string) ?? "Instagram";
+    var isEvento = string.Equals(pt, "EventoRichiedeDati", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="text-center">
@@ -15,8 +17,9 @@
         <!-- QR Code -->
         @if (ViewBag.QRCode != null)
         {
-            <img id="qrImage" src="data:image/png;base64,@ViewBag.QRCode" alt="QR Code" style="width: 180px; height: 180px; margin-bottom: 20px;" />
-            <a id="apriQRCode" class="btn btn-sm btn-outline-secondary d-block mx-auto mb-3" target="_blank">
+            var qrSrc = $"data:image/png;base64,{ViewBag.QRCode}";
+            <img id="qrImage" src="@qrSrc" alt="QR Code" style="width: 180px; height: 180px; margin-bottom: 20px;" />
+            <a id="apriQRCode" class="btn btn-sm btn-outline-secondary d-block mx-auto mb-3" target="_blank" href="@qrSrc">
                 📷 Apri immagine in nuova scheda
             </a>
         }
@@ -25,22 +28,55 @@
             <p class="text-danger">⚠️ Errore nella generazione del QR code.</p>
         }
 
-
-
         @if (ViewBag.DescrizionePromo != null)
         {
             <p class="mt-3"><strong>@ViewBag.DescrizionePromo</strong></p>
         }
 
-
         <h3 class="text-success">@Model.Codice</h3>
         <p>Valido fino al <strong>@Model.DataScadenza.ToString("dd/MM/yyyy")</strong></p>
-        <p><strong>Instagram:</strong> @Model.InstagramAccount</p>
-        <p class="text-warning mt-3">
-            ⚠️ Ricorda: per poter utilizzare il buono, è necessario seguire la nostra pagina Instagram.
-        </p>
-    </div>
 
+        @* --- Mostra IG solo per promo Instagram --- *@
+        @if (!isEvento && !string.IsNullOrWhiteSpace(Model.InstagramAccount))
+        {
+            <p><strong>Instagram:</strong> @Model.InstagramAccount</p>
+        }
+
+        @* --- Dati richiedente per EventoRichiedeDati --- *@
+        @if (isEvento)
+        {
+            <div class="text-start small text-muted mt-2">
+                @if (!string.IsNullOrWhiteSpace(Model.Cognome) || !string.IsNullOrWhiteSpace(Model.Nome))
+                {
+                    <div><strong>@Model.Cognome @Model.Nome</strong></div>
+                }
+                @if (Model.DataNascita.HasValue)
+                {
+                    <div>Data di nascita: @Model.DataNascita.Value.ToString("dd/MM/yyyy")</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.ComuneNascita))
+                {
+                    <div>Comune di nascita: @Model.ComuneNascita</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.ComuneResidenza))
+                {
+                    <div>Residenza: @Model.ComuneResidenza</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                {
+                    <div>Email: @Model.Email</div>
+                }
+            </div>
+        }
+
+        @* Avviso IG solo se NON evento *@
+        @if (!isEvento)
+        {
+            <div class="alert alert-warning mt-3">
+                ⚠️ Ricorda: per poter utilizzare il buono, è necessario seguire la nostra pagina Instagram.
+            </div>
+        }
+    </div>
 
     <div class="mt-4">
         <a href="/" class="btn btn-outline-primary me-2">🏠 Torna alla Home</a>
@@ -50,11 +86,9 @@
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <script>
         document.getElementById('downloadBtn').addEventListener('click', function () {
             const container = document.getElementById('buonoContainer');
-
             html2canvas(container, { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = 'buono_promozionale.png';
@@ -63,14 +97,4 @@
             });
         });
     </script>
-    <script>
-        window.onload = function () {
-            const img = document.getElementById("qrImage");
-            const link = document.getElementById("apriQRCode");
-            if (img && link) {
-                link.href = img.src;
-            }
-        };
-    </script>
-
 }

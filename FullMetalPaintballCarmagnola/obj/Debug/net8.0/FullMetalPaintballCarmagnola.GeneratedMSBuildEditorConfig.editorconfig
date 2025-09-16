@@ -25,8 +25,6 @@ build_property.SupportLocalizedComponentNames =
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
 build_property.MSBuildProjectDirectory = C:\Users\Alex\source\repos\FullMetalPaintballCarmagnola\FullMetalPaintballCarmagnola
 build_property._RazorSourceGeneratorDebug = 
-build_property.EffectiveAnalysisLevelStyle = 8.0
-build_property.EnableCodeStyleSeverity = 
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Areas/Identity/Pages/Account/AccessDenied.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxBY2Nlc3NEZW5pZWQuY3NodG1s
@@ -208,12 +206,12 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29kaWNpUHJvbW9cR2VuZXJhQ29kaWNlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/CodiciPromo/RichiediCodicePromo.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29kaWNpUHJvbW9cUmljaGllZGlDb2RpY2VQcm9tby5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/CodiciPromo/VerificaCodici.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29kaWNpUHJvbW9cVmVyaWZpY2FDb2RpY2kuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/CodiciPromo/_RichiediCodicePromo_OLD.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29kaWNpUHJvbW9cX1JpY2hpZWRpQ29kaWNlUHJvbW9fT0xELmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Dashboard/Index.cshtml]
@@ -306,6 +304,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Promozioni/Crea.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvbW96aW9uaVxDcmVhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Promozioni/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUHJvbW96aW9uaVxFZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Promozioni/PromoNonValida.cshtml]
