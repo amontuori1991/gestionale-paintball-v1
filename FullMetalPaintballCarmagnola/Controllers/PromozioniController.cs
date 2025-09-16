@@ -141,10 +141,9 @@ public class PromozioniController : Controller
 
         var promo = await _db.Promozioni
             .FirstOrDefaultAsync(p => p.Alias.ToLower() == alias.ToLower());
-
         if (promo == null) return NotFound();
 
-        // URL assoluto alla pagina di richiesta codice: /promo/{alias}
+        // URL assoluto alla pagina /promo/{alias}
         var urlAssoluto = Url.Action(
             action: "RichiediDaAlias",
             controller: "CodiciPromo",
@@ -153,16 +152,25 @@ public class PromozioniController : Controller
             host: Request.Host.Value
         );
 
-        // Genera QR (PNG base64) dal link assoluto
+        // QR (PNG base64) dal link assoluto
         using var qrGen = new QRCoder.QRCodeGenerator();
         var qrData = qrGen.CreateQrCode(urlAssoluto, QRCoder.QRCodeGenerator.ECCLevel.Q);
         var qrPng = new QRCoder.PngByteQRCode(qrData);
         var qrBytes = qrPng.GetGraphic(20);
+
         ViewBag.QRBase64 = Convert.ToBase64String(qrBytes);
         ViewBag.UrlAssoluto = urlAssoluto;
+        ViewBag.LogoUrl = Url.Content("~/img/logo.gif");
+
+        // Tema colori (puoi cambiare gli esadecimali qui)
+        var isEvento = string.Equals(promo.PromotionType, "EventoRichiedeDati", StringComparison.OrdinalIgnoreCase);
+        ViewBag.Accent = isEvento ? "#16a34a" : "#7c3aed"; // verde / viola
+        ViewBag.AccentSoft = isEvento ? "#dcfce7" : "#ede9fe";
+        ViewBag.AccentDark = isEvento ? "#065f46" : "#4c1d95";
 
         return View("Poster", promo);
     }
+
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
