@@ -221,8 +221,14 @@ public class CodiciPromoController : Controller
             return View("PromoNonValida");
 
         promo.PromotionType ??= "Instagram";
+
+        // ⬇️ nascondi navbar+footer per la landing promo
+        ViewBag.HideNavbar = true;
+        ViewBag.HideFooter = true;
+
         return View("GeneraCodice", promo);
     }
+
 
     [AllowAnonymous]
     [HttpPost]
@@ -313,6 +319,8 @@ public class CodiciPromoController : Controller
                         TempData["EmailEsito"] = "Codice già presente. Invio email non riuscito.";
                     }
                 }
+                ViewBag.HideNavbar = true;
+                ViewBag.HideFooter = true;
 
                 return View("CodiceGenerato", esistente);
             }
@@ -358,6 +366,9 @@ public class CodiciPromoController : Controller
                     ViewBag.DescrizionePromo = promo.Descrizione;
                     ViewBag.PromotionType = promo.PromotionType;
                     TempData["Info"] = "Hai già un buono attivo per questa promozione: ecco il tuo codice.";
+                    ViewBag.HideNavbar = true;
+                    ViewBag.HideFooter = true;
+
                     return View("CodiceGenerato", esistente);
                 }
                 throw;
@@ -378,6 +389,8 @@ public class CodiciPromoController : Controller
             {
                 TempData["EmailEsito"] = "Codice generato. Invio email non riuscito.";
             }
+            ViewBag.HideNavbar = true;
+            ViewBag.HideFooter = true;
 
             return View("CodiceGenerato", promoCode);
         }
@@ -421,6 +434,9 @@ public class CodiciPromoController : Controller
             ViewBag.DescrizionePromo = promo.Descrizione;
             ViewBag.PromotionType = promo.PromotionType;
             ViewBag.BenefitPromo = promo.CosaDaDiritto;
+            ViewBag.HideNavbar = true;
+            ViewBag.HideFooter = true;
+
             return View("CodiceGenerato", promoCode);
         }
 
@@ -493,6 +509,9 @@ public class CodiciPromoController : Controller
         ViewBag.DescrizionePromo = promo?.Descrizione ?? "Offerta promozionale";
         ViewBag.BenefitPromo = promo?.CosaDaDiritto;
         ViewBag.PromotionType = promo?.PromotionType ?? "Instagram";
+        ViewBag.HideNavbar = true;
+        ViewBag.HideFooter = true;
+
 
         return View("CodiceGenerato", codice);
     }
