@@ -1,0 +1,317 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Survey
+@{
+    ViewData["Title"] = "Poster QR sondaggio";
+    var url = (string)ViewBag.PublicUrl;
+}
+
+<div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <h2 class="mb-0">Poster QR • @Model.Title</h2>
+        <div>
+            <a class="btn btn-outline-secondary me-2" asp-action="Index"><i class="bi bi-arrow-left"></i> Torna all'elenco</a>
+            <button id="printBtn" class="btn btn-outline-dark me-2"><i class="bi bi-printer"></i> Stampa A4</button>
+            <button id="downloadBtn" class="btn btn-success"><i class="bi bi-download"></i> Scarica Poster (PNG)</button>
+        </div>
+    </div>
+
+    <!-- Wrapper centrato -->
+    <div class="poster-wrapper">
+        <!-- Canvas A4 Landscape -->
+        <div id="posterA4" class="a4-landscape shadow-sm">
+            <div class="poster-inner">
+                <!-- Header -->
+                <div class="poster-header">
+                    <img src="~/img/logo.gif" alt="Logo" class="poster-logo" />
+                    <div class="poster-titleblock">
+                        <div class="poster-subtitle">Partecipa al sondaggio</div>
+                        <h1 class="poster-title">@Model.Title</h1>
+                        @if (!string.IsNullOrWhiteSpace(Model.Description))
+                        {
+                            <div class="poster-desc">@Model.Description</div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="poster-body">
+                    <div class="poster-qr">
+                        <canvas id="qrCanvas" width="1000" height="1000"></canvas>
+                    </div>
+                    <div class="poster-right">
+                        <div class="poster-instructions">
+                            <div class="big-emoji">📱</div>
+                            <div class="instr-title">Scansiona il QR</div>
+                            <div class="instr-text">Inquadra con la fotocamera del telefono e rispondi alle domande.</div>
+                        </div>
+
+                        <div class="poster-url">
+                            <div class="url-label">Oppure visita:</div>
+                            <div class="url-text">@url</div>
+                        </div>
+
+                        <div class="poster-badges">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge badge-active">Sondaggio attivo</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-draft">Bozza / Non attivo</span>
+                            }
+                            <span class="badge badge-brand">Full Metal Paintball Carmagnola</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer brand -->
+                <div class="poster-footer">
+                    <div>Grazie per il tuo contributo!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Wrapper centrale */
+        .poster-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 160px);
+        }
+
+        /* Area visiva */
+        .a4-landscape {
+            background: #fff;
+            width: 297mm; /* A4 landscape width */
+            height: 210mm; /* A4 landscape height */
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Per schermo: riduci per viewport strette */
+        @@media screen and (max-width: 1200px) {
+            .a4-landscape {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 297 / 210;
+            }
+        }
+
+        /* Stampa: pagina A4 orizzontale */
+        @@page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: #fff !important;
+            }
+
+            .poster-wrapper {
+                min-height: auto;
+            }
+
+            .a4-landscape {
+                box-shadow: none !important;
+                border: 0 !important;
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        .poster-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 14mm 16mm;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+            color: #111827;
+        }
+
+        .poster-header {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 12mm;
+            align-items: center;
+            margin-bottom: 8mm;
+        }
+
+        .poster-logo {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+        }
+
+        .poster-titleblock .poster-subtitle {
+            font-size: 14pt;
+            color: #2563eb;
+            letter-spacing: .02em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .poster-title {
+            font-size: 28pt;
+            line-height: 1.1;
+            margin: 2mm 0 1mm;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .poster-desc {
+            font-size: 12pt;
+            color: #374151;
+            max-width: 100ch;
+        }
+
+        .poster-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12mm;
+            align-items: center;
+            flex: 1;
+        }
+
+        .poster-qr {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 6mm;
+        }
+
+            .poster-qr canvas {
+                width: 100%;
+                height: auto;
+                max-width: 150mm;
+                max-height: 150mm;
+            }
+
+        .poster-right {
+            display: flex;
+            flex-direction: column;
+            gap: 8mm;
+        }
+
+        .poster-instructions .big-emoji {
+            font-size: 42pt;
+            line-height: 1;
+        }
+
+        .instr-title {
+            font-size: 18pt;
+            font-weight: 800;
+            margin-top: 2mm;
+        }
+
+        .instr-text {
+            font-size: 12pt;
+            color: #374151;
+            max-width: 60ch;
+        }
+
+        .poster-url .url-label {
+            font-size: 10pt;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .poster-url .url-text {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #111827;
+            word-break: break-all;
+            padding: 3mm 4mm;
+            border: 1px dashed #93c5fd;
+            border-radius: 6px;
+            background: #eff6ff;
+        }
+
+        .poster-badges {
+            display: flex;
+            gap: 6mm;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2mm 4mm;
+            border-radius: 1000px;
+            font-weight: 700;
+            font-size: 10pt;
+            border: 1px solid transparent;
+        }
+
+        .badge-active {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #10b981;
+        }
+
+        .badge-draft {
+            background: #f3f4f6;
+            color: #374151;
+            border-color: #9ca3af;
+        }
+
+        .badge-brand {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+        }
+
+        .poster-footer {
+            margin-top: 8mm;
+            font-size: 12pt;
+            text-align: center;
+            color: #374151;
+        }
+    </style>
+}
+
+@section Scripts {
+    <!-- QRious: QR client-side -->
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+    <!-- html2canvas: export poster -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        (function () {
+            // Genera QR
+            var qr = new QRious({
+                element: document.getElementById('qrCanvas'),
+                value: '@url',
+                size: 1000,
+                level: 'H'
+            });
+
+            // Stampa A4
+            document.getElementById('printBtn').addEventListener('click', function () {
+                window.print();
+            });
+
+            // Scarica PNG del poster
+            document.getElementById('downloadBtn').addEventListener('click', function () {
+                var poster = document.getElementById('posterA4');
+                html2canvas(poster, { scale: 2, backgroundColor: '#ffffff' }).then(function (canvas) {
+                    var link = document.createElement('a');
+                    var safeTitle = '@Model.Title'.replace(/[\\/:*?"<>|]+/g, '').trim() || 'poster_sondaggio';
+                    link.download = safeTitle + '_A4.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            });
+        })();
+    </script>
+}

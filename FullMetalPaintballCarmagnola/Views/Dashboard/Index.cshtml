@@ -363,6 +363,15 @@
             </div>
         }
 
+        @if (((List<string>)ViewBag.PermessiVisibili).Contains("Sondaggi"))
+        {
+            <div class="btn-container">
+                <a class="btn btn-outline-info" href="@Url.Action("Index", "Sondaggi")">
+                    <i class="bi bi-ui-checks-grid"></i>
+                    Sondaggi
+                </a>
+            </div>
+        }
 
     </div>
 </div>

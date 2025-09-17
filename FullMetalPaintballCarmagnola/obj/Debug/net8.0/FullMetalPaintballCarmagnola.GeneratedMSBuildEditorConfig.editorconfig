@@ -342,12 +342,40 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Sondaggi/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZGFnZ2lcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Sondaggi/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZGFnZ2lcRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Sondaggi/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZGFnZ2lcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Sondaggi/Qr.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZGFnZ2lcUXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Sondaggi/Responses.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU29uZGFnZ2lcUmVzcG9uc2VzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Spese/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3Blc2VcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Statistiche/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RhdGlzdGljaGVcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/SurveyPublic/Public.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3VydmV5UHVibGljXFB1YmxpYy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/SurveyPublic/Thanks.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3VydmV5UHVibGljXFRoYW5rcy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Alex/source/repos/FullMetalPaintballCarmagnola/FullMetalPaintballCarmagnola/Views/Tesseramento/Duplicato.cshtml]

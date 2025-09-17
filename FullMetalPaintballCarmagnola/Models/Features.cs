@@ -18,7 +18,8 @@
             "ToDoList",
             "Movimenti",
             "Spese",
-            "Codici Promo"
+            "Codici Promo",
+            "Sondaggi"
         };
     }
 }

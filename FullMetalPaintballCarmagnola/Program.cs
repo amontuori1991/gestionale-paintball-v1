@@ -66,6 +66,9 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new FeatureRequirement("Movimenti")));
     options.AddPolicy("Spese", policy =>
     policy.Requirements.Add(new FeatureRequirement("Spese")));
+    options.AddPolicy("Sondaggi", policy =>
+    policy.Requirements.Add(new FeatureRequirement("Sondaggi")));
+
 });
 
 // Cookie di autenticazione
