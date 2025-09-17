@@ -72,13 +72,18 @@ public class CodiciPromoController : Controller
 
         var scadenza = cp.DataScadenza.ToUniversalTime().ToString("dd/MM/yyyy");
         // Corpo HTML
+        var diritto = string.IsNullOrWhiteSpace(promo.CosaDaDiritto) ? "" :
+            $"<p><strong>Il buono dà diritto a:</strong> {WebUtility.HtmlEncode(promo.CosaDaDiritto)}</p>";
+
         msg.Body = $@"
-        <p>Ciao {WebUtility.HtmlEncode(cp.Nome ?? "")} {WebUtility.HtmlEncode(cp.Cognome ?? "")},</p>
-        <p>ecco il tuo buono per <strong>{WebUtility.HtmlEncode(promo.Nome ?? "")}</strong>.</p>
-        <p><strong>Codice:</strong> {WebUtility.HtmlEncode(cp.Codice)}<br/>
-           <strong>Valido fino al:</strong> {scadenza}</p>
-        <p>In allegato trovi il QR del buono. Mostralo alla cassa.</p>
-        <p>Grazie!<br/>Full Metal Paintball</p>";
+    <p>Ciao {WebUtility.HtmlEncode(cp.Nome ?? "")} {WebUtility.HtmlEncode(cp.Cognome ?? "")},</p>
+    <p>ecco il tuo buono per <strong>{WebUtility.HtmlEncode(promo.Nome ?? "")}</strong>.</p>
+    {diritto}
+    <p><strong>Codice:</strong> {WebUtility.HtmlEncode(cp.Codice)}<br/>
+       <strong>Valido fino al:</strong> {scadenza}</p>
+    <p>In allegato trovi il QR del buono. Mostralo alla cassa.</p>
+    <p>Grazie!<br/>Full Metal Paintball</p>";
+
 
         // Allegato PNG del QR
         using var ms = new MemoryStream(pngBytes);
@@ -293,6 +298,7 @@ public class CodiciPromoController : Controller
                 ViewBag.QRCode = Convert.ToBase64String(qrBytes);
                 ViewBag.DescrizionePromo = promo.Descrizione;
                 ViewBag.PromotionType = promo.PromotionType;
+                ViewBag.BenefitPromo = promo.CosaDaDiritto;
                 TempData["Info"] = "Hai già un buono attivo per questa promozione: ecco il tuo codice.";
 
                 if (RESEND_EMAIL_ON_DUPLICATE)
@@ -361,6 +367,7 @@ public class CodiciPromoController : Controller
             ViewBag.QRCode = Convert.ToBase64String(qrBytesNew);
             ViewBag.DescrizionePromo = promo.Descrizione;
             ViewBag.PromotionType = promo.PromotionType;
+            ViewBag.BenefitPromo = promo.CosaDaDiritto;
 
             try
             {
@@ -413,7 +420,7 @@ public class CodiciPromoController : Controller
             ViewBag.QRCode = Convert.ToBase64String(qrBytes);
             ViewBag.DescrizionePromo = promo.Descrizione;
             ViewBag.PromotionType = promo.PromotionType;
-
+            ViewBag.BenefitPromo = promo.CosaDaDiritto;
             return View("CodiceGenerato", promoCode);
         }
 
@@ -484,6 +491,7 @@ public class CodiciPromoController : Controller
 
         ViewBag.QRCode = GeneraQRCode(codice.Codice);
         ViewBag.DescrizionePromo = promo?.Descrizione ?? "Offerta promozionale";
+        ViewBag.BenefitPromo = promo?.CosaDaDiritto;
         ViewBag.PromotionType = promo?.PromotionType ?? "Instagram";
 
         return View("CodiceGenerato", codice);

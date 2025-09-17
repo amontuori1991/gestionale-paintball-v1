@@ -32,6 +32,13 @@
         {
             <p class="mt-3"><strong>@ViewBag.DescrizionePromo</strong></p>
         }
+        @if (!string.IsNullOrWhiteSpace((string)ViewBag.BenefitPromo))
+        {
+            <div class="mt-2 p-2" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                <div class="small text-muted">Il buono dà diritto a:</div>
+                <div><strong>@ViewBag.BenefitPromo</strong></div>
+            </div>
+        }
 
         <h3 class="text-success">@Model.Codice</h3>
         <p>Valido fino al <strong>@Model.DataScadenza.ToString("dd/MM/yyyy")</strong></p>

@@ -20,6 +20,10 @@
     {
         <p><strong>Descrizione:</strong> @Model.Descrizione</p>
     }
+    @if (!string.IsNullOrWhiteSpace(Model.CosaDaDiritto))
+    {
+        <p><strong>Il buono dà diritto a:</strong> @Model.CosaDaDiritto</p>
+    }
 
     <p><strong>Valida fino al:</strong> @Model.DataScadenza.ToString("dd/MM/yyyy")</p>
 

@@ -17,7 +17,12 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public string Alias { get; set; } = string.Empty;
 
         [Column("descrizione")]
+
         public string? Descrizione { get; set; }
+
+        [Column("cosadadiritto")]
+        public string? CosaDaDiritto { get; set; }
+
 
         [Column("datascadenza", TypeName = "date")] // <— è un DATE puro
         public DateTime DataScadenza { get; set; }

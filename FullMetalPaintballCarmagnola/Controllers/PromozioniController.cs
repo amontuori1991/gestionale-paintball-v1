@@ -39,7 +39,7 @@ public class PromozioniController : Controller
     [Authorize(Roles = "Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Crea([Bind("Nome,Alias,Descrizione,DataScadenza,PromotionType,EditionYear")] Promozione model)
+    public async Task<IActionResult> Crea([Bind("Nome,Alias,Descrizione,CosaDaDiritto,DataScadenza,PromotionType,EditionYear")] Promozione model)
     {
         if (!ModelState.IsValid)
             return View(model);
@@ -94,7 +94,7 @@ public class PromozioniController : Controller
     [Authorize(Roles = "Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Nome,Alias,Descrizione,DataScadenza,PromotionType,EditionYear,DataCreazione")] Promozione model)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,Nome,Alias,Descrizione,CosaDaDiritto,DataScadenza,PromotionType,EditionYear,DataCreazione")] Promozione model)
     {
         if (id != model.Id) return NotFound();
         if (!ModelState.IsValid) return View(model);
