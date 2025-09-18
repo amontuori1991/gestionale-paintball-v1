@@ -194,7 +194,6 @@ public class SondaggiController : Controller
             .Include(r => r.Answers)
             .ToListAsync();
 
-        // Prepara mappa opzioni per lookup veloce
         var optionIds = responses
             .SelectMany(r => r.Answers)
             .Where(a => a.OptionId.HasValue)
@@ -209,8 +208,32 @@ public class SondaggiController : Controller
         ViewBag.Questions = questions;
         ViewBag.OptionMap = optionMap;
 
+        // Passo IEnumerable per evitare mismatch List/IEnumerable
         return View((s, responses.AsEnumerable()));
+    }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateQuestion(int id, string text, int type, bool allowMultiple)
+    {
+        var q = await _db.SurveyQuestions.FindAsync(id);
+        if (q == null) return NotFound();
+        q.Text = text;
+        q.Type = (QuestionType)type;
+        q.AllowMultiple = allowMultiple;
+        await _db.SaveChangesAsync();
+        return RedirectToAction(nameof(Edit), new { id = q.SurveyId });
+    }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateOption(int id, string text)
+    {
+        var opt = await _db.SurveyOptions.FindAsync(id);
+        if (opt == null) return NotFound();
+        opt.Text = text;
+        await _db.SaveChangesAsync();
+        var surveyId = await _db.SurveyQuestions.Where(q => q.Id == opt.QuestionId).Select(q => q.SurveyId).FirstAsync();
+        return RedirectToAction(nameof(Edit), new { id = surveyId });
     }
 
 

@@ -1,62 +1,66 @@
-﻿@model (Full_Metal_Paintball_Carmagnola.Models.Survey survey, System.Collections.Generic.List<Full_Metal_Paintball_Carmagnola.Models.SurveyResponse> responses)
+﻿@model (Full_Metal_Paintball_Carmagnola.Models.Survey survey, System.Collections.Generic.IEnumerable<Full_Metal_Paintball_Carmagnola.Models.SurveyResponse> responses)
 @using Full_Metal_Paintball_Carmagnola.Models
 @{
     ViewData["Title"] = "Risposte";
     var survey = Model.survey;
-    var responses = Model.responses;
-    var questions = (IEnumerable<SurveyQuestion>)ViewBag.Questions;
-}
-
-@{
+    var responses = Model.responses ?? Enumerable.Empty<SurveyResponse>();
+    var questions = (IEnumerable<SurveyQuestion>)(ViewBag.Questions ?? Array.Empty<SurveyQuestion>());
     var optionMap = ViewBag.OptionMap as IDictionary<int, string> ?? new Dictionary<int, string>();
 }
-
 <div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Risposte: @survey.Title</h2>
+    <div class="text-center mb-3">
+        <h2 class="mb-2">Risposte: @survey.Title</h2>
         <a class="btn btn-outline-dark" asp-action="ExportCsv" asp-route-id="@survey.Id">Export CSV</a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Data invio</th>
-                    @foreach (var q in questions)
-                    {
-                        <th>@q.Text</th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var r in responses)
-                {
+    @if (!responses.Any())
+    {
+        <div class="alert alert-info">Nessuna risposta al momento.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
                     <tr>
-                        <td>@r.Id</td>
-                        <td>@r.SubmittedAt.ToLocalTime()</td>
+                        <th>ID</th>
+                        <th>Data invio</th>
                         @foreach (var q in questions)
                         {
-                            var answers = r.Answers.Where(a => a.QuestionId == q.Id).ToList();
-                            <td>
-                                @if (answers.Count == 0)
-                                {
-                                    <span class="text-muted">—</span>
-                                }
-                                else
-                                {
-                                    @string.Join(" | ", answers.Select(a =>
-                                    a.OptionId.HasValue
-                                    ? (optionMap.TryGetValue(a.OptionId.Value, out var txt) ? txt : $"Opt#{a.OptionId}")
-                                    : a.AnswerText))
-                                }
-                            </td>
+                            <th>@q.Text</th>
                         }
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var r in responses)
+                    {
+                        <tr>
+                            <td>@r.Id</td>
+                            <td>@r.SubmittedAt.ToLocalTime()</td>
+                            @foreach (var q in questions)
+                            {
+                                var ans = r.Answers?.Where(a => a.QuestionId == q.Id).ToList() ?? new List<SurveyAnswer>();
+                                <td>
+                                    @if (ans.Count == 0)
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                    else
+                                    {
+                                        @string.Join(" | ", ans.Select(a =>
+                                        a.OptionId.HasValue
+                                        ? (optionMap.TryGetValue(a.OptionId.Value, out var txt) ? txt : $"Opt#{a.OptionId}")
+                                        : a.AnswerText))
+                                                }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <div class="mt-3">
+        <a class="btn btn-outline-secondary" asp-action="Index">Torna all'elenco</a>
     </div>
-
-    <a class="btn btn-outline-secondary" asp-action="Index">Torna all'elenco</a>
 </div>

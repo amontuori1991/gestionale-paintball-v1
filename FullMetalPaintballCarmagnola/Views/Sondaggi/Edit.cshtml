@@ -40,41 +40,68 @@
 
     <hr class="my-4" />
 
-    <h4>Domande</h4>
+    <h4 class="text-center mb-3">Domande</h4>
     <div class="card p-3 mb-3">
-        <form asp-action="AddQuestion" method="post" class="row g-2">
+        <form asp-action="AddQuestion" method="post" class="row g-3 align-items-end">
             <input type="hidden" name="surveyId" value="@Model.Id" />
-            <div class="col-md-6">
-                <input name="text" class="form-control" placeholder="Testo domanda" required />
+            <div class="col-12 col-lg-6">
+                <label class="form-label">Testo domanda</label>
+                <input name="text" class="form-control" placeholder="Es. Ti interesserebbe un corso?" required />
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-lg-3">
+                <label class="form-label">Tipo di risposta</label>
                 <select name="type" class="form-select">
-                    <option value="@QuestionType.MultipleChoice">Risposta multipla</option>
-                    <option value="@QuestionType.OpenText">Testo libero</option>
+                    <option value="0">Risposta multipla</option>
+                    <option value="1">Testo libero</option>
                 </select>
             </div>
-            <div class="col-md-2 form-check d-flex align-items-center">
-                <input class="form-check-input" type="checkbox" name="allowMultiple" value="true" id="allowMultiple" />
-                <label class="form-check-label ms-2" for="allowMultiple">Più risposte</label>
+            <div class="col-6 col-lg-2">
+                <label class="form-label d-block">Opzioni</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="allowMultiple" value="true" id="addAllowMultiple">
+                    <label class="form-check-label" for="addAllowMultiple">Più risposte</label>
+                </div>
             </div>
-            <div class="col-md-1">
+            <div class="col-12 col-lg-1">
+                <label class="form-label d-none d-lg-block">&nbsp;</label>
                 <button class="btn btn-success w-100" type="submit"><i class="bi bi-plus-lg"></i></button>
             </div>
         </form>
     </div>
 
+
     @foreach (var q in Model.Questions.OrderBy(q => q.Order))
     {
         <div class="card mb-3">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h5 class="card-title mb-0">@q.Text</h5>
-                    <form asp-action="RemoveQuestion" method="post">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <form asp-action="UpdateQuestion" method="post" class="d-flex flex-wrap align-items-end gap-2 flex-grow-1">
                         <input type="hidden" name="id" value="@q.Id" />
-                        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i></button>
+                        <div class="me-2" style="min-width:260px;flex:1 1 320px;">
+                            <label class="form-label mb-1">Testo domanda</label>
+                            <input name="text" class="form-control" value="@q.Text" required />
+                        </div>
+                        <div class="me-2" style="width:220px;">
+                            <label class="form-label mb-1">Tipo</label>
+                            <select name="type" class="form-select">
+                                <option value="0" selected="@(q.Type == QuestionType.MultipleChoice)">Risposta multipla</option>
+                                <option value="1" selected="@(q.Type == QuestionType.OpenText)">Testo libero</option>
+                            </select>
+                        </div>
+                        <div class="form-check ms-1" style="padding-top:28px;">
+                            <input class="form-check-input" type="checkbox" name="allowMultiple" value="true" @(q.AllowMultiple ? "checked" : "") id="allow_@q.Id" />
+                            <label class="form-check-label" for="allow_@q.Id">Più risposte</label>
+                        </div>
+                        <button class="btn btn-primary btn-sm ms-auto" type="submit">Salva</button>
+                    </form>
+
+                    <form asp-action="RemoveQuestion" method="post" class="m-0">
+                        <input type="hidden" name="id" value="@q.Id" />
+                        <button class="btn btn-outline-danger btn-sm" title="Elimina"><i class="bi bi-trash"></i></button>
                     </form>
                 </div>
-                <div class="text-muted">
+
+                <div class="text-muted mt-2">
                     Tipo: @(q.Type == QuestionType.MultipleChoice ? "Risposta multipla" : "Testo libero")
                     @if (q.Type == QuestionType.MultipleChoice)
                     {
@@ -89,11 +116,15 @@
                         <ul class="list-group mb-2">
                             @foreach (var opt in q.Options.OrderBy(o => o.Order))
                             {
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>@opt.Text</span>
+                                <li class="list-group-item d-flex align-items-center gap-2">
+                                    <form asp-action="UpdateOption" method="post" class="d-flex gap-2 flex-grow-1">
+                                        <input type="hidden" name="id" value="@opt.Id" />
+                                        <input name="text" class="form-control" value="@opt.Text" />
+                                        <button class="btn btn-primary btn-sm" type="submit">Salva</button>
+                                    </form>
                                     <form asp-action="RemoveOption" method="post" class="m-0">
                                         <input type="hidden" name="id" value="@opt.Id" />
-                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x"></i></button>
+                                        <button class="btn btn-outline-danger btn-sm" title="Rimuovi"><i class="bi bi-x"></i></button>
                                     </form>
                                 </li>
                             }
@@ -108,4 +139,6 @@
             </div>
         </div>
     }
+
+
 </div>

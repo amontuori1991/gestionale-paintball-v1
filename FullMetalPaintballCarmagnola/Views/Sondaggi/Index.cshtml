@@ -3,51 +3,53 @@
     ViewData["Title"] = "Sondaggi";
 }
 <div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Sondaggi</h2>
-        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> Nuovo</a>
+    <div class="text-center mb-3">
+        <h2 class="mb-2">Sondaggi</h2>
+        <a class="btn btn-primary mt-1" asp-action="Create"><i class="bi bi-plus-lg"></i> Nuovo</a>
     </div>
 
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Titolo</th>
-                <th>Slug</th>
-                <th>Stato</th>
-                <th>Aggiornato</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var s in Model)
-            {
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
                 <tr>
-                    <td>@s.Title</td>
-                    <td>@s.PublicSlug</td>
-                    <td>
-                        @if (s.IsActive)
-                        {
-                            <span class="badge bg-success">Attivo</span>
-                        }
-                        else
-                        {
-
-                            <span class="badge bg-secondary">Bozza</span>
-                        }
-                    </td>
-                    <td>@s.UpdatedAt.ToLocalTime()</td>
-                    <td class="text-end">
-                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@s.Id">Modifica</a>
-                        <a class="btn btn-sm btn-outline-info" asp-action="Qr" asp-route-id="@s.Id">QR/Link</a>
-                        <a class="btn btn-sm btn-outline-dark" asp-action="Responses" asp-route-id="@s.Id">Risposte</a>
-                        <form asp-action="ToggleActive" asp-route-id="@s.Id" method="post" class="d-inline">
-                            <button class="btn btn-sm btn-outline-warning" type="submit">
-                                @(s.IsActive ? "Disattiva" : "Attiva")
-                            </button>
-                        </form>
-                    </td>
+                    <th>Titolo</th>
+                    <th>Slug</th>
+                    <th>Stato</th>
+                    <th>Aggiornato</th>
+                    <th class="text-end">Azioni</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var s in Model)
+                {
+                    <tr>
+                        <td>@s.Title</td>
+                        <td>@s.PublicSlug</td>
+                        <td>
+                            @if (s.IsActive)
+                            {
+                                <span class="badge bg-success">Attivo</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-secondary">Bozza</span>
+                            }
+                        </td>
+                        <td>@s.UpdatedAt.ToLocalTime()</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@s.Id">Modifica</a>
+                            <a class="btn btn-sm btn-outline-info" asp-action="Qr" asp-route-id="@s.Id">QR/Link</a>
+                            <a class="btn btn-sm btn-outline-dark" asp-action="Responses" asp-route-id="@s.Id">Risposte</a>
+                            <form asp-action="ToggleActive" asp-route-id="@s.Id" method="post" class="d-inline">
+                                <button class="btn btn-sm btn-outline-warning" type="submit">
+                                    @(s.IsActive ? "Disattiva" : "Attiva")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
