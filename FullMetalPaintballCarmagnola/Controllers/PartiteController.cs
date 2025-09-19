@@ -616,41 +616,71 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             string prezzo, colpi, extraCaccia, infoTesseramento;
 
-            if (tipo == "kids")
+            if ((partita.Tipo?.ToLowerInvariant() ?? "adulti") == "kids")
             {
+                // KIDS: sempre illimitati, prezzi 1h=17, 1.5h=22, 2h=27
                 prezzo = partita.Durata switch
                 {
-                    1 => "17€",
+                    1.0 => "17€",
                     1.5 => "22€",
-                    2 => "27€",
+                    2.0 => "27€",
                     _ => "-"
                 };
 
                 colpi = "Illimitati";
-                extraCaccia = ""; // non prevista
+                extraCaccia = ""; // non prevista per KIDS
                 infoTesseramento = "<strong>⚠️ Il prezzo include il tesseramento con validità fino al 31/12.</strong><br>";
             }
             else
             {
-                prezzo = partita.Torneo ? "22€" : partita.Durata switch
+                // ADULTI
+                if (partita.ColpiIllimitati)
                 {
-                    1 => "22€",
-                    1.5 => "27€",
-                    2 => "32€",
-                    _ => "-"
-                };
-
-                colpi = partita.ColpiIllimitati ? "Illimitati" : partita.Durata switch
+                    // Illimitati: 1h=35, 1.5h=42, 2h NON PREVISTA
+                    prezzo = partita.Durata switch
+                    {
+                        1.0 => "35€",
+                        1.5 => "42€",
+                        2.0 => "NON PREVISTA",
+                        _ => "-"
+                    };
+                    colpi = "Illimitati";
+                }
+                else
                 {
-                    1 => "200",
-                    1.5 => "300",
-                    2 => "400",
-                    _ => "-"
-                };
+                    // A colpi: 1h 200=22, 1.5h 300=27, 2h 400=32
+                    prezzo = partita.Durata switch
+                    {
+                        1.0 => "22€",
+                        1.5 => "27€",
+                        2.0 => "32€",
+                        _ => "-"
+                    };
+                    colpi = partita.Durata switch
+                    {
+                        1.0 => "200",
+                        1.5 => "300",
+                        2.0 => "400",
+                        _ => "-"
+                    };
+                }
 
+                // Extra caccia solo se flaggato
                 extraCaccia = partita.Caccia ? "💥 Extra: Caccia al Coniglio 60€<br>" : "";
                 infoTesseramento = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>";
             }
+            // Blocco coerenza: Adulti + 2 ore + Illimitati non prevista
+            if ((partita.Tipo?.ToLowerInvariant() ?? "adulti") != "kids"
+                && partita.ColpiIllimitati
+                && Math.Abs(partita.Durata - 2.0) < 0.001)
+            {
+                return Json(new
+                {
+                    success = false,
+                    messaggio = "Per adulti, la formula '2 ore con colpi illimitati' non è prevista. Modifica la durata o togli gli illimitati."
+                });
+            }
+
 
             string baseUrl = $"{Request.Scheme}://{Request.Host}";
             string linkTesseramento = $"{baseUrl}/Tesseramento?partitaId={partita.Id}";
