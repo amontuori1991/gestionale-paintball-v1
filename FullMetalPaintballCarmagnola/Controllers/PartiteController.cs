@@ -149,7 +149,32 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 string oraFormattata = $"{(int)partita.OraInizio.TotalHours:D2}:{partita.OraInizio.Minutes:D2}";
                 var subject = $"NUOVA PARTITA: {partita.Data:dd/MM/yyyy} - {oraFormattata}";
 
-                var messageHtml = $@"<html><body><p>Ciao,</p><p>È stata inserita una nuova partita!</p><p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}</p><p><strong>Orario:</strong> {oraFormattata}</p><p><strong>Annotazioni:</strong> {partita.Annotazioni}</p><p>Controlla il calendario per maggiori dettagli.</p><p>Il team di Full Metal Paintball Carmagnola</p></body></html>";
+                string tipologia = (partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) ?? false) ? "KIDS" : "Adulti";
+
+                // Costruzione Extra dinamici
+                string extra = "";
+                if (partita.ColpiIllimitati) extra += "♾️ Colpi Illimitati<br>";
+                if (partita.Caccia) extra += "🐰 Caccia al Coniglio<br>";
+                if (string.IsNullOrWhiteSpace(extra)) extra = "—";
+
+                var messageHtml = $@"
+<html>
+  <body>
+    <div style='font-family: Arial, sans-serif; line-height:1.5;'>
+      <p>Ciao,</p>
+      <p>È stata inserita una nuova partita!</p>
+      <p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}<br>
+         <strong>Orario:</strong> {oraFormattata}<br>
+         <strong>Durata:</strong> {partita.Durata:0.##} ore<br>
+         <strong>Numero partecipanti:</strong> {partita.NumeroPartecipanti}<br>
+         <strong>Tipologia:</strong> {tipologia}<br>
+         <strong>Extra:</strong><br>{extra}
+      </p>
+      <p>Controlla il calendario per maggiori dettagli.</p>
+      <p>Il team di Full Metal Paintball Carmagnola</p>
+    </div>
+  </body>
+</html>";
 
                 if (!_env.IsDevelopment())
                 {
