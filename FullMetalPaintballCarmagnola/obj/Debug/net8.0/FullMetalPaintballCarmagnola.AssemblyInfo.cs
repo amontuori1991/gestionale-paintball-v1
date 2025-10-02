@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FullMetalPaintballCarmagnola")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bb6396cf2226c9cccae75e10de92a1e32d07d05f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ddc3a21d14949f5fb4b2afa8b9fb3cbab8ebcb11")]
 [assembly: System.Reflection.AssemblyProductAttribute("FullMetalPaintballCarmagnola")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FullMetalPaintballCarmagnola")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -530,23 +530,27 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [HttpPost]
         public async Task<IActionResult> AggiornaStaff(int id, string campo, string valore)
         {
-            var partita = await _dbContext.Partite.FirstOrDefaultAsync(p => p.Id == id);
-            if (partita == null)
-                return Json(new { success = false, message = "Partita non trovata." });
+            // Consenti solo i campi Staff1..Staff4 (evita nomi arbitrari via reflection)
+            var campiAmmessi = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        { "Staff1", "Staff2", "Staff3", "Staff4" };
+            if (!campiAmmessi.Contains(campo))
+                return Json(new { success = false, message = "Campo non valido." });
+
+            // Attacco un "guscio" dell'entità per fare un update parziale senza toccare altre colonne
+            var entity = new Partita { Id = id };
+            _dbContext.Partite.Attach(entity);
+
+            // Imposto il solo campo richiesto
+            var prop = typeof(Partita).GetProperty(campo);
+            prop.SetValue(entity, string.IsNullOrWhiteSpace(valore) ? null : valore);
+
+            // Marco come modificata SOLO la proprietà StaffX indicata
+            _dbContext.Entry(entity).Property(campo).IsModified = true;
 
             try
             {
-                // Niente SpecifyKind qui: non stiamo modificando la Data.
-                var property = typeof(Partita).GetProperty(campo);
-                if (property != null && property.PropertyType == typeof(string))
-                {
-                    property.SetValue(partita, valore);
-                    _dbContext.Partite.Update(partita);
-                    await _dbContext.SaveChangesAsync();
-                    return Json(new { success = true });
-                }
-
-                return Json(new { success = false, message = "Campo non valido." });
+                await _dbContext.SaveChangesAsync();
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {
@@ -557,6 +561,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 });
             }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> PresenzeStaffPopup(string data)

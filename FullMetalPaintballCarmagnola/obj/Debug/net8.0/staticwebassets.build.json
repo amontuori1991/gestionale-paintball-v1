@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "tTgalODiMzad7+pX4m9lP3RKuDUChoEH8E/8IKJPoVg=",
+  "Hash": "bGHW6ZFI5YIQlU4xRYOXlJ3aD6p18G6By0psxxz6/mE=",
   "Source": "FullMetalPaintballCarmagnola",
   "BasePath": "_content/FullMetalPaintballCarmagnola",
   "Mode": "Default",
@@ -2238,6 +2238,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\Firme\\firma_bfcc9caa-03af-478c-b606-11c6866b7f99.png"
+    },
+    {
+      "Identity": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\wwwroot\\Firme\\firma_f16cb9d5-f58f-4518-8d21-b50f35928a29.png",
+      "SourceId": "FullMetalPaintballCarmagnola",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\wwwroot\\",
+      "BasePath": "_content/FullMetalPaintballCarmagnola",
+      "RelativePath": "Firme/firma_f16cb9d5-f58f-4518-8d21-b50f35928a29.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\Firme\\firma_f16cb9d5-f58f-4518-8d21-b50f35928a29.png"
     },
     {
       "Identity": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\wwwroot\\Firme\\firma_f4276cd5-1377-4aac-b88b-aa6e1bc3f632.png",
