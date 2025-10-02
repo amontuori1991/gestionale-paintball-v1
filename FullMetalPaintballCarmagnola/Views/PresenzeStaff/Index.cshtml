@@ -108,7 +108,9 @@
                         else if (val === 'NO') td.addClass('bg-danger');
                         else td.addClass('bg-warning');
                     })
-                    .fail(() => alert("Errore durante il salvataggio della presenza."));
+                            .fail((xhr) => {
+          alert(xhr.responseText || "Errore durante il salvataggio della presenza.");
+        });
             });
 
             $('#aggiungiInfrasettimanale').on('click', function () {

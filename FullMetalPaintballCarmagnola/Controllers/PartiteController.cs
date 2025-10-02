@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using DocumentFormat.OpenXml.InkML;
+// using DocumentFormat.OpenXml.InkML; // non serve qui, puoi rimuoverlo
 using Full_Metal_Paintball_Carmagnola.Models;
 using Full_Metal_Paintball_Carmagnola.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -23,11 +24,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private readonly IWebHostEnvironment _env;
 
         public PartiteController(
-    TesseramentoDbContext dbContext,
-    IConfiguration configuration,
-    IEmailService emailService,
-    UserManager<ApplicationUser> userManager,
-    IWebHostEnvironment env)
+            TesseramentoDbContext dbContext,
+            IConfiguration configuration,
+            IEmailService emailService,
+            UserManager<ApplicationUser> userManager,
+            IWebHostEnvironment env)
         {
             _dbContext = dbContext;
             _configuration = configuration;
@@ -35,7 +36,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _userManager = userManager;
             _env = env;
         }
-
 
         private async Task SendNotificationToAllUsers(string subject, string messageHtml)
         {
@@ -64,34 +64,47 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
         }
 
-
+        // ----------- INDEX -----------
         public async Task<IActionResult> Index()
         {
-            var partite = await _dbContext.Partite.Include(p => p.Tesseramenti).ToListAsync();
-            var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+            var partite = await _dbContext.Partite
+                .Include(p => p.Tesseramenti)
+                .ToListAsync();
+
+            var oggi = DateTime.UtcNow.Date; // solo data
             var dueSettimaneFa = oggi.AddDays(-14);
 
-            var datePartite = partite.Select(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc)).Distinct().ToList();
-            var assenzeCalendario = await _dbContext.AssenzeCalendario.Where(a => datePartite.Contains(DateTime.SpecifyKind(a.Data.Date, DateTimeKind.Utc))).ToListAsync();
+            // Date presenti tra le partite
+            var datePartite = partite.Select(p => p.Data.Date).Distinct().ToList();
+            if (datePartite.Count == 0) datePartite.Add(oggi);
+
+            var minData = datePartite.Min();
+            var maxData = datePartite.Max();
+
+            // Reperibilità in quel range
+            var assenzeCalendario = await _dbContext.AssenzeCalendario
+                .Where(a => a.Data >= minData && a.Data <= maxData)
+                .ToListAsync();
 
             foreach (var partita in partite)
             {
-                var assenza = assenzeCalendario.FirstOrDefault(a => DateTime.SpecifyKind(a.Data.Date, DateTimeKind.Utc) == DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc));
-                partita.Reperibile = assenza != null ? assenza.Reperibile : "In attesa";
+                var giorno = partita.Data.Date;
+                var assenza = assenzeCalendario.FirstOrDefault(a => a.Data == giorno);
+                partita.Reperibile = assenza?.Reperibile ?? "In attesa";
             }
 
             var partiteFuture = partite
-                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= oggi && !p.IsDeleted)
+                .Where(p => p.Data.Date >= oggi && !p.IsDeleted)
                 .OrderBy(p => p.Data + p.OraInizio)
                 .ToList();
 
             var partitePassate = partite
-                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) < oggi && DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= dueSettimaneFa && !p.IsDeleted)
+                .Where(p => p.Data.Date < oggi && p.Data.Date >= dueSettimaneFa && !p.IsDeleted)
                 .OrderByDescending(p => p.Data + p.OraInizio)
                 .ToList();
 
             var partiteCancellate = partite
-                .Where(p => p.IsDeleted && DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= dueSettimaneFa)
+                .Where(p => p.IsDeleted && p.Data.Date >= dueSettimaneFa)
                 .OrderByDescending(p => p.Data + p.OraInizio)
                 .ToList();
 
@@ -101,118 +114,151 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return View();
         }
 
-
+        // ----------- CREATE -----------
         public IActionResult Create() => View();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Partita partita)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(partita);
+
+            // 👇 forza UTC anche se prendi solo la data
+            partita.Data = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
+
+            _dbContext.Add(partita);
+
+            // INSERIMENTO AUTOMATICO PER PARTITE INFRASETTIMANALI
+            var data = partita.Data; // è già UTC alla mezzanotte
+            if (data.DayOfWeek != DayOfWeek.Saturday && data.DayOfWeek != DayOfWeek.Sunday)
             {
-                partita.Data = DateTime.SpecifyKind(partita.Data, DateTimeKind.Utc);
-                _dbContext.Add(partita);
+                var giorno = CultureInfo.CurrentCulture.TextInfo
+                    .ToTitleCase(data.ToString("dddd", CultureInfo.GetCultureInfo("it-IT")));
 
-                // INSERIMENTO AUTOMATICO PER PARTITE INFRASETTIMANALI
-                if (partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday)
+                if (!await _dbContext.AssenzeCalendario.AnyAsync(r => r.Data == data))
                 {
-                    var data = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
-                    var giorno = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(data.ToString("dddd"));
-
-                    if (!_dbContext.AssenzeCalendario.Any(r => r.Data == data))
+                    _dbContext.AssenzeCalendario.Add(new AssenzaCalendario
                     {
-                        _dbContext.AssenzeCalendario.Add(new AssenzaCalendario
+                        Data = data,
+                        Giorno = giorno,
+                        Reperibile = "In attesa"
+                    });
+                }
+
+                foreach (var nome in new[] { "Simone", "Davide", "Andrea", "Federico", "Enrico" })
+                {
+                    if (!await _dbContext.PresenzaStaff.AnyAsync(p => p.Data == data && p.NomeStaff == nome))
+                    {
+                        _dbContext.PresenzaStaff.Add(new PresenzaStaff
                         {
                             Data = data,
                             Giorno = giorno,
-                            Reperibile = "In attesa"
+                            NomeStaff = nome,
+                            Presente = null
                         });
                     }
-
-                    foreach (var nome in new[] { "Simone", "Davide", "Andrea", "Federico", "Enrico" })
-                    {
-                        if (!_dbContext.PresenzaStaff.Any(p => p.Data == data && p.NomeStaff == nome))
-                        {
-                            _dbContext.PresenzaStaff.Add(new PresenzaStaff
-                            {
-                                Data = data,
-                                Giorno = giorno,
-                                NomeStaff = nome,
-                                Presente = null
-                            });
-                        }
-                    }
                 }
-
-                await _dbContext.SaveChangesAsync();
-
-                string oraFormattata = $"{(int)partita.OraInizio.TotalHours:D2}:{partita.OraInizio.Minutes:D2}";
-                var subject = $"NUOVA PARTITA: {partita.Data:dd/MM/yyyy} - {oraFormattata}";
-
-                string tipologia = (partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) ?? false) ? "KIDS" : "Adulti";
-
-                // Costruzione Extra dinamici
-                string extra = "";
-                if (partita.ColpiIllimitati) extra += "♾️ Colpi Illimitati<br>";
-                if (partita.Caccia) extra += "🐰 Caccia al Coniglio<br>";
-                if (string.IsNullOrWhiteSpace(extra)) extra = "—";
-
-                var messageHtml = $@"
-<html>
-  <body>
-    <div style='font-family: Arial, sans-serif; line-height:1.5;'>
-      <p>Ciao,</p>
-      <p>È stata inserita una nuova partita!</p>
-      <p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}<br>
-         <strong>Orario:</strong> {oraFormattata}<br>
-         <strong>Durata:</strong> {partita.Durata:0.##} ore<br>
-         <strong>Numero partecipanti:</strong> {partita.NumeroPartecipanti}<br>
-         <strong>Tipologia:</strong> {tipologia}<br>
-         <strong>Extra:</strong><br>{extra}
-      </p>
-      <p>Controlla il calendario per maggiori dettagli.</p>
-      <p>Il team di Full Metal Paintball Carmagnola</p>
-    </div>
-  </body>
-</html>";
-
-                if (!_env.IsDevelopment())
-                {
-                    await SendNotificationToAllUsers(subject, messageHtml);
-                }
-
-                return RedirectToAction(nameof(Index));
             }
-            return View(partita);
+
+            await _dbContext.SaveChangesAsync();
+
+            string oraFormattata = $"{(int)partita.OraInizio.TotalHours:D2}:{partita.OraInizio.Minutes:D2}";
+            var subject = $"NUOVA PARTITA: {partita.Data:dd/MM/yyyy} - {oraFormattata}";
+            string tipologia = (partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) ?? false) ? "KIDS" : "Adulti";
+
+            string extra = "";
+            if (partita.ColpiIllimitati) extra += "♾️ Colpi Illimitati<br>";
+            if (partita.Caccia) extra += "🐰 Caccia al Coniglio<br>";
+            if (string.IsNullOrWhiteSpace(extra)) extra = "—";
+
+            var messageHtml = $@"
+<html><body><div style='font-family:Arial,sans-serif;line-height:1.5;'>
+<p>Ciao,</p><p>È stata inserita una nuova partita!</p>
+<p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}<br>
+<strong>Orario:</strong> {oraFormattata}<br>
+<strong>Durata:</strong> {partita.Durata:0.##} ore<br>
+<strong>Numero partecipanti:</strong> {partita.NumeroPartecipanti}<br>
+<strong>Tipologia:</strong> {tipologia}<br>
+<strong>Extra:</strong><br>{extra}</p>
+<p>Controlla il calendario per maggiori dettagli.</p>
+<p>Il team di Full Metal Paintball Carmagnola</p>
+</div></body></html>";
+
+            if (!_env.IsDevelopment())
+                await SendNotificationToAllUsers(subject, messageHtml);
+
+            return RedirectToAction(nameof(Index));
         }
 
 
+        // ----------- EDIT -----------
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
             var partita = await _dbContext.Partite.FindAsync(id);
             return partita == null ? NotFound() : View(partita);
         }
-        // Nel controller PartiteController
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Partita partita)
+        {
+            if (id != partita.Id) return NotFound();
+            if (!ModelState.IsValid) return View(partita);
+
+            var existingPartita = await _dbContext.Partite.FindAsync(id);
+            if (existingPartita == null) return NotFound();
+
+            // 👇 forza UTC anche qui
+            existingPartita.Data = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
+
+            existingPartita.OraInizio = partita.OraInizio;
+            existingPartita.Durata = partita.Durata;
+            existingPartita.NumeroPartecipanti = partita.NumeroPartecipanti;
+            existingPartita.Caparra = partita.Caparra;
+            existingPartita.CaparraConfermata = partita.CaparraConfermata;
+            existingPartita.MetodoPagamentoCaparra = partita.MetodoPagamentoCaparra;
+            existingPartita.Torneo = partita.Torneo;
+            existingPartita.ColpiIllimitati = partita.ColpiIllimitati;
+            existingPartita.Caccia = partita.Caccia;
+            existingPartita.Riferimento = partita.Riferimento;
+            existingPartita.Annotazioni = partita.Annotazioni;
+            existingPartita.Tipo = partita.Tipo;
+
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _dbContext.Partite.AnyAsync(p => p.Id == id)) return NotFound();
+                throw;
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        // ----------- LISTE / VISTE SUPPORTO -----------
         [HttpGet]
         public async Task<IActionResult> Semplificata()
         {
-            var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+            var oggi = DateTime.UtcNow.Date;
 
             var partite = await _dbContext.Partite
-                .Where(p => DateTime.SpecifyKind(p.Data.Date, DateTimeKind.Utc) >= oggi && !p.IsDeleted)
+                .Where(p => p.Data.Date >= oggi && !p.IsDeleted)
                 .OrderBy(p => p.Data)
                 .ThenBy(p => p.OraInizio)
                 .ToListAsync();
 
             var assenze = await _dbContext.AssenzeCalendario
-                .Where(a => DateTime.SpecifyKind(a.Data.Date, DateTimeKind.Utc) >= oggi)
+                .Where(a => a.Data >= oggi)
                 .ToListAsync();
 
             foreach (var partita in partite)
             {
-                var assenza = assenze.FirstOrDefault(a => DateTime.SpecifyKind(a.Data.Date, DateTimeKind.Utc) == DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc));
-                partita.Reperibile = assenza != null ? assenza.Reperibile : "In attesa";
+                var assenza = assenze.FirstOrDefault(a => a.Data == partita.Data.Date);
+                partita.Reperibile = assenza?.Reperibile ?? "In attesa";
             }
 
             return View(partite);
@@ -221,7 +267,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [HttpGet]
         public async Task<IActionResult> Archivio()
         {
-            var oggi = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+            var oggi = DateTime.UtcNow.Date;
             var sogliaArchivio = oggi.AddDays(-14);
 
             var partite = await _dbContext.Partite
@@ -245,11 +291,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 archivio[anno][mese].Add(partita);
             }
 
-            var model = new ArchivioViewModel
-            {
-                Archivio = archivio
-            };
-
+            var model = new ArchivioViewModel { Archivio = archivio };
             return View(model);
         }
 
@@ -257,11 +299,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         public IActionResult GeneraMessaggioDettagli(int id)
         {
             var partita = _dbContext.Partite.FirstOrDefault(p => p.Id == id);
-
             if (partita == null)
-            {
                 return Json(new { success = false, messaggio = "Partita non trovata." });
-            }
 
             string messaggio = $@"
 <strong>Data:</strong> {partita.Data:dd/MM/yyyy}<br>
@@ -271,80 +310,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 <strong>Partecipanti:</strong> {partita.NumeroPartecipanti}<br>
 <strong>Caparra:</strong> {partita.Caparra:0.00}€<br>";
 
-            if (partita.Torneo)
-                messaggio += "<strong>🏆 Torneo</strong><br>";
-
-            if (partita.ColpiIllimitati)
-                messaggio += "<strong>♾️ Colpi Illimitati</strong><br>";
-
-            if (partita.Caccia)
-                messaggio += "<strong>🐰 Caccia al Coniglio</strong><br>";
+            if (partita.Torneo) messaggio += "<strong>🏆 Torneo</strong><br>";
+            if (partita.ColpiIllimitati) messaggio += "<strong>♾️ Colpi Illimitati</strong><br>";
+            if (partita.Caccia) messaggio += "<strong>🐰 Caccia al Coniglio</strong><br>";
 
             return Json(new { success = true, messaggio });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> TesseratiPerPopup(int id)
-        {
-            var partita = await _dbContext.Partite.Include(p => p.Tesseramenti).FirstOrDefaultAsync(p => p.Id == id);
-
-            if (partita == null || partita.Tesseramenti == null || !partita.Tesseramenti.Any())
-            {
-                return Content("<p>Nessun tesserato registrato per questa partita.</p>");
-            }
-
-            string html = "<ul style='text-align:left; padding-left:20px;'>";
-            foreach (var t in partita.Tesseramenti.OrderBy(t => t.Nome).ThenBy(t => t.Cognome))
-            {
-                html += $"<li><strong>{t.Nome} {t.Cognome}</strong></li>";
-            }
-            html += "</ul>";
-
-            return Content(html);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Partita partita)
-        {
-            if (id != partita.Id) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                var existingPartita = await _dbContext.Partite.FindAsync(id);
-                if (existingPartita == null) return NotFound();
-
-                // Aggiorna solo i campi modificabili (escludendo Staff1–4)
-                existingPartita.Data = DateTime.SpecifyKind(partita.Data, DateTimeKind.Utc);
-                existingPartita.OraInizio = partita.OraInizio;
-                existingPartita.Durata = partita.Durata;
-                existingPartita.NumeroPartecipanti = partita.NumeroPartecipanti;
-                existingPartita.Caparra = partita.Caparra;
-                existingPartita.CaparraConfermata = partita.CaparraConfermata;
-                existingPartita.MetodoPagamentoCaparra = partita.MetodoPagamentoCaparra;
-                existingPartita.Torneo = partita.Torneo;
-                existingPartita.ColpiIllimitati = partita.ColpiIllimitati;
-                existingPartita.Caccia = partita.Caccia;
-                existingPartita.Riferimento = partita.Riferimento;
-                existingPartita.Annotazioni = partita.Annotazioni;
-                existingPartita.Tipo = partita.Tipo;
-
-                try
-                {
-                    await _dbContext.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_dbContext.Partite.Any(p => p.Id == id)) return NotFound();
-                    else throw;
-                }
-
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(partita);
-        }
-
+        // ----------- DELETE (GET + POST) -----------
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -359,31 +332,43 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var partita = await _dbContext.Partite.FindAsync(id);
             if (partita != null)
             {
+                // soft-delete
                 partita.IsDeleted = true;
                 await _dbContext.SaveChangesAsync();
 
                 string oraFormattata = $"{(int)partita.OraInizio.TotalHours:D2}:{partita.OraInizio.Minutes:D2}";
                 var subject = $"PARTITA CANCELLATA: {partita.Data:dd/MM/yyyy} - {oraFormattata}";
-
-                var messageHtml = $@"<html><body><p>Ciao,</p><p>Una partita è stata cancellata.</p><p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}</p><p><strong>Orario:</strong> {oraFormattata}</p><p><strong>Annotazioni:</strong> {partita.Annotazioni}</p><p>Controlla il calendario per gli aggiornamenti.</p><p>Il team di Full Metal Paintball Carmagnola</p></body></html>";
+                var messageHtml = $@"<html><body><p>Ciao,</p><p>Una partita è stata cancellata.</p>
+<p><strong>Data:</strong> {partita.Data:dd/MM/yyyy}</p>
+<p><strong>Orario:</strong> {oraFormattata}</p>
+<p><strong>Annotazioni:</strong> {partita.Annotazioni}</p>
+<p>Controlla il calendario per gli aggiornamenti.</p>
+<p>Il team di Full Metal Paintball Carmagnola</p></body></html>";
 
                 if (!string.Equals(_env.EnvironmentName, "Development", StringComparison.OrdinalIgnoreCase))
-                {
                     await SendNotificationToAllUsers(subject, messageHtml);
-                }
 
-                // ✅ Gestione cancellazione riga infrasettimanale, solo se NON ci sono altre partite confermate lo stesso giorno
-                var dataGiorno = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
+                // ATTENZIONE: doppia variabile per evitare il crash su timestamptz
+                var giorno = partita.Data.Date;                                  // per colonne DATE (Unspecified)
+                var giornoUtc = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc); // per Partite (timestamptz)
 
-                bool altreConfermate = _dbContext.Partite
-                    .Any(p => p.Id != id && p.Data.Date == dataGiorno && !p.IsDeleted && p.CaparraConfermata);
+                // Se nello stesso giorno (stessa data) ci sono ALTRE partite confermate (caparra) non cancellate,
+                // NON rimuovere le righe infrasettimanali
+                bool altreConfermate = await _dbContext.Partite
+                    .AnyAsync(p => p.Id != id
+                                && p.CaparraConfermata
+                                && !p.IsDeleted
+                                && p.Data.Date == giornoUtc); // confronto su Partite (timestamptz) → parametro UTC
 
-                if (!altreConfermate && dataGiorno.DayOfWeek != DayOfWeek.Saturday && dataGiorno.DayOfWeek != DayOfWeek.Sunday)
+                if (!altreConfermate
+                    && giorno.DayOfWeek != DayOfWeek.Saturday
+                    && giorno.DayOfWeek != DayOfWeek.Sunday)
                 {
-                    var assenza = _dbContext.AssenzeCalendario.FirstOrDefault(a => a.Data.Date == dataGiorno);
+                    // Queste tabelle hanno colonne DATE → usa 'giorno' (Unspecified va bene)
+                    var assenza = await _dbContext.AssenzeCalendario.FirstOrDefaultAsync(a => a.Data == giorno);
                     if (assenza != null) _dbContext.AssenzeCalendario.Remove(assenza);
 
-                    var presenze = _dbContext.PresenzaStaff.Where(p => p.Data.Date == dataGiorno);
+                    var presenze = _dbContext.PresenzaStaff.Where(p => p.Data == giorno);
                     _dbContext.PresenzaStaff.RemoveRange(presenze);
 
                     await _dbContext.SaveChangesAsync();
@@ -394,28 +379,20 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
 
-
-        // In PartiteController.cs
-        // Percorso: Controllers/PartiteController.cs
-
+        // ----------- TESSERATI / POPUP -----------
         public async Task<IActionResult> TesseratiPerPartita(int id)
         {
             var partita = await _dbContext.Partite
-                                        .Include(p => p.Tesseramenti)
-                                        .FirstOrDefaultAsync(p => p.Id == id);
+                                          .Include(p => p.Tesseramenti)
+                                          .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (partita == null)
-            {
-                return NotFound(); // Gestisce il caso in cui l'ID non esista
-            }
+            if (partita == null) return NotFound();
 
             string oraPartitaFormattata = partita.OraInizio.ToString(@"hh\:mm");
 
             var viewModel = new TesseratiPerPartitaViewModel
             {
-                // ✅ CONTROLLA CHE QUESTA RIGA SIA PRESENTE E CORRETTA
                 PartitaId = partita.Id,
-
                 DataPartita = partita.Data,
                 OraPartita = oraPartitaFormattata,
                 Tesserati = partita.Tesseramenti
@@ -434,35 +411,45 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return View(viewModel);
         }
 
-
         [AllowAnonymous]
         public async Task<IActionResult> VisualizzaTesseratiPubblico(int id)
         {
-            var partita = await _dbContext.Partite.Include(p => p.Tesseramenti).FirstOrDefaultAsync(p => p.Id == id);
+            var partita = await _dbContext.Partite
+                                          .Include(p => p.Tesseramenti)
+                                          .FirstOrDefaultAsync(p => p.Id == id);
             if (partita == null) return NotFound();
 
-            var tesseratiPubblici = partita.Tesseramenti.Select(t => new TesseramentoPubblicoViewModel
-            {
-                Nome = t.Nome,
-                Cognome = t.Cognome
-            }).OrderBy(t => t.Nome).ThenBy(t => t.Cognome).ToList();
+            var tesseratiPubblici = partita.Tesseramenti
+                                           .Select(t => new TesseramentoPubblicoViewModel
+                                           {
+                                               Nome = t.Nome,
+                                               Cognome = t.Cognome
+                                           })
+                                           .OrderBy(t => t.Nome)
+                                           .ThenBy(t => t.Cognome)
+                                           .ToList();
 
             var model = new PartitaPubblicoViewModel
             {
                 PartitaId = partita.Id,
                 DataPartita = partita.Data,
                 OraPartita = partita.OraInizio,
-                NumeroPartecipanti = partita.NumeroPartecipanti, // << aggiunto
+                NumeroPartecipanti = partita.NumeroPartecipanti,
                 Tesserati = tesseratiPubblici
             };
 
             return View(model);
         }
 
-
+        // ----------- CAPARRE / AZIONI VARIE -----------
         public async Task<IActionResult> Caparre()
         {
-            var partite = await _dbContext.Partite.Where(p => p.Caparra > 0).OrderBy(p => p.Data).ThenBy(p => p.OraInizio).ToListAsync();
+            var partite = await _dbContext.Partite
+                .Where(p => p.Caparra > 0)
+                .OrderBy(p => p.Data)
+                .ThenBy(p => p.OraInizio)
+                .ToListAsync();
+
             return View(partite);
         }
 
@@ -481,7 +468,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 await _dbContext.SaveChangesAsync();
                 return Json(new { success = true, message = "Caparra cancellata con successo." });
             }
-            catch (Exception)
+            catch
             {
                 return Json(new { success = false, message = "Errore durante la cancellazione della caparra." });
             }
@@ -517,19 +504,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                         </div>";
 
                 foreach (var email in emailList)
-                {
                     await _emailService.SendEmailAsync(email, subject, bodyHtml);
-                }
 
                 return Json(new { success = true, message = "Email inviate con successo!" });
             }
-            catch (Exception)
+            catch
             {
                 return Json(new { success = false, message = "Errore durante l’invio delle email di recensione." });
             }
         }
-
-        // Percorso: Controllers/PartiteController.cs
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -541,52 +524,32 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 _dbContext.Tesseramenti.Remove(tesserato);
                 await _dbContext.SaveChangesAsync();
             }
-
-            // Reindirizza l'utente alla stessa pagina per vedere la lista aggiornata.
             return RedirectToAction("TesseratiPerPartita", new { id = partitaId });
         }
-
-
-
 
         [HttpPost]
         public async Task<IActionResult> AggiornaStaff(int id, string campo, string valore)
         {
             var partita = await _dbContext.Partite.FirstOrDefaultAsync(p => p.Id == id);
-
             if (partita == null)
-            {
                 return Json(new { success = false, message = "Partita non trovata." });
-            }
 
             try
             {
-                // Forza Data a UTC per evitare problemi con PostgreSQL
-                partita.Data = DateTime.SpecifyKind(partita.Data, DateTimeKind.Utc);
-
-                // Reflection: aggiorna dinamicamente il campo Staff1, Staff2, etc.
+                // Niente SpecifyKind qui: non stiamo modificando la Data.
                 var property = typeof(Partita).GetProperty(campo);
                 if (property != null && property.PropertyType == typeof(string))
                 {
                     property.SetValue(partita, valore);
                     _dbContext.Partite.Update(partita);
                     await _dbContext.SaveChangesAsync();
-
                     return Json(new { success = true });
                 }
-                else
-                {
-                    return Json(new { success = false, message = "Campo non valido." });
-                }
+
+                return Json(new { success = false, message = "Campo non valido." });
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ERRORE durante il salvataggio: " + ex.Message);
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine("Dettaglio: " + ex.InnerException.Message);
-                }
-
                 return Json(new
                 {
                     success = false,
@@ -599,21 +562,17 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         public async Task<IActionResult> PresenzeStaffPopup(string data)
         {
             if (!DateTime.TryParse(data, out var dataParsed))
-            {
                 return Content("<p>Data non valida.</p>");
-            }
 
-            var dataGiorno = DateTime.SpecifyKind(dataParsed.Date, DateTimeKind.Utc);
+            var giorno = dataParsed.Date;
 
             var presenze = await _dbContext.PresenzaStaff
-                .Where(p => p.Data.Date == dataGiorno && (p.Presente == true || p.Presente == null))
+                .Where(p => p.Data == giorno && (p.Presente == true || p.Presente == null))
                 .OrderBy(p => p.NomeStaff)
                 .ToListAsync();
 
             if (!presenze.Any())
-            {
                 return Content("<p>Nessun membro dello staff risulta disponibile o in attesa.</p>");
-            }
 
             string html = "<ul style='text-align:left; padding-left:20px;'>";
             foreach (var p in presenze)
@@ -626,16 +585,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return Content(html);
         }
 
-
         [HttpGet]
         public IActionResult GeneraMessaggioPrenotazione(int id)
         {
             var partita = _dbContext.Partite.FirstOrDefault(p => p.Id == id);
-
             if (partita == null)
-            {
                 return Json(new { success = false, messaggio = "Partita non trovata." });
-            }
 
             string tipo = partita.Tipo?.ToLowerInvariant() ?? "adulti";
 
@@ -643,7 +598,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             if ((partita.Tipo?.ToLowerInvariant() ?? "adulti") == "kids")
             {
-                // KIDS: sempre illimitati, prezzi 1h=17, 1.5h=22, 2h=27
+                // KIDS
                 prezzo = partita.Durata switch
                 {
                     1.0 => "17€",
@@ -651,9 +606,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     2.0 => "27€",
                     _ => "-"
                 };
-
                 colpi = "Illimitati";
-                extraCaccia = ""; // non prevista per KIDS
+                extraCaccia = "";
                 infoTesseramento = "<strong>⚠️ Il prezzo include il tesseramento con validità fino al 31/12.</strong><br>";
             }
             else
@@ -661,7 +615,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 // ADULTI
                 if (partita.ColpiIllimitati)
                 {
-                    // Illimitati: 1h=35, 1.5h=42, 2h NON PREVISTA
                     prezzo = partita.Durata switch
                     {
                         1.0 => "35€",
@@ -673,7 +626,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 }
                 else
                 {
-                    // A colpi: 1h 200=22, 1.5h 300=27, 2h 400=32
                     prezzo = partita.Durata switch
                     {
                         1.0 => "22€",
@@ -690,11 +642,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     };
                 }
 
-                // Extra caccia solo se flaggato
                 extraCaccia = partita.Caccia ? "💥 Extra: Caccia al Coniglio 60€<br>" : "";
                 infoTesseramento = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>";
             }
-            // Blocco coerenza: Adulti + 2 ore + Illimitati non prevista
+
+            // Blocco coerenza adulti 2h illimitati
             if ((partita.Tipo?.ToLowerInvariant() ?? "adulti") != "kids"
                 && partita.ColpiIllimitati
                 && Math.Abs(partita.Durata - 2.0) < 0.001)
@@ -705,7 +657,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     messaggio = "Per adulti, la formula '2 ore con colpi illimitati' non è prevista. Modifica la durata o togli gli illimitati."
                 });
             }
-
 
             string baseUrl = $"{Request.Scheme}://{Request.Host}";
             string linkTesseramento = $"{baseUrl}/Tesseramento?partitaId={partita.Id}";
@@ -728,15 +679,10 @@ Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 Potrete visualizzare in tempo reale gli iscritti qui:<br>
 🔎 <a href='{linkTesseratiPubblico}' target='_blank'>{linkTesseratiPubblico}</a><br><br>";
 
-            // ✅ Solo se NON sono illimitati
             if (colpi != "Illimitati")
-            {
-                messaggio += "Eventuali colpi extra potranno essere acquistati al campo.<br><br>"; // << aggiunto un <br> extra
-            }
+                messaggio += "Eventuali colpi extra potranno essere acquistati al campo.<br><br>";
             else
-            {
-                messaggio += "<br>"; // << per mantenere lo stacco anche se non ci sono colpi extra
-            }
+                messaggio += "<br>";
 
             messaggio += @"È richiesto l'arrivo almeno 15 minuti prima della prenotazione.<br>
 Il tempo di gioco inizia alle " + partita.OraInizio.ToString(@"hh\:mm") + @" anche in caso di ritardo.<br>
@@ -750,7 +696,5 @@ Ti aspettiamo! 🎯";
 
             return Json(new { success = true, messaggio });
         }
-
-
     }
 }
