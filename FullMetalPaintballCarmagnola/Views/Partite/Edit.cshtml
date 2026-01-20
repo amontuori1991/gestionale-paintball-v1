@@ -3,10 +3,29 @@
 @{
     ViewData["Title"] = "Modifica Partita";
 }
+<style>
+    .overlay-spinner {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 6px solid rgba(255,255,255,0.25);
+        border-top-color: rgba(255,255,255,0.95);
+        animation: overlaySpin 0.9s linear infinite;
+    }
+
+    @@keyframes overlaySpin {
+        to
+
+    {
+        transform: rotate(360deg);
+    }
+
+    }
+</style>
 
 <h2>Modifica Partita</h2>
 
-<form asp-action="Edit">
+<form asp-action="Edit" method="post" id="form-edit-partita">
     <input type="hidden" asp-for="Id" />
 
     <div class="form-group">
@@ -99,7 +118,40 @@
     <button type="submit" class="btn btn-primary mt-3">Salva modifiche</button>
     <a asp-action="Index" class="btn btn-secondary mt-3">Annulla</a>
 </form>
+<div id="overlay-edit-partita" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background-color:rgba(0,0,0,0.7);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px;">
+        <div class="overlay-spinner" aria-hidden="true"></div>
+        <div style="font-size:1.25rem; color:white; font-weight:700;">
+            Salvataggio modifiche, attendere...
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        (function () {
+            const form = document.getElementById('form-edit-partita');
+            const overlay = document.getElementById('overlay-edit-partita');
+
+            if (!form) return;
+
+            form.addEventListener('submit', function () {
+                if (overlay) overlay.style.display = 'flex';
+
+                const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+            });
+        })();
+    </script>
 }

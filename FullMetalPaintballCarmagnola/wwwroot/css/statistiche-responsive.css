@@ -108,6 +108,9 @@
         display: block;
         margin-bottom: 5px;
     }
+    .chart-card h4 {
+        text-align: center;
+    }
 
     /* Regola altezza del canvas su mobile */
     @media screen and (max-width: 768px) {

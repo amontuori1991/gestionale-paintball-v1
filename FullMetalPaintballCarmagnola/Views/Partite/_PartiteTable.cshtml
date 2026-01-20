@@ -1,24 +1,29 @@
-﻿@model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.Partita>
+﻿@using System.Globalization
+@model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.Partita>
 
 @{
     var staffList = new List<string> { "Simone", "Enrico", "Federico", "Davide", "Andrea" };
     var titolo = ViewData["Titolo"]?.ToString();
 }
 
-<h4>@titolo</h4>
+<h4 class="partite-section-title">@titolo</h4>
 
-<table class="table table-bordered responsive-table">
+<div class="table-scroll" style="width:100%; max-width:100%; overflow-x:auto; overflow-y:hidden;">
+
+    <table class="table table-bordered responsive-table">
+
+
     <thead>
         <tr>
             <th>Stato</th>
             <th>Data</th>
-            <th>Ora Inizio</th>
+            <th>Ora</th>
             <th>Tipo</th>
-            <th>Riferimento</th>
+            <th>Rif.</th>
             <th>Durata</th>
-            <th>Partecipanti</th>
+            <th>Nr. P.</th>
             <th>Iscritti</th>
-            <th>Caparra (€)</th>
+            <th>Caparra</th>
             <th>Torneo</th>
             <th>Illimitati</th>
             <th>Caccia</th>
@@ -41,8 +46,14 @@
                     {
                         <span style="background-color: #fff3cd; padding: 4px 8px; border-radius: 5px;">In Attesa</span>
                     }
+                <td data-label="Data">
+                    @(partita.Data
+                                        .ToString("ddd dd/MM/yyyy", CultureInfo.GetCultureInfo("it-IT"))
+                                        .ToLowerInvariant()
+                                        .Replace(".", ""))
                 </td>
-                <td data-label="Data">@partita.Data.ToString("dddd dd/MM/yyyy")</td>
+
+
                 <td data-label="Ora Inizio">@partita.OraInizio.ToString(@"hh\:mm")</td>
                 <td data-label="Tipo">@partita.Tipo</td>
                 <td data-label="Riferimento">
@@ -69,7 +80,7 @@
                 </td>
             </tr>
             <tr style="@(partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday ? "background-color: #ffeeba;" : "")">
-                <td colspan="14" style="background-color: inherit;">
+                    <td colspan="15" style="background-color: inherit;">
                     <strong>Gestita da:</strong>
                     @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
                     {
@@ -94,4 +105,5 @@
             </tr>
         }
     </tbody>
-</table>
+    </table>
+</div>

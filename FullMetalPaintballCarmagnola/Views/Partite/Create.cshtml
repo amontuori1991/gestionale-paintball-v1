@@ -6,7 +6,7 @@
 
 <h2 class="mb-4">➕ Aggiungi Nuova Partita</h2>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" id="form-create-partita">
     <div class="mb-3">
         <label asp-for="Data" class="form-label"></label>
         <input asp-for="Data" class="form-control" type="date" />
@@ -90,33 +90,60 @@
 </form>
 
 <div id="overlay-partita" style="
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-    font-weight: bold;
+    display:none;
+    position:fixed;
+    inset:0;
+    background-color:rgba(0,0,0,0.7);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
 ">
-    Salvataggio in corso, attendere...
+    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px;">
+        <div class="overlay-spinner" aria-hidden="true"></div>
+        <div style="font-size:1.25rem; color:white; font-weight:700;">
+            Inserimento partita, attendere...
+        </div>
+    </div>
 </div>
 
+<style>
+    .overlay-spinner {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 6px solid rgba(255,255,255,0.25);
+        border-top-color: rgba(255,255,255,0.95);
+        animation: overlaySpin 0.9s linear infinite;
+    }
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @@keyframes overlaySpin {
+        to
 
-    <script>
-        document.querySelector('form').addEventListener('submit', function () {
-            const overlay = document.getElementById('overlay-partita');
-            if (overlay) {
-                overlay.style.display = 'flex';
-            }
+    {
+        transform: rotate(360deg);
+    }
+
+    }
+</style>
+
+
+<script>
+    (function () {
+        const form = document.getElementById('form-create-partita');
+        const overlay = document.getElementById('overlay-partita');
+
+        if (!form) return;
+
+        form.addEventListener('submit', function () {
+            if (overlay) overlay.style.display = 'flex';
+
+            // evita doppi click
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
         });
-    </script>
+    })();
+</script>
+
 }
 

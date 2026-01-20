@@ -618,38 +618,49 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             else
             {
                 // ADULTI
-                if (partita.ColpiIllimitati)
+
+                // ✅ TORNEO: forza pacchetto base indipendentemente da durata/illimitati
+                if (partita.Torneo)
                 {
-                    prezzo = partita.Durata switch
-                    {
-                        1.0 => "35€",
-                        1.5 => "42€",
-                        2.0 => "NON PREVISTA",
-                        _ => "-"
-                    };
-                    colpi = "Illimitati";
+                    prezzo = "22€";
+                    colpi = "200";
                 }
                 else
                 {
-                    prezzo = partita.Durata switch
+                    if (partita.ColpiIllimitati)
                     {
-                        1.0 => "22€",
-                        1.5 => "27€",
-                        2.0 => "32€",
-                        _ => "-"
-                    };
-                    colpi = partita.Durata switch
+                        prezzo = partita.Durata switch
+                        {
+                            1.0 => "35€",
+                            1.5 => "42€",
+                            2.0 => "NON PREVISTA",
+                            _ => "-"
+                        };
+                        colpi = "Illimitati";
+                    }
+                    else
                     {
-                        1.0 => "200",
-                        1.5 => "300",
-                        2.0 => "400",
-                        _ => "-"
-                    };
+                        prezzo = partita.Durata switch
+                        {
+                            1.0 => "22€",
+                            1.5 => "27€",
+                            2.0 => "32€",
+                            _ => "-"
+                        };
+                        colpi = partita.Durata switch
+                        {
+                            1.0 => "200",
+                            1.5 => "300",
+                            2.0 => "400",
+                            _ => "-"
+                        };
+                    }
                 }
 
                 extraCaccia = partita.Caccia ? "💥 Extra: Caccia al Coniglio 60€<br>" : "";
                 infoTesseramento = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>";
             }
+
 
             // Blocco coerenza adulti 2h illimitati
             if ((partita.Tipo?.ToLowerInvariant() ?? "adulti") != "kids"
@@ -671,7 +682,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 📅 Data: {partita.Data:dd/MM/yyyy}<br>
 🕒 Orario: {partita.OraInizio.ToString(@"hh\:mm")}<br>
-👶 Tipologia: {(partita.Tipo?.ToUpperInvariant() == "KIDS" ? "KIDS" : "Adulti")}<br>
+👶 Tipologia: {(partita.Torneo ? "Torneo + " : "")}{(partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) == true ? "KIDS" : "Adulti")}<br>
 ⏳ Durata: {partita.Durata} ore<br> 
 👤 Referente: {partita.Riferimento}<br>
 👥 Nr. Partecipanti: {partita.NumeroPartecipanti}<br>

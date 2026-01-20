@@ -27,15 +27,67 @@
         background-color: #6c757d;
         color: white;
     }
+
+    .overlay-spinner {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 6px solid rgba(255,255,255,0.25);
+        border-top-color: rgba(255,255,255,0.95);
+        animation: overlaySpin 0.9s linear infinite;
+    }
+
+    @@keyframes overlaySpin {
+        to
+
+    {
+        transform: rotate(360deg);
+    }
+
+    }
 </style>
 
 <div class="container delete-container">
     <h2 class="delete-title">Conferma cancellazione</h2>
     <p>Sei sicuro di voler cancellare la partita del <strong>@Model.Data.ToString("dd/MM/yyyy")</strong> alle <strong>@Model.OraInizio</strong>?</p>
 
-    <form asp-action="Delete">
+    <form asp-action="Delete" method="post" id="form-delete-partita">
         <input type="hidden" asp-for="Id" />
         <button type="submit" class="btn btn-cancella">Conferma Cancellazione</button>
         <a asp-action="Index" class="btn btn-annulla">Annulla</a>
     </form>
 </div>
+<div id="overlay-delete-partita" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background-color:rgba(0,0,0,0.7);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px;">
+        <div class="overlay-spinner" aria-hidden="true"></div>
+        <div style="font-size:1.25rem; color:white; font-weight:700;">
+            Cancellazione partita, attendere...
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('form-delete-partita');
+            const overlay = document.getElementById('overlay-delete-partita');
+
+            if (!form) return;
+
+            form.addEventListener('submit', function () {
+                if (overlay) overlay.style.display = 'flex';
+
+                const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+            });
+        })();
+    </script>
+}

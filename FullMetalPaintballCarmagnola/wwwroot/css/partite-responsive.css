@@ -102,3 +102,62 @@
         margin: 5px 0;
     }
 }
+/* Evita tagli/scroll orizzontale indesiderato su desktop */
+html, body {
+    overflow-x: hidden;
+}
+/* Desktop: la tabella ha molte colonne -> abilito scroll orizzontale invece di tagliare */
+@media (min-width: 769px) {
+    .table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        /* Mantiene la larghezza naturale della tabella */
+        .table-scroll .responsive-table {
+            width: max-content;
+            min-width: 100%;
+        }
+}
+
+/* Titoli sezione centrati (come volevi nelle altre pagine) */
+.partite-section-title {
+    text-align: center;
+    margin: 0 0 12px 0;
+}
+/* DESKTOP: la tabella è larga -> deve scrollare orizzontalmente */
+@media (min-width: 769px) {
+    .table-scroll {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        /* Bootstrap .table mette width:100%: qui lo sovrascriviamo */
+        .table-scroll > table.table.table-bordered.responsive-table {
+            width: max-content !important; /* crea overflow reale */
+            min-width: 100% !important; /* mai più piccola del contenitore */
+        }
+}
+/* La card iOS ha probabilmente overflow:hidden (per i bordi tondi) e taglia la tabella */
+.card-v {
+    overflow: visible !important;
+}
+
+/* Wrapper scroll tabella */
+.table-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+    /* Forza la tabella a "scegliere" la sua larghezza naturale e creare overflow */
+    .table-scroll > table.table.table-bordered.responsive-table {
+        width: max-content !important;
+        min-width: 100% !important;
+    }

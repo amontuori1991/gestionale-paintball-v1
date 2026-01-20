@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "bGHW6ZFI5YIQlU4xRYOXlJ3aD6p18G6By0psxxz6/mE=",
+  "Hash": "TPniulWFQybb+FMQ2mmR0osydhkuCQwTfAnLNCYTw88=",
   "Source": "FullMetalPaintballCarmagnola",
   "BasePath": "_content/FullMetalPaintballCarmagnola",
   "Mode": "Default",
@@ -1326,6 +1326,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\documenti-responsive.css"
+    },
+    {
+      "Identity": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\wwwroot\\css\\ios26.css",
+      "SourceId": "FullMetalPaintballCarmagnola",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\wwwroot\\",
+      "BasePath": "_content/FullMetalPaintballCarmagnola",
+      "RelativePath": "css/ios26.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\ios26.css"
     },
     {
       "Identity": "C:\\Users\\Alex\\source\\repos\\FullMetalPaintballCarmagnola\\FullMetalPaintballCarmagnola\\wwwroot\\css\\movimenti-responsive.css",

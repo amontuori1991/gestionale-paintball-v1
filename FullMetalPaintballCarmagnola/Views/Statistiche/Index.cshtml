@@ -1,12 +1,25 @@
-﻿@{
+﻿@using System.Globalization
+@{
     ViewData["Title"] = "Statistiche";
-    var anni = ViewBag.Anni as List<string>;
-    var datiMese = ViewBag.DatiMese as Dictionary<string, int>;
-    var datiCancellatiMese = ViewBag.DatiCancellatiMese as Dictionary<string, int>;
-    var annualTotals = ViewBag.AnnualTotals as Dictionary<string, ValueTuple<int, int>>;
+
     int meseCorrente = ViewBag.MeseCorrente;
+    int annoCorrente = ViewBag.AnnoCorrente;
+    int annoPrecedente = ViewBag.AnnoPrecedente;
     string labelMese = ViewBag.LabelMese;
-    var colors = new[] { "#0d6efd", "#198754", "#ffc107", "#0dcaf0", "#6f42c1", "#fd7e14", "#20c997", "#6610f2", "#e83e8c" };
+
+    int chart1TopPrevYear = ViewBag.Chart1TopPrevYear;
+    int chart1TopPrevValue = ViewBag.Chart1TopPrevValue;
+
+    int chart1CurrentValue = ViewBag.Chart1CurrentValue;
+    bool chart1CurrentIsTop = ViewBag.Chart1CurrentIsTop;
+
+    int chart2CurrentValue = ViewBag.Chart2CurrentValue;
+    int chart2PrevValue = ViewBag.Chart2PrevValue;
+
+    var anni = ViewBag.Anni as List<int>;
+    var totalsPerYear = ViewBag.TotalsPerYear as Dictionary<int, int>;
+    int topYearOverall = ViewBag.TopYearOverall;
+    int topOverallValue = ViewBag.TopOverallValue;
 }
 
 <link href="~/css/statistiche-responsive.css" rel="stylesheet" />
@@ -15,118 +28,246 @@
 <div class="background-logo"></div>
 
 <div class="statistiche-container">
-    <h2>Statistiche Partite – @labelMese</h2>
+    <h2>Statistiche Partite – @labelMese (@annoCorrente)</h2>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary">← Mese Precedente</a>
-        <strong>@labelMese.ToUpper()</strong>
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary">Mese Successivo →</a>
+    <!-- Navigazione mese -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary">← Mese precedente</a>
+
+        <div style="font-weight:700; letter-spacing:.5px;">
+            @labelMese.ToUpper()
+        </div>
+
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary">Mese successivo →</a>
     </div>
 
-    <canvas id="graficoMensile" style="max-height: 300px; width: 100%;"></canvas>
+    <!-- GRAFICO 1: TOP storico vs Anno Corrente -->
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">TOP storico vs @annoCorrente (mese: @labelMese)</h4>
+        <div style="position:relative; height:320px;">
+            <canvas id="chartTopVsCurrent"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Il TOP considera gli anni precedenti. Se @annoCorrente supera il TOP, diventa lui il nuovo TOP.
+        </div>
+    </div>
 
+    <!-- GRAFICO 2: Anno Corrente vs Anno Precedente sul mese -->
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">@annoCorrente vs @annoPrecedente (mese: @labelMese)</h4>
+        <div style="position:relative; height:280px;">
+            <canvas id="chartCurrentVsPrev"></canvas>
+        </div>
+    </div>
 
-    <hr style="margin-top: 50px; margin-bottom: 30px;" />
-
-    <h3>Riepilogo</h3>
-    <table class="summary-table responsive-table">
-        <thead>
-            <tr>
-                <th>Anno</th>
-                <th>Confermate (@labelMese)</th>
-                <th>Cancellate (@labelMese)</th>
-                <th>Totale Anno Confermate</th>
-                <th>Totale Anno Cancellate</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var anno in anni)
-            {
-                var conf = datiMese.ContainsKey(anno) ? datiMese[anno] : 0;
-                var canc = datiCancellatiMese.ContainsKey(anno) ? datiCancellatiMese[anno] : 0;
-                var annualConf = annualTotals.ContainsKey(anno) ? annualTotals[anno].Item1 : 0;
-                var annualCanc = annualTotals.ContainsKey(anno) ? annualTotals[anno].Item2 : 0;
-
-                <tr>
-                    <td>@anno</td>
-                    <td>@conf</td>
-                    <td>@canc</td>
-                    <td>@annualConf</td>
-                    <td>@annualCanc</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <!-- GRAFICO 3: Totali per anno + TOP assoluto + anno corrente -->
+    <div class="chart-card">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Totali per anno (con evidenza TOP e anno in corso)</h4>
+        <div style="position:relative; height:340px;">
+            <canvas id="chartYearTotals"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            TOP assoluto: <strong>@topYearOverall</strong> – <strong>@topOverallValue</strong> partite.
+        </div>
+    </div>
 </div>
 
 <script>
-    const anni = @Html.Raw(Json.Serialize(anni));
-    const datiConfermate = @Html.Raw(Json.Serialize(datiMese));
-    const datiCancellate = @Html.Raw(Json.Serialize(datiCancellatiMese));
-    const colorList = @Html.Raw(Json.Serialize(colors));
-    const isMobile = window.innerWidth < 768;
+    // Plugin semplice per scrivere etichette sopra le barre (senza librerie esterne)
+    const barLabelPlugin = {
+        id: 'barLabelPlugin',
+        afterDatasetsDraw(chart, args, pluginOptions) {
+            const { ctx } = chart;
+            ctx.save();
 
-    const datasets = [];
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                const meta = chart.getDatasetMeta(datasetIndex);
+                if (!meta || meta.hidden) return;
 
-    anni.forEach((anno, i) => {
-        datasets.push({
-            label: `${anno} - Confermate`,
-            data: [datiConfermate[anno] || 0],
-            backgroundColor: colorList[i % colorList.length],
-            barThickness: isMobile ? 10 : 14
-        });
-        datasets.push({
-            label: `${anno} - Cancellate`,
-            data: [datiCancellate[anno] || 0],
-            backgroundColor: '#dc3545',
-            barThickness: isMobile ? 10 : 14
-        });
-    });
+                meta.data.forEach((bar, index) => {
+                    const val = dataset.data[index];
+                    if (val === null || val === undefined) return;
 
-    const data = {
-        labels: [''], // singola etichetta Y per impilare le barre
-        datasets: datasets
-    };
+                    const label = (dataset.customLabels && dataset.customLabels[index]) ? dataset.customLabels[index] : null;
+                    if (!label) return;
 
-    const config = {
-        type: 'bar',
-        data: data,
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        boxWidth: 14,
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'Confronto partite - @labelMese'
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Numero Partite'
-                    }
-                },
-                y: {
-                    display: false // nasconde l'etichetta vuota
-                }
-            }
+                        const isMobile = window.innerWidth < 768;
+    ctx.font = isMobile ? 'bold 10px sans-serif' : 'bold 12px sans-serif';
+
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+
+                    // posizione: poco sopra la barra
+                    const x = bar.x;
+                    const y = bar.y - 8;
+
+                    // piccolo "stroke" per leggibilità
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                    ctx.strokeText(label, x, y);
+
+                    ctx.fillStyle = 'rgba(20,20,20,0.95)';
+                    ctx.fillText(label, x, y);
+                });
+            });
+
+            ctx.restore();
         }
     };
 
-    new Chart(document.getElementById('graficoMensile').getContext('2d'), config);
+    // -------------------------
+    // CHART 1: TOP vs Current
+    // -------------------------
+    const topPrevYear = @chart1TopPrevYear;
+    const topPrevVal = @chart1TopPrevValue;
+
+    const currentYear = @annoCorrente;
+    const currentVal = @chart1CurrentValue;
+    const currentIsTop = @Html.Raw(Json.Serialize(chart1CurrentIsTop));
+
+    // Se current è TOP, la barra TOP coincide con current (ma noi mostriamo comunque 2 barre: TOP e @annoCorrente)
+    // In quel caso, la barra TOP = current e la barra @annoCorrente = current (valore uguale),
+    // ma la label TOP viene visualizzata sul TOP e la label "ANNO CORRENTE" sull'altra.
+    const chart1Labels = ['TOP', currentYear.toString()];
+    const chart1Data = [topPrevVal, currentVal];
+
+    const topPrevLabel = (topPrevYear && topPrevYear > 0)
+        ? `TOP: ${topPrevYear} - ${topPrevVal} partite`
+        : `TOP: N/D - 0 partite`;
+
+    const chart1CustomLabels = [
+        topPrevLabel,
+        currentIsTop
+            ? `TOP: ${currentYear} - ${currentVal} partite`
+            : `${currentYear}: ${currentVal} partite`
+    ];
+
+
+    new Chart(document.getElementById('chartTopVsCurrent').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chart1Labels,
+            datasets: [{
+                label: 'Partite confermate',
+                data: chart1Data,
+                borderWidth: 1,
+                customLabels: chart1CustomLabels
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 40 } },
+            plugins: {
+                legend: { display: false },
+                                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.parsed.y} partite`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
+    // -------------------------
+    // CHART 2: Current vs Prev
+    // -------------------------
+    const chart2Labels = ['@annoPrecedente', '@annoCorrente'];
+    const chart2Data = [@chart2PrevValue, @chart2CurrentValue];
+
+    const chart2CustomLabels = [
+        `${@annoPrecedente}: ${@chart2PrevValue}`,
+        `${@annoCorrente}: ${@chart2CurrentValue}`
+    ];
+
+    new Chart(document.getElementById('chartCurrentVsPrev').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chart2Labels,
+            datasets: [{
+                label: 'Partite confermate',
+                data: chart2Data,
+                borderWidth: 1,
+                customLabels: chart2CustomLabels
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 40 } },
+            plugins: {
+                legend: { display: false },
+                
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
+    // -------------------------
+    // CHART 3: Totali per anno
+    // -------------------------
+    const anni = @Html.Raw(Json.Serialize(anni));
+    const totalsPerYear = @Html.Raw(Json.Serialize(totalsPerYear));
+    const topYearOverall = @topYearOverall;
+    const topOverallValue = @topOverallValue;
+
+    const chart3Labels = anni.map(a => a.toString());
+    const chart3Data = anni.map(a => totalsPerYear[a] || 0);
+
+    const chart3CustomLabels = anni.map(a => {
+        const val = totalsPerYear[a] || 0;
+        if (a === topYearOverall) return `TOP: ${a} - ${val}`;
+        if (a === currentYear) return `${a} (in corso): ${val}`;
+        return `${a}: ${val}`;
+    });
+
+    new Chart(document.getElementById('chartYearTotals').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chart3Labels,
+            datasets: [{
+                label: 'Totale annuo (confermate)',
+                data: chart3Data,
+                borderWidth: 1,
+                customLabels: chart3CustomLabels
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 40 } },
+            plugins: {
+                legend: { display: false },
+               
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.parsed.y} partite`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
 </script>
-
-
-

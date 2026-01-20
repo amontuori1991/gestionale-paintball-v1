@@ -11,27 +11,58 @@
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 <link href="~/css/partite-responsive.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    .overlay-spinner {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 6px solid rgba(255,255,255,0.25);
+        border-top-color: rgba(255,255,255,0.95);
+        animation: overlaySpin 0.9s linear infinite;
+    }
 
-<div class="container-list">
-    <div class="list-container">
+    @@keyframes overlaySpin {
+        to
 
-        <h2>Gestione Partite</h2>
+    {
+        transform: rotate(360deg);
+    }
 
-        <p>
-            <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-                <a class="btn btn-success" href="@Url.Action("Create", "Partite")">➕ Aggiungi Partita</a>
-                <a class="btn btn-secondary" href="@Url.Action("Archivio", "Partite")">📂 Archivio</a>
-                <a class="btn btn-primary" href="@Url.Action("Semplificata", "Partite")">✨ Visualizzazione Semplificata</a>
+    }
+</style>
+
+<div class="ios26-page">
+
+    <!-- Header / Large Title + Toolbar -->
+    <div class="card-v p-3 p-lg-4 mb-3">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+            <h1 class="large-title m-0">Gestione Partite</h1>
+
+            <div class="toolbar-ios d-flex flex-wrap gap-2">
+                <a class="btn btn-ios btn-ios-success" href="@Url.Action("Create", "Partite")">
+                    <i class="bi bi-plus-circle me-1"></i> Aggiungi Partita
+                </a>
+                <a class="btn btn-ios btn-ios-secondary" href="@Url.Action("Archivio", "Partite")">
+                    <i class="bi bi-folder2-open me-1"></i> Archivio
+                </a>
+                <a class="btn btn-ios btn-ios-primary" href="@Url.Action("Semplificata", "Partite")">
+                    <i class="bi bi-stars me-1"></i> Visualizzazione Semplificata
+                </a>
             </div>
-        </p>
+        </div>
+    </div>
 
-
+    <!-- Sezioni Tabelle -->
+    <div class="card-v p-3 p-lg-4 mb-3">
         @Html.Partial("_PartiteTable", partiteFuture, new ViewDataDictionary(ViewData) { { "Titolo", "📅 Prossime Partite" } })
+    </div>
 
+    <div class="card-v p-3 p-lg-4 mb-3">
         @Html.Partial("_PartiteTable", partitePassate, new ViewDataDictionary(ViewData) { { "Titolo", "✅ Partite Disputate" } })
+    </div>
 
+    <div class="card-v p-3 p-lg-4">
         @Html.Partial("_PartiteTable", partiteCancellate, new ViewDataDictionary(ViewData) { { "Titolo", "❌ Partite Annullate" } })
-
     </div>
 </div>
 
@@ -49,22 +80,24 @@
         </div>
     </div>
 </div>
+
 <!-- Overlay di attesa per invio recensione -->
 <div id="overlay-recensione" style="
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-    font-weight: bold;
+    display:none;
+    position:fixed;
+    inset:0;
+    background-color:rgba(0,0,0,0.7);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
 ">
-    Invio in corso, attendere...
+    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px;">
+        <div class="overlay-spinner" aria-hidden="true"></div>
+        <div style="font-size:1.25rem; color:white; font-weight:700;">
+            Invio recensione in corso, attendere...
+        </div>
+    </div>
 </div>
 
 
@@ -84,20 +117,12 @@
                 var partitaId = select.data('partita');
                 var valore = select.val();
 
-                console.log("Invio al server:", {
-                    id: partitaId,
-                    campo: campo,
-                    valore: valore
-                });
-
                 $.ajax({
                     url: '@Url.Action("AggiornaStaff", "Partite")',
                     method: 'POST',
                     data: { id: partitaId, campo: campo, valore: valore },
                     success: function (response) {
-                        if (response.success) {
-                            console.log('✔️ Staff aggiornato correttamente');
-                        } else {
+                        if (!response.success) {
                             alert(response.message || "Errore durante l'aggiornamento dello staff");
                             console.error("Errore dal server:", response);
                         }
@@ -110,40 +135,43 @@
             });
 
         $('.btn-invia-recensione').on('click', function () {
-            var partitaId = $(this).data('id');
-            Swal.fire({
-                title: 'Sei sicuro?',
-                text: "Vuoi inviare la richiesta di recensione per la partita selezionata?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Invia',
-                cancelButtonText: 'Annulla'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Mostra overlay
-                    $('#overlay-recensione').css('display', 'flex');
+            const btn = $(this);
+            var partitaId = btn.data('id');
 
-                    $.ajax({
-                        url: '@Url.Action("InviaRecensione", "Partite")',
-                        method: 'POST',
-                        data: { id: partitaId },
-                        success: function (response) {
-                            $('#overlay-recensione').hide(); // Nascondi overlay
-                            if (response.success) {
-                                Swal.fire('Inviato!', response.message || 'Email inviate con successo!', 'success');
-                            } else {
-                                Swal.fire('Errore', response.message || 'Errore nell\'invio delle email.', 'error');
-                            }
-                        },
-                        error: function () {
-                            $('#overlay-recensione').hide(); // Nascondi overlay in caso di errore
-                            Swal.fire('Errore', 'Errore nell\'invio delle email.', 'error');
-                        }
-                    });
-                }
+                Swal.fire({
+                    title: 'Sei sicuro?',
+                    text: "Vuoi inviare la richiesta di recensione per la partita selezionata?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Invia',
+                    cancelButtonText: 'Annulla'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.prop('disabled', true);
+                        $('#overlay-recensione').css('display', 'flex');
+                        $.ajax({
+                            url: '@Url.Action("InviaRecensione", "Partite")',
+                            method: 'POST',
+                            data: { id: partitaId },
+                            success: function (response) {
+                                $('#overlay-recensione').hide();
+                                btn.prop('disabled', false);
+                                if (response.success) {
+                                    Swal.fire('Inviato!', response.message || 'Email inviate con successo!', 'success');
+                                } else {
+                                    Swal.fire('Errore', response.message || 'Errore nell\'invio delle email.', 'error');
+                                }
+                            },
+        error: function () {
+            $('#overlay-recensione').hide();
+            btn.prop('disabled', false);
+            Swal.fire('Errore', 'Errore nell\'invio delle email.', 'error');
+        }
+
+                        });
+                    }
+                });
             });
-        });
-
 
             $('.btn-messaggio-prenotazione').on('click', function () {
                 var partitaId = $(this).data('id');
@@ -156,20 +184,17 @@
                         if (response.success) {
                             Swal.fire({
                                 title: 'Messaggio Prenotazione',
-                                // MODIFICA QUI: Usiamo un div con contenteditable="true" e senza replace dei <br>
-                                html: `<div id="messaggioTestoSelezionabile" style="width:100%; height:auto; max-height:400px; overflow-y:auto; border:1px solid #ccc; padding:10px; text-align:left; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; white-space: pre-wrap; word-break: break-word;">${response.messaggio}</div>`,
+                                html: `<div id="messaggioTestoSelezionabile" style="width:100%;max-height:400px;overflow-y:auto;border:1px solid #ccc;padding:10px;text-align:left;user-select:text;-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;white-space:pre-wrap;word-break:break-word;">${response.messaggio}</div>`,
                                 icon: 'info',
                                 confirmButtonText: 'Chiudi',
-                                // Opzionale: Aggiungi un pulsante "Copia"
-                                showConfirmButton: true, // Mostra il bottone "Chiudi"
-                                showDenyButton: true, // Mostra un secondo bottone per "Copia"
+                                showConfirmButton: true,
+                                showDenyButton: true,
                                 denyButtonText: 'Copia Testo',
-                                allowOutsideClick: false, // Per evitare chiusure accidentali durante la selezione
+                                allowOutsideClick: false,
                                 didOpen: () => {
-                                    // Focus sul div per aiutare la selezione, se necessario
                                     document.getElementById('messaggioTestoSelezionabile').focus();
                                 },
-                                preDeny: () => { // Funzione eseguita prima di premere il bottone "Copia Testo"
+                                preDeny: () => {
                                     const textElement = document.getElementById('messaggioTestoSelezionabile');
                                     if (textElement) {
                                         const range = document.createRange();
@@ -179,31 +204,27 @@
                                         selection.addRange(range);
 
                                         try {
-                                            const successful = document.execCommand('copy');
-                                            if (successful) {
+                                            const ok = document.execCommand('copy');
+                                            if (ok) {
                                                 Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success');
                                             } else {
-                                                // Fallback per browser che non supportano execCommand (o se fallisce)
-                                                console.warn('execCommand fallback fallito, usando navigator.clipboard');
-                                                navigator.clipboard.writeText(textElement.innerText).then(() => {
-                                                    Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success');
-                                                }).catch(err => {
-                                                    Swal.fire('Errore', 'Impossibile copiare il testo automaticamente. Seleziona manualmente.', 'error');
-                                                    console.error('Errore durante la copia tramite clipboard API:', err);
-                                                });
+                                                navigator.clipboard.writeText(textElement.innerText)
+                                                    .then(() => Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success'))
+                                                    .catch(err => {
+                                                        Swal.fire('Errore', 'Impossibile copiare automaticamente. Seleziona manualmente.', 'error');
+                                                        console.error('Clipboard API:', err);
+                                                    });
                                             }
                                         } catch (err) {
-                                            // Fallback per browser che non supportano execCommand
-                                            console.warn('execCommand non supportato, usando navigator.clipboard');
-                                            navigator.clipboard.writeText(textElement.innerText).then(() => {
-                                                Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success');
-                                            }).catch(err => {
-                                                Swal.fire('Errore', 'Impossibile copiare il testo automaticamente. Seleziona manualmente.', 'error');
-                                                console.error('Errore durante la copia tramite clipboard API:', err);
-                                            });
+                                            navigator.clipboard.writeText(textElement.innerText)
+                                                .then(() => Swal.fire('Copiato!', 'Il testo è stato copiato negli appunti.', 'success'))
+                                                .catch(err => {
+                                                    Swal.fire('Errore', 'Impossibile copiare automaticamente. Seleziona manualmente.', 'error');
+                                                    console.error('Clipboard API:', err);
+                                                });
                                         }
                                     }
-                                    return false; // Impedisce la chiusura automatica della modale dopo la copia
+                                    return false;
                                 }
                             });
                         } else {
@@ -217,7 +238,8 @@
             });
 
         });
-                $(document).on('click', '.btn-verifica-presenze', function () {
+
+        $(document).on('click', '.btn-verifica-presenze', function () {
             var data = $(this).data('data');
             $.get('/Partite/PresenzeStaffPopup', { data: data })
                 .done(function (response) {
@@ -230,8 +252,7 @@
                 })
                 .fail(function () {
                     Swal.fire('Errore', 'Impossibile recuperare le presenze.', 'error');
-                }); 
+                });
         });
-
     </script>
 }

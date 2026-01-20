@@ -471,3 +471,93 @@ table.calendario-table {
         width: 100% !important;
     }
 }
+/* --- Forza sempre il tema chiaro quando c'è .force-light --- */
+body.ios26.force-light {
+    /* Diciamo al browser che i colori sono chiari (influenza anche form controls) */
+    color-scheme: light;
+    /* Reimpostiamo le variabili "light", anche se l'OS è in dark */
+    --ios-bg: #f6f7fb;
+    --ios-surface: rgba(255,255,255,0.70);
+    --ios-surface-strong: rgba(255,255,255,0.92);
+    --ios-text: #0b0c0f;
+    --ios-text-muted: #5b5f6a;
+    --ios-border: rgba(0,0,0,0.08);
+}
+
+/* Sfondo più chiaro e meno “fumoso” */
+body.ios26 {
+    background: radial-gradient(1200px 800px at 10% -10%, rgba(59,130,246,.04), transparent 55%), radial-gradient(900px 600px at 90% 0%, rgba(34,197,94,.04), transparent 45%), var(--ios-bg);
+}
+
+/* Contrasto navbar/link su vetro */
+.ios26 .ios26-navbar,
+.ios26 .ios26-navbar .navbar-brand,
+.ios26 .ios26-navbar .nav-link {
+    color: var(--ios-text) !important;
+}
+
+    .ios26 .ios26-navbar .nav-link:hover {
+        background: var(--ios-surface-strong);
+    }
+
+/* Titolo ben visibile */
+.ios26 .large-title {
+    color: var(--ios-text);
+}
+
+/* Tabelle/partials dentro card vetro: testo sempre leggibile */
+.ios26 .card-v {
+    color: var(--ios-text);
+}
+
+/* --- Normalizza sfondo e contrasto su TUTTE le pagine quando c'è .ios26 --- */
+html.ios26, body.ios26 {
+    background: radial-gradient(1200px 800px at 10% -10%, rgba(59,130,246,.04), transparent 55%), radial-gradient(900px 600px at 90% 0%, rgba(34,197,94,.04), transparent 45%), var(--ios-bg) !important; /* vince sul background-color del site.css */
+    color: var(--ios-text);
+}
+
+    /* Se forziamo il tema chiaro, anullla ogni residuo “verdino” */
+    body.ios26.force-light {
+        color-scheme: light;
+        --ios-bg: #f6f7fb;
+        --ios-surface: rgba(255,255,255,0.70);
+        --ios-surface-strong: rgba(255,255,255,0.92);
+        --ios-text: #0b0c0f;
+        --ios-text-muted: #5b5f6a;
+        --ios-border: rgba(0,0,0,0.08);
+        background: var(--ios-bg) !important;
+    }
+/* Corregge overflow della tabella nelle card vetro (desktop) */
+.ios26 .card-v .table-responsive {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: auto; /* mantiene scroll se serve */
+}
+
+/* Evita che il contenuto “sbordi” oltre gli angoli arrotondati */
+.ios26 .card-v {
+    overflow: hidden;
+}
+
+    /* Allinea i bordi della tabella allo stile iOS */
+    .ios26 .card-v table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .ios26 .card-v thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1; /* header “appiccicoso” elegante */
+        background: var(--ios-surface-strong);
+    }
+v.ios26 .ios26-navbar {
+    background: var(--ios-surface-strong);
+}
+
+.ios26 .ios26-shell {
+    padding-top: 20px;
+}
