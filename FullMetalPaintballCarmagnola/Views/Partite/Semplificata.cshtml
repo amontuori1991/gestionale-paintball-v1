@@ -31,6 +31,7 @@
                     <th>Durata</th>
                     <th style="white-space: nowrap;">Nr. P.</th>
                     <th>Caparra</th>
+                    <th>Listino</th>
                     <th>Torneo</th>
                     <th>Illimit.</th>
                     <th>Caccia</th>
@@ -67,6 +68,12 @@
                         <td data-label="Durata">@partita.Durata</td>
                         <td data-label="Nr. P.">@partita.NumeroPartecipanti</td>
                         <td data-label="Caparra">@partita.Caparra.ToString("0.00") €</td>
+                        @{
+                            var listinoText = partita.Listino == 2 ? "Nuovo" : "Vecchio";
+                            var listinoClass = partita.Listino == 2 ? "calendario-bg-info" : "calendario-bg-warning";
+                        }
+
+                        <td data-label="Listino" class="@listinoClass">@listinoText</td>
 
                         <td data-label="Torneo" class="@(partita.Torneo ? "calendario-bg-success" : "calendario-bg-danger")">
                             @(partita.Torneo ? "SI" : "NO")

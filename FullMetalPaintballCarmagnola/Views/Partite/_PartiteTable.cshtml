@@ -24,6 +24,7 @@
             <th>Nr. P.</th>
             <th>Iscritti</th>
             <th>Caparra</th>
+                <th>Listino</th>
             <th>Torneo</th>
             <th>Illimitati</th>
             <th>Caccia</th>
@@ -63,6 +64,10 @@
                 <td data-label="Partecipanti">@partita.NumeroPartecipanti</td>
                 <td data-label="Iscritti">@(partita.Tesseramenti?.Count ?? 0)</td>
                 <td data-label="Caparra">@($"{partita.Caparra:0.00}€")</td>
+                    <td data-label="Listino">
+                        @(partita.Listino == 2 ? "Nuovo" : "Vecchio")
+                    </td>
+
                 <td data-label="Torneo" class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
                 <td data-label="Illimitati" class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
                 <td data-label="Caccia" class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
@@ -80,7 +85,7 @@
                 </td>
             </tr>
             <tr style="@(partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday ? "background-color: #ffeeba;" : "")">
-                    <td colspan="15" style="background-color: inherit;">
+                    <td colspan="16" style="background-color: inherit;">
                     <strong>Gestita da:</strong>
                     @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
                     {

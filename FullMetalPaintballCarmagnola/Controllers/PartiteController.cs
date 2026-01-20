@@ -224,6 +224,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             existingPartita.Riferimento = partita.Riferimento;
             existingPartita.Annotazioni = partita.Annotazioni;
             existingPartita.Tipo = partita.Tipo;
+            existingPartita.Listino = partita.Listino;
+
 
             try
             {
@@ -642,11 +644,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     {
                         prezzo = partita.Durata switch
                         {
-                            1.0 => "22€",
-                            1.5 => "27€",
-                            2.0 => "32€",
+                            1.0 => (partita.Listino == 2 ? "25€" : "22€"),
+                            1.5 => (partita.Listino == 2 ? "30€" : "27€"),
+                            2.0 => (partita.Listino == 2 ? "35€" : "32€"),
                             _ => "-"
                         };
+
                         colpi = partita.Durata switch
                         {
                             1.0 => "200",

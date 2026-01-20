@@ -45,6 +45,8 @@ public class Partita
     [Required]
     public string Tipo { get; set; } = "Adulti";
 
+    // 1 = Vecchio listino (22/27/32), 2 = Nuovo listino (25/30/35)
+    public short Listino { get; set; } = 1;
 
 
     public bool Torneo { get; set; }
