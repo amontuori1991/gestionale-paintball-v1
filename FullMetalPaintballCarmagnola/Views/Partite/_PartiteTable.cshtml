@@ -4,94 +4,177 @@
 @{
     var staffList = new List<string> { "Simone", "Enrico", "Federico", "Davide", "Andrea" };
     var titolo = ViewData["Titolo"]?.ToString();
+    var it = CultureInfo.GetCultureInfo("it-IT");
 }
 
 <h4 class="partite-section-title">@titolo</h4>
 
-<div class="table-scroll" style="width:100%; max-width:100%; overflow-x:auto; overflow-y:hidden;">
-
+<!-- =========================
+     DESKTOP/TABLET: TABELLA
+     ========================= -->
+<div class="table-scroll partite-table-desktop">
     <table class="table table-bordered responsive-table">
-
-
-    <thead>
-        <tr>
-            <th>Stato</th>
-            <th>Data</th>
-            <th>Ora</th>
-            <th>Tipo</th>
-            <th>Rif.</th>
-            <th>Durata</th>
-            <th>Nr. P.</th>
-            <th>Iscritti</th>
-            <th>Caparra</th>
+        <thead>
+            <tr>
+                <th>Stato</th>
+                <th>Data</th>
+                <th>Ora</th>
+                <th>Tipo</th>
+                <th>Rif.</th>
+                <th>Durata</th>
+                <th>Nr. P.</th>
+                <th>Iscritti</th>
+                <th>Caparra</th>
                 <th>Listino</th>
-            <th>Torneo</th>
-            <th>Illimitati</th>
-            <th>Caccia</th>
-            <th>Link</th>
-            <th>Tesserati</th>
-            <th>Azioni</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var partita in Model)
-        {
-            <tr style="@(partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday ? "background-color: #ffeeba;" : "")">
+                <th>Torneo</th>
+                <th>Illimitati</th>
+                <th>Caccia</th>
+                <th>Link</th>
+                <th>Tesserati</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
 
-                <td data-label="Stato">
-                    @if (partita.CaparraConfermata)
-                    {
-                        <span style="background-color: #d4edda; padding: 4px 8px; border-radius: 5px;">Confermata</span>
-                    }
-                    else
-                    {
-                        <span style="background-color: #fff3cd; padding: 4px 8px; border-radius: 5px;">In Attesa</span>
-                    }
-                <td data-label="Data">
-                    @(partita.Data
-                                        .ToString("ddd dd/MM/yyyy", CultureInfo.GetCultureInfo("it-IT"))
-                                        .ToLowerInvariant()
-                                        .Replace(".", ""))
-                </td>
+        <tbody>
+            @foreach (var partita in Model)
+            {
+                var isInfrasett = partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday;
 
+                <tr style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
 
-                <td data-label="Ora Inizio">@partita.OraInizio.ToString(@"hh\:mm")</td>
-                <td data-label="Tipo">@partita.Tipo</td>
-                <td data-label="Riferimento">
-                    <span class="ref-icon" onclick="showRiferimento('@partita.Riferimento')">📇</span>
-                </td>
-                <td data-label="Durata">@partita.Durata</td>
-                <td data-label="Partecipanti">@partita.NumeroPartecipanti</td>
-                <td data-label="Iscritti">@(partita.Tesseramenti?.Count ?? 0)</td>
-                <td data-label="Caparra">@($"{partita.Caparra:0.00}€")</td>
-                    <td data-label="Listino">
-                        @(partita.Listino == 2 ? "Nuovo" : "Vecchio")
+                    <td data-label="Stato">
+                        @if (partita.CaparraConfermata)
+                        {
+                            <span style="background-color: #d4edda; padding: 4px 8px; border-radius: 5px;">Confermata</span>
+                        }
+                        else
+                        {
+                            <span style="background-color: #fff3cd; padding: 4px 8px; border-radius: 5px;">In Attesa</span>
+                        }
                     </td>
 
-                <td data-label="Torneo" class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
-                <td data-label="Illimitati" class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
-                <td data-label="Caccia" class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
-                <td data-label="Link">
-                    <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
-                </td>
-                <td data-label="Tesserati">
-                    <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
-                </td>
-                <td data-label="Azioni">
-                    <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
-                    <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", "Partite", new { id = partita.Id })">🗑️</a>
-                    <button class="btn btn-sm btn-primary btn-invia-recensione" data-id="@partita.Id" title="Invia richiesta recensione">📧</button>
-                    <button class="btn btn-sm btn-secondary btn-messaggio-prenotazione" data-id="@partita.Id" title="Genera messaggio prenotazione">📄</button>
-                </td>
-            </tr>
-            <tr style="@(partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday ? "background-color: #ffeeba;" : "")">
+                    <td data-label="Data">
+                        @(partita.Data.ToString("ddd dd/MM/yyyy", it).ToLowerInvariant().Replace(".", ""))
+                    </td>
+
+                    <td data-label="Ora Inizio">@partita.OraInizio.ToString(@"hh\:mm")</td>
+                    <td data-label="Tipo">@partita.Tipo</td>
+
+                    <td data-label="Riferimento">
+                        <span class="ref-icon" onclick="showRiferimento('@partita.Riferimento')">📇</span>
+                    </td>
+
+                    <td data-label="Durata">@partita.Durata</td>
+                    <td data-label="Partecipanti">@partita.NumeroPartecipanti</td>
+                    <td data-label="Iscritti">@(partita.Tesseramenti?.Count ?? 0)</td>
+                    <td data-label="Caparra">@($"{partita.Caparra:0.00}€")</td>
+
+                    <td data-label="Listino">@((partita.Listino == 2) ? "Nuovo" : "Vecchio")</td>
+
+                    <td data-label="Torneo" class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
+                    <td data-label="Illimitati" class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
+                    <td data-label="Caccia" class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
+
+                    <td data-label="Link">
+                        <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
+                    </td>
+
+                    <td data-label="Tesserati">
+                        <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
+                    </td>
+
+                    <td data-label="Azioni">
+                        <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
+                        <a class="btn btn-sm btn-danger" href="@Url.Action("Delete", "Partite", new { id = partita.Id })">🗑️</a>
+                        <button class="btn btn-sm btn-primary btn-invia-recensione" data-id="@partita.Id" title="Invia richiesta recensione">📧</button>
+                        <button class="btn btn-sm btn-secondary btn-messaggio-prenotazione" data-id="@partita.Id" title="Genera messaggio prenotazione">📄</button>
+                    </td>
+                </tr>
+
+                <tr style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
                     <td colspan="16" style="background-color: inherit;">
-                    <strong>Gestita da:</strong>
+                        <strong>Gestita da:</strong>
+                        @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
+                        {
+                            var currentVal = (string)typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff).GetValue(partita) ?? "";
+                            <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
+                                    data-campo="@staff" data-partita="@partita.Id">
+                                <option value="">--</option>
+                                @foreach (var s in staffList)
+                                {
+                                    <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+                                }
+                            </select>
+                        }
+
+                        <span style="float: right;">
+                            <strong>Reperibile:</strong> @partita.Reperibile
+                            <button class="btn btn-sm btn-info btn-verifica-presenze mx-2" data-data="@partita.Data.ToString("yyyy-MM-dd")">
+                                Presenze Staff
+                            </button>
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- =========================
+     MOBILE: CARD (SOLO MOBILE)
+     ========================= -->
+<div class="partite-cards-mobile pm-wrap">
+@foreach (var partita in Model)
+{
+    var isInfrasett = partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday;
+
+    var statoLabel = partita.CaparraConfermata ? "Confermata" : "In attesa";
+    var statoClass = partita.CaparraConfermata ? "pm-status-ok" : "pm-status-wait";
+
+    var tipoLabel = (partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) ?? false)
+        ? "KIDS"
+        : (string.IsNullOrWhiteSpace(partita.Tipo) ? "ADULTI" : partita.Tipo.ToUpperInvariant());
+
+    <div class="pm-card @(isInfrasett ? "pm-infrasett" : "")">
+
+        <div class="pm-head">
+            <div class="pm-left">
+                <div class="pm-date">@partita.Data.ToString("ddd dd/MM", it).ToLowerInvariant().Replace(".", "")</div>
+                <div class="pm-time">@partita.OraInizio.ToString(@"hh\:mm")</div>
+            </div>
+            <span class="pm-status @statoClass">@statoLabel</span>
+        </div>
+
+        <div class="pm-chips">
+            <span class="pm-chip pm-chip-muted">@tipoLabel</span>
+            <span class="pm-chip pm-chip-muted">@(partita.Listino == 2 ? "Listino Nuovo" : "Listino Vecchio")</span>
+            @if (partita.Torneo) { <span class="pm-chip pm-chip-gold">🏆 Torneo</span> }
+            @if (partita.ColpiIllimitati) { <span class="pm-chip pm-chip-blue">♾️ Illimitati</span> }
+            @if (partita.Caccia) { <span class="pm-chip pm-chip-pink">🐰 Caccia</span> }
+        </div>
+
+        <div class="pm-grid">
+            <div class="pm-kv"><div class="pm-k">Durata</div><div class="pm-v">@partita.Durata h</div></div>
+            <div class="pm-kv"><div class="pm-k">Pax</div><div class="pm-v">@partita.NumeroPartecipanti</div></div>
+            <div class="pm-kv"><div class="pm-k">Iscritti</div><div class="pm-v">@(partita.Tesseramenti?.Count ?? 0)</div></div>
+            <div class="pm-kv"><div class="pm-k">Caparra</div><div class="pm-v">@($"{partita.Caparra:0.00}€")</div></div>
+        </div>
+
+        <div class="pm-row-actions">
+            <button type="button" class="pm-iconbtn" onclick="showRiferimento('@partita.Riferimento')" title="Riferimento">📇</button>
+            <a class="pm-iconbtn" href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" title="Link tesseramento">📎</a>
+            <a class="pm-primary" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">👥 Tesserati</a>
+        </div>
+
+        <details class="pm-details" open>
+
+            <summary>Gestita da • Reperibile</summary>
+            <div class="pm-details-body">
+                <div class="pm-staff-grid">
                     @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
                     {
-                        var currentVal = (string)typeof(Partita).GetProperty(staff).GetValue(partita) ?? "";
-                        <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
-                                data-campo="@staff" data-partita="@partita.Id">
+                        var currentVal = (string)typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff).GetValue(partita) ?? "";
+                        <select class="form-select staff-select pm-select" data-campo="@staff" data-partita="@partita.Id">
                             <option value="">--</option>
                             @foreach (var s in staffList)
                             {
@@ -99,16 +182,24 @@
                             }
                         </select>
                     }
-                    <span style="float: right;">
-                        <strong>Reperibile:</strong> @partita.Reperibile
-                        <button class="btn btn-sm btn-info btn-verifica-presenze mx-2" data-data="@partita.Data.ToString("yyyy-MM-dd")">
-                            Presenze Staff
-                        </button>
-                    </span>
-                </td>
+                </div>
 
-            </tr>
-        }
-    </tbody>
-    </table>
+                <div class="pm-rep">
+                    <div><strong>Reperibile:</strong> @partita.Reperibile</div>
+                    <button class="btn btn-sm btn-info btn-verifica-presenze" data-data="@partita.Data.ToString("yyyy-MM-dd")">
+                        Presenze Staff
+                    </button>
+                </div>
+            </div>
+        </details>
+
+        <div class="pm-actions">
+            <a class="pm-act" href="@Url.Action("Edit", "Partite", new { id = partita.Id })" title="Modifica">✏️</a>
+            <a class="pm-act" href="@Url.Action("Delete", "Partite", new { id = partita.Id })" title="Elimina">🗑️</a>
+            <button type="button" class="pm-act btn-invia-recensione" data-id="@partita.Id" title="Invia recensione">⭐</button>
+            <button type="button" class="pm-act btn-messaggio-prenotazione" data-id="@partita.Id" title="Messaggio prenotazione">📄</button>
+        </div>
+
+    </div>
+}
 </div>

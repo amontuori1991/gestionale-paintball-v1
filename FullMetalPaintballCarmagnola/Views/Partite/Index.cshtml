@@ -9,7 +9,7 @@
 
 <!-- SweetAlert2 CSS e JS -->
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
-<link href="~/css/partite-responsive.css" rel="stylesheet" />
+<link href="~/css/partite-responsive.css?v=@DateTime.UtcNow.Ticks" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .overlay-spinner {
@@ -31,25 +31,27 @@
     }
 </style>
 
-<div class="ios26-page">
+<div class="ios26-page" id="partite-page">
+
 
     <!-- Header / Large Title + Toolbar -->
     <div class="card-v p-3 p-lg-4 mb-3">
-        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div class="d-flex flex-column gap-3">
             <h1 class="large-title m-0">Gestione Partite</h1>
 
-            <div class="toolbar-ios d-flex flex-wrap gap-2">
-                <a class="btn btn-ios btn-ios-success" href="@Url.Action("Create", "Partite")">
+            <div class="partite-actions">
+                <a class="pbtn pbtn-green" href="@Url.Action("Create", "Partite")">
                     <i class="bi bi-plus-circle me-1"></i> Aggiungi Partita
                 </a>
-                <a class="btn btn-ios btn-ios-secondary" href="@Url.Action("Archivio", "Partite")">
+                <a class="pbtn pbtn-gray" href="@Url.Action("Archivio", "Partite")">
                     <i class="bi bi-folder2-open me-1"></i> Archivio
                 </a>
-                <a class="btn btn-ios btn-ios-primary" href="@Url.Action("Semplificata", "Partite")">
+                <a class="pbtn pbtn-blue" href="@Url.Action("Semplificata", "Partite")">
                     <i class="bi bi-stars me-1"></i> Visualizzazione Semplificata
                 </a>
             </div>
         </div>
+
     </div>
 
     <!-- Sezioni Tabelle -->

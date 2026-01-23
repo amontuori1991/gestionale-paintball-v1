@@ -1,4 +1,7 @@
-﻿.responsive-table {
+﻿/* =========================
+   TABELLA (base)
+   ========================= */
+.responsive-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
@@ -17,65 +20,25 @@
         font-weight: bold;
     }
 
-/* Responsive design per schermi piccoli */
-@media (max-width: 768px) {
-    .responsive-table thead {
-        display: none;
+    /* Migliorie generali */
+    .responsive-table .btn {
+        margin: 2px 0;
+        padding: 6px 10px;
+        font-size: 0.9rem;
     }
 
-    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
-        display: block;
-        width: 100%;
+    .responsive-table .icon-link {
+        font-size: 1.2rem;
+        display: inline-block;
+        margin-top: 5px;
     }
 
-        .responsive-table tr {
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-        }
+    .responsive-table .ref-icon {
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
 
-        .responsive-table td {
-            text-align: left;
-            padding: 10px 8px;
-            border: none;
-            border-bottom: 1px solid #eee;
-            position: relative;
-        }
-
-            .responsive-table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: block;
-                margin-bottom: 5px;
-                color: #333;
-            }
-}
-
-/* Migliorie generali */
-.responsive-table .btn {
-    margin: 2px 0;
-    padding: 6px 10px;
-    font-size: 0.9rem;
-}
-
-.responsive-table .icon-link {
-    font-size: 1.2rem;
-    display: inline-block;
-    margin-top: 5px;
-}
-
-.responsive-table .ref-icon {
-    cursor: pointer;
-    font-size: 1.2rem;
-}
-
-/* Miglioramento visualizzazione su desktop */
+/* Desktop: evita tagli */
 @media (min-width: 769px) {
     .responsive-table {
         table-layout: auto;
@@ -85,75 +48,365 @@
             white-space: nowrap;
         }
 }
-
-/* Stile mobile specifico per Gestione Partite */
-@media (max-width: 768px) {
-    .responsive-table td[colspan="14"] {
-        display: block;
-        border: 1px solid #ddd;
-        margin-top: 10px;
-        padding: 10px;
-        background-color: #f0f0f0;
-        grid-column: 1 / -1;
-    }
-
-    .responsive-table select {
-        width: 100%;
-        margin: 5px 0;
-    }
-}
-/* Evita tagli/scroll orizzontale indesiderato su desktop */
-html, body {
-    overflow-x: clip;
-}
-
-/* Desktop: la tabella ha molte colonne -> abilito scroll orizzontale invece di tagliare */
-
-
-/* Titoli sezione centrati (come volevi nelle altre pagine) */
-.partite-section-title {
-    text-align: center;
-    margin: 0 0 12px 0;
-}
-
-/* La card iOS ha probabilmente overflow:hidden (per i bordi tondi) e taglia la tabella */
-.card-v {
-    overflow: visible !important;
-}
-
-/* ==========================
-   SCROLL TABELLA: SOLO DESKTOP
-   ========================== */
-
-/* MOBILE/TABLET: niente scroll orizzontale, layout a blocchi come prima */
-@media (max-width: 768px) {
-    .table-scroll {
-        overflow-x: visible !important;
-    }
-
-        .table-scroll > table.table.table-bordered.responsive-table {
-            width: 100% !important;
-            min-width: 0 !important;
-        }
-}
-
-/* DESKTOP: tabella larga -> scroll orizzontale */
+/* =========================
+   DESKTOP/TABLET: NASCONDI LE CARD MOBILE
+   ========================= */
 @media (min-width: 769px) {
-    .table-scroll {
-        width: 100%;
-        max-width: 100%;
+    #partite-page .partite-cards-mobile,
+    #partite-page .pm-wrap {
+        display: none !important;
+    }
+
+    /* opzionale: la tabella deve essere visibile */
+    #partite-page .partite-table-desktop {
+        display: block !important;
+    }
+}
+
+/* =========================
+   SCROLL TABELLA DESKTOP (FULL WIDTH)
+   ========================= */
+@media (min-width: 769px) {
+
+    /* wrapper pieno */
+    #partite-page .table-scroll.partite-table-desktop {
+        width: 100% !important;
+        max-width: 100% !important;
         overflow-x: auto !important;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
     }
 
-        .table-scroll > table.table.table-bordered.responsive-table {
-            width: max-content !important; /* crea overflow reale */
-            min-width: 1200px !important; /* forza abbastanza larghezza per vedere tutte le colonne */
+        /* tabella piena dentro la card */
+        #partite-page .table-scroll.partite-table-desktop > table.responsive-table {
+            width: 100% !important;
+            min-width: 0 !important; /* niente “min 1200” */
+            table-layout: auto;
         }
+
+    /* evita che la card centri/limiti */
+    #partite-page .card-v {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 }
 
-/* La card arrotondata non deve tagliare lo scroll */
-.card-v {
-    overflow: visible !important;
+
+/* =========================
+   MOBILE: NASCONDI TABELLA PARTITE
+   (evita l'effetto "lista verticale" brutta)
+   ========================= */
+@media (max-width: 768px) {
+    .partite-table-desktop {
+        display: none !important;
+    }
+
+    .table-scroll {
+        overflow: visible !important;
+    }
+}
+
+/* =========================
+   MOBILE CARDS – Partite
+   ========================= */
+@media (max-width: 768px) {
+
+    .partite-cards-mobile,
+    .pm-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .pm-card {
+        background: rgba(255,255,255,.80) !important;
+        border: 1px solid rgba(0,0,0,.10) !important;
+        border-radius: 16px !important;
+        padding: 12px !important;
+        box-shadow: 0 6px 18px rgba(0,0,0,.06) !important;
+    }
+
+    .pm-infrasett {
+        background: rgba(255, 243, 205, .75) !important;
+        border-color: rgba(255,193,7,.35) !important;
+    }
+
+    .pm-head {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .pm-left {
+        display: flex !important;
+        align-items: baseline !important;
+        gap: 10px !important;
+        min-width: 0;
+    }
+
+    .pm-date {
+        font-weight: 900 !important;
+        font-size: 1.05rem !important;
+        white-space: nowrap;
+    }
+
+    .pm-time {
+        font-weight: 850 !important;
+        opacity: .85;
+        white-space: nowrap;
+    }
+
+    .pm-status {
+        padding: 5px 10px !important;
+        border-radius: 999px !important;
+        font-weight: 900 !important;
+        font-size: .85rem !important;
+        white-space: nowrap;
+        border: 1px solid rgba(0,0,0,.08);
+    }
+
+    .pm-status-ok {
+        background: #d4edda !important;
+    }
+
+    .pm-status-wait {
+        background: #fff3cd !important;
+    }
+
+    .pm-chips {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        margin: 8px 0 10px !important;
+    }
+
+    .pm-chip {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 5px 10px !important;
+        border-radius: 999px !important;
+        font-size: .82rem !important;
+        font-weight: 900 !important;
+        background: rgba(0,0,0,.06) !important;
+    }
+
+    .pm-chip-muted {
+        opacity: .92 !important;
+    }
+
+    .pm-chip-gold {
+        background: rgba(255,193,7,.25) !important;
+    }
+
+    .pm-chip-blue {
+        background: rgba(13,110,253,.18) !important;
+    }
+
+    .pm-chip-pink {
+        background: rgba(214,51,132,.16) !important;
+    }
+
+    .pm-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin-top: 6px !important;
+    }
+
+    .pm-kv {
+        background: rgba(0,0,0,.035) !important;
+        border: 1px solid rgba(0,0,0,.06) !important;
+        border-radius: 14px !important;
+        padding: 10px !important;
+        min-width: 0;
+    }
+
+    .pm-k {
+        font-size: .74rem !important;
+        opacity: .70 !important;
+        font-weight: 900 !important;
+        margin-bottom: 2px !important;
+        line-height: 1.1 !important;
+    }
+
+    .pm-v {
+        font-size: 1.05rem !important;
+        font-weight: 950 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pm-row-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-top: 10px !important;
+    }
+
+    .pm-iconbtn {
+        border: 1px solid rgba(0,0,0,.12) !important;
+        background: rgba(255,255,255,.65) !important;
+        border-radius: 14px !important;
+        padding: 10px 12px !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+
+    .pm-primary {
+        margin-left: auto !important;
+        border: 1px solid rgba(0,0,0,.12) !important;
+        background: rgba(0,0,0,.03) !important;
+        border-radius: 14px !important;
+        padding: 10px 12px !important;
+        font-weight: 900 !important;
+        text-decoration: none !important;
+        color: inherit !important;
+        white-space: nowrap;
+    }
+
+    .pm-details {
+        margin-top: 10px !important;
+        border-top: 1px dashed rgba(0,0,0,.12) !important;
+        padding-top: 10px !important;
+    }
+
+        .pm-details summary {
+            font-weight: 950 !important;
+            cursor: pointer !important;
+            opacity: .9 !important;
+            list-style: none !important;
+        }
+
+            .pm-details summary::-webkit-details-marker {
+                display: none !important;
+            }
+
+    .pm-details-body {
+        margin-top: 10px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .pm-staff-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+
+    .pm-select {
+        border-radius: 14px !important;
+        font-weight: 850 !important;
+        padding: 10px 12px !important;
+    }
+
+    .pm-rep {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+
+    .pm-actions {
+        margin-top: 10px !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+    }
+
+    .pm-act {
+        border: 1px solid rgba(0,0,0,.12) !important;
+        background: rgba(255,255,255,.65) !important;
+        border-radius: 14px !important;
+        padding: 10px 12px !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+}
+/* =========================================================
+   PARTITE – FIX DEFINITIVO
+   Su mobile mostra SOLO le card, nascondi qualunque tabella
+   dentro la pagina Partite (evita doppia visualizzazione)
+   ========================================================= */
+@media (max-width: 768px) {
+    #partite-page .partite-table-desktop,
+    #partite-page .table-scroll,
+    #partite-page table.responsive-table,
+    #partite-page .responsive-table,
+    #partite-page table.table {
+        display: none !important;
+    }
+
+    #partite-page .partite-cards-mobile,
+    #partite-page .pm-wrap {
+        display: flex !important;
+    }
+}
+/* =========================
+   PARTITE – ACTIONS BAR
+   Bottoni centrati sopra alle tabelle
+   ========================= */
+#partite-page .partite-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0 2px 0;
+}
+
+/* pill button */
+#partite-page .pbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 900;
+    text-decoration: none;
+    border: 1px solid rgba(0,0,0,.12);
+    background: rgba(255,255,255,.75);
+    color: #0b0c0f;
+    box-shadow: 0 6px 16px rgba(0,0,0,.06);
+    transition: transform .08s ease, filter .12s ease;
+}
+
+    #partite-page .pbtn:hover {
+        filter: brightness(1.03);
+        transform: translateY(-1px);
+    }
+
+    #partite-page .pbtn:active {
+        transform: translateY(0);
+    }
+
+/* colori */
+#partite-page .pbtn-green {
+    background: rgba(25,135,84,.16);
+    border-color: rgba(25,135,84,.25);
+}
+
+#partite-page .pbtn-blue {
+    background: rgba(13,110,253,.16);
+    border-color: rgba(13,110,253,.25);
+}
+
+#partite-page .pbtn-gray {
+    background: rgba(108,117,125,.14);
+    border-color: rgba(108,117,125,.22);
+}
+
+/* mobile: bottoni più compatti */
+@media (max-width: 768px) {
+    #partite-page .pbtn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 14px;
+    }
 }
