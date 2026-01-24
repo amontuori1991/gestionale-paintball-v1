@@ -155,7 +155,7 @@
 
         <div class="pm-grid">
             <div class="pm-kv"><div class="pm-k">Durata</div><div class="pm-v">@partita.Durata h</div></div>
-            <div class="pm-kv"><div class="pm-k">Pax</div><div class="pm-v">@partita.NumeroPartecipanti</div></div>
+            <div class="pm-kv"><div class="pm-k">Nr. P.</div><div class="pm-v">@partita.NumeroPartecipanti</div></div>
             <div class="pm-kv"><div class="pm-k">Iscritti</div><div class="pm-v">@(partita.Tesseramenti?.Count ?? 0)</div></div>
             <div class="pm-kv"><div class="pm-k">Caparra</div><div class="pm-v">@($"{partita.Caparra:0.00}€")</div></div>
         </div>
@@ -168,7 +168,7 @@
 
         <details class="pm-details" open>
 
-            <summary>Gestita da • Reperibile</summary>
+            <summary>Gestita da: </summary>
             <div class="pm-details-body">
                 <div class="pm-staff-grid">
                     @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
