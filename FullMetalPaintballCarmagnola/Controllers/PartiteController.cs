@@ -111,6 +111,32 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             ViewBag.PartiteCancellate = partiteCancellate;
             ViewBag.PartiteFuture = partiteFuture;
             ViewBag.PartitePassate = partitePassate;
+
+            // ✅ STAFF DISPONIBILE/IN ATTESA PER DATA (Presente == true || Presente == null)
+            var tutteLePartiteMostrate = partiteFuture
+                .Concat(partitePassate)
+                .Concat(partiteCancellate)
+                .ToList();
+
+            var dateMostrate = tutteLePartiteMostrate
+                .Select(p => p.Data.Date)
+                .Distinct()
+                .ToList();
+
+            var presenzeStaff = await _dbContext.PresenzaStaff
+                .Where(p => dateMostrate.Contains(p.Data))
+                .ToListAsync();
+
+            var staffDisponibiliPerData = presenzeStaff
+                .Where(p => p.Presente == true || p.Presente == null)
+                .GroupBy(p => p.Data.Date)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(x => x.NomeStaff).Distinct().OrderBy(x => x).ToList()
+                );
+
+            ViewBag.StaffDisponibiliPerData = staffDisponibiliPerData;
+
             return View();
         }
 
@@ -125,6 +151,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             // 👇 forza UTC anche se prendi solo la data
             partita.Data = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
+            if (!partita.Caccia)
+                partita.CacciaDoppia = false;
 
             _dbContext.Add(partita);
 
@@ -168,7 +196,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             string extra = "";
             if (partita.ColpiIllimitati) extra += "♾️ Colpi Illimitati<br>";
-            if (partita.Caccia) extra += "🐰 Caccia al Coniglio<br>";
+            if (partita.Caccia)
+            {
+                var labelX2 = partita.CacciaDoppia ? " x2 (100€)" : " (60€)";
+                extra += $"🐰 Caccia al Coniglio{labelX2}<br>";
+            }
+
             if (string.IsNullOrWhiteSpace(extra)) extra = "—";
 
             var messageHtml = $@"
@@ -205,7 +238,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         {
             if (id != partita.Id) return NotFound();
             if (!ModelState.IsValid) return View(partita);
-
+            if (!partita.Caccia)
+                partita.CacciaDoppia = false;
             var existingPartita = await _dbContext.Partite.FindAsync(id);
             if (existingPartita == null) return NotFound();
 
@@ -221,6 +255,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             existingPartita.Torneo = partita.Torneo;
             existingPartita.ColpiIllimitati = partita.ColpiIllimitati;
             existingPartita.Caccia = partita.Caccia;
+            existingPartita.CacciaDoppia = partita.CacciaDoppia;
             existingPartita.Riferimento = partita.Riferimento;
             existingPartita.Annotazioni = partita.Annotazioni;
             existingPartita.Tipo = partita.Tipo;
@@ -314,7 +349,13 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             if (partita.Torneo) messaggio += "<strong>🏆 Torneo</strong><br>";
             if (partita.ColpiIllimitati) messaggio += "<strong>♾️ Colpi Illimitati</strong><br>";
-            if (partita.Caccia) messaggio += "<strong>🐰 Caccia al Coniglio</strong><br>";
+            if (partita.Caccia)
+            {
+                var labelX2 = partita.CacciaDoppia ? " x2" : "";
+                var prezzo = partita.CacciaDoppia ? "100€" : "60€";
+                messaggio += $"<strong>🐰 Caccia al Coniglio{labelX2} ({prezzo})</strong><br>";
+            }
+
 
             return Json(new { success = true, messaggio });
         }
@@ -660,7 +701,17 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     }
                 }
 
-                extraCaccia = partita.Caccia ? "💥 Extra: Caccia al Coniglio 60€<br>" : "";
+                if (partita.Caccia)
+                {
+                    var prezzoCaccia = partita.CacciaDoppia ? "100€" : "60€";
+                    var labelX2 = partita.CacciaDoppia ? " x2" : "";
+                    extraCaccia = $"💥 Extra: Caccia al Coniglio{labelX2} {prezzoCaccia}<br>";
+                }
+                else
+                {
+                    extraCaccia = "";
+                }
+
                 infoTesseramento = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>";
             }
 

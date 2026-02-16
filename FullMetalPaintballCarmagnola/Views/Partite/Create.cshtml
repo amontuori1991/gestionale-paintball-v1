@@ -88,10 +88,16 @@
         <label asp-for="ColpiIllimitati" class="form-check-label"></label>
     </div>
 
-    <div class="form-check mb-4">
-        <input asp-for="Caccia" class="form-check-input" type="checkbox" />
-        <label asp-for="Caccia" class="form-check-label"></label>
+    <div class="form-check mb-2">
+        <input asp-for="Caccia" class="form-check-input" type="checkbox" id="chkCaccia" />
+        <label asp-for="Caccia" class="form-check-label">🐰 Caccia al Coniglio</label>
     </div>
+
+    <div class="form-check mb-4 ms-3" id="wrapCacciaX2" style="display:none;">
+        <input asp-for="CacciaDoppia" class="form-check-input" type="checkbox" id="chkCacciaX2" />
+        <label asp-for="CacciaDoppia" class="form-check-label">🐰 x2 (100€)</label>
+    </div>
+
 
     <button type="submit" class="btn btn-primary">Salva</button>
     <a asp-action="Index" class="btn btn-secondary">Annulla</a>
@@ -145,6 +151,36 @@
             if (overlay) overlay.style.display = 'flex';
 
             // evita doppi click
+            const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+        });
+    })();
+</script>
+<script>
+    (function () {
+        const form = document.getElementById('form-create-partita');
+        const overlay = document.getElementById('overlay-partita');
+
+        // ✅ toggle caccia x2
+        const chkCaccia = document.getElementById('chkCaccia');
+        const wrapX2 = document.getElementById('wrapCacciaX2');
+        const chkX2 = document.getElementById('chkCacciaX2');
+
+        function syncX2() {
+            const on = chkCaccia && chkCaccia.checked;
+            if (wrapX2) wrapX2.style.display = on ? 'block' : 'none';
+            if (!on && chkX2) chkX2.checked = false;
+        }
+        if (chkCaccia) {
+            chkCaccia.addEventListener('change', syncX2);
+            syncX2();
+        }
+
+        if (!form) return;
+
+        form.addEventListener('submit', function () {
+            if (overlay) overlay.style.display = 'flex';
+
             const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
         });

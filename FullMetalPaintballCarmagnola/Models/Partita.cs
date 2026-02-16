@@ -53,6 +53,8 @@ public class Partita
     public bool ColpiIllimitati { get; set; }
     public bool Caccia { get; set; }
 
+    public bool CacciaDoppia { get; set; }
+
     public string? LinkTesseramento { get; set; }
 
     // Nuovi campi staff e reperibile

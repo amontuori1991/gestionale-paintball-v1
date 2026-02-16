@@ -2,10 +2,13 @@
 @model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.Partita>
 
 @{
-    var staffList = new List<string> { "Simone", "Enrico", "Federico", "Davide", "Andrea" };
+    var staffDefault = new List<string> { "Simone", "Enrico", "Federico", "Davide", "Andrea" };
+    var staffDisponibiliPerData = ViewBag.StaffDisponibiliPerData as Dictionary<DateTime, List<string>>;
+
     var titolo = ViewData["Titolo"]?.ToString();
     var it = CultureInfo.GetCultureInfo("it-IT");
 }
+
 
 <h4 class="partite-section-title">@titolo</h4>
 
@@ -40,7 +43,8 @@
             {
                 var isInfrasett = partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday;
 
-                <tr style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
+                <tr class="@(isInfrasett ? "bg-infrasett" : "")">
+
 
                     <td data-label="Stato">
                         @if (partita.CaparraConfermata)
@@ -73,7 +77,12 @@
 
                     <td data-label="Torneo" class="@(partita.Torneo ? "yes" : "no")">@((partita.Torneo) ? "SI" : "NO")</td>
                     <td data-label="Illimitati" class="@(partita.ColpiIllimitati ? "yes" : "no")">@((partita.ColpiIllimitati) ? "SI" : "NO")</td>
-                    <td data-label="Caccia" class="@(partita.Caccia ? "yes" : "no")">@((partita.Caccia) ? "SI" : "NO")</td>
+                    <td data-label="Caccia" class="@(partita.Caccia ? "yes" : "no")">
+    @(partita.Caccia
+        ? (partita.CacciaDoppia ? "SI x2" : "SI")
+        : "NO")
+</td>
+
 
                     <td data-label="Link">
                         <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
@@ -91,21 +100,38 @@
                     </td>
                 </tr>
 
-                <tr style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
-                    <td colspan="16" style="background-color: inherit;">
-                        <strong>Gestita da:</strong>
-                        @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
-                        {
-                            var currentVal = (string)typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff).GetValue(partita) ?? "";
-                            <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
-                                    data-campo="@staff" data-partita="@partita.Id">
-                                <option value="">--</option>
-                                @foreach (var s in staffList)
-                                {
-                                    <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
-                                }
-                            </select>
-                        }
+<tr style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
+    <td colspan="16" style="background-color: inherit;">
+        <strong>Gestita da:</strong>
+
+                         @{
+            var dataKey = partita.Data.Date;
+            var staffList = (staffDisponibiliPerData != null && staffDisponibiliPerData.TryGetValue(dataKey, out var lista))
+                ? lista
+                : staffDefault;
+        }
+
+ @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
+{
+    var prop = typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff);
+    var currentVal = prop?.GetValue(partita) as string ?? "";
+
+    // ✅ se il valore già salvato non è nella lista (perché quel giorno è "NO"),
+    // lo aggiungo comunque per non farlo "sparire" dal menu
+    var list = staffList;
+    if (!string.IsNullOrWhiteSpace(currentVal) && !list.Contains(currentVal))
+        list = staffList.Concat(new[] { currentVal }).Distinct().OrderBy(x => x).ToList();
+
+    <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
+            data-campo="@staff" data-partita="@partita.Id">
+        <option value="">--</option>
+        @foreach (var s in list)
+        {
+            <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+        }
+    </select>
+}
+
 
                         <span style="float: right;">
                             <strong>Reperibile:</strong> @partita.Reperibile
@@ -150,7 +176,11 @@
             <span class="pm-chip pm-chip-muted">@(partita.Listino == 2 ? "Listino Nuovo" : "Listino Vecchio")</span>
             @if (partita.Torneo) { <span class="pm-chip pm-chip-gold">🏆 Torneo</span> }
             @if (partita.ColpiIllimitati) { <span class="pm-chip pm-chip-blue">♾️ Illimitati</span> }
-            @if (partita.Caccia) { <span class="pm-chip pm-chip-pink">🐰 Caccia</span> }
+            @if (partita.Caccia)
+{
+    <span class="pm-chip pm-chip-pink">🐰 Caccia @(partita.CacciaDoppia ? "x2" : "")</span>
+}
+
         </div>
 
         <div class="pm-grid">
@@ -170,19 +200,27 @@
 
             <summary>Gestita da: </summary>
             <div class="pm-details-body">
-                <div class="pm-staff-grid">
-                    @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
-                    {
-                        var currentVal = (string)typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff).GetValue(partita) ?? "";
-                        <select class="form-select staff-select pm-select" data-campo="@staff" data-partita="@partita.Id">
-                            <option value="">--</option>
-                            @foreach (var s in staffList)
-                            {
-                                <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
-                            }
-                        </select>
-                    }
-                </div>
+ <div class="pm-staff-grid">
+    @{
+        var dataKey = partita.Data.Date;
+        var staffList = (staffDisponibiliPerData != null && staffDisponibiliPerData.TryGetValue(dataKey, out var lista))
+            ? lista
+            : staffDefault;
+    }
+
+    @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
+    {
+        var currentVal = (string)typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff).GetValue(partita) ?? "";
+        <select class="form-select staff-select pm-select" data-campo="@staff" data-partita="@partita.Id">
+            <option value="">--</option>
+            @foreach (var s in staffList)
+            {
+                <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+            }
+        </select>
+    }
+</div>
+
 
                 <div class="pm-rep">
                     <div><strong>Reperibile:</strong> @partita.Reperibile</div>

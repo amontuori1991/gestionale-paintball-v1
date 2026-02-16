@@ -81,9 +81,12 @@
                         <td data-label="Illimit." class="@(partita.ColpiIllimitati ? "calendario-bg-success" : "calendario-bg-danger")">
                             @(partita.ColpiIllimitati ? "SI" : "NO")
                         </td>
-                        <td data-label="Caccia" class="@(partita.Caccia ? "calendario-bg-success" : "calendario-bg-danger")">
-                            @(partita.Caccia ? "SI" : "NO")
-                        </td>
+                    <td data-label="Caccia" class="@(partita.Caccia ? "calendario-bg-success" : "calendario-bg-danger")">
+                        @(partita.Caccia
+                                                ? (partita.CacciaDoppia ? "SI x2" : "SI")
+                                                : "NO")
+                    </td>
+
                     </tr>
                 }
 
