@@ -665,8 +665,16 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 // ✅ TORNEO: forza pacchetto base indipendentemente da durata/illimitati
                 if (partita.Torneo)
                 {
-                    prezzo = "22€";
-                    colpi = "200";
+                    if (partita.ColpiIllimitati)
+                    {
+                        prezzo = "35€";
+                        colpi = "Illimitati";
+                    }
+                    else
+                    {
+                        prezzo = "22€";
+                        colpi = "200";
+                    }
                 }
                 else
                 {
