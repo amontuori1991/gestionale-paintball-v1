@@ -141,7 +141,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         // ----------- CREATE -----------
-        public IActionResult Create() => View();
+        // ✅ Default listino = 2 (nuovo listino)
+        public IActionResult Create() => View(new Partita { Listino = 2 });
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -261,7 +262,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             existingPartita.Tipo = partita.Tipo;
             existingPartita.Listino = partita.Listino;
 
-
             try
             {
                 await _dbContext.SaveChangesAsync();
@@ -355,7 +355,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 var prezzo = partita.CacciaDoppia ? "100€" : "60€";
                 messaggio += $"<strong>🐰 Caccia al Coniglio{labelX2} ({prezzo})</strong><br>";
             }
-
 
             return Json(new { success = true, messaggio });
         }
@@ -553,7 +552,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
             catch
             {
-                return Json(new { success = false, message = "Errore durante l’invio delle email di recensione." });
+                return Json(new { success = false, message = "Errore durante l'invio delle email di recensione." });
             }
         }
 
@@ -644,14 +643,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             string prezzo, colpi, extraCaccia, infoTesseramento;
 
-            if ((partita.Tipo?.ToLowerInvariant() ?? "adulti") == "kids")
+            if (tipo == "kids")
             {
-                // KIDS
+                // KIDS — vecchio listino: 17/22/27 | nuovo listino: 18/23/28
                 prezzo = partita.Durata switch
                 {
-                    1.0 => "17€",
-                    1.5 => "22€",
-                    2.0 => "27€",
+                    1.0 => partita.Listino == 2 ? "18€" : "17€",
+                    1.5 => partita.Listino == 2 ? "23€" : "22€",
+                    2.0 => partita.Listino == 2 ? "28€" : "27€",
                     _ => "-"
                 };
                 colpi = "Illimitati";
@@ -661,18 +660,17 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             else
             {
                 // ADULTI
-
-                // ✅ TORNEO: forza pacchetto base indipendentemente da durata/illimitati
                 if (partita.Torneo)
                 {
+                    // Torneo: vecchio listino 22€/35€ | nuovo listino 25€/38€
                     if (partita.ColpiIllimitati)
                     {
-                        prezzo = "35€";
+                        prezzo = partita.Listino == 2 ? "38€" : "35€";
                         colpi = "Illimitati";
                     }
                     else
                     {
-                        prezzo = "22€";
+                        prezzo = partita.Listino == 2 ? "25€" : "22€";
                         colpi = "200";
                     }
                 }
@@ -680,10 +678,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 {
                     if (partita.ColpiIllimitati)
                     {
+                        // Colpi illimitati: vecchio listino 35€/42€ | nuovo listino 38€/45€
                         prezzo = partita.Durata switch
                         {
-                            1.0 => "35€",
-                            1.5 => "42€",
+                            1.0 => partita.Listino == 2 ? "38€" : "35€",
+                            1.5 => partita.Listino == 2 ? "45€" : "42€",
                             2.0 => "NON PREVISTA",
                             _ => "-"
                         };
@@ -691,14 +690,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     }
                     else
                     {
+                        // Standard: vecchio listino 22/27/32 | nuovo listino 25/30/35
                         prezzo = partita.Durata switch
                         {
-                            1.0 => (partita.Listino == 2 ? "25€" : "22€"),
-                            1.5 => (partita.Listino == 2 ? "30€" : "27€"),
-                            2.0 => (partita.Listino == 2 ? "35€" : "32€"),
+                            1.0 => partita.Listino == 2 ? "25€" : "22€",
+                            1.5 => partita.Listino == 2 ? "30€" : "27€",
+                            2.0 => partita.Listino == 2 ? "35€" : "32€",
                             _ => "-"
                         };
-
                         colpi = partita.Durata switch
                         {
                             1.0 => "200",
@@ -723,9 +722,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 infoTesseramento = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>";
             }
 
-
             // Blocco coerenza adulti 2h illimitati
-            if ((partita.Tipo?.ToLowerInvariant() ?? "adulti") != "kids"
+            if (tipo != "kids"
                 && partita.ColpiIllimitati
                 && Math.Abs(partita.Durata - 2.0) < 0.001)
             {
@@ -761,6 +759,9 @@ Potrete visualizzare in tempo reale gli iscritti qui:<br>
                 messaggio += "Eventuali colpi extra potranno essere acquistati al campo.<br><br>";
             else
                 messaggio += "<br>";
+
+            messaggio += @"📍 Ci trovi a: Via Ceis 80, Carmagnola<br>
+🧺 Disponiamo di un'area pic-nic dedicata per festeggiamenti, tagli torta e celebrazioni, senza costi aggiuntivi. Vi chiediamo solo di lasciare l'area pulita portando con voi i rifiuti a fine giornata.<br><br>";
 
             messaggio += @"È richiesto l'arrivo almeno 15 minuti prima della prenotazione.<br>
 Il tempo di gioco inizia alle " + partita.OraInizio.ToString(@"hh\:mm") + @" anche in caso di ritardo.<br>

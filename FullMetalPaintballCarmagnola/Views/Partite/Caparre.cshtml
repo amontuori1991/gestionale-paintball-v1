@@ -3,72 +3,160 @@
 @{
     ViewData["Title"] = "Gestione Caparre";
 }
+
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link href="~/css/caparre-responsive.css" rel="stylesheet" />
 
+<div class="cap-page">
 
-<div class="content-container">
-    <h2 class="text-center">📄 Riepilogo Caparre</h2>
+    @* Header *@
+    <div class="cap-header">
+        <div class="cap-header__icon">
+            <i class="bi bi-cash-coin"></i>
+        </div>
+        <div>
+            <h2 class="cap-header__title">Riepilogo Caparre</h2>
+            <p class="cap-header__sub">Full Metal Paintball Carmagnola</p>
+        </div>
+    </div>
 
-    <div class="table-responsive">
-        <table class="responsive-table">
-            <thead>
-                <tr>
-                    <th>Stato</th>
-                    <th>Giorno</th>
-                    <th>Data</th>
-                    <th>Riferimento</th>
-                    <th>Importo Caparra</th>
-                    <th>Metodo di Pagamento</th>
-                    <th>Ricevuta</th>
-                    <th>Annotazioni</th>
-                    <th>Rimborso</th>
-                    <th>Azioni</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var partita in Model)
-                {
-                    if (partita.Caparra > 0)
-                    {
+    @* Tabella *@
+    <div class="cap-card">
+        <div class="cap-table-wrap">
+
+            @{
+                var caparre = Model
+                .Where(p => p.Caparra > 0)
+                .OrderByDescending(p => p.Data)
+                .ToList();
+            }
+
+            @if (caparre.Any())
+            {
+                <table class="cap-table">
+                    <thead>
                         <tr>
-                            <td data-label="Stato">
-                                @(partita.IsDeleted ? "<span style='color:red;font-weight:bold;'>Cancellata</span>" : "Attiva")
-                            </td>
-                            <td data-label="Giorno">@partita.Data.ToString("dddd")</td>
-                            <td data-label="Data">@partita.Data.ToString("dd/MM/yyyy")</td>
-                            <td data-label="Riferimento">@partita.Riferimento</td>
-                            <td data-label="Importo Caparra">@($"{partita.Caparra:0.00}€")</td>
-                            <td data-label="Metodo di Pagamento">@(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "N/D" : partita.MetodoPagamentoCaparra)</td>
-                            <td data-label="Ricevuta">@((partita.CaparraConfermata) ? "SI" : "NO")</td>
-                            <td data-label="Annotazioni">
-                                <input type="text" class="form-control" name="annotazioni" value="@partita.Annotazioni" data-partita-id="@partita.Id" />
-                            </td>
-                            <td data-label="Rimborso">
-                                <select class="form-select" name="rimborso" data-partita-id="@partita.Id">
-                                    <option value="">--</option>
-                                    <option value="SI" selected="@(partita.Rimborso == "SI" ? "selected" : null)">SI</option>
-                                    <option value="NO" selected="@(partita.Rimborso == "NO" ? "selected" : null)">NO</option>
-                                </select>
-                            </td>
-                            <td data-label="Azioni">
-                                <button class="btn btn-danger btn-sm btn-cancella-caparra" data-id="@partita.Id">🗑️ Cancella</button>
-                            </td>
+                            <th>Stato</th>
+                            <th>Data</th>
+                            <th>Riferimento</th>
+                            <th>Importo</th>
+                            <th>Metodo Pagamento</th>
+                            <th>Ricevuta</th>
+                            <th>Annotazioni</th>
+                            <th>Rimborso</th>
+                            <th>Azioni</th>
                         </tr>
-                    }
-                }
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var partita in caparre)
+                        {
+                            <tr class="@(partita.IsDeleted ? "row-cancellata" : "")">
+
+                                <td data-label="Stato">
+                                    @if (partita.IsDeleted)
+                                    {
+                                        <span class="badge-stato badge-stato--cancellata">
+                                            <i class="bi bi-x-circle-fill"></i> Cancellata
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-stato badge-stato--attiva">
+                                            <i class="bi bi-check-circle-fill"></i> Attiva
+                                        </span>
+                                    }
+                                </td>
+
+                                <td data-label="Data">
+                                    <div class="data-pill">
+                                        <span class="data-pill__giorno">@partita.Data.ToString("dddd")</span>
+                                        <span class="data-pill__data">@partita.Data.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                </td>
+
+                                <td data-label="Riferimento">
+                                    <strong>@partita.Riferimento</strong>
+                                </td>
+
+                                <td data-label="Importo Caparra">
+                                    <span class="importo-pill">@($"{partita.Caparra:0.00}€")</span>
+                                </td>
+
+                                <td data-label="Metodo Pagamento">
+                                    @(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "—" : partita.MetodoPagamentoCaparra)
+                                </td>
+
+                                <td data-label="Ricevuta">
+                                    @if (partita.CaparraConfermata)
+                                    {
+                                        <span class="badge-ricevuta badge-ricevuta--si">
+                                            <i class="bi bi-check-lg"></i> Sì
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-ricevuta badge-ricevuta--no">
+                                            <i class="bi bi-clock"></i> No
+                                        </span>
+                                    }
+                                </td>
+
+                                <td data-label="Annotazioni">
+                                    <input type="text"
+                                           name="annotazioni"
+                                           value="@partita.Annotazioni"
+                                           data-partita-id="@partita.Id"
+                                           placeholder="Nessuna nota…" />
+                                </td>
+
+                                <td data-label="Rimborso">
+                                    <select name="rimborso" data-partita-id="@partita.Id">
+                                        <option value="">—</option>
+                                        <option value="SI" selected="@(partita.Rimborso == "SI" ? "selected" : null)">Sì</option>
+                                        <option value="NO" selected="@(partita.Rimborso == "NO" ? "selected" : null)">No</option>
+                                    </select>
+                                </td>
+
+                                <td data-label="Azioni">
+                                    <button class="btn-cancella btn-cancella-caparra"
+                                            data-id="@partita.Id">
+                                        <i class="bi bi-trash3"></i> Cancella
+                                    </button>
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="cap-empty">
+                    <div class="cap-empty__icon"><i class="bi bi-cash-stack"></i></div>
+                    <p class="cap-empty__text">Nessuna caparra presente</p>
+                    <p style="font-size:.85rem;color:var(--fmp-muted);margin-top:6px;">
+                        Le caparre inserite nelle partite appariranno qui.
+                    </p>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    @* Footer nav *@
+    <div class="cap-footer-nav">
+        <a href="@Url.Action("Index", "Home")" class="btn-nav btn-nav--secondary">
+            <i class="bi bi-house-fill"></i> Torna alla Home
+        </a>
     </div>
 
 </div>
 
-
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            $('.btn-cancella-caparra').on('click', function() {
+        $(document).ready(function () {
+            $('.btn-cancella-caparra').on('click', function () {
                 var partitaId = $(this).data('id');
 
                 Swal.fire({
@@ -76,39 +164,41 @@
                     text: "La caparra sarà rimossa definitivamente!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Sì, cancella!',
-                    cancelButtonText: 'Annulla'
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#3a7d44',
+                    confirmButtonText: '<i class="bi bi-trash3"></i> Sì, cancella!',
+                    cancelButtonText: 'Annulla',
+                    borderRadius: '12px'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
                             url: '@Url.Action("CancellaCaparra", "Partite")',
                             type: 'POST',
                             data: { id: partitaId },
-                            success: function(response) {
+                            success: function (response) {
                                 if (response.success) {
-                                    Swal.fire(
-                                        'Cancellata!',
-                                        'La caparra è stata eliminata.',
-                                        'success'
-                                    ).then(() => {
-                                        location.reload();
-                                    });
+                                    Swal.fire({
+                                        title: 'Cancellata!',
+                                        text: 'La caparra è stata eliminata.',
+                                        icon: 'success',
+                                        confirmButtonColor: '#3a7d44'
+                                    }).then(() => { location.reload(); });
                                 } else {
-                                    Swal.fire(
-                                        'Errore',
-                                        response.message || 'Errore nella cancellazione.',
-                                        'error'
-                                    );
+                                    Swal.fire({
+                                        title: 'Errore',
+                                        text: response.message || 'Errore nella cancellazione.',
+                                        icon: 'error',
+                                        confirmButtonColor: '#dc3545'
+                                    });
                                 }
                             },
-                            error: function() {
-                                Swal.fire(
-                                    'Errore',
-                                    'Errore nella cancellazione della caparra.',
-                                    'error'
-                                );
+                            error: function () {
+                                Swal.fire({
+                                    title: 'Errore',
+                                    text: 'Errore nella cancellazione della caparra.',
+                                    icon: 'error',
+                                    confirmButtonColor: '#dc3545'
+                                });
                             }
                         });
                     }

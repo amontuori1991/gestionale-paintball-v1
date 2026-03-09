@@ -1,131 +1,465 @@
-﻿/* Tabella responsive caparre */
+﻿/* ============================================================
+   GESTIONE CAPARRE — Full Metal Paintball Carmagnola
+   Redesign 2026 — stesso design system di tesseramenti
+   ============================================================ */
 
-.responsive-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');
+
+/* ── Variables (coerenti con tesseramenti) ───────────────── */
+:root {
+    --fmp-green: #3a7d44;
+    --fmp-green-light: #4caf50;
+    --fmp-green-dark: #285a30;
+    --fmp-green-glow: rgba(76,175,80,.15);
+    --fmp-blue: #0d6efd;
+    --fmp-danger: #dc3545;
+    --fmp-warning: #f59e0b;
+    --fmp-surface: #ffffff;
+    --fmp-border: #d6dbc9;
+    --fmp-text: #1c2417;
+    --fmp-muted: #6b7a60;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-card: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+    --transition: all .2s cubic-bezier(.4,0,.2,1);
 }
 
-    .responsive-table th,
-    .responsive-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
+/* ── Neutralizza interferenze site.css ───────────────────── */
+.cap-page .table-responsive {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    transform: none !important;
+}
+
+/* ── Page wrapper ─────────────────────────────────────────── */
+.cap-page {
+    font-family: 'Barlow', sans-serif;
+    color: var(--fmp-text);
+    padding: 28px 16px 60px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* ── Page header ──────────────────────────────────────────── */
+.cap-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.cap-header__icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--fmp-warning), #d97706);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(245,158,11,.35);
+}
+
+.cap-header__title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--fmp-green-dark);
+    line-height: 1;
+    margin: 0;
+}
+
+.cap-header__sub {
+    font-size: .78rem;
+    color: var(--fmp-muted);
+    margin: 3px 0 0;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+/* ── Card ────────────────────────────────────────────────── */
+.cap-card {
+    background: var(--fmp-surface);
+    border: 1px solid var(--fmp-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+/* ── Table wrapper ───────────────────────────────────────── */
+.cap-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ── Table ────────────────────────────────────────────────── */
+.cap-table {
+    width: 100%;
+    min-width: 960px;
+    border-collapse: collapse;
+    font-size: .83rem;
+}
+
+    .cap-table thead {
+        background: linear-gradient(135deg, var(--fmp-green-dark) 0%, var(--fmp-green) 100%);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+        .cap-table thead th {
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 600;
+            font-size: .75rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 12px 12px;
+            text-align: center;
+            border: none;
+            white-space: nowrap;
+            background: transparent;
+        }
+
+    .cap-table tbody tr {
+        border-bottom: 1px solid #eaede4;
+        transition: background .15s ease;
+    }
+
+        .cap-table tbody tr:hover {
+            background: #f0f5ec !important;
+        }
+
+        .cap-table tbody tr:nth-child(even) {
+            background: #f9faf6;
+        }
+
+        .cap-table tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        /* Riga cancellata */
+        .cap-table tbody tr.row-cancellata {
+            opacity: .6;
+        }
+
+            .cap-table tbody tr.row-cancellata td {
+                color: var(--fmp-muted);
+            }
+
+    .cap-table tbody td {
+        padding: 9px 12px;
         text-align: center;
-        word-break: break-word;
+        color: var(--fmp-text);
+        border: none;
+        background: transparent;
+        vertical-align: middle;
     }
 
-    .responsive-table th {
-        background-color: #f2f2f2;
-        color: #333;
-        font-weight: bold;
+    /* ── Form controls dentro la tabella ────────────────────── */
+    .cap-table input[type="text"],
+    .cap-table select {
+        border: 1.5px solid var(--fmp-border);
+        border-radius: 7px;
+        padding: 5px 9px;
+        font-size: .82rem;
+        font-family: 'Barlow', sans-serif;
+        color: var(--fmp-text);
+        background: #fbfcf9;
+        transition: var(--transition);
+        outline: none;
+        width: 100%;
+        min-width: 90px;
     }
 
-/* Layout responsive mobile */
+        .cap-table input[type="text"]:focus,
+        .cap-table select:focus {
+            border-color: var(--fmp-green-light);
+            background: #fff;
+            box-shadow: 0 0 0 3px var(--fmp-green-glow);
+        }
+
+/* ── Badges ─────────────────────────────────────────────── */
+.badge-stato {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+
+.badge-stato--attiva {
+    background: #d4edda;
+    color: #1a5c2a;
+    border: 1px solid #a3d9b0;
+}
+
+.badge-stato--cancellata {
+    background: #fde8e8;
+    color: #9b1c1c;
+    border: 1px solid #f5a0a0;
+}
+
+.badge-ricevuta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.badge-ricevuta--si {
+    background: #d4edda;
+    color: #1a5c2a;
+    border: 1px solid #a3d9b0;
+}
+
+.badge-ricevuta--no {
+    background: #fff3cd;
+    color: #7d5a00;
+    border: 1px solid #ffd966;
+}
+
+/* ── Importo caparra ─────────────────────────────────────── */
+.importo-pill {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a5c2a, var(--fmp-green));
+    color: #fff;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: .92rem;
+    letter-spacing: .03em;
+}
+
+/* ── Data pill ───────────────────────────────────────────── */
+.data-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+}
+
+.data-pill__giorno {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--fmp-muted);
+    font-weight: 600;
+}
+
+.data-pill__data {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: .92rem;
+    color: var(--fmp-text);
+}
+
+/* ── Bottone cancella ────────────────────────────────────── */
+.btn-cancella {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    font-size: .8rem;
+    border: 1.5px solid var(--fmp-danger);
+    background: transparent;
+    color: var(--fmp-danger);
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+    .btn-cancella:hover {
+        background: var(--fmp-danger);
+        color: #fff;
+    }
+
+/* ── Empty state ─────────────────────────────────────────── */
+.cap-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--fmp-muted);
+}
+
+.cap-empty__icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: .35;
+}
+
+.cap-empty__text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* ── Footer nav ──────────────────────────────────────────── */
+.cap-footer-nav {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+
+.btn-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    font-size: .85rem;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn-nav--primary {
+    background: var(--fmp-green);
+    color: #fff;
+    border-color: var(--fmp-green);
+}
+
+    .btn-nav--primary:hover {
+        background: var(--fmp-green-dark);
+        border-color: var(--fmp-green-dark);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(58,125,68,.3);
+    }
+
+.btn-nav--secondary {
+    background: transparent;
+    color: var(--fmp-muted);
+    border-color: var(--fmp-border);
+}
+
+    .btn-nav--secondary:hover {
+        background: #f0f2eb;
+        color: var(--fmp-text);
+        border-color: #b8c4a8;
+        text-decoration: none;
+    }
+
+/* ── Responsive mobile ───────────────────────────────────── */
 @media (max-width: 768px) {
+    .cap-page {
+        padding: 16px 8px 50px;
+    }
 
-    .responsive-table thead {
+    .cap-header__title {
+        font-size: 1.5rem;
+    }
+
+    .cap-table thead {
         display: none;
     }
 
-    .responsive-table,
-    .responsive-table tbody,
-    .responsive-table tr,
-    .responsive-table td {
-        display: block;
-        width: 100%;
+    .cap-table tbody tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "stato    data"
+            "riferim  riferim"
+            "importo  pagamento"
+            "ricevuta rimborso"
+            "annot    annot"
+            "azioni   azioni";
+        gap: 4px 12px;
+        margin-bottom: 14px;
+        border: 1px solid var(--fmp-border);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        background: var(--fmp-surface) !important;
+        box-shadow: var(--shadow-card);
     }
 
-        .responsive-table tr {
-            display: grid;
-            grid-template-areas:
-                "stato giorno"
-                "data importo"
-                "riferimento riferimento"
-                "pagamento ricevuta"
-                "rimborso annotazioni"
-                "azioni azioni";
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-            text-align: left;
-        }
-
-        .responsive-table td {
-            border: none;
-            border-bottom: 1px solid #eee;
-            padding: 10px 8px;
-            position: relative;
-        }
-
-            .responsive-table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: block;
-                margin-bottom: 5px;
-                color: #333;
-            }
-
-            .responsive-table td[data-label="Stato"] {
-                grid-area: stato;
-            }
-
-            .responsive-table td[data-label="Giorno"] {
-                grid-area: giorno;
-            }
-
-            .responsive-table td[data-label="Data"] {
-                grid-area: data;
-            }
-
-            .responsive-table td[data-label="Importo Caparra"] {
-                grid-area: importo;
-            }
-
-            .responsive-table td[data-label="Riferimento"] {
-                grid-area: riferimento;
-                text-align: center;
-            }
-
-            .responsive-table td[data-label="Metodo di Pagamento"] {
-                grid-area: pagamento;
-            }
-
-            .responsive-table td[data-label="Ricevuta"] {
-                grid-area: ricevuta;
-            }
-
-            .responsive-table td[data-label="Rimborso"] {
-                grid-area: rimborso;
-            }
-
-            .responsive-table td[data-label="Annotazioni"] {
-                grid-area: annotazioni;
-            }
-
-            .responsive-table td[data-label="Azioni"] {
-                grid-area: azioni;
-                text-align: center;
-            }
-
-        .responsive-table input,
-        .responsive-table select {
-            width: 100%;
-        }
-}
-
-/* Desktop migliorie */
-@media (min-width: 769px) {
-    .responsive-table {
-        table-layout: auto;
+    .cap-table tbody td {
+        display: flex;
+        flex-direction: column;
+        padding: 6px 0;
+        text-align: left;
+        border-bottom: none;
     }
 
-        .responsive-table td,
-        .responsive-table th {
-            white-space: nowrap;
+        .cap-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            font-size: .65rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--fmp-muted);
+            margin-bottom: 3px;
         }
+
+    /* Grid areas per mobile */
+    .cap-table td[data-label="Stato"] {
+        grid-area: stato;
+    }
+
+    .cap-table td[data-label="Data"] {
+        grid-area: data;
+    }
+
+    .cap-table td[data-label="Riferimento"] {
+        grid-area: riferim;
+    }
+
+    .cap-table td[data-label="Importo Caparra"] {
+        grid-area: importo;
+    }
+
+    .cap-table td[data-label="Metodo Pagamento"] {
+        grid-area: pagamento;
+    }
+
+    .cap-table td[data-label="Ricevuta"] {
+        grid-area: ricevuta;
+    }
+
+    .cap-table td[data-label="Rimborso"] {
+        grid-area: rimborso;
+    }
+
+    .cap-table td[data-label="Annotazioni"] {
+        grid-area: annot;
+    }
+
+    .cap-table td[data-label="Azioni"] {
+        grid-area: azioni;
+        align-items: center;
+    }
+
+    .cap-table input[type="text"],
+    .cap-table select {
+        min-width: 0;
+    }
 }

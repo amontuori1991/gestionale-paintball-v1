@@ -1,4 +1,4 @@
-html {
+﻿html {
     font-size: 14px;
     position: relative;
     min-height: 100%;
@@ -470,11 +470,11 @@ table.calendario-table {
         width: 100% !important;
     }
 }
-/* --- Forza sempre il tema chiaro quando c'� .force-light --- */
+/* --- Forza sempre il tema chiaro quando c'è .force-light --- */
 body.ios26.force-light {
     /* Diciamo al browser che i colori sono chiari (influenza anche form controls) */
     color-scheme: light;
-    /* Reimpostiamo le variabili "light", anche se l'OS � in dark */
+    /* Reimpostiamo le variabili "light", anche se l'OS è in dark */
     --ios-bg: #f6f7fb;
     --ios-surface: rgba(255,255,255,0.70);
     --ios-surface-strong: rgba(255,255,255,0.92);
@@ -483,7 +483,7 @@ body.ios26.force-light {
     --ios-border: rgba(0,0,0,0.08);
 }
 
-/* Sfondo pi� chiaro e meno �fumoso� */
+/* Sfondo più chiaro e meno “fumoso” */
 body.ios26 {
     background: radial-gradient(1200px 800px at 10% -10%, rgba(59,130,246,.04), transparent 55%), radial-gradient(900px 600px at 90% 0%, rgba(34,197,94,.04), transparent 45%), var(--ios-bg);
 }
@@ -509,13 +509,13 @@ body.ios26 {
     color: var(--ios-text);
 }
 
-/* --- Normalizza sfondo e contrasto su TUTTE le pagine quando c'� .ios26 --- */
+/* --- Normalizza sfondo e contrasto su TUTTE le pagine quando c'è .ios26 --- */
 html.ios26, body.ios26 {
     background: radial-gradient(1200px 800px at 10% -10%, rgba(59,130,246,.04), transparent 55%), radial-gradient(900px 600px at 90% 0%, rgba(34,197,94,.04), transparent 45%), var(--ios-bg) !important; /* vince sul background-color del site.css */
     color: var(--ios-text);
 }
 
-    /* Se forziamo il tema chiaro, anullla ogni residuo �verdino� */
+    /* Se forziamo il tema chiaro, anullla ogni residuo “verdino” */
     body.ios26.force-light {
         color-scheme: light;
         --ios-bg: #f6f7fb;
@@ -536,7 +536,7 @@ html.ios26, body.ios26 {
     overflow-x: auto; /* mantiene scroll se serve */
 }
 
-/* Evita che il contenuto �sbordi� oltre gli angoli arrotondati */
+/* Evita che il contenuto “sbordi” oltre gli angoli arrotondati */
 .ios26 .card-v {
     overflow: hidden;
 }
@@ -550,7 +550,7 @@ html.ios26, body.ios26 {
     .ios26 .card-v thead th {
         position: sticky;
         top: 0;
-        z-index: 1; /* header �appiccicoso� elegante */
+        z-index: 1; /* header “appiccicoso” elegante */
         background: var(--ios-surface-strong);
     }
 v.ios26 .ios26-navbar {
@@ -559,4 +559,1114 @@ v.ios26 .ios26-navbar {
 
 .ios26 .ios26-shell {
     padding-top: 20px;
+}
+/* ============================================================
+   LISTA TESSERAMENTI — Full Metal Paintball Carmagnola
+   Redesign 2026 — Tactical precision meets clean data dashboard
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');
+
+/* ── Root variables ──────────────────────────────────────── */
+:root {
+    --fmp-green: #3a7d44;
+    --fmp-green-light: #4caf50;
+    --fmp-green-dark: #285a30;
+    --fmp-green-glow: rgba(76,175,80,.15);
+    --fmp-blue: #0d6efd;
+    --fmp-danger: #dc3545;
+    --fmp-bg: #f0f2eb;
+    --fmp-surface: #ffffff;
+    --fmp-border: #d6dbc9;
+    --fmp-text: #1c2417;
+    --fmp-muted: #6b7a60;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-card: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+    --transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Page wrapper ─────────────────────────────────────────── */
+.tess-page {
+    font-family: 'Barlow', sans-serif;
+    color: var(--fmp-text);
+    padding: 28px 16px 60px;
+}
+
+/* ── Page header ──────────────────────────────────────────── */
+.tess-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.tess-header__icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--fmp-green), var(--fmp-green-dark));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(58,125,68,.35);
+}
+
+.tess-header__title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--fmp-green-dark);
+    line-height: 1;
+    margin: 0;
+}
+
+.tess-header__sub {
+    font-size: .78rem;
+    color: var(--fmp-muted);
+    margin: 3px 0 0;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.tess-card {
+    background: var(--fmp-surface);
+    border: 1px solid var(--fmp-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.tess-card__body {
+    padding: 20px 24px;
+}
+
+/* ── Filter panel ─────────────────────────────────────────── */
+.tess-filters__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.tess-filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tess-filters__label {
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--fmp-muted);
+}
+
+.tess-filters__input {
+    border: 1.5px solid var(--fmp-border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: .88rem;
+    font-family: 'Barlow', sans-serif;
+    color: var(--fmp-text);
+    background: #fbfcf9;
+    transition: var(--transition);
+    outline: none;
+    min-width: 130px;
+}
+
+    .tess-filters__input:focus {
+        border-color: var(--fmp-green-light);
+        background: #fff;
+        box-shadow: 0 0 0 3px var(--fmp-green-glow);
+    }
+
+    .tess-filters__input::placeholder {
+        color: #a8b49a;
+    }
+
+.tess-filters__actions {
+    display: flex;
+    gap: 8px;
+    align-self: flex-end;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn-tess {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    font-size: .85rem;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn-tess--primary {
+    background: var(--fmp-green);
+    color: #fff;
+    border-color: var(--fmp-green);
+}
+
+    .btn-tess--primary:hover {
+        background: var(--fmp-green-dark);
+        border-color: var(--fmp-green-dark);
+        box-shadow: 0 4px 14px rgba(58,125,68,.3);
+        color: #fff;
+    }
+
+.btn-tess--secondary {
+    background: transparent;
+    color: var(--fmp-muted);
+    border-color: var(--fmp-border);
+}
+
+    .btn-tess--secondary:hover {
+        background: #f0f2eb;
+        color: var(--fmp-text);
+        border-color: #b8c4a8;
+        text-decoration: none;
+    }
+
+.btn-tess--success {
+    background: #1a7a3a;
+    color: #fff;
+    border-color: #1a7a3a;
+}
+
+    .btn-tess--success:hover {
+        background: #145f2c;
+        border-color: #145f2c;
+        box-shadow: 0 4px 14px rgba(26,122,58,.3);
+        color: #fff;
+    }
+
+.btn-tess--info {
+    background: var(--fmp-blue);
+    color: #fff;
+    border-color: var(--fmp-blue);
+}
+
+    .btn-tess--info:hover {
+        background: #0a58ca;
+        border-color: #0a58ca;
+        color: #fff;
+    }
+
+.btn-tess--danger {
+    background: var(--fmp-danger);
+    color: #fff;
+    border-color: var(--fmp-danger);
+}
+
+    .btn-tess--danger:hover {
+        background: #b02a37;
+        border-color: #b02a37;
+        color: #fff;
+    }
+
+.btn-tess--ghost {
+    background: transparent;
+    color: var(--fmp-danger);
+    border-color: var(--fmp-danger);
+    padding: 4px 10px;
+    font-size: .78rem;
+    border-radius: 6px;
+}
+
+    .btn-tess--ghost:hover {
+        background: var(--fmp-danger);
+        color: #fff;
+    }
+
+.btn-tess--outline-blue {
+    background: transparent;
+    color: var(--fmp-blue);
+    border-color: var(--fmp-blue);
+}
+
+    .btn-tess--outline-blue:hover {
+        background: var(--fmp-blue);
+        color: #fff;
+        text-decoration: none;
+    }
+
+/* ── Action toolbar ───────────────────────────────────────── */
+.tess-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #f8faf5, #eef1e8);
+    border-bottom: 1px solid var(--fmp-border);
+    align-items: center;
+}
+
+.tess-toolbar__label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--fmp-muted);
+    margin-right: 4px;
+}
+
+/* ── Selected counter ─────────────────────────────────────── */
+.selected-counter {
+    display: none;
+    background: var(--fmp-green);
+    color: #fff;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    align-items: center;
+    gap: 5px;
+}
+
+    .selected-counter.visible {
+        display: inline-flex;
+    }
+
+/* ── Table ────────────────────────────────────────────────── */
+.tess-table-wrap {
+    overflow-x: auto;
+}
+
+.tess-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+
+    .tess-table thead {
+        background: linear-gradient(135deg, var(--fmp-green-dark) 0%, var(--fmp-green) 100%);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+        .tess-table thead th {
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 600;
+            font-size: .75rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 12px 10px;
+            text-align: center;
+            border: none;
+            white-space: nowrap;
+            background: transparent;
+        }
+
+    .tess-table tbody tr {
+        border-bottom: 1px solid #eaede4;
+        transition: background .15s ease;
+    }
+
+        .tess-table tbody tr:hover {
+            background: #f0f5ec !important;
+        }
+
+        .tess-table tbody tr:nth-child(even) {
+            background: #f9faf6;
+        }
+
+        .tess-table tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+    .tess-table tbody td {
+        padding: 9px 10px;
+        text-align: center;
+        color: var(--fmp-text);
+        border: none;
+        background: transparent;
+        vertical-align: middle;
+    }
+
+/* ── Table cell decorations ───────────────────────────────── */
+.partita-pill {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--fmp-green-dark), var(--fmp-green));
+    color: #fff;
+    border-radius: 6px;
+    padding: 2px 9px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: .88rem;
+    letter-spacing: .04em;
+}
+
+.badge-tessera {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.badge-tessera--active {
+    background: #d4edda;
+    color: #1a5c2a;
+    border: 1px solid #a3d9b0;
+}
+
+.badge-tessera--none {
+    background: #f0f2eb;
+    color: var(--fmp-muted);
+    border: 1px solid var(--fmp-border);
+}
+
+.badge-minorenne--si {
+    display: inline-block;
+    background: #fff3cd;
+    color: #7d5a00;
+    border: 1px solid #ffd966;
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.badge-minorenne--no {
+    display: inline-block;
+    background: #f0f2eb;
+    color: var(--fmp-muted);
+    border: 1px solid var(--fmp-border);
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+/* ── Checkbox ─────────────────────────────────────────────── */
+.tess-check {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--fmp-green);
+    cursor: pointer;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.tess-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--fmp-muted);
+}
+
+.tess-empty__icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: .35;
+}
+
+.tess-empty__text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* ── Footer nav ───────────────────────────────────────────── */
+.tess-footer-nav {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+
+/* ── Modal ────────────────────────────────────────────────── */
+.tess-modal .modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    overflow: hidden;
+}
+
+.tess-modal .modal-header {
+    background: linear-gradient(135deg, var(--fmp-danger), #a5202e);
+    color: #fff;
+    border-bottom: none;
+    padding: 18px 24px;
+}
+
+.tess-modal .modal-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.tess-modal .btn-close {
+    filter: invert(1);
+}
+
+.tess-modal .modal-body {
+    padding: 24px;
+    font-size: .95rem;
+}
+
+.tess-modal .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--fmp-border);
+    gap: 10px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .tess-page {
+        padding: 16px 8px 50px;
+    }
+
+    .tess-header__title {
+        font-size: 1.5rem;
+    }
+
+    .tess-table thead {
+        display: none;
+    }
+
+    .tess-table tbody tr {
+        display: block;
+        margin-bottom: 12px;
+        border: 1px solid var(--fmp-border);
+        border-radius: var(--radius-md);
+        padding: 10px 14px;
+        background: var(--fmp-surface) !important;
+        box-shadow: var(--shadow-card);
+    }
+
+    .tess-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #eaede4;
+        text-align: right;
+    }
+
+        .tess-table tbody td:last-child {
+            border-bottom: none;
+        }
+
+        .tess-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--fmp-muted);
+            text-align: left;
+            flex-shrink: 0;
+            margin-right: 8px;
+        }
+
+    .tess-filters__input {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .tess-filters__grid {
+        flex-direction: column;
+    }
+
+    .tess-toolbar {
+        padding: 12px 16px;
+    }
+
+    .tess-card__body {
+        padding: 16px;
+    }
+}
+
+/* ============================================================
+   LISTA TESSERAMENTI — Full Metal Paintball Carmagnola
+   Redesign 2026 — Tactical precision meets clean data dashboard
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');
+
+/* ── Root variables ──────────────────────────────────────── */
+:root {
+    --fmp-green: #3a7d44;
+    --fmp-green-light: #4caf50;
+    --fmp-green-dark: #285a30;
+    --fmp-green-glow: rgba(76,175,80,.15);
+    --fmp-blue: #0d6efd;
+    --fmp-danger: #dc3545;
+    --fmp-bg: #f0f2eb;
+    --fmp-surface: #ffffff;
+    --fmp-border: #d6dbc9;
+    --fmp-text: #1c2417;
+    --fmp-muted: #6b7a60;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-card: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+    --transition: all .2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Neutralizza interferenze site.css / container-fluid ─── */
+
+/* Annulla i margin negativi aggressivi che site.css applica a .table-responsive */
+.tess-page .table-responsive {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    transform: none !important;
+}
+
+/* La card che contiene la tabella non deve mai uscire dall'asse x */
+.tess-card {
+    /* già definita sotto, questo blocco sovrascrive solo overflow */
+    overflow: hidden;
+}
+
+/* ── Page wrapper ─────────────────────────────────────────── */
+.tess-page {
+    font-family: 'Barlow', sans-serif;
+    color: var(--fmp-text);
+    padding: 28px 16px 60px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* ── Page header ──────────────────────────────────────────── */
+.tess-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.tess-header__icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--fmp-green), var(--fmp-green-dark));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(58,125,68,.35);
+}
+
+.tess-header__title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--fmp-green-dark);
+    line-height: 1;
+    margin: 0;
+}
+
+.tess-header__sub {
+    font-size: .78rem;
+    color: var(--fmp-muted);
+    margin: 3px 0 0;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.tess-card {
+    background: var(--fmp-surface);
+    border: 1px solid var(--fmp-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.tess-card__body {
+    padding: 20px 24px;
+}
+
+/* ── Filter panel ─────────────────────────────────────────── */
+.tess-filters__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.tess-filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tess-filters__label {
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--fmp-muted);
+}
+
+.tess-filters__input {
+    border: 1.5px solid var(--fmp-border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: .88rem;
+    font-family: 'Barlow', sans-serif;
+    color: var(--fmp-text);
+    background: #fbfcf9;
+    transition: var(--transition);
+    outline: none;
+    min-width: 130px;
+}
+
+    .tess-filters__input:focus {
+        border-color: var(--fmp-green-light);
+        background: #fff;
+        box-shadow: 0 0 0 3px var(--fmp-green-glow);
+    }
+
+    .tess-filters__input::placeholder {
+        color: #a8b49a;
+    }
+
+.tess-filters__actions {
+    display: flex;
+    gap: 8px;
+    align-self: flex-end;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn-tess {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    font-size: .85rem;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.btn-tess--primary {
+    background: var(--fmp-green);
+    color: #fff;
+    border-color: var(--fmp-green);
+}
+
+    .btn-tess--primary:hover {
+        background: var(--fmp-green-dark);
+        border-color: var(--fmp-green-dark);
+        box-shadow: 0 4px 14px rgba(58,125,68,.3);
+        color: #fff;
+    }
+
+.btn-tess--secondary {
+    background: transparent;
+    color: var(--fmp-muted);
+    border-color: var(--fmp-border);
+}
+
+    .btn-tess--secondary:hover {
+        background: #f0f2eb;
+        color: var(--fmp-text);
+        border-color: #b8c4a8;
+        text-decoration: none;
+    }
+
+.btn-tess--success {
+    background: #1a7a3a;
+    color: #fff;
+    border-color: #1a7a3a;
+}
+
+    .btn-tess--success:hover {
+        background: #145f2c;
+        border-color: #145f2c;
+        box-shadow: 0 4px 14px rgba(26,122,58,.3);
+        color: #fff;
+    }
+
+.btn-tess--info {
+    background: var(--fmp-blue);
+    color: #fff;
+    border-color: var(--fmp-blue);
+}
+
+    .btn-tess--info:hover {
+        background: #0a58ca;
+        border-color: #0a58ca;
+        color: #fff;
+    }
+
+.btn-tess--danger {
+    background: var(--fmp-danger);
+    color: #fff;
+    border-color: var(--fmp-danger);
+}
+
+    .btn-tess--danger:hover {
+        background: #b02a37;
+        border-color: #b02a37;
+        color: #fff;
+    }
+
+.btn-tess--ghost {
+    background: transparent;
+    color: var(--fmp-danger);
+    border-color: var(--fmp-danger);
+    padding: 4px 10px;
+    font-size: .78rem;
+    border-radius: 6px;
+}
+
+    .btn-tess--ghost:hover {
+        background: var(--fmp-danger);
+        color: #fff;
+    }
+
+.btn-tess--outline-blue {
+    background: transparent;
+    color: var(--fmp-blue);
+    border-color: var(--fmp-blue);
+}
+
+    .btn-tess--outline-blue:hover {
+        background: var(--fmp-blue);
+        color: #fff;
+        text-decoration: none;
+    }
+
+/* ── Action toolbar ───────────────────────────────────────── */
+.tess-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #f8faf5, #eef1e8);
+    border-bottom: 1px solid var(--fmp-border);
+    align-items: center;
+}
+
+.tess-toolbar__label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--fmp-muted);
+    margin-right: 4px;
+}
+
+/* ── Selected counter ─────────────────────────────────────── */
+.selected-counter {
+    display: none;
+    background: var(--fmp-green);
+    color: #fff;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    align-items: center;
+    gap: 5px;
+}
+
+    .selected-counter.visible {
+        display: inline-flex;
+    }
+
+/* ── Table ────────────────────────────────────────────────── */
+.tess-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tess-table {
+    width: 100%;
+    /* min-width: assicura che tutte le colonne abbiano spazio leggibile;
+     se la viewport è più stretta, scatta lo scroll orizzontale nel wrapper */
+    min-width: 1100px;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+
+    .tess-table thead {
+        background: linear-gradient(135deg, var(--fmp-green-dark) 0%, var(--fmp-green) 100%);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+        .tess-table thead th {
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 600;
+            font-size: .75rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 12px 10px;
+            text-align: center;
+            border: none;
+            white-space: nowrap;
+            background: transparent;
+        }
+
+    .tess-table tbody tr {
+        border-bottom: 1px solid #eaede4;
+        transition: background .15s ease;
+    }
+
+        .tess-table tbody tr:hover {
+            background: #f0f5ec !important;
+        }
+
+        .tess-table tbody tr:nth-child(even) {
+            background: #f9faf6;
+        }
+
+        .tess-table tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+    .tess-table tbody td {
+        padding: 9px 10px;
+        text-align: center;
+        color: var(--fmp-text);
+        border: none;
+        background: transparent;
+        vertical-align: middle;
+    }
+
+/* ── Table cell decorations ───────────────────────────────── */
+.partita-pill {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--fmp-green-dark), var(--fmp-green));
+    color: #fff;
+    border-radius: 6px;
+    padding: 2px 9px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: .88rem;
+    letter-spacing: .04em;
+}
+
+.badge-tessera {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.badge-tessera--active {
+    background: #d4edda;
+    color: #1a5c2a;
+    border: 1px solid #a3d9b0;
+}
+
+.badge-tessera--none {
+    background: #f0f2eb;
+    color: var(--fmp-muted);
+    border: 1px solid var(--fmp-border);
+}
+
+.badge-minorenne--si {
+    display: inline-block;
+    background: #fff3cd;
+    color: #7d5a00;
+    border: 1px solid #ffd966;
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.badge-minorenne--no {
+    display: inline-block;
+    background: #f0f2eb;
+    color: var(--fmp-muted);
+    border: 1px solid var(--fmp-border);
+    border-radius: 20px;
+    padding: 2px 9px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+/* ── Checkbox ─────────────────────────────────────────────── */
+.tess-check {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--fmp-green);
+    cursor: pointer;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.tess-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--fmp-muted);
+}
+
+.tess-empty__icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: .35;
+}
+
+.tess-empty__text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* ── Footer nav ───────────────────────────────────────────── */
+.tess-footer-nav {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+
+/* ── Modal ────────────────────────────────────────────────── */
+.tess-modal .modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    overflow: hidden;
+}
+
+.tess-modal .modal-header {
+    background: linear-gradient(135deg, var(--fmp-danger), #a5202e);
+    color: #fff;
+    border-bottom: none;
+    padding: 18px 24px;
+}
+
+.tess-modal .modal-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.tess-modal .btn-close {
+    filter: invert(1);
+}
+
+.tess-modal .modal-body {
+    padding: 24px;
+    font-size: .95rem;
+}
+
+.tess-modal .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--fmp-border);
+    gap: 10px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .tess-page {
+        padding: 16px 8px 50px;
+    }
+
+    .tess-header__title {
+        font-size: 1.5rem;
+    }
+
+    .tess-table thead {
+        display: none;
+    }
+
+    .tess-table tbody tr {
+        display: block;
+        margin-bottom: 12px;
+        border: 1px solid var(--fmp-border);
+        border-radius: var(--radius-md);
+        padding: 10px 14px;
+        background: var(--fmp-surface) !important;
+        box-shadow: var(--shadow-card);
+    }
+
+    .tess-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #eaede4;
+        text-align: right;
+    }
+
+        .tess-table tbody td:last-child {
+            border-bottom: none;
+        }
+
+        .tess-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--fmp-muted);
+            text-align: left;
+            flex-shrink: 0;
+            margin-right: 8px;
+        }
+
+    .tess-filters__input {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .tess-filters__grid {
+        flex-direction: column;
+    }
+
+    .tess-toolbar {
+        padding: 12px 16px;
+    }
+
+    .tess-card__body {
+        padding: 16px;
+    }
 }

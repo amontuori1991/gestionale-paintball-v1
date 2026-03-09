@@ -1,8 +1,8 @@
 ﻿@{
     ViewData["Title"] = "Prezzi";
 }
-
 <div class="content-container">
+
     <div class="list-container">
         <h2 class="text-center">Prezzi Partite - Adulti</h2>
         <div class="table-responsive">
@@ -13,7 +13,8 @@
                         <th>Colpi</th>
                         <th>Vecchio Listino</th>
                         <th>Nuovo Listino</th>
-                        <th>Colpi Illimitati</th>
+                        <th>Colpi Illimitati (Vecchio)</th>
+                        <th>Colpi Illimitati (Nuovo)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -23,20 +24,22 @@
                         <td>22,00 €</td>
                         <td>25,00 €</td>
                         <td>35,00 €</td>
+                        <td>38,00 €</td>
                     </tr>
-
                     <tr>
                         <td>1 ora e 30</td>
                         <td>300</td>
                         <td>27,00 €</td>
                         <td>30,00 €</td>
                         <td>42,00 €</td>
+                        <td>45,00 €</td>
                     </tr>
                     <tr>
                         <td>2 ore</td>
                         <td>400</td>
                         <td>32,00 €</td>
                         <td>35,00 €</td>
+                        <td>NO</td>
                         <td>NO</td>
                     </tr>
                 </tbody>
@@ -45,20 +48,51 @@
     </div>
 
     <div class="list-container">
+        <h2 class="text-center">Prezzi Torneo - Adulti</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Formula</th>
+                        <th>Colpi</th>
+                        <th>Vecchio Listino</th>
+                        <th>Nuovo Listino</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Standard</td>
+                        <td>200</td>
+                        <td>22,00 €</td>
+                        <td>25,00 €</td>
+                    </tr>
+                    <tr>
+                        <td>Colpi Illimitati</td>
+                        <td>Illimitati</td>
+                        <td>35,00 €</td>
+                        <td>38,00 €</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="list-container">
         <h2 class="text-center">Prezzi Partite - KIDS</h2>
-        <p class="text-muted text-center">⚠️ I prezzi includono colpi illimitati.</p>
+        <p class="text-muted text-center">⚠️ I prezzi includono colpi illimitati e tesseramento fino al 31/12.</p>
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
                         <th>Durata</th>
-                        <th>Prezzo</th>
+                        <th>Vecchio Listino</th>
+                        <th>Nuovo Listino</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td>1 ora</td><td>17,00 €</td></tr>
-                    <tr><td>1 ora e 30</td><td>22,00 €</td></tr>
-                    <tr><td>2 ore</td><td>27,00 €</td></tr>
+                    <tr><td>1 ora</td><td>17,00 €</td><td>18,00 €</td></tr>
+                    <tr><td>1 ora e 30</td><td>22,00 €</td><td>23,00 €</td></tr>
+                    <tr><td>2 ore</td><td>27,00 €</td><td>28,00 €</td></tr>
                 </tbody>
             </table>
         </div>
@@ -103,4 +137,5 @@
             </table>
         </div>
     </div>
+
 </div>

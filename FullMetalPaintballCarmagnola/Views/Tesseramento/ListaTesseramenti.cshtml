@@ -6,125 +6,270 @@
 }
 <link href="~/css/tesseramenti-responsive.css" rel="stylesheet" />
 
-<div class="content-container">
-    <h2 class="text-center">Elenco Tesseramenti</h2>
+<div class="tess-page">
 
-    <form method="get" asp-action="ListaTesseramenti" class="mb-3 d-flex justify-content-center flex-wrap gap-3">
-        <input type="number" name="partitaId" value="@ViewBag.PartitaId" placeholder="Filtra per ID Partita" class="form-control" style="width: 150px;" />
-        <input type="text" name="searchNome" value="@ViewBag.SearchNome" placeholder="Filtra per Nome" class="form-control" style="width: 150px;" />
-        <input type="text" name="searchCognome" value="@ViewBag.SearchCognome" placeholder="Filtra per Cognome" class="form-control" style="width: 150px;" />
-        <input type="date" name="dataDa" value="@ViewBag.DataDa" class="form-control" style="width: 150px;" />
-        <input type="date" name="dataA" value="@ViewBag.DataA" class="form-control" style="width: 150px;" />
-        <button type="submit" class="btn btn-primary">Filtra</button>
-        <a href="@Url.Action("ListaTesseramenti")" class="btn btn-secondary">Reset</a>
-    </form>
 
-    <form method="post">
-        @Html.AntiForgeryToken()
-
-        <div class="btn-toolbar justify-content-center mb-3 gap-2">
-            <button type="submit" class="btn btn-success" formaction="@Url.Action("ExportExcel")">
-                Esporta Selezionati in Excel
-            </button>
-            <button type="submit" class="btn btn-primary" formaction="@Url.Action("AssegnaTessere")">
-                Assegna Tessere ai Selezionati
-            </button>
-            <button type="submit" class="btn btn-danger" formaction="@Url.Action("DissociaTessereSelezionate")">
-                Dissocia Tessere ai Selezionati
-            </button>
+    <div class="tess-header">
+        <div class="tess-header__icon">
+            <i class="bi bi-person-badge"></i>
         </div>
+        <div>
+            <h2 class="tess-header__title">Elenco Tesseramenti</h2>
+            <p class="tess-header__sub">Full Metal Paintball Carmagnola</p>
+        </div>
+    </div>
 
-        @if (Model != null && Model.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-striped tesseramenti-table">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" id="selectAll" /></th>
-                            <th>Partita Id</th>
-                            <th>Data Partita</th>
-                            <th>Nome</th>
-                            <th>Cognome</th>
-                            <th>Data Nascita</th>
-                            <th>Genere</th>
-                            <th>Comune Nascita</th>
-                            <th>Comune Residenza</th>
-                            <th>Email</th>
-                            <th>Codice Fiscale</th>
-                            <th>Tessera</th>
-                            <th>Azione Tessera</th>
-                            <th>Minorenne</th>
-                            <th>Nome Genitore</th>
-                            <th>Cognome Genitore</th>
-                            <th>Data Creazione</th>
-                            <th>Data Scadenza</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tesseramento in Model)
-                        {
-                            var scadenza = new DateTime(tesseramento.DataCreazione.Year, 12, 31);
-                            <tr>
-                                <td data-label="Seleziona"><input type="checkbox" name="tesseratiIds" value="@tesseramento.Id" class="select-item" /></td>
-                                <td data-label="Partita Id">@tesseramento.PartitaId</td>
-                                <td data-label="Data Partita">@tesseramento.DataPartita?.ToString("dd/MM/yyyy")</td>
-                                <td data-label="Nome">@tesseramento.Nome</td>
-                                <td data-label="Cognome">@tesseramento.Cognome</td>
-                                <td data-label="Data Nascita">@(tesseramento.DataNascita?.ToString("dd/MM/yyyy") ?? "")</td>
-                                <td data-label="Genere">@tesseramento.Genere</td>
-                                <td data-label="Comune Nascita">@tesseramento.ComuneNascita</td>
-                                <td data-label="Comune Residenza">@tesseramento.ComuneResidenza</td>
-                                <td data-label="Email">@tesseramento.Email</td>
-                                <td data-label="Codice Fiscale">@tesseramento.CodiceFiscale</td>
-                                <td data-label="Tessera">
-                                    @(string.IsNullOrEmpty(tesseramento.Tessera) ? "-" : tesseramento.Tessera)
-                                </td>
-                                <td data-label="Azione Tessera">
-                                    @if (!string.IsNullOrEmpty(tesseramento.Tessera))
-                                    {
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="dissociaTessera(@tesseramento.Id)">Dissocia</button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td data-label="Minorenne">@tesseramento.Minorenne</td>
-                                <td data-label="Nome Genitore">@tesseramento.NomeGenitore</td>
-                                <td data-label="Cognome Genitore">@tesseramento.CognomeGenitore</td>
-                                <td data-label="Data Creazione">@tesseramento.DataCreazione.ToShortDateString()</td>
-                                <td data-label="Data Scadenza">@scadenza.ToShortDateString()</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+
+    <div class="tess-card">
+        <div class="tess-card__body">
+            <form method="get" asp-action="ListaTesseramenti">
+                <div class="tess-filters__grid">
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">ID Partita</label>
+                        <input type="number" name="partitaId" value="@ViewBag.PartitaId"
+                               placeholder="es. 42" class="tess-filters__input" style="width:110px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Nome</label>
+                        <input type="text" name="searchNome" value="@ViewBag.SearchNome"
+                               placeholder="Nome…" class="tess-filters__input" style="width:130px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Cognome</label>
+                        <input type="text" name="searchCognome" value="@ViewBag.SearchCognome"
+                               placeholder="Cognome…" class="tess-filters__input" style="width:130px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Data dal</label>
+                        <input type="date" name="dataDa" value="@ViewBag.DataDa" class="tess-filters__input" style="width:150px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Data al</label>
+                        <input type="date" name="dataA" value="@ViewBag.DataA" class="tess-filters__input" style="width:150px;" />
+                    </div>
+
+                    <div class="tess-filters__actions">
+                        <button type="submit" class="btn-tess btn-tess--primary">
+                            <i class="bi bi-funnel-fill"></i> Filtra
+                        </button>
+                        <a href="@Url.Action("ListaTesseramenti")" class="btn-tess btn-tess--secondary">
+                            <i class="bi bi-x-lg"></i> Reset
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="tess-card">
+
+        <form method="post">
+            @Html.AntiForgeryToken()
+
+
+            <div class="tess-toolbar">
+                <span class="tess-toolbar__label"><i class="bi bi-lightning-charge-fill me-1"></i>Azioni sui selezionati</span>
+
+                <span class="selected-counter" id="selectedCounter">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span id="selectedCount">0</span> selezionati
+                </span>
+
+                <button type="submit" class="btn-tess btn-tess--success"
+                        formaction="@Url.Action("ExportExcel")">
+                    <i class="bi bi-file-earmark-excel-fill"></i> Esporta Excel
+                </button>
+
+                <button type="submit" class="btn-tess btn-tess--info"
+                        formaction="@Url.Action("AssegnaTessere")">
+                    <i class="bi bi-card-checklist"></i> Assegna Tessere
+                </button>
+
+                <button type="submit" class="btn-tess btn-tess--danger"
+                        formaction="@Url.Action("DissociaTessereSelezionate")">
+                    <i class="bi bi-scissors"></i> Dissocia Tessere
+                </button>
             </div>
-        }
-        else
-        {
-            <p>Nessun tesseramento disponibile.</p>
-        }
-    </form>
 
-    <p class="text-center" style="margin-top: 30px;">
-        <a href="@Url.Action("Index", "Tesseramento")" class="btn btn-primary">Nuovo Tesseramento</a>
-        <a href="@Url.Action("Index", "Home")" class="btn btn-primary" style="margin-left: 10px;">Torna alla Home</a>
-    </p>
+
+            @if (Model != null && Model.Any())
+            {
+                var sortedModel = Model.OrderByDescending(t => t.PartitaId);
+
+                <div class="tess-table-wrap">
+                    <table class="tess-table">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;">
+                                    <input type="checkbox" id="selectAll" class="tess-check" />
+                                </th>
+                                <th>Partita ID</th>
+                                <th>Data Partita</th>
+                                <th>Nome</th>
+                                <th>Cognome</th>
+                                <th>Data Nascita</th>
+                                <th>Genere</th>
+                                <th>Comune Nascita</th>
+                                <th>Comune Residenza</th>
+                                <th>Email</th>
+                                <th>Codice Fiscale</th>
+                                <th>Tessera</th>
+                                <th>Azione</th>
+                                <th>Minorenne</th>
+                                <th>Nome Genitore</th>
+                                <th>Cognome Genitore</th>
+                                <th>Creazione</th>
+                                <th>Scadenza</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in sortedModel)
+                            {
+                                var scadenza = new DateTime(t.DataCreazione.Year, 12, 31);
+                                var hasTessera = !string.IsNullOrEmpty(t.Tessera);
+
+                                <tr>
+                                    <td data-label="Sel.">
+                                        <input type="checkbox" name="tesseratiIds" value="@t.Id"
+                                               class="tess-check select-item" />
+                                    </td>
+
+                                    <td data-label="Partita ID">
+                                        <span class="partita-pill">@t.PartitaId</span>
+                                    </td>
+
+                                    <td data-label="Data Partita">
+                                        @t.DataPartita?.ToString("dd/MM/yyyy")
+                                    </td>
+
+                                    <td data-label="Nome">@t.Nome</td>
+                                    <td data-label="Cognome"><strong>@t.Cognome</strong></td>
+
+                                    <td data-label="Data Nascita">
+                                        @(t.DataNascita?.ToString("dd/MM/yyyy") ?? "—")
+                                    </td>
+
+                                    <td data-label="Genere">@t.Genere</td>
+                                    <td data-label="Comune Nascita">@t.ComuneNascita</td>
+                                    <td data-label="Comune Residenza">@t.ComuneResidenza</td>
+                                    <td data-label="Email">
+                                        <a href="mailto:@t.Email" style="color:var(--fmp-blue);text-decoration:none;font-size:.78rem;">@t.Email</a>
+                                    </td>
+                                    <td data-label="Codice Fiscale">
+                                        <span style="font-family:monospace;font-size:.78rem;letter-spacing:.03em;">@t.CodiceFiscale</span>
+                                    </td>
+
+                                    <td data-label="Tessera">
+                                        @if (hasTessera)
+                                        {
+                                            <span class="badge-tessera badge-tessera--active">
+                                                <i class="bi bi-check-circle-fill"></i> @t.Tessera
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-tessera badge-tessera--none">
+                                                <i class="bi bi-dash-circle"></i> Nessuna
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td data-label="Azione">
+                                        @if (hasTessera)
+                                        {
+                                            <button type="button" class="btn-tess btn-tess--ghost"
+                                                    onclick="dissociaTessera(@t.Id)">
+                                                <i class="bi bi-scissors"></i> Dissocia
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:var(--fmp-muted);font-size:.78rem;">—</span>
+                                        }
+                                    </td>
+
+                                    <td data-label="Minorenne">
+                                        @if (t.Minorenne?.ToString().ToLower() == "si" ||
+                                                                        t.Minorenne?.ToString().ToLower() == "sì" ||
+                                                                        t.Minorenne?.ToString() == "true")
+                                        {
+                                            <span class="badge-minorenne--si"><i class="bi bi-person-fill-exclamation"></i> Sì</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-minorenne--no">No</span>
+                                        }
+                                    </td>
+
+                                    <td data-label="Nome Genitore">@t.NomeGenitore</td>
+                                    <td data-label="Cognome Genitore">@t.CognomeGenitore</td>
+
+                                    <td data-label="Creazione">
+                                        @t.DataCreazione.ToShortDateString()
+                                    </td>
+
+                                    <td data-label="Scadenza">
+                                        @scadenza.ToShortDateString()
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="tess-empty">
+                    <div class="tess-empty__icon"><i class="bi bi-inbox"></i></div>
+                    <p class="tess-empty__text">Nessun tesseramento trovato</p>
+                    <p style="font-size:.85rem;color:var(--fmp-muted);margin-top:6px;">
+                        Prova a modificare i filtri o crea un nuovo tesseramento.
+                    </p>
+                </div>
+            }
+
+        </form>
+    </div>
+
+
+    <div class="tess-footer-nav">
+        <a href="@Url.Action("Index", "Tesseramento")" class="btn-tess btn-tess--primary">
+            <i class="bi bi-plus-circle-fill"></i> Nuovo Tesseramento
+        </a>
+        <a href="@Url.Action("Index", "Home")" class="btn-tess btn-tess--secondary">
+            <i class="bi bi-house-fill"></i> Torna alla Home
+        </a>
+    </div>
+
 </div>
 
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+<div class="modal fade tess-modal" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmModalLabel">Conferma dissociazione</h5>
+                <h5 class="modal-title" id="confirmModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Conferma dissociazione
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
             </div>
             <div class="modal-body">
-                Sei sicuro di voler dissociare la tessera?
+                <p>Sei sicuro di voler <strong>dissociare la tessera</strong> da questo tesserato?</p>
+                <p style="font-size:.85rem;color:var(--fmp-muted);">Questa operazione non può essere annullata automaticamente.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                <button type="button" id="confirmBtn" class="btn btn-danger">Dissocia</button>
+                <button type="button" class="btn-tess btn-tess--secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Annulla
+                </button>
+                <button type="button" id="confirmBtn" class="btn-tess btn-tess--danger">
+                    <i class="bi bi-scissors"></i> Dissocia
+                </button>
             </div>
         </div>
     </div>
@@ -132,11 +277,29 @@
 
 @section Scripts {
     <script>
-        document.getElementById('selectAll').addEventListener('change', function () {
-            const checked = this.checked;
-            document.querySelectorAll('.select-item').forEach(cb => cb.checked = checked);
+        // Select all / deselect + counter
+        const selectAllEl   = document.getElementById('selectAll');
+        const counterEl     = document.getElementById('selectedCounter');
+        const countSpan     = document.getElementById('selectedCount');
+        const items         = () => document.querySelectorAll('.select-item');
+
+        function updateCounter() {
+            const n = document.querySelectorAll('.select-item:checked').length;
+            countSpan.textContent = n;
+            if (n > 0) { counterEl.classList.add('visible'); }
+            else        { counterEl.classList.remove('visible'); }
+        }
+
+        selectAllEl.addEventListener('change', function () {
+            items().forEach(cb => cb.checked = this.checked);
+            updateCounter();
         });
 
+        document.addEventListener('change', e => {
+            if (e.target.classList.contains('select-item')) updateCounter();
+        });
+
+        // Dissocia singola
         let tesseraDaDissociare = null;
         const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 
