@@ -39,7 +39,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         private async Task SendNotificationToAllUsers(string subject, string messageHtml)
         {
-            var users = await _userManager.Users.ToListAsync();
+            var users = await _userManager.Users.Where(u => u.IsApproved).ToListAsync();
             var adminEmails = _configuration.GetSection("AdminNotifications").Get<string[]>();
 
             foreach (var user in users)
