@@ -161,7 +161,7 @@
         ? "KIDS"
         : (string.IsNullOrWhiteSpace(partita.Tipo) ? "ADULTI" : partita.Tipo.ToUpperInvariant());
 
-    <div class="pm-card @(isInfrasett ? "pm-infrasett" : "")">
+        <div class="pm-card @(isInfrasett ? "pm-infrasett" : "")" data-date="@partita.Data.ToString("yyyy-MM-dd")">
 
         <div class="pm-head">
             <div class="pm-left">

@@ -50,6 +50,34 @@
                     <i class="bi bi-stars me-1"></i> Visualizzazione Semplificata
                 </a>
             </div>
+            <!-- FILTRI -->
+            <div class="d-flex flex-wrap gap-2 mt-2 align-items-end justify-content-center">
+                <!-- Stato -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Stato</label>
+                    <select id="filtro-stato" class="form-select form-select-sm" style="min-width:140px;">
+                        <option value="">Tutti</option>
+                        <option value="confermata">Confermata</option>
+                        <option value="attesa">In Attesa</option>
+                    </select>
+                </div>
+                <!-- Data da -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Dal</label>
+                    <input type="date" id="filtro-data-da" class="form-control form-control-sm" style="min-width:140px;" />
+                </div>
+                <!-- Data a -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Al</label>
+                    <input type="date" id="filtro-data-a" class="form-control form-control-sm" style="min-width:140px;" />
+                </div>
+                <!-- Reset -->
+                <div>
+                    <button id="btn-reset-filtri" class="pbtn pbtn-gray mt-auto">
+                        <i class="bi bi-x-circle me-1"></i> Reset
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -255,6 +283,77 @@
                 .fail(function () {
                     Swal.fire('Errore', 'Impossibile recuperare le presenze.', 'error');
                 });
+        });
+
+        // =================== FILTRI ===================
+        function applyFiltri() {
+            const stato = $('#filtro-stato').val().toLowerCase();
+            const dataDa = $('#filtro-data-da').val(); // "yyyy-MM-dd"
+            const dataA  = $('#filtro-data-a').val();
+
+            // ---- DESKTOP: righe tabella ----
+            // Ogni partita occupa 2 <tr> consecutivi; il primo ha la cella "Stato" e data-label="Data"
+            $('table.responsive-table tbody').each(function () {
+                const rows = $(this).children('tr');
+                let i = 0;
+                while (i < rows.length) {
+                    const mainRow  = rows.eq(i);
+                    const staffRow = rows.eq(i + 1);
+                    i += 2;
+
+                    // Stato
+                    const statoTxt = mainRow.find('td[data-label="Stato"] span').text().trim().toLowerCase();
+                    // Data: "lun 23/06/2025" → prendi "23/06/2025"
+                    const dataTxt  = mainRow.find('td[data-label="Data"]').text().trim();
+                    const dateParts = dataTxt.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    let rowDate = null;
+                    if (dateParts) rowDate = new Date(`${dateParts[3]}-${dateParts[2]}-${dateParts[1]}`);
+
+                    let show = true;
+
+                    if (stato) {
+                        if (stato === 'confermata' && !statoTxt.includes('confermata')) show = false;
+                        if (stato === 'attesa'     && !statoTxt.includes('attesa'))     show = false;
+                    }
+                    if (dataDa && rowDate && rowDate < new Date(dataDa)) show = false;
+                    if (dataA  && rowDate && rowDate > new Date(dataA))  show = false;
+
+                    mainRow.toggle(show);
+                    if (staffRow.length) staffRow.toggle(show);
+                }
+            });
+
+            // ---- MOBILE: card ----
+            $('.pm-card').each(function () {
+                const card = $(this);
+                const statoTxt = card.find('.pm-status').text().trim().toLowerCase();
+                const dateTxt  = card.find('.pm-date').text().trim(); // "lun 23/06"
+                // La card non ha l'anno — prendiamo dall'attributo data-* se disponibile,
+                // altrimenti usiamo il testo esteso dalla riga desktop corrispondente
+                // → soluzione più robusta: aggiungiamo data-date alle card (vedi nota sotto)
+                const dataAttr = card.data('date'); // "2025-06-23"
+                let rowDate = dataAttr ? new Date(dataAttr) : null;
+
+                let show = true;
+
+                if (stato) {
+                    if (stato === 'confermata' && !statoTxt.includes('confermata')) show = false;
+                    if (stato === 'attesa'     && !statoTxt.includes('attesa'))     show = false;
+                }
+                if (dataDa && rowDate && rowDate < new Date(dataDa)) show = false;
+                if (dataA  && rowDate && rowDate > new Date(dataA))  show = false;
+
+                card.toggle(show);
+            });
+        }
+
+        $('#filtro-stato, #filtro-data-da, #filtro-data-a').on('change input', applyFiltri);
+
+        $('#btn-reset-filtri').on('click', function () {
+            $('#filtro-stato').val('');
+            $('#filtro-data-da').val('');
+            $('#filtro-data-a').val('');
+            applyFiltri();
         });
     </script>
 }
