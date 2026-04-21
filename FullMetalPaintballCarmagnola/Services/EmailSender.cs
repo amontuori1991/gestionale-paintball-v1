@@ -158,9 +158,10 @@ namespace Full_Metal_Paintball_Carmagnola.Services
       <tr><th>Cognome:</th><td>{model.Cognome}</td></tr>
       <tr><th>Data di Nascita:</th><td>{model.DataNascita:dd/MM/yyyy}</td></tr>
       <tr><th>Genere:</th><td>{model.Genere}</td></tr>
-      <tr><th>Comune di Nascita:</th><td>{model.ComuneNascita}</td></tr>
-      <tr><th>Comune di Residenza:</th><td>{model.ComuneResidenza}</td></tr>
+      {(model.NatoEstero ? $"<tr><th>Nazione di Nascita:</th><td>{model.NazioneNascita}</td></tr><tr><th>Città di Nascita:</th><td>{model.CittaNascita}</td></tr><tr><th>Cittadinanza:</th><td>{model.NazioneCittadinanza}</td></tr><tr><th>Nazione Residenza:</th><td>{model.NazioneResidenza}</td></tr>" : $"<tr><th>Comune di Nascita:</th><td>{model.ComuneNascita}</td></tr>")}
+      <tr><th>Residenza:</th><td>{(model.NatoEstero ? model.NazioneResidenza : model.ComuneResidenza)}</td></tr>
       <tr><th>Email:</th><td><a href='mailto:{model.Email}'>{model.Email}</a></td></tr>
+      <tr><th>Cellulare:</th><td>{model.Cellulare}</td></tr>
       <tr><th>Codice Fiscale:</th><td>{model.CodiceFiscale}</td></tr>
       <tr><th>Minorenne:</th><td>{model.Minorenne}</td></tr>
       {(model.Minorenne == "Sì" ? $"<tr><th>Genitore:</th><td>{model.NomeGenitore} {model.CognomeGenitore}</td></tr>" : "")}

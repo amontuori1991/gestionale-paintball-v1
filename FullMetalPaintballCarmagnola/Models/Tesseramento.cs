@@ -24,9 +24,26 @@ namespace Full_Metal_Paintball_Carmagnola.Models // Assicurati che il namespace 
         [StringLength(50)]
         public string Genere { get; set; } = string.Empty; // Inizializzato
 
+        public bool NatoEstero { get; set; }
+
         [Required]
         [StringLength(100)]
         public string ComuneNascita { get; set; } = string.Empty; // Inizializzato
+
+        [StringLength(4)]
+        public string? CodiceCatastaleNascita { get; set; }
+
+        [StringLength(100)]
+        public string? NazioneNascita { get; set; }
+
+        [StringLength(100)]
+        public string? CittaNascita { get; set; }
+
+        [StringLength(100)]
+        public string? NazioneCittadinanza { get; set; }
+
+        [StringLength(100)]
+        public string? NazioneResidenza { get; set; }
 
         [Required]
         [StringLength(100)]
@@ -39,6 +56,9 @@ namespace Full_Metal_Paintball_Carmagnola.Models // Assicurati che il namespace 
 
         [StringLength(16)]
         public string? CodiceFiscale { get; set; }
+
+        [StringLength(30)]
+        public string? Cellulare { get; set; }
 
         [Required]
         [StringLength(3)]

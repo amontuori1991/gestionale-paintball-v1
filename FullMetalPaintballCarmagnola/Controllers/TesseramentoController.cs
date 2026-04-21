@@ -25,11 +25,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Index(int? partitaId = null)
+        public IActionResult Index(int? partitaId = null, string lang = "it")
         {
             var model = new TesseramentoViewModel();
             if (partitaId.HasValue)
                 model.PartitaId = partitaId;
+
+            model.Lingua = NormalizeLanguage(lang);
+            ViewBag.Lingua = model.Lingua;
 
             return View(model);
         }
@@ -39,6 +42,19 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(TesseramentoViewModel model)
         {
+            model.Lingua = NormalizeLanguage(model.Lingua);
+            ViewBag.Lingua = model.Lingua;
+
+            if (!model.NatoEstero && model.DataNascita.HasValue && !string.IsNullOrWhiteSpace(model.CodiceCatastaleNascita))
+            {
+                model.CodiceFiscale = CodiceFiscaleService.Calcola(
+                    model.Cognome,
+                    model.Nome,
+                    model.DataNascita.Value,
+                    model.Genere,
+                    model.CodiceCatastaleNascita);
+            }
+
             if (model.Minorenne == "Sì")
             {
                 if (string.IsNullOrWhiteSpace(model.NomeGenitore))
@@ -118,6 +134,108 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> CercaComuni(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
+                return Json(Array.Empty<object>());
+
+            var value = term.Trim().ToUpper();
+
+            var comuni = await _dbContext.ComuniCatastali
+                .Where(c => c.Attivo && c.Nome.ToUpper().Contains(value))
+                .OrderBy(c => c.Nome)
+                .ThenBy(c => c.Provincia)
+                .Take(20)
+                .Select(c => new
+                {
+                    label = c.Provincia == null ? c.Nome : $"{c.Nome} ({c.Provincia})",
+                    value = c.Nome,
+                    codiceCatastale = c.CodiceCatastale
+                })
+                .ToListAsync();
+
+            return Json(comuni);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> CercaStati(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
+                return Json(Array.Empty<object>());
+
+            var value = term.Trim().ToUpper();
+
+            var stati = await _dbContext.StatiEsteriCatastali
+                .Where(s => s.Attivo && s.Nome.ToUpper().Contains(value))
+                .OrderBy(s => s.Nome)
+                .Take(20)
+                .Select(s => new
+                {
+                    label = s.Nome,
+                    value = s.Nome,
+                    codiceCatastale = s.CodiceCatastale
+                })
+                .ToListAsync();
+
+            return Json(stati);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public IActionResult CalcolaCodiceFiscale([FromBody] CalcolaCodiceFiscaleRequest request)
+        {
+            if (request == null ||
+                string.IsNullOrWhiteSpace(request.Nome) ||
+                string.IsNullOrWhiteSpace(request.Cognome) ||
+                string.IsNullOrWhiteSpace(request.Sesso) ||
+                string.IsNullOrWhiteSpace(request.CodiceCatastale) ||
+                !request.DataNascita.HasValue)
+            {
+                return BadRequest(new { message = "Dati insufficienti per calcolare il codice fiscale." });
+            }
+
+            var codiceFiscale = CodiceFiscaleService.Calcola(
+                request.Cognome,
+                request.Nome,
+                request.DataNascita.Value,
+                request.Sesso,
+                request.CodiceCatastale);
+
+            return Json(new { codiceFiscale });
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult CalcolaCodiceFiscale(string nome, string cognome, DateTime? dataNascita, string sesso, string codiceCatastale)
+        {
+            if (string.IsNullOrWhiteSpace(nome) ||
+                string.IsNullOrWhiteSpace(cognome) ||
+                string.IsNullOrWhiteSpace(sesso) ||
+                string.IsNullOrWhiteSpace(codiceCatastale) ||
+                !dataNascita.HasValue)
+            {
+                return BadRequest(new { message = "Dati insufficienti per calcolare il codice fiscale." });
+            }
+
+            var codiceFiscale = CodiceFiscaleService.Calcola(
+                cognome,
+                nome,
+                dataNascita.Value,
+                sesso,
+                codiceCatastale);
+
+            return Json(new { codiceFiscale });
+        }
+
+        private static string NormalizeLanguage(string? lang)
+        {
+            return string.Equals(lang, "en", StringComparison.OrdinalIgnoreCase) ? "en" : "it";
+        }
+
         [AllowAnonymous]
         public IActionResult Successo()
         {
@@ -143,12 +261,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 query = query.Where(t => t.Cognome.Contains(searchCognome));
 
             if (dataDa.HasValue)
-                query = query.Where(t => t.DataCreazione >= DateTime.SpecifyKind(dataDa.Value.Date, DateTimeKind.Utc));
+            {
+                var dataDaInizio = DateTime.SpecifyKind(dataDa.Value.Date, DateTimeKind.Utc);
+                query = query.Where(t => t.Partita != null && t.Partita.Data >= dataDaInizio);
+            }
 
             if (dataA.HasValue)
             {
                 var dataAEnd = DateTime.SpecifyKind(dataA.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
-                query = query.Where(t => t.DataCreazione <= dataAEnd);
+                query = query.Where(t => t.Partita != null && t.Partita.Data <= dataAEnd);
             }
 
             if (partitaId.HasValue)
@@ -170,10 +291,17 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 Cognome = t.Cognome,
                 DataNascita = t.DataNascita,
                 Genere = t.Genere,
+                NatoEstero = t.NatoEstero,
                 ComuneNascita = t.ComuneNascita,
+                CodiceCatastaleNascita = t.CodiceCatastaleNascita,
+                NazioneNascita = t.NazioneNascita,
+                CittaNascita = t.CittaNascita,
+                NazioneCittadinanza = t.NazioneCittadinanza,
+                NazioneResidenza = t.NazioneResidenza,
                 ComuneResidenza = t.ComuneResidenza,
                 Email = t.Email,
                 CodiceFiscale = t.CodiceFiscale,
+                Cellulare = t.Cellulare,
                 Minorenne = t.Minorenne,
                 NomeGenitore = t.NomeGenitore,
                 CognomeGenitore = t.CognomeGenitore,
@@ -214,17 +342,25 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return RedirectToAction("ListaTesseramenti");
             }
 
-            var intervalli = await _dbContext.RangeTessereAcsi.ToListAsync();
-            var tessereAssegnateDb = await _dbContext.Tesseramenti
+            var oggi = DateTime.UtcNow.Date;
+            var tessereAssegnateDbRaw = await _dbContext.Tesseramenti
                 .Where(t => !string.IsNullOrEmpty(t.Tessera))
-                .Select(t => long.Parse(t.Tessera))
+                .Select(t => t.Tessera)
                 .ToListAsync();
 
-            var tessereDisponibili = intervalli
-                .SelectMany(r => Enumerable.Range((int)r.NumeroDa, (int)(r.NumeroA - r.NumeroDa + 1)))
-                .Where(numero => !tessereAssegnateDb.Contains(numero))
-                .OrderBy(numero => numero)
-                .Select(n => (long)n)
+            var tessereAssegnateDb = tessereAssegnateDbRaw
+                .Where(t => long.TryParse(t, out _))
+                .Select(long.Parse)
+                .ToHashSet();
+
+            var tessereDisponibili = await _dbContext.RangeTessereAcsi
+                .Where(r => !r.Assegnata)
+                .Where(r => !r.DataValidita.HasValue || r.DataValidita.Value.Date >= oggi)
+                .OrderBy(r => r.NumeroDa)
+                .ToListAsync();
+
+            tessereDisponibili = tessereDisponibili
+                .Where(t => !tessereAssegnateDb.Contains(t.NumeroDa))
                 .ToList();
 
             if (tessereDisponibili.Count < tesseratiDaAggiornare.Count)
@@ -236,7 +372,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             int tessereAssegnateCount = 0;
             for (int i = 0; i < tesseratiDaAggiornare.Count; i++)
             {
-                tesseratiDaAggiornare[i].Tessera = tessereDisponibili[i].ToString();
+                var tesseraDisponibile = tessereDisponibili[i];
+                tesseratiDaAggiornare[i].Tessera = tesseraDisponibile.NumeroDa.ToString();
+                tesseraDisponibile.Assegnata = true;
                 tessereAssegnateCount++;
             }
 
@@ -258,7 +396,18 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             if (string.IsNullOrEmpty(tesserato.Tessera))
                 return Json(new { success = false, message = "Il tesserato non ha una tessera assegnata." });
 
+            var tesseraDaDissociare = tesserato.Tessera;
             tesserato.Tessera = null;
+
+            if (long.TryParse(tesseraDaDissociare, out var numeroTessera))
+            {
+                var rangeTessera = await _dbContext.RangeTessereAcsi
+                    .FirstOrDefaultAsync(r => r.NumeroDa == numeroTessera && r.NumeroA == numeroTessera);
+
+                if (rangeTessera != null)
+                    rangeTessera.Assegnata = false;
+            }
+
             await _dbContext.SaveChangesAsync();
 
             return Json(new { success = true });
@@ -283,6 +432,21 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             {
                 TempData["Messaggio"] = "I tesserati selezionati non hanno tessere da dissociare o non sono stati trovati.";
                 return RedirectToAction("ListaTesseramenti");
+            }
+
+            var numeriTessereDaDissociare = tesseratiDaDissociare
+                .Select(t => t.Tessera)
+                .Where(t => long.TryParse(t, out _))
+                .Select(long.Parse)
+                .ToList();
+
+            var rangeTessereDaLiberare = await _dbContext.RangeTessereAcsi
+                .Where(r => numeriTessereDaDissociare.Contains(r.NumeroDa) && r.NumeroDa == r.NumeroA)
+                .ToListAsync();
+
+            foreach (var rangeTessera in rangeTessereDaLiberare)
+            {
+                rangeTessera.Assegnata = false;
             }
 
             foreach (var tesserato in tesseratiDaDissociare)
@@ -333,7 +497,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 {
                     "N.Tessera", "Cognome", "Nome", "Codice Fiscale", "Qualifica", "Email", "Cellulare",
                     "Assicurazione", "Inserire Disciplina CONI 1", "Inserire Disciplina CONI 2", "Inserire Disciplina CONI 3",
-                    "Inserire Disciplina ACSI 1", "Inserire Disciplina ACSI 2", "Inserire Disciplina ACSI 3"
+                    "Inserire Disciplina ACSI 1", "Inserire Disciplina ACSI 2", "Inserire Disciplina ACSI 3",
+                    "Consenso Privacy 2.4", "Consenso Privacy 2.5", "Consenso Privacy FotoVideo"
                 };
 
                 for (int i = 0; i < headers.Length; i++)
@@ -360,7 +525,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     worksheet.Cell(row, 4).Value = t.CodiceFiscale;
                     worksheet.Cell(row, 5).Value = "Socio - 2116";
                     worksheet.Cell(row, 6).Value = t.Email;
-                    worksheet.Cell(row, 7).Value = "";
+                    worksheet.Cell(row, 7).Value = t.Cellulare ?? "";
                     worksheet.Cell(row, 8).Value = "Base Sport - 102";
                     worksheet.Cell(row, 9).Value = "Attività sportiva ginnastica finalizzata alla salute ed al fitness - BI001";
                     worksheet.Cell(row, 10).Value = "";
@@ -368,8 +533,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     worksheet.Cell(row, 12).Value = "PAINTBALL - 514";
                     worksheet.Cell(row, 13).Value = "";
                     worksheet.Cell(row, 14).Value = "";
+                    worksheet.Cell(row, 15).Value = "NO";
+                    worksheet.Cell(row, 16).Value = "NO";
+                    worksheet.Cell(row, 17).Value = "NO";
 
-                    for (int col = 1; col <= 14; col++)
+                    for (int col = 1; col <= headers.Length; col++)
                         worksheet.Cell(row, col).Style.Border.OutsideBorder = XLBorderStyleValues.Thick;
 
                     row++;

@@ -22,10 +22,24 @@
                 <input type="number" class="form-control" id="NumeroFinale" name="NumeroFinale" required />
             </div>
             <div class="col-auto">
+                <label for="DataValidita" class="form-label">Valida fino al</label>
+                <input type="date" class="form-control" id="DataValidita" name="DataValidita" required />
+            </div>
+            <div class="col-auto">
                 <button type="submit" class="btn btn-primary mt-3">Aggiungi Range</button>
             </div>
         </div>
     </form>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger" role="alert">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>@error.ErrorMessage</div>
+            }
+        </div>
+    }
 
     <hr />
 
@@ -44,21 +58,25 @@
             <thead>
                 <tr>
                     <th>Tessere Disponibili</th>
+                    <th>Valida fino al</th>
                     <th>Tessere Assegnate</th>
+                    <th>Valida fino al</th>
                 </tr>
             </thead>
             <tbody>
                 @{
-                    var disponibili = Model.Where(t => !tessereAssegnate.Contains(t.NumeroDa.ToString())).Select(t => t.NumeroDa).ToList();
-                    var assegnate = Model.Where(t => tessereAssegnate.Contains(t.NumeroDa.ToString())).Select(t => t.NumeroDa).ToList();
+                    var disponibili = Model.Where(t => !tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
+                    var assegnate = Model.Where(t => tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
 
                     int maxRows = Math.Max(disponibili.Count, assegnate.Count);
 
                     for (int i = 0; i < maxRows; i++)
                     {
                         <tr>
-                            <td>@(i<disponibili.Count? disponibili[i].ToString() : "")</td>
-                            <td>@(i<assegnate.Count? assegnate[i].ToString() : "")</td>
+                            <td>@(i<disponibili.Count? disponibili[i].NumeroDa.ToString() : "")</td>
+                            <td>@(i<disponibili.Count? disponibili[i].DataValidita?.ToString("dd/MM/yyyy") : "")</td>
+                            <td>@(i<assegnate.Count? assegnate[i].NumeroDa.ToString() : "")</td>
+                            <td>@(i<assegnate.Count? assegnate[i].DataValidita?.ToString("dd/MM/yyyy") : "")</td>
                         </tr>
                     }
                 }

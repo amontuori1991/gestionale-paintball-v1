@@ -14,6 +14,9 @@ namespace Full_Metal_Paintball_Carmagnola.Models
             Genere = string.Empty;
             ComuneNascita = string.Empty;
             ComuneResidenza = string.Empty;
+            NazioneNascita = "Italia";
+            NazioneCittadinanza = "Italia";
+            NazioneResidenza = "Italia";
             Email = string.Empty;
             Minorenne = "No";
             TerminiAccettati = false;
@@ -22,6 +25,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         }
 
         public int Id { get; set; }
+
+        public string Lingua { get; set; } = "it";
 
         [Display(Name = "Data Partita")]
         public DateTime? DataPartita { get; set; }
@@ -41,11 +46,26 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         [Required(ErrorMessage = "Il genere è obbligatorio")]
         public string Genere { get; set; }
 
-        [Required(ErrorMessage = "Il comune di nascita è obbligatorio")]
+        [Display(Name = "Nato all'estero?")]
+        public bool NatoEstero { get; set; }
+
         [Display(Name = "Comune di Nascita")]
         public string ComuneNascita { get; set; }
 
-        [Required(ErrorMessage = "Il comune di residenza è obbligatorio")]
+        public string? CodiceCatastaleNascita { get; set; }
+
+        [Display(Name = "Nazione di nascita")]
+        public string? NazioneNascita { get; set; }
+
+        [Display(Name = "Città di nascita")]
+        public string? CittaNascita { get; set; }
+
+        [Display(Name = "Nazione di cittadinanza")]
+        public string? NazioneCittadinanza { get; set; }
+
+        [Display(Name = "Nazione di residenza")]
+        public string? NazioneResidenza { get; set; }
+
         [Display(Name = "Comune di Residenza")]
         public string ComuneResidenza { get; set; }
 
@@ -55,6 +75,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         [Display(Name = "Codice Fiscale")]
         public string? CodiceFiscale { get; set; }
+
+        public string? Cellulare { get; set; }
 
         public string? Tessera { get; set; }
 
@@ -99,6 +121,32 @@ namespace Full_Metal_Paintball_Carmagnola.Models
             {
                 yield return new ValidationResult("La data di nascita è obbligatoria.", new[] { nameof(DataNascita) });
             }
+
+            if (NatoEstero)
+            {
+                if (string.IsNullOrWhiteSpace(NazioneNascita))
+                    yield return new ValidationResult("La nazione di nascita è obbligatoria.", new[] { nameof(NazioneNascita) });
+
+                if (string.IsNullOrWhiteSpace(CittaNascita))
+                    yield return new ValidationResult("La città di nascita è obbligatoria.", new[] { nameof(CittaNascita) });
+
+                if (string.IsNullOrWhiteSpace(NazioneCittadinanza))
+                    yield return new ValidationResult("La nazione di cittadinanza è obbligatoria.", new[] { nameof(NazioneCittadinanza) });
+
+                if (string.IsNullOrWhiteSpace(NazioneResidenza))
+                    yield return new ValidationResult("La nazione di residenza è obbligatoria.", new[] { nameof(NazioneResidenza) });
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(ComuneNascita))
+                    yield return new ValidationResult("Il comune di nascita è obbligatorio.", new[] { nameof(ComuneNascita) });
+
+                if (string.IsNullOrWhiteSpace(CodiceCatastaleNascita))
+                    yield return new ValidationResult("Seleziona il comune di nascita dall'elenco proposto.", new[] { nameof(ComuneNascita) });
+
+                if (string.IsNullOrWhiteSpace(ComuneResidenza))
+                    yield return new ValidationResult("Il comune di residenza è obbligatorio.", new[] { nameof(ComuneResidenza) });
+            }
         }
 
         public Tesseramento ToEntity(string firmaPath)
@@ -110,10 +158,17 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 Cognome = this.Cognome,
                 DataNascita = DateTime.SpecifyKind(this.DataNascita.GetValueOrDefault(), DateTimeKind.Utc),
                 Genere = this.Genere,
-                ComuneNascita = this.ComuneNascita,
-                ComuneResidenza = this.ComuneResidenza,
+                NatoEstero = this.NatoEstero,
+                ComuneNascita = this.NatoEstero ? $"{this.CittaNascita} ({this.NazioneNascita})" : this.ComuneNascita,
+                CodiceCatastaleNascita = this.CodiceCatastaleNascita,
+                NazioneNascita = this.NazioneNascita,
+                CittaNascita = this.CittaNascita,
+                NazioneCittadinanza = this.NazioneCittadinanza,
+                NazioneResidenza = this.NazioneResidenza,
+                ComuneResidenza = this.NatoEstero ? this.NazioneResidenza ?? string.Empty : this.ComuneResidenza,
                 Email = this.Email,
                 CodiceFiscale = this.CodiceFiscale,
+                Cellulare = this.Cellulare,
                 Minorenne = this.Minorenne,
                 NomeGenitore = this.NomeGenitore,
                 CognomeGenitore = this.CognomeGenitore,

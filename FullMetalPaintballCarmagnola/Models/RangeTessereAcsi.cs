@@ -15,6 +15,10 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         [Display(Name = "A Numero")]
         public long NumeroA { get; set; }
 
+        [Display(Name = "Data validità")]
+        [DataType(DataType.Date)]
+        public DateTime? DataValidita { get; set; }
+
         public bool Assegnata { get; set; }
     }
 }

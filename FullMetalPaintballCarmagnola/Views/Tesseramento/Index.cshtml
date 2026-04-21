@@ -2,6 +2,51 @@
 
 @{
     ViewData["Title"] = "Tesseramento";
+    var lang = (Model.Lingua ?? "it").ToLowerInvariant() == "en" ? "en" : "it";
+    Func<string, string> T = key =>
+    {
+        var translations = new Dictionary<string, (string It, string En)>
+        {
+            ["Title"] = ("Tesseramento", "Membership"),
+            ["Italian"] = ("Italiano", "Italian"),
+            ["English"] = ("Inglese", "English"),
+            ["Nome"] = ("Nome", "First name"),
+            ["Cognome"] = ("Cognome", "Last name"),
+            ["DataNascita"] = ("Data di nascita", "Date of birth"),
+            ["Genere"] = ("Sesso", "Sex"),
+            ["Select"] = ("Seleziona...", "Select..."),
+            ["Maschio"] = ("Maschio", "Male"),
+            ["Femmina"] = ("Femmina", "Female"),
+            ["NatoEstero"] = ("Nato all'estero?", "Born abroad?"),
+            ["ComuneNascita"] = ("Comune di nascita", "Birth town"),
+            ["ComuneNascitaHelp"] = ("Inizia a scrivere e seleziona il comune dall'elenco.", "Start typing and select the town from the list."),
+            ["NazioneNascita"] = ("Nazione di nascita", "Country of birth"),
+            ["CittaNascita"] = ("Città di nascita", "City of birth"),
+            ["NazioneCittadinanza"] = ("Nazione di cittadinanza", "Country of citizenship"),
+            ["NazioneResidenza"] = ("Nazione di residenza", "Country of residence"),
+            ["ComuneResidenza"] = ("Comune di residenza", "Residence town"),
+            ["Email"] = ("Email", "Email"),
+            ["Cellulare"] = ("Cellulare", "Mobile phone"),
+            ["CodiceFiscale"] = ("Codice Fiscale", "Italian tax code"),
+            ["CodiceFiscaleHelp"] = ("Calcolato automaticamente dopo la selezione del comune di nascita.", "Automatically calculated after selecting the birth town."),
+            ["Minorenne"] = ("Sei minorenne?", "Are you under 18?"),
+            ["Si"] = ("Sì", "Yes"),
+            ["No"] = ("No", "No"),
+            ["NomeGenitore"] = ("Nome Genitore", "Parent first name"),
+            ["CognomeGenitore"] = ("Cognome Genitore", "Parent last name"),
+            ["Termini"] = ("Accetto i termini e le condizioni", "I accept the terms and conditions"),
+            ["TerminiTitolo"] = ("Termini e Condizioni", "Terms and Conditions"),
+            ["Firma"] = ("Firma", "Signature"),
+            ["CancellaFirma"] = ("Cancella Firma", "Clear signature"),
+            ["Invia"] = ("Invia", "Submit"),
+            ["Attendere"] = ("Attendere...", "Please wait..."),
+            ["MostraIscritti"] = ("Mostra Elenco Iscritti", "Show registered players")
+        };
+
+        return translations.TryGetValue(key, out var value)
+            ? (lang == "en" ? value.En : value.It)
+            : key;
+    };
 }
 
 <style>
@@ -166,7 +211,41 @@
             background-color: #5a6268;
             color: white;
             text-decoration: none;
-        }
+    }
+
+    .language-switcher {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .language-switcher a {
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        color: #1f2937;
+        font-size: .9rem;
+        padding: 6px 10px;
+        text-decoration: none;
+    }
+
+    .language-switcher a.active {
+        background: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        font-weight: 700;
+    }
+
+    .field-help {
+        color: #6c757d;
+        display: block;
+        font-size: .82rem;
+        margin: -12px 0 10px;
+    }
+
+    .foreign-section {
+        display: none;
+    }
 </style>
 
 @* Rimosso il div .background-logo da qui *
@@ -178,79 +257,134 @@
     <div class="form-container">
         <div class="background-logo"></div>
 
-        <h2>Tesseramento</h2>
+        <div class="language-switcher">
+            <a class="@(lang == "it" ? "active" : "")" href="@Url.Action("Index", "Tesseramento", new { partitaId = Model.PartitaId, lang = "it" })">IT - @T("Italian")</a>
+            <a class="@(lang == "en" ? "active" : "")" href="@Url.Action("Index", "Tesseramento", new { partitaId = Model.PartitaId, lang = "en" })">EN - @T("English")</a>
+        </div>
+
+        <h2>@T("Title")</h2>
 
         <form method="post" asp-action="Index" id="tesseramentoForm">
+            @Html.HiddenFor(model => model.Lingua)
+
             <div class="form-group">
-                <label asp-for="Nome"></label>
+                <label asp-for="Nome">@T("Nome")</label>
                 <input asp-for="Nome" class="form-control" />
                 <span asp-validation-for="Nome" class="text-danger field-validation-error"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Cognome"></label>
+                <label asp-for="Cognome">@T("Cognome")</label>
                 <input asp-for="Cognome" class="form-control" />
                 <span asp-validation-for="Cognome" class="text-danger field-validation-error"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="DataNascita"></label>
+                <label asp-for="DataNascita">@T("DataNascita")</label>
                 <input asp-for="DataNascita" class="form-control" />
                 <span asp-validation-for="DataNascita" class="text-danger field-validation-error"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Genere"></label>
+                <label asp-for="Genere">@T("Genere")</label>
                 <select asp-for="Genere" class="form-control">
-                    <option value="">Seleziona...</option>
-                    <option value="Maschio">Maschio</option>
-                    <option value="Femmina">Femmina</option>
+                    <option value="">@T("Select")</option>
+                    <option value="Maschio">@T("Maschio")</option>
+                    <option value="Femmina">@T("Femmina")</option>
                 </select>
                 <span asp-validation-for="Genere" class="text-danger field-validation-error"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="ComuneNascita"></label>
-                <input asp-for="ComuneNascita" class="form-control" />
+                <label asp-for="NatoEstero">@T("NatoEstero")</label>
+                <select asp-for="NatoEstero" class="form-control" id="NatoEstero">
+                    <option value="false">@T("No")</option>
+                    <option value="true">@T("Si")</option>
+                </select>
+            </div>
+
+            <div id="ItalianBirthSection">
+                <div class="form-group">
+                    <label for="ComuneNascitaLookup">@T("ComuneNascita")</label>
+                    <input id="ComuneNascitaLookup" class="form-control" list="comuniNascitaList" autocomplete="off" value="@Model.ComuneNascita" />
+                    <datalist id="comuniNascitaList"></datalist>
+                    <small class="field-help">@T("ComuneNascitaHelp")</small>
+                    <input type="hidden" asp-for="ComuneNascita" />
+                    <input type="hidden" asp-for="CodiceCatastaleNascita" />
+                </div>
                 <span asp-validation-for="ComuneNascita" class="text-danger field-validation-error"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="ComuneResidenza"></label>
+            <div id="ForeignBirthSection" class="foreign-section">
+                <div class="form-group">
+                    <label asp-for="NazioneNascita">@T("NazioneNascita")</label>
+                    <input asp-for="NazioneNascita" class="form-control stato-lookup" list="statiList" autocomplete="off" />
+                    <span asp-validation-for="NazioneNascita" class="text-danger field-validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CittaNascita">@T("CittaNascita")</label>
+                    <input asp-for="CittaNascita" class="form-control" />
+                    <span asp-validation-for="CittaNascita" class="text-danger field-validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="NazioneCittadinanza">@T("NazioneCittadinanza")</label>
+                    <input asp-for="NazioneCittadinanza" class="form-control stato-lookup" list="statiList" autocomplete="off" />
+                    <span asp-validation-for="NazioneCittadinanza" class="text-danger field-validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="NazioneResidenza">@T("NazioneResidenza")</label>
+                    <input asp-for="NazioneResidenza" class="form-control stato-lookup" list="statiList" autocomplete="off" />
+                    <span asp-validation-for="NazioneResidenza" class="text-danger field-validation-error"></span>
+                </div>
+                <datalist id="statiList"></datalist>
+            </div>
+
+            <div class="form-group" id="ComuneResidenzaSection">
+                <label asp-for="ComuneResidenza">@T("ComuneResidenza")</label>
                 <input asp-for="ComuneResidenza" class="form-control" />
                 <span asp-validation-for="ComuneResidenza" class="text-danger field-validation-error"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Email"></label>
+                <label asp-for="Email">@T("Email")</label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger field-validation-error"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="CodiceFiscale"></label>
+                <label asp-for="Cellulare">@T("Cellulare")</label>
+                <input asp-for="Cellulare" class="form-control" />
+                <span asp-validation-for="Cellulare" class="text-danger field-validation-error"></span>
+            </div>
+
+            <div class="form-group" id="CodiceFiscaleSection">
+                <label asp-for="CodiceFiscale">@T("CodiceFiscale")</label>
                 <input asp-for="CodiceFiscale" class="form-control" />
+                <small class="field-help">@T("CodiceFiscaleHelp")</small>
                 <span asp-validation-for="CodiceFiscale" class="text-danger field-validation-error"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="Minorenne"></label>
+                <label asp-for="Minorenne">@T("Minorenne")</label>
                 <select asp-for="Minorenne" class="form-control">
-                    <option value="">Seleziona...</option>
-                    <option value="Sì">Sì</option>
-                    <option value="No">No</option>
+                    <option value="">@T("Select")</option>
+                    <option value="Sì">@T("Si")</option>
+                    <option value="No">@T("No")</option>
                 </select>
                 <span asp-validation-for="Minorenne" class="text-danger field-validation-error"></span>
             </div>
 
             <div id="GenitoreSection" style="display: none;">
                 <div class="form-group">
-                    <label asp-for="NomeGenitore"></label>
+                    <label asp-for="NomeGenitore">@T("NomeGenitore")</label>
                     <input asp-for="NomeGenitore" class="form-control" />
                     <span asp-validation-for="NomeGenitore" class="text-danger field-validation-error"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="CognomeGenitore"></label>
+                    <label asp-for="CognomeGenitore">@T("CognomeGenitore")</label>
                     <input asp-for="CognomeGenitore" class="form-control" />
                     <span asp-validation-for="CognomeGenitore" class="text-danger field-validation-error"></span>
                 </div>
@@ -258,12 +392,12 @@
 
             <div class="terms-checkbox-wrapper">
                 <div id="termsCheckbox" class="terms-checkbox"></div>
-                <label asp-for="TerminiAccettati"></label>
+                <label asp-for="TerminiAccettati">@T("Termini")</label>
                 <input type="hidden" asp-for="TerminiAccettati" id="TerminiAccettatiInput" />
                 <span asp-validation-for="TerminiAccettati" class="text-danger field-validation-error"></span>
             </div>
             <div class="terms-text-container" style="max-height: 200px; overflow-y: auto; background-color: #e9f2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; color: #444; line-height: 1.4;">
-                <strong>Termini e Condizioni</strong>
+                <strong>@T("TerminiTitolo")</strong>
                 <p>
                     DICHIARO: Di aver preso visione/conoscenza nonché di aver accettato lo Statuto della presente associazione, nonché le norme comportamentali, di correttezza e di sicurezza, di volta in volta in dettaglio esposte dall’associazione stessa, in persona dei suoi rappresentanti; 2. Di essere consapevole e di aver accettato tutte le regole di sicurezza, scritte nei regolamenti/atti/circolari dell’associazione e/o consuetudinarie, normalmente praticate nell’attività paintball, in particolar modo le regole di sicurezza ad oggetto le protezioni al volto ed agli occhi. In particolare, a solo titolo esemplificativo e non tassativo dichiaro di accettare sotto la mia responsabilità: di impegnarmi a portare le obbligatorie protezioni agli occhi ed al volto per l’intera durata delle singole partite e manches di gioco; che la scelta delle protezioni al volto è appannaggio del giocatore, il quale si assume la piena e totale responsabilità di protezioni che salvaguardino gli occhi e il resto del volto; che le protezioni prescelte dovranno essere assolutamente ed inderogabilmente idonee a prevenire l’impatto diretto della paintball con gli occhi e il volto, sia frontalmente che lateralmente, sia di rimbalzo che a brevissima distanza e lunga distanza. Che il giocatore si assume la piena e totale responsabilità dell’eventuale inidoneità e/o malfunzionamento delle protezioni prescelte; che i giocatori si impegnano a non togliere le suddette protezioni facciali sino a che non si siano debitamente allontanati dal gioco in corso di almeno 50 metri, inteso come distanza di sicurezza idonea a prevenire anche fortuiti colpi di rimbalzo o interni alle relative zone di sicurezza denominate safety area e visibilmente individuate nel terreno di gioco. 3. Di aver accettato tutti gli obblighi conseguenti all’appartenenza alla presente associazione, quali il versamento della quota di iscrizione. 4. Di esonerare la presente associazione ed i suoi rappresentanti da ogni e qualsivoglia responsabilità per sinistri in cui incorresse il socio, che saranno eventualmente coperti/garantiti solo ed esclusivamente dalle polizze assicurative stipulate dall’associazione medesima con l’Ente di promozione sportiva deputata al caso /e/o altre eventuali polizze personali dei singoli); 5. Di essere a conoscenza e di accettare il fatto che l’organizzazione non garantisce alcuna copertura assicurativa per infortuni ancora ai soci, fatte salve le polizze sottoscritte dalla presente associazione con l’Ente di promozione sportiva deputata al caso, di cui il socio dichiara di aver preso visione/conoscenza mediante il rilascio di fotocopie; 6. Di essere in buona condizione fisica, tale da praticare attività sportive non agonistiche; di non essere a conoscenza di suoi problemi fisici/fisiologici tali da impedire/sconsigliare la pratica sportiva non agonistica. 7. I dati forniti verranno utilizzati solo ed esclusivamente a scopo di comunicazione ed aggiornamento sulle attività Asd Full Metal Paintball Carmagnola (via Monteu Roero n. 12, Carmagnola TO) nel pieno rispetto della legge sulla privacy e sul trattamento dei dati personali ex art. 13 d. lgs. 196/2003.
                 </p>
@@ -271,21 +405,21 @@
 
 
             <div class="form-group">
-                <label asp-for="Firma"></label>
+                <label asp-for="Firma">@T("Firma")</label>
                 <div class="signature-pad" id="signature-pad">
                     <canvas id="signatureCanvas"></canvas>
                 </div>
-                <button type="button" id="clearSignature" class="btn btn-danger">Cancella Firma</button>
+                <button type="button" id="clearSignature" class="btn btn-danger">@T("CancellaFirma")</button>
                 <input type="hidden" asp-for="Firma" id="FirmaInput" />
                 <span asp-validation-for="Firma" class="text-danger field-validation-error"></span>
             </div>
 
             @Html.HiddenFor(model => model.PartitaId)
-            <button type="submit" class="btn btn-primary">Invia</button>
+            <button type="submit" class="btn btn-primary">@T("Invia")</button>
         </form>
 
         <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-            <div style="color:white; font-size:1.8rem; font-weight:bold; text-align:center; width:100%;">Attendere…</div>
+            <div style="color:white; font-size:1.8rem; font-weight:bold; text-align:center; width:100%;">@T("Attendere")</div>
         </div>
 
 
@@ -298,7 +432,7 @@
                asp-action="VisualizzaTesseratiPubblico"
                asp-route-id="@Model.PartitaId.Value"
                target="_blank">
-                Mostra Elenco Iscritti
+                @T("MostraIscritti")
             </a>
         }
         
@@ -321,6 +455,25 @@
         const signatureCanvas = document.getElementById("signatureCanvas");
         const ctx = signatureCanvas.getContext("2d");
         const firmaInput = document.getElementById('FirmaInput');
+        const natoEsteroSelect = document.getElementById('NatoEstero');
+        const italianBirthSection = document.getElementById('ItalianBirthSection');
+        const foreignBirthSection = document.getElementById('ForeignBirthSection');
+        const codiceFiscaleSection = document.getElementById('CodiceFiscaleSection');
+        const comuneResidenzaSection = document.getElementById('ComuneResidenzaSection');
+        const comuneNascitaLookup = document.getElementById('ComuneNascitaLookup');
+        const comuneNascitaHidden = document.getElementById('ComuneNascita');
+        const codiceCatastaleHidden = document.getElementById('CodiceCatastaleNascita');
+        const comuniNascitaList = document.getElementById('comuniNascitaList');
+        const codiceFiscaleInput = document.getElementById('CodiceFiscale');
+        const nomeInput = document.getElementById('Nome');
+        const cognomeInput = document.getElementById('Cognome');
+        const dataNascitaInput = document.getElementById('DataNascita');
+        const genereInput = document.getElementById('Genere');
+        const statiList = document.getElementById('statiList');
+        const comuniByLabel = new Map();
+        const statesByLabel = new Map();
+        let comuniTimer = null;
+        let statiTimer = null;
 
         signatureCanvas.width = 400;
         signatureCanvas.height = 100;
@@ -372,6 +525,143 @@
         }
 
         minorenneSelect.addEventListener('change', handleMinorenneChange);
+
+        function isNatoEstero() {
+            return natoEsteroSelect.value.toLowerCase() === 'true';
+        }
+
+        function handleNatoEsteroChange() {
+            const estero = isNatoEstero();
+
+            italianBirthSection.style.display = estero ? 'none' : 'block';
+            foreignBirthSection.style.display = estero ? 'block' : 'none';
+            codiceFiscaleSection.style.display = estero ? 'none' : 'block';
+            comuneResidenzaSection.style.display = estero ? 'none' : 'block';
+
+            updateClientValidation('ComuneNascita', !estero);
+            updateClientValidation('CodiceFiscale', !estero);
+            updateClientValidation('ComuneResidenza', !estero);
+            updateClientValidation('NazioneNascita', estero);
+            updateClientValidation('CittaNascita', estero);
+            updateClientValidation('NazioneCittadinanza', estero);
+            updateClientValidation('NazioneResidenza', estero);
+
+            if (estero) {
+                comuneNascitaHidden.value = '';
+                codiceCatastaleHidden.value = '';
+                codiceFiscaleInput.value = '';
+            } else {
+                calculateCodiceFiscale();
+            }
+        }
+
+        function debounce(timer, callback) {
+            clearTimeout(timer);
+            return setTimeout(callback, 250);
+        }
+
+        async function loadComuni(term) {
+            if (!term || term.trim().length < 2) {
+                comuniNascitaList.innerHTML = '';
+                comuniByLabel.clear();
+                return;
+            }
+
+            const response = await fetch(`@Url.Action("CercaComuni", "Tesseramento")?term=${encodeURIComponent(term)}`);
+            if (!response.ok) return;
+
+            const comuni = await response.json();
+            comuniNascitaList.innerHTML = '';
+            comuniByLabel.clear();
+
+            comuni.forEach(comune => {
+                const option = document.createElement('option');
+                option.value = comune.label;
+                comuniByLabel.set(comune.label, comune);
+                comuniNascitaList.appendChild(option);
+            });
+
+            syncSelectedComune();
+        }
+
+        async function loadStati(term) {
+            if (!term || term.trim().length < 2) {
+                statiList.innerHTML = '';
+                statesByLabel.clear();
+                return;
+            }
+
+            const response = await fetch(`@Url.Action("CercaStati", "Tesseramento")?term=${encodeURIComponent(term)}`);
+            if (!response.ok) return;
+
+            const stati = await response.json();
+            statiList.innerHTML = '';
+            statesByLabel.clear();
+
+            stati.forEach(stato => {
+                const option = document.createElement('option');
+                option.value = stato.label;
+                statesByLabel.set(stato.label, stato);
+                statiList.appendChild(option);
+            });
+        }
+
+        function syncSelectedComune() {
+            const selected = comuniByLabel.get(comuneNascitaLookup.value);
+
+            if (!selected) {
+                comuneNascitaHidden.value = comuneNascitaLookup.value;
+                return;
+            }
+
+            comuneNascitaHidden.value = selected.value;
+            codiceCatastaleHidden.value = selected.codiceCatastale;
+            calculateCodiceFiscale();
+        }
+
+        async function calculateCodiceFiscale() {
+            if (isNatoEstero()) return;
+
+            if (!nomeInput.value || !cognomeInput.value || !dataNascitaInput.value || !genereInput.value || !codiceCatastaleHidden.value) {
+                return;
+            }
+
+            const params = new URLSearchParams({
+                nome: nomeInput.value,
+                cognome: cognomeInput.value,
+                dataNascita: dataNascitaInput.value,
+                sesso: genereInput.value,
+                codiceCatastale: codiceCatastaleHidden.value
+            });
+
+            const response = await fetch(`@Url.Action("CalcolaCodiceFiscale", "Tesseramento")?${params.toString()}`);
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            codiceFiscaleInput.value = data.codiceFiscale || '';
+
+            if ($.validator) {
+                $('#tesseramentoForm').validate().element(codiceFiscaleInput);
+            }
+        }
+
+        natoEsteroSelect.addEventListener('change', handleNatoEsteroChange);
+        comuneNascitaLookup.addEventListener('input', function () {
+            comuneNascitaHidden.value = this.value;
+            comuniTimer = debounce(comuniTimer, () => loadComuni(this.value));
+        });
+        comuneNascitaLookup.addEventListener('change', syncSelectedComune);
+        comuneNascitaLookup.addEventListener('blur', syncSelectedComune);
+        [nomeInput, cognomeInput, dataNascitaInput, genereInput].forEach(input => {
+            input.addEventListener('change', calculateCodiceFiscale);
+            input.addEventListener('blur', calculateCodiceFiscale);
+        });
+        document.querySelectorAll('.stato-lookup').forEach(input => {
+            input.addEventListener('input', function () {
+                statiTimer = debounce(statiTimer, () => loadStati(this.value));
+            });
+        });
 
         termsCheckboxDiv.addEventListener('click', function () {
             const isChecked = !this.classList.contains('checked');
@@ -488,6 +778,7 @@
                 formValidator.element(terminiAccettatiInput);
                 validateAndSetSignature();
                 handleMinorenneChange();
+                handleNatoEsteroChange();
             }
 
             // ✅ Mostra overlay durante l'invio

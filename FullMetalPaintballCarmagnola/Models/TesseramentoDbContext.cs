@@ -16,6 +16,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public DbSet<ReperibilitaStaff> ReperibilitaStaff { get; set; }
         public DbSet<AssenzaCalendario> AssenzeCalendario { get; set; }
         public DbSet<RangeTessereAcsi> RangeTessereAcsi { get; set; }
+        public DbSet<ComuneCatastale> ComuniCatastali { get; set; }
+        public DbSet<StatoEsteroCatastale> StatiEsteriCatastali { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
 
         public DbSet<Documento> Documenti { get; set; }
@@ -83,6 +85,20 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 .WithOne(ti => ti.Topic)
                 .HasForeignKey(ti => ti.TopicId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ComuneCatastale>()
+                .HasIndex(c => new { c.Nome, c.Provincia, c.CodiceCatastale });
+
+            modelBuilder.Entity<ComuneCatastale>()
+                .HasIndex(c => c.CodiceCatastale)
+                .IsUnique();
+
+            modelBuilder.Entity<StatoEsteroCatastale>()
+                .HasIndex(s => new { s.Nome, s.CodiceCatastale });
+
+            modelBuilder.Entity<StatoEsteroCatastale>()
+                .HasIndex(s => s.CodiceCatastale)
+                .IsUnique();
         }
 
         public DbSet<CodicePromozionale> codicipromozionali { get; set; }

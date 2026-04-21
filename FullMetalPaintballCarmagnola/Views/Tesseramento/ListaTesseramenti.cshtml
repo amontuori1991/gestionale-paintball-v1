@@ -44,12 +44,12 @@
                     </div>
 
                     <div class="tess-filters__field">
-                        <label class="tess-filters__label">Data dal</label>
+                        <label class="tess-filters__label">Data partita dal</label>
                         <input type="date" name="dataDa" value="@ViewBag.DataDa" class="tess-filters__input" style="width:150px;" />
                     </div>
 
                     <div class="tess-filters__field">
-                        <label class="tess-filters__label">Data al</label>
+                        <label class="tess-filters__label">Data partita al</label>
                         <input type="date" name="dataA" value="@ViewBag.DataA" class="tess-filters__input" style="width:150px;" />
                     </div>
 
@@ -101,7 +101,9 @@
 
             @if (Model != null && Model.Any())
             {
-                var sortedModel = Model.OrderByDescending(t => t.PartitaId);
+                var sortedModel = Model
+                    .OrderByDescending(t => t.DataPartita)
+                    .ThenByDescending(t => t.PartitaId);
 
                 <div class="tess-table-wrap">
                     <table class="tess-table">
@@ -119,6 +121,7 @@
                                 <th>Comune Nascita</th>
                                 <th>Comune Residenza</th>
                                 <th>Email</th>
+                                <th>Cellulare</th>
                                 <th>Codice Fiscale</th>
                                 <th>Tessera</th>
                                 <th>Azione</th>
@@ -162,6 +165,7 @@
                                     <td data-label="Email">
                                         <a href="mailto:@t.Email" style="color:var(--fmp-blue);text-decoration:none;font-size:.78rem;">@t.Email</a>
                                     </td>
+                                    <td data-label="Cellulare">@t.Cellulare</td>
                                     <td data-label="Codice Fiscale">
                                         <span style="font-family:monospace;font-size:.78rem;letter-spacing:.03em;">@t.CodiceFiscale</span>
                                     </td>
