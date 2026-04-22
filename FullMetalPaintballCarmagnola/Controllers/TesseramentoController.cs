@@ -45,6 +45,21 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             model.Lingua = NormalizeLanguage(model.Lingua);
             ViewBag.Lingua = model.Lingua;
 
+            if (model.NatoEstero)
+            {
+                ModelState.Remove(nameof(model.ComuneNascita));
+                ModelState.Remove(nameof(model.CodiceCatastaleNascita));
+                ModelState.Remove(nameof(model.ComuneResidenza));
+                ModelState.Remove(nameof(model.CodiceFiscale));
+            }
+            else
+            {
+                ModelState.Remove(nameof(model.NazioneNascita));
+                ModelState.Remove(nameof(model.CittaNascita));
+                ModelState.Remove(nameof(model.NazioneCittadinanza));
+                ModelState.Remove(nameof(model.NazioneResidenza));
+            }
+
             if (!model.NatoEstero && model.DataNascita.HasValue && !string.IsNullOrWhiteSpace(model.CodiceCatastaleNascita))
             {
                 model.CodiceFiscale = CodiceFiscaleService.Calcola(

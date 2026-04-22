@@ -50,7 +50,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public bool NatoEstero { get; set; }
 
         [Display(Name = "Comune di Nascita")]
-        public string ComuneNascita { get; set; }
+        public string? ComuneNascita { get; set; }
 
         public string? CodiceCatastaleNascita { get; set; }
 
@@ -67,7 +67,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public string? NazioneResidenza { get; set; }
 
         [Display(Name = "Comune di Residenza")]
-        public string ComuneResidenza { get; set; }
+        public string? ComuneResidenza { get; set; }
 
         [Required(ErrorMessage = "L'email è obbligatoria")]
         [EmailAddress(ErrorMessage = "L'email non è valida")]
@@ -159,13 +159,13 @@ namespace Full_Metal_Paintball_Carmagnola.Models
                 DataNascita = DateTime.SpecifyKind(this.DataNascita.GetValueOrDefault(), DateTimeKind.Utc),
                 Genere = this.Genere,
                 NatoEstero = this.NatoEstero,
-                ComuneNascita = this.NatoEstero ? $"{this.CittaNascita} ({this.NazioneNascita})" : this.ComuneNascita,
+                ComuneNascita = this.NatoEstero ? $"{this.CittaNascita} ({this.NazioneNascita})" : this.ComuneNascita ?? string.Empty,
                 CodiceCatastaleNascita = this.CodiceCatastaleNascita,
                 NazioneNascita = this.NazioneNascita,
                 CittaNascita = this.CittaNascita,
                 NazioneCittadinanza = this.NazioneCittadinanza,
                 NazioneResidenza = this.NazioneResidenza,
-                ComuneResidenza = this.NatoEstero ? this.NazioneResidenza ?? string.Empty : this.ComuneResidenza,
+                ComuneResidenza = this.NatoEstero ? this.NazioneResidenza ?? string.Empty : this.ComuneResidenza ?? string.Empty,
                 Email = this.Email,
                 CodiceFiscale = this.CodiceFiscale,
                 Cellulare = this.Cellulare,
