@@ -3,8 +3,10 @@
 @{
     ViewData["Title"] = "Modifica sondaggio";
 }
-<div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center">
+<link href="~/css/sondaggi-responsive.css" rel="stylesheet" />
+
+<div class="container py-3 sondaggi-page sondaggi-edit-page">
+    <div class="d-flex justify-content-between align-items-center sondaggi-edit-header">
         <h2>Modifica: @Model.Title</h2>
         <div>
             <a class="btn btn-outline-info" asp-action="Qr" asp-route-id="@Model.Id">QR/Link</a>
@@ -41,7 +43,7 @@
     <hr class="my-4" />
 
     <h4 class="text-center mb-3">Domande</h4>
-    <div class="card p-3 mb-3">
+    <div class="card p-3 mb-3 sondaggi-question-add">
         <form asp-action="AddQuestion" method="post" class="row g-3 align-items-end">
             <input type="hidden" name="surveyId" value="@Model.Id" />
             <div class="col-12 col-lg-6">
@@ -72,23 +74,23 @@
 
     @foreach (var q in Model.Questions.OrderBy(q => q.Order))
     {
-        <div class="card mb-3">
+        <div class="card mb-3 sondaggi-question-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                    <form asp-action="UpdateQuestion" method="post" class="d-flex flex-wrap align-items-end gap-2 flex-grow-1">
+                    <form asp-action="UpdateQuestion" method="post" class="d-flex flex-wrap align-items-end gap-2 flex-grow-1 sondaggi-question-form">
                         <input type="hidden" name="id" value="@q.Id" />
-                        <div class="me-2" style="min-width:260px;flex:1 1 320px;">
+                        <div class="me-2 sondaggi-question-text">
                             <label class="form-label mb-1">Testo domanda</label>
                             <input name="text" class="form-control" value="@q.Text" required />
                         </div>
-                        <div class="me-2" style="width:220px;">
+                        <div class="me-2 sondaggi-question-type">
                             <label class="form-label mb-1">Tipo</label>
                             <select name="type" class="form-select">
                                 <option value="0" selected="@(q.Type == QuestionType.MultipleChoice)">Risposta multipla</option>
                                 <option value="1" selected="@(q.Type == QuestionType.OpenText)">Testo libero</option>
                             </select>
                         </div>
-                        <div class="form-check ms-1" style="padding-top:28px;">
+                        <div class="form-check ms-1 sondaggi-question-check">
                             <input class="form-check-input" type="checkbox" name="allowMultiple" value="true" @(q.AllowMultiple ? "checked" : "") id="allow_@q.Id" />
                             <label class="form-check-label" for="allow_@q.Id">Più risposte</label>
                         </div>
@@ -116,8 +118,8 @@
                         <ul class="list-group mb-2">
                             @foreach (var opt in q.Options.OrderBy(o => o.Order))
                             {
-                                <li class="list-group-item d-flex align-items-center gap-2">
-                                    <form asp-action="UpdateOption" method="post" class="d-flex gap-2 flex-grow-1">
+                                <li class="list-group-item d-flex align-items-center gap-2 sondaggi-option-item">
+                                    <form asp-action="UpdateOption" method="post" class="d-flex gap-2 flex-grow-1 sondaggi-option-form">
                                         <input type="hidden" name="id" value="@opt.Id" />
                                         <input name="text" class="form-control" value="@opt.Text" />
                                         <button class="btn btn-primary btn-sm" type="submit">Salva</button>
@@ -129,7 +131,7 @@
                                 </li>
                             }
                         </ul>
-                        <form asp-action="AddOption" method="post" class="input-group">
+                        <form asp-action="AddOption" method="post" class="input-group sondaggi-add-option-form">
                             <input type="hidden" name="questionId" value="@q.Id" />
                             <input name="text" class="form-control" placeholder="Nuova opzione" required />
                             <button class="btn btn-outline-success" type="submit">Aggiungi</button>

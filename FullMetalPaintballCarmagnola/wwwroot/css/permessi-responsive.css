@@ -19,42 +19,211 @@
 
 /* Mobile */
 @media (max-width: 768px) {
+    .permessi-page {
+        margin: 12px auto;
+        padding: 14px 8px;
+        max-width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+        overflow-x: hidden;
+    }
+
+    .permessi-page h2.text-center {
+        font-size: 1.35rem;
+        margin: 12px 0;
+    }
+
+    .permessi-page h3.h5 {
+        font-size: 1rem;
+    }
+
+    .permessi-page .bg-light {
+        border-radius: 8px !important;
+        padding: 12px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .permessi-page .bg-light form {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 10px !important;
+        align-items: stretch !important;
+    }
+
+    .permessi-page .bg-light .btn {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .permessi-page .table-responsive {
+        margin: 0 !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+        padding: 0 !important;
+    }
+
     .responsive-table thead {
         display: none;
     }
 
-    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+    .responsive-table,
+    .responsive-table tbody {
         display: block;
         width: 100%;
     }
 
-        .responsive-table tr {
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-        }
+    .responsive-table tr {
+        display: grid;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+        border: 1px solid #d8dee6;
+        border-radius: 8px;
+        padding: 8px;
+        background-color: #fff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        gap: 6px;
+        overflow: hidden;
+    }
 
-        .responsive-table td {
-            text-align: left;
-            padding: 10px 8px;
-            border: none;
-            border-bottom: 1px solid #eee;
-            position: relative;
-        }
+    .responsive-table td {
+        display: block;
+        width: auto;
+        min-width: 0;
+        box-sizing: border-box;
+        text-align: left;
+        padding: 8px;
+        border: 1px solid #eef1f5;
+        border-radius: 6px;
+        position: relative;
+        overflow-wrap: anywhere;
+    }
 
-            .responsive-table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: block;
-                margin-bottom: 5px;
-                color: #333;
-            }
+    .responsive-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        display: block;
+        margin-bottom: 4px;
+        color: #475569;
+        font-size: .66rem;
+        letter-spacing: .05em;
+        line-height: 1.05;
+        text-transform: uppercase;
+    }
+
+    .permessi-table tr {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .permessi-table td[data-label="Funzionalità"] {
+        grid-column: 1 / -1;
+        background: #f8fafc;
+        color: #111827;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .permessi-table td[data-label="Funzionalità"]::before {
+        margin-bottom: 2px;
+    }
+
+    .permessi-table td:not([data-label="Funzionalità"]) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 40px;
+        padding: 8px 10px;
+    }
+
+    .permessi-table td:not([data-label="Funzionalità"])::before {
+        margin-bottom: 0;
+    }
+
+    .permessi-table input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+    }
+
+    .permessi-page form[asp-action="SalvaPermessi"],
+    .permessi-page form[action*="SalvaPermessi"] {
+        display: block;
+    }
+
+    .permessi-page form > .btn.btn-primary.mt-3 {
+        width: 100%;
+        min-height: 42px;
+        margin-top: 6px !important;
+        position: sticky;
+        bottom: 8px;
+        z-index: 5;
+        box-shadow: 0 4px 18px rgba(13, 110, 253, .25);
+    }
+
+    .utenti-table tr {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .utenti-table td[data-label="Nome Completo"] {
+        background: #f8fafc;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .utenti-table td[data-label="Email"] {
+        font-size: .9rem;
+    }
+
+    .utenti-table td[data-label="Ruolo Attuale"],
+    .utenti-table td[data-label="Approvato"] {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .utenti-table td[data-label="Ruolo Attuale"]::before,
+    .utenti-table td[data-label="Approvato"]::before {
+        margin-bottom: 0;
+    }
+
+    .utenti-table td[data-label="Approvato"] input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+    }
+
+    .utenti-table td[data-label="Assegna Ruolo"] > div {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 8px !important;
+    }
+
+    .utenti-table td[data-label="Assegna Ruolo"] form {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+    }
+
+    .utenti-table td[data-label="Assegna Ruolo"] select {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .utenti-table td[data-label="Assegna Ruolo"] .btn {
+        min-height: 38px;
+        margin: 0;
+    }
+
+    .utenti-table td[data-label="Assegna Ruolo"] form:last-child {
+        grid-template-columns: 1fr;
+    }
+
+    .utenti-table td[data-label="Assegna Ruolo"] form:last-child .btn {
+        width: 100%;
+    }
 }
 
 /* Generale */

@@ -34,61 +34,173 @@
 
 /* Mobile Card Style */
 @media (max-width: 768px) {
+    .container-custom {
+        padding-left: 8px;
+        padding-right: 8px;
+        overflow-x: hidden;
+    }
+
+    .container-custom h2 {
+        font-size: 1.35rem;
+        margin-bottom: 12px;
+    }
+
+    #filtroCalendario {
+        max-width: none !important;
+        width: 100%;
+        height: 42px;
+        font-size: 16px;
+    }
+
+    .calendario-table-wrapper {
+        display: block !important;
+        margin: 12px 0 0 !important;
+        overflow-x: hidden !important;
+        width: 100%;
+    }
+
+    table.calendario-table,
+    .calendario-table {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        table-layout: fixed;
+        background-image: none !important;
+    }
+
     .calendario-table thead {
         display: none;
     }
 
     .calendario-table,
     .calendario-table tbody,
-    .calendario-table tr,
-    .calendario-table td {
+    .calendario-table tr {
         display: block;
         width: 100%;
     }
 
+        .calendario-table td {
+            display: block;
+            width: auto;
+            box-sizing: border-box;
+        }
+
         .calendario-table tr {
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border: 1px solid #d8ddcf;
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             background-color: #fff;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 6px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .calendario-table td {
             text-align: left;
-            padding: 6px 6px;
-            border: none;
-            border-bottom: 1px solid #eee;
+            padding: 7px;
+            border: 1px solid #edf0e8;
+            border-radius: 6px;
             position: relative;
+            min-width: 0;
+            overflow: hidden;
         }
 
             .calendario-table td::before {
                 content: attr(data-label);
                 font-weight: bold;
                 display: block;
-                margin-bottom: 3px;
-                color: #333;
+                margin-bottom: 4px;
+                color: #5f6f57;
+                font-size: .66rem;
+                letter-spacing: .04em;
+                line-height: 1.05;
+                text-transform: uppercase;
             }
 
         .calendario-table select {
             width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            height: 34px;
+            border: 1px solid #cfd6c4;
+            border-radius: 6px;
+            background-color: rgba(255, 255, 255, .8);
+            font-size: .82rem;
+            padding: 4px 6px;
         }
 
-        /* Giorno e Data sulla stessa riga */
         .calendario-table td[data-label="Giorno"] {
-            grid-column: span 1;
+            grid-column: 1;
+            background: #f8faf5;
+            font-weight: 700;
         }
+
+            .calendario-table td[data-label="Giorno"]::before {
+                margin-bottom: 0;
+            }
 
         .calendario-table td[data-label="Data"] {
-            grid-column: span 1;
+            display: block;
+            grid-column: 1;
+            background: #f8faf5;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
-        /* Reperibile su tutta la larghezza */
-        .calendario-table td[data-label="Reperibile"] {
-            grid-column: span 2;
+            .calendario-table td[data-label="Data"]::before {
+                margin-bottom: 0;
+            }
+
+            .calendario-table td[data-label="Giorno"],
+            .calendario-table td[data-label="Data"] {
+                text-align: left;
         }
+
+        .calendario-table td[data-label="Reperibile"] {
+            grid-column: 1;
+        }
+
+        .calendario-table td[data-label="Montuo"],
+        .calendario-table td[data-label="Flavio"] {
+            grid-column: 1;
+        }
+
+        .calendario-table td[data-label="Bosax"] {
+            grid-column: 1;
+        }
+}
+
+@media (max-width: 380px) {
+    .calendario-table tr {
+        gap: 5px;
+        padding: 7px;
+    }
+
+    .calendario-table td {
+        padding: 6px 5px;
+    }
+
+    .calendario-table select {
+        font-size: .76rem;
+        padding-left: 3px;
+        padding-right: 3px;
+    }
+
+    .calendario-table td::before {
+        font-size: .6rem;
+    }
+
+    .calendario-table td[data-label="Giorno"] {
+        grid-column: 1;
+    }
+
+    .calendario-table td[data-label="Data"] {
+        display: block;
+    }
 }

@@ -2,14 +2,16 @@
 @{
     ViewData["Title"] = "Sondaggi";
 }
-<div class="container py-3">
+<link href="~/css/sondaggi-responsive.css" rel="stylesheet" />
+
+<div class="container py-3 sondaggi-page sondaggi-index-page">
     <div class="text-center mb-3">
         <h2 class="mb-2">Sondaggi</h2>
         <a class="btn btn-primary mt-1" asp-action="Create"><i class="bi bi-plus-lg"></i> Nuovo</a>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped align-middle">
+        <table class="table table-striped align-middle sondaggi-table">
             <thead>
                 <tr>
                     <th>Titolo</th>
@@ -23,9 +25,9 @@
                 @foreach (var s in Model)
                 {
                     <tr>
-                        <td>@s.Title</td>
-                        <td>@s.PublicSlug</td>
-                        <td>
+                        <td data-label="Titolo">@s.Title</td>
+                        <td data-label="Slug">@s.PublicSlug</td>
+                        <td data-label="Stato">
                             @if (s.IsActive)
                             {
                                 <span class="badge bg-success">Attivo</span>
@@ -36,8 +38,8 @@
                                 <span class="badge bg-secondary">Bozza</span>
                             }
                         </td>
-                        <td>@s.UpdatedAt.ToLocalTime()</td>
-                        <td class="text-end">
+                        <td data-label="Aggiornato">@s.UpdatedAt.ToLocalTime()</td>
+                        <td data-label="Azioni" class="text-end sondaggi-actions">
                             <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@s.Id">Modifica</a>
                             <a class="btn btn-sm btn-outline-info" asp-action="Qr" asp-route-id="@s.Id">QR/Link</a>
                             <a class="btn btn-sm btn-outline-dark" asp-action="Responses" asp-route-id="@s.Id">Risposte</a>

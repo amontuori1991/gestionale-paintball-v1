@@ -6,9 +6,12 @@
     var tessereAssegnate = new HashSet<string>(
         ViewBag.TessereAssegnate ?? new List<string>()
     );
+    var disponibili = Model.Where(t => !tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
+    var assegnate = Model.Where(t => tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
 }
+<link href="~/css/tessere-acsi-responsive.css" rel="stylesheet" />
 
-<div class="content-container">
+<div class="content-container tessere-acsi-page">
     <h2 class="text-center">Gestione Tessere ACSI</h2>
 
     <form asp-action="AddRange" method="post" class="mb-4">
@@ -51,36 +54,77 @@
         </div>
     </form>
 
-    <h3 class="text-center">Tessere a disposizione</h3>
+    <section class="tessere-acsi-section tessere-acsi-section--available">
+        <button class="tessere-acsi-section__header" type="button" data-bs-toggle="collapse" data-bs-target="#tessereDisponibili" aria-expanded="true" aria-controls="tessereDisponibili">
+            <span class="tessere-acsi-title">Tessere disponibili</span>
+            <span class="tessere-acsi-count">@disponibili.Count</span>
+            <i class="bi bi-chevron-down tessere-acsi-chevron" aria-hidden="true"></i>
+        </button>
 
-    <div class="table-responsive">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Tessere Disponibili</th>
-                    <th>Valida fino al</th>
-                    <th>Tessere Assegnate</th>
-                    <th>Valida fino al</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    var disponibili = Model.Where(t => !tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
-                    var assegnate = Model.Where(t => tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
+        <div class="collapse show" id="tessereDisponibili">
+            @if (disponibili.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered tessere-acsi-table">
+                        <thead>
+                            <tr>
+                                <th>Numero tessera</th>
+                                <th>Valida fino al</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tessera in disponibili)
+                            {
+                                <tr>
+                                    <td data-label="Numero tessera">@tessera.NumeroDa</td>
+                                    <td data-label="Valida fino al">@(tessera.DataValidita?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="tessere-acsi-empty">Nessuna tessera disponibile.</div>
+            }
+        </div>
+    </section>
 
-                    int maxRows = Math.Max(disponibili.Count, assegnate.Count);
+    <section class="tessere-acsi-section tessere-acsi-section--used">
+        <button class="tessere-acsi-section__header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tessereUtilizzate" aria-expanded="false" aria-controls="tessereUtilizzate">
+            <span class="tessere-acsi-title">Tessere utilizzate</span>
+            <span class="tessere-acsi-count">@assegnate.Count</span>
+            <i class="bi bi-chevron-down tessere-acsi-chevron" aria-hidden="true"></i>
+        </button>
 
-                    for (int i = 0; i < maxRows; i++)
-                    {
-                        <tr>
-                            <td>@(i<disponibili.Count? disponibili[i].NumeroDa.ToString() : "")</td>
-                            <td>@(i<disponibili.Count? disponibili[i].DataValidita?.ToString("dd/MM/yyyy") : "")</td>
-                            <td>@(i<assegnate.Count? assegnate[i].NumeroDa.ToString() : "")</td>
-                            <td>@(i<assegnate.Count? assegnate[i].DataValidita?.ToString("dd/MM/yyyy") : "")</td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
+        <div class="collapse" id="tessereUtilizzate">
+            @if (assegnate.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered tessere-acsi-table">
+                        <thead>
+                            <tr>
+                                <th>Numero tessera</th>
+                                <th>Valida fino al</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var tessera in assegnate)
+                            {
+                                <tr>
+                                    <td data-label="Numero tessera">@tessera.NumeroDa</td>
+                                    <td data-label="Valida fino al">@(tessera.DataValidita?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="tessere-acsi-empty">Nessuna tessera utilizzata.</div>
+            }
+        </div>
+    </section>
 </div>

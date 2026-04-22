@@ -3,7 +3,9 @@
 @{
     ViewData["Title"] = "Gestione Spese";
 }
+<link href="~/css/spese-responsive.css" rel="stylesheet" />
 
+<div class="spese-page">
 <h2 class="text-center">Gestione Spese</h2>
 
 @Html.AntiForgeryToken()
@@ -33,14 +35,14 @@
             @foreach (var item in Model)
             {
                 <tr data-id="@item.Id">
-                    <td data-order="@item.Data.ToString("yyyyMMdd")">@item.Data.ToString("dd/MM/yyyy")</td>
-                    <td>@item.Descrizione</td>
-                    <td data-order="@item.Importo.ToString(System.Globalization.CultureInfo.InvariantCulture)">@item.Importo.ToString("0.00")</td>
-                    <td>
-                        <input type="checkbox" class="form-check-input rimborsato-checkbox" @(item.Rimborsato ? "checked" : "") />
+                    <td data-label="Data" data-order="@item.Data.ToString("yyyyMMdd")">@item.Data.ToString("dd/MM/yyyy")</td>
+                    <td data-label="Descrizione">@item.Descrizione</td>
+                    <td data-label="Importo" data-order="@item.Importo.ToString(System.Globalization.CultureInfo.InvariantCulture)">@item.Importo.ToString("0.00")</td>
+                    <td data-label="Rimborsato">
+                        <input type="checkbox" class="form-check-input rimborsato-checkbox" data-id="@item.Id" @(item.Rimborsato ? "checked" : "") />
                     </td>
-                    <td>@item.Riferimento</td>
-                    <td>
+                    <td data-label="Riferimento">@item.Riferimento</td>
+                    <td data-label="Azioni">
                         <button class="btn btn-sm btn-secondary duplica-spesa-btn"
                                 data-id="@item.Id"
                                 data-descrizione="@item.Descrizione">
@@ -57,6 +59,7 @@
 <div class="mt-4">
     <h4>Totale Spese:</h4>
     <div><strong>Importo Totale:</strong> <span id="totaleImporto">0.00 €</span></div>
+</div>
 </div>
 
 <!-- Modale Inserimento -->
@@ -156,7 +159,7 @@
             });
 
             $('#tabellaSpese').on('change', '.rimborsato-checkbox', function () {
-                var id = $(this).closest('tr').data('id');
+                var id = $(this).data('id') || $(this).closest('tr').data('id');
                 var nuovoValore = $(this).is(':checked');
                 aggiornaRimborsato(id, nuovoValore);
             });

@@ -15,7 +15,7 @@
     }
 </style>
 
-<div class="content-container">
+<div class="content-container presenze-page">
 
     <h2 class="text-center">Gestione Presenze Staff</h2>
 
@@ -74,7 +74,7 @@
                             </td>
                         }
 
-                        <td data-label="Azioni">
+                        <td data-label="Azioni" class="presenze-actions-cell @(isWeekend ? "presenze-actions-cell--empty" : "")">
                             @if (!isWeekend)
                             {
                                 <button class="btn btn-danger btn-sm btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>

@@ -1,0 +1,238 @@
+.tessere-acsi-section {
+    margin-top: 22px;
+}
+
+.tessere-acsi-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+}
+
+.tessere-acsi-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+.tessere-acsi-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #198754;
+    color: #fff;
+    font-weight: 700;
+}
+
+.tessere-acsi-section--used .tessere-acsi-count {
+    background: #6c757d;
+}
+
+.tessere-acsi-chevron {
+    transition: transform .18s ease;
+}
+
+.tessere-acsi-section__header:not(.collapsed) .tessere-acsi-chevron {
+    transform: rotate(180deg);
+}
+
+.tessere-acsi-empty {
+    padding: 16px;
+    border: 1px dashed #cfd6de;
+    border-radius: 8px;
+    color: #667085;
+    text-align: center;
+    background: #f8fafc;
+}
+
+@media (min-width: 769px) {
+    .tessere-acsi-table {
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .tessere-acsi-page {
+        margin: 12px auto;
+        padding: 14px 8px;
+        max-width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+        overflow-x: hidden;
+    }
+
+    .tessere-acsi-page h2 {
+        font-size: 1.35rem;
+        margin-bottom: 14px;
+    }
+
+    .tessere-acsi-page form.mb-4 {
+        margin-bottom: 14px !important;
+    }
+
+    .tessere-acsi-page form.mb-4 .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px !important;
+        margin: 0;
+    }
+
+    .tessere-acsi-page form.mb-4 .col-auto {
+        width: 100%;
+        padding: 0;
+    }
+
+    .tessere-acsi-page .form-control,
+    .tessere-acsi-page .btn {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .tessere-acsi-page form.mb-4 .btn {
+        margin-top: 0 !important;
+    }
+
+    .tessere-acsi-page form[method="get"] .input-group {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .tessere-acsi-page form[method="get"] input {
+        grid-column: 1 / -1;
+        max-width: none !important;
+    }
+
+    .tessere-acsi-section {
+        margin-top: 16px;
+    }
+
+    .tessere-acsi-section__header {
+        justify-content: space-between;
+        padding: 10px 12px;
+        border: 1px solid #d8dee6;
+        border-radius: 8px;
+        background: #f8fafc;
+        margin-bottom: 8px;
+    }
+
+    .tessere-acsi-title {
+        font-size: 1.05rem;
+    }
+
+    .tessere-acsi-count {
+        min-width: 36px;
+        height: 30px;
+    }
+
+    .tessere-acsi-page .table-responsive {
+        margin: 0 !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+        padding: 0 !important;
+    }
+
+    .tessere-acsi-table,
+    .tessere-acsi-table tbody,
+    .tessere-acsi-table tr {
+        display: block;
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    .tessere-acsi-table {
+        border: 0;
+        margin: 0;
+    }
+
+    .tessere-acsi-table thead {
+        display: none;
+    }
+
+    .tessere-acsi-table tbody {
+        display: grid;
+        gap: 6px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tessere-acsi-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 3px;
+        padding: 7px;
+        border: 1px solid #d8dee6;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+        box-sizing: border-box;
+    }
+
+    .tessere-acsi-table td {
+        display: block;
+        width: auto;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+
+    .tessere-acsi-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 1px;
+        color: #667085;
+        font-size: .58rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        line-height: 1.05;
+        text-transform: uppercase;
+    }
+
+    .tessere-acsi-table td[data-label="Numero tessera"] {
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .tessere-acsi-table td[data-label="Valida fino al"] {
+        text-align: left;
+        white-space: nowrap;
+        font-weight: 700;
+        font-size: .82rem;
+    }
+
+    .tessere-acsi-empty {
+        padding: 12px;
+        font-size: .9rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .tessere-acsi-table tbody {
+        gap: 5px;
+    }
+
+    .tessere-acsi-table tr {
+        padding: 6px;
+    }
+
+    .tessere-acsi-table td[data-label="Numero tessera"] {
+        font-size: .94rem;
+    }
+
+    .tessere-acsi-table td[data-label="Valida fino al"] {
+        font-size: .76rem;
+    }
+}

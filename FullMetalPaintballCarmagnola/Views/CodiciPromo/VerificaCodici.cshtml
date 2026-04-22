@@ -6,20 +6,22 @@
 }
 <link rel="stylesheet" href="~/css/verifica-codici.css" />
 
-<div class="text-center mb-4">
+<div class="verifica-codici-page">
+
+<div class="text-center mb-4 verifica-codici-nav">
     <a href="@Url.Action("Archivio", "Promozioni")" class="btn btn-outline-secondary">
         📚 Archivio Promozioni
     </a>
 </div>
 
-<div class="d-flex align-items-center justify-content-center gap-3 mb-3 flex-wrap">
+<div class="d-flex align-items-center justify-content-center gap-3 mb-3 flex-wrap verifica-codici-search">
     <input type="text" id="ricercaCodice" class="form-control" placeholder="🔎 Inserisci o scansiona un codice">
     <button type="button" id="attivaScanner" class="btn btn-outline-success">📷 Scansiona QR</button>
 </div>
 
 <div id="qr-reader" style="width: 300px; margin: 0 auto; display: none;"></div>
 
-<div class="container mt-5">
+<div class="container mt-5 verifica-codici-container">
     <h2 class="text-center">Verifica Codici Promozionali</h2>
 
     <!-- ✅ DESKTOP: tabella -->
@@ -112,7 +114,7 @@
         @foreach (var c in Model)
         {
             var isEvento = c.RequiresPersonalData;
-            <div class="promo-card">
+            <div class="promo-card" data-code="@c.Codice">
                 <div data-label="Codice">@c.Codice</div>
                 <div data-label="Tipo">@c.PromotionType</div>
                 <div data-label="Promo">
@@ -177,6 +179,8 @@
     </div>
 </div>
 
+</div>
+
 @section Scripts {
     <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -227,6 +231,16 @@
                     trovato = true;
                     $(this).addClass('table-warning');
                     setTimeout(() => $(this).removeClass('table-warning'), 1500);
+                }
+            });
+
+            $('.promo-card').each(function () {
+                const codice = ($(this).data('code') || '').toString().toLowerCase();
+                const match = codice.includes(valore);
+                $(this).toggle(match);
+                if (match && valore !== '') {
+                    $(this).addClass('promo-card--match');
+                    setTimeout(() => $(this).removeClass('promo-card--match'), 1500);
                 }
             });
 

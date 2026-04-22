@@ -4,19 +4,21 @@
 @{
     ViewData["Title"] = "Movimenti";
 }
-<link href="~/css/movimenti-responsive.css" rel="stylesheet" />
+<link href="~/css/movimenti-responsive.css" rel="stylesheet" asp-append-version="true" />
+
+<div class="movimenti-page">
 
 <h2 class="text-center">Gestione Movimenti</h2>
 
 @Html.AntiForgeryToken()
 
-<div class="mb-3">
+<div class="mb-3 movimenti-toolbar">
     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#aggiungiMovimentoModal">
         Aggiungi Movimento Manuale
     </button>
 </div>
 
-<div class="table-responsive" style="overflow-x: auto;">
+<div class="table-responsive movimenti-table-wrap">
     <table id="tabellaMovimenti" class="table table-bordered align-middle">
         <thead>
             <tr>
@@ -49,17 +51,17 @@
             @foreach (var item in Model)
             {
                 <tr>
-                    <td>@item.Data.ToString("dd/MM/yyyy")</td>
-                    <td>@item.Ora.ToString(@"hh\:mm")</td>
-                    <td>@item.Stato</td>
-                    <td>@item.Caparra.ToString("0.00")</td>
-                    <td>@item.MetodoCaparra</td>
-                    <td>@item.Dare?.ToString("0.00")</td>
-                    <td>@item.Avere?.ToString("0.00")</td>
-                    <td>@item.DareBis?.ToString("0.00")</td>
-                    <td>@item.AvereBis?.ToString("0.00")</td>
-                    <td>@item.Note</td>
-                    <td>
+                    <td data-label="Data">@item.Data.ToString("dd/MM/yyyy")</td>
+                    <td data-label="Ora">@item.Ora.ToString(@"hh\:mm")</td>
+                    <td data-label="Stato">@item.Stato</td>
+                    <td data-label="Caparra">@item.Caparra.ToString("0.00")</td>
+                    <td data-label="Metodo Caparra">@item.MetodoCaparra</td>
+                    <td data-label="Dare">@item.Dare?.ToString("0.00")</td>
+                    <td data-label="Avere">@item.Avere?.ToString("0.00")</td>
+                    <td data-label="Dare Bis">@item.DareBis?.ToString("0.00")</td>
+                    <td data-label="Avere Bis">@item.AvereBis?.ToString("0.00")</td>
+                    <td data-label="Note">@item.Note</td>
+                    <td data-label="Azioni">
                         @if (item.Stato == "Movimento Manuale" && item.ExtraId.HasValue)
                         {
                             <button class="btn btn-sm btn-danger" onclick="confermaElimina(@item.ExtraId.Value)">Elimina</button>
@@ -84,7 +86,7 @@
     </table>
 </div>
 
-<div class="mt-4">
+<div class="mt-4 movimenti-totali">
     <h4>Totali Movimenti</h4>
     <div class="row">
         <div class="col-md-3"><strong>Caparra Totale:</strong> <span id="totalCaparra">0.00 €</span></div>
@@ -95,6 +97,8 @@
         <div class="col-md-3"><strong>Dare Bis Totale:</strong> <span id="totalDareBis">0.00 €</span></div>
         <div class="col-md-3"><strong>Avere Bis Totale:</strong> <span id="totalAvereBis">0.00 €</span></div>
     </div>
+</div>
+
 </div>
 
 <div class="modal fade" id="modificaMovimentoModal" tabindex="-1" aria-labelledby="modificaMovimentoModalLabel" aria-hidden="true">

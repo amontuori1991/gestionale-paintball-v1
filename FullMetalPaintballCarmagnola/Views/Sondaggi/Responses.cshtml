@@ -7,7 +7,9 @@
     var questions = (IEnumerable<SurveyQuestion>)(ViewBag.Questions ?? Array.Empty<SurveyQuestion>());
     var optionMap = ViewBag.OptionMap as IDictionary<int, string> ?? new Dictionary<int, string>();
 }
-<div class="container py-3">
+<link href="~/css/sondaggi-responsive.css" rel="stylesheet" />
+
+<div class="container py-3 sondaggi-page sondaggi-responses-page">
     <div class="text-center mb-3">
         <h2 class="mb-2">Risposte: @survey.Title</h2>
         <a class="btn btn-outline-dark" asp-action="ExportCsv" asp-route-id="@survey.Id">Export CSV</a>
@@ -20,7 +22,7 @@
     else
     {
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="table table-striped align-middle sondaggi-table sondaggi-responses-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -35,12 +37,12 @@
                     @foreach (var r in responses)
                     {
                         <tr>
-                            <td>@r.Id</td>
-                            <td>@r.SubmittedAt.ToLocalTime()</td>
+                            <td data-label="ID">@r.Id</td>
+                            <td data-label="Data invio">@r.SubmittedAt.ToLocalTime()</td>
                             @foreach (var q in questions)
                             {
                                 var ans = r.Answers?.Where(a => a.QuestionId == q.Id).ToList() ?? new List<SurveyAnswer>();
-                                <td>
+                                <td data-label="@q.Text">
                                     @if (ans.Count == 0)
                                     {
                                         <span class="text-muted">—</span>

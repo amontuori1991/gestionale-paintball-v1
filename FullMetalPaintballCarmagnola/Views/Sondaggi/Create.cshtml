@@ -2,7 +2,9 @@
 @{
     ViewData["Title"] = "Nuovo sondaggio";
 }
-<div class="container py-3">
+<link href="~/css/sondaggi-responsive.css" rel="stylesheet" />
+
+<div class="container py-3 sondaggi-page sondaggi-form-page">
     <h2>Nuovo sondaggio</h2>
     <form asp-action="Create" method="post" class="mt-3">
         <div class="mb-3">
