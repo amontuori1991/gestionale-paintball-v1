@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
 
 namespace Full_Metal_Paintball_Carmagnola.Models
 {
@@ -12,5 +10,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         // Aggiungi questa proprietà
         public bool IsApproved { get; set; } = false; // default a false
+
+        public string? DashboardHiddenFeatures { get; set; }
     }
 }
