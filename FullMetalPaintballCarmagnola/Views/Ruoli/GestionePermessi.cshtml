@@ -5,6 +5,19 @@
 <div class="content-container">
     <h2 class="text-center">Gestione Permessi</h2>
 
+    <div class="mb-4 p-3 border rounded bg-light">
+        <h3 class="h5 mb-2">Registrazione gestionale</h3>
+        <form asp-action="AggiornaRegistroGestionale" asp-controller="Ruoli" method="post" class="d-flex align-items-center flex-wrap gap-3">
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="registerEnabled" name="registerEnabled" @(ViewBag.RegisterEnabled == true ? "checked" : "") />
+                <label class="form-check-label" for="registerEnabled">
+                    Abilita pagina Register per nuovi utenti del gestionale
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Salva</button>
+        </form>
+    </div>
+
     <form asp-action="SalvaPermessi" method="post">
         <div class="table-responsive">
             <table class="responsive-table">

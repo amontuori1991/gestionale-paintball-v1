@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Full_Metal_Paintball_Carmagnola.Models; // 👈 Importa il tuo ApplicationUser
@@ -16,19 +17,23 @@ namespace Full_Metal_Paintball_Carmagnola.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class RegisterModel : PageModel
     {
+        private const string RegisterEnabledSettingKey = "RegisterEnabled";
+
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly TesseramentoDbContext _dbContext;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            TesseramentoDbContext dbContext)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -36,6 +41,7 @@ namespace Full_Metal_Paintball_Carmagnola.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _dbContext = dbContext;
         }
 
         [BindProperty]
@@ -72,16 +78,29 @@ namespace Full_Metal_Paintball_Carmagnola.Areas.Identity.Pages.Account
             public string? ConfirmPassword { get; set; }
         }
 
-        public async Task OnGetAsync(string? returnUrl = null)
+        public async Task<IActionResult> OnGetAsync(string? returnUrl = null)
         {
+            if (!await RegistroGestionaleAbilitatoAsync())
+            {
+                TempData["ErrorMessage"] = "La registrazione al gestionale è disabilitata. Usa il link di tesseramento ricevuto dallo staff.";
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            }
+
             ReturnUrl = returnUrl ?? Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            if (!await RegistroGestionaleAbilitatoAsync())
+            {
+                TempData["ErrorMessage"] = "La registrazione al gestionale è disabilitata. Usa il link di tesseramento ricevuto dallo staff.";
+                return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            }
 
             if (ModelState.IsValid)
             {
@@ -166,6 +185,16 @@ namespace Full_Metal_Paintball_Carmagnola.Areas.Identity.Pages.Account
             {
                 throw new InvalidOperationException($"Impossibile creare un'istanza di '{nameof(ApplicationUser)}'. Assicurati che abbia un costruttore pubblico senza parametri.");
             }
+        }
+
+        private async Task<bool> RegistroGestionaleAbilitatoAsync()
+        {
+            var valore = await _dbContext.AppSettings
+                .Where(s => s.Key == RegisterEnabledSettingKey)
+                .Select(s => s.Value)
+                .FirstOrDefaultAsync();
+
+            return string.Equals(valore, "true", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

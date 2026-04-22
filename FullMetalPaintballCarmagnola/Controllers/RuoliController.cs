@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 [Authorize(Policy = "Gestione Utenti")]
 public class RuoliController : Controller
 {
+    private const string RegisterEnabledSettingKey = "RegisterEnabled";
+
     private readonly TesseramentoDbContext _dbContext;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
@@ -25,6 +27,7 @@ public class RuoliController : Controller
     {
         var ruoli = new[] { "Admin", "Staff" };
         var permessi = await _dbContext.RolePermissions.ToListAsync();
+        ViewBag.RegisterEnabled = await RegistroGestionaleAbilitatoAsync();
 
         var permessiModel = (from ruolo in ruoli
                              from feature in Features.AllFeatures
@@ -63,6 +66,28 @@ public class RuoliController : Controller
         };
 
         return View(model);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AggiornaRegistroGestionale(string registerEnabled)
+    {
+        var setting = await _dbContext.AppSettings
+            .FirstOrDefaultAsync(s => s.Key == RegisterEnabledSettingKey);
+
+        if (setting == null)
+        {
+            setting = new AppSetting { Key = RegisterEnabledSettingKey };
+            _dbContext.AppSettings.Add(setting);
+        }
+
+        setting.Value = registerEnabled == "on" ? "true" : "false";
+        await _dbContext.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = setting.Value == "true"
+            ? "Registrazione gestionale abilitata."
+            : "Registrazione gestionale disabilitata.";
+
+        return RedirectToAction(nameof(GestionePermessi));
     }
 
     [HttpPost]
@@ -178,6 +203,16 @@ public class RuoliController : Controller
         }
 
         return RedirectToAction(nameof(GestionePermessi));
+    }
+
+    private async Task<bool> RegistroGestionaleAbilitatoAsync()
+    {
+        var valore = await _dbContext.AppSettings
+            .Where(s => s.Key == RegisterEnabledSettingKey)
+            .Select(s => s.Value)
+            .FirstOrDefaultAsync();
+
+        return string.Equals(valore, "true", System.StringComparison.OrdinalIgnoreCase);
     }
 
 

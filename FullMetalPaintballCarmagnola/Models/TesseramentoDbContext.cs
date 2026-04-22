@@ -31,6 +31,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public DbSet<MovimentoExtra> MovimentiExtra { get; set; }
 
         public DbSet<Spesa> Spese { get; set; }
+        public DbSet<AppSetting> AppSettings { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
