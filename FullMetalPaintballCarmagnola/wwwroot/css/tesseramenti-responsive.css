@@ -1,86 +1,241 @@
-﻿@media (max-width: 768px) {
-
-    .tesseramenti-table thead {
-        display: none;
-    }
-
-    .tesseramenti-table,
-    .tesseramenti-table tbody,
-    .tesseramenti-table tr,
-    .tesseramenti-table td {
-        display: block;
-        width: 100%;
-    }
-
-        .tesseramenti-table tr {
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-        }
-
-        .tesseramenti-table td {
-            text-align: left;
-            padding: 8px;
-            border: none;
-            border-bottom: 1px solid #eee;
-            position: relative;
-            word-break: break-word;
-        }
-
-            .tesseramenti-table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: block;
-                margin-bottom: 3px;
-                color: #333;
-            }
+.tess-mobile-list {
+    display: none;
 }
-@media (max-width: 768px) {
 
-    .tesseramenti-table thead {
-        display: none;
+/* Mobile refinements for Views/Tesseramento/ListaTesseramenti.cshtml.
+   The desktop table is intentionally left unchanged above 768px. */
+
+@media (max-width: 768px) {
+    .tess-page {
+        padding: 12px 8px 44px;
+        overflow-x: hidden;
     }
 
-    .tesseramenti-table,
-    .tesseramenti-table tbody,
-    .tesseramenti-table tr,
-    .tesseramenti-table td {
-        display: block;
+    .tess-header {
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .tess-header__icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        font-size: 1.15rem;
+    }
+
+    .tess-header__title {
+        font-size: 1.45rem;
+        line-height: 1.05;
+    }
+
+    .tess-header__sub {
+        font-size: .7rem;
+    }
+
+    .tess-card {
+        border-radius: 8px;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .tess-card__body {
+        padding: 14px;
+    }
+
+    .tess-filters__grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .tess-filters__field,
+    .tess-filters__actions {
         width: 100%;
     }
 
-        .tesseramenti-table tr {
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-        }
+    .tess-filters__input {
+        width: 100% !important;
+        min-width: 0;
+        height: 42px;
+        font-size: 16px;
+    }
 
-        .tesseramenti-table td {
-            text-align: left;
-            padding: 8px;
-            border: none;
-            border-bottom: 1px solid #eee;
-            position: relative;
-            word-break: break-word;
-        }
+    .tess-filters__actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
 
-            .tesseramenti-table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                display: block;
-                margin-bottom: 3px;
-                color: #333;
-            }
+    .btn-tess {
+        min-height: 42px;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.15;
+    }
+
+    .tess-toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .tess-toolbar__label {
+        margin: 0;
+        text-align: center;
+    }
+
+    .selected-counter {
+        justify-content: center;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    .tess-table-wrap {
+        display: none;
+    }
+
+    .tess-mobile-list {
+        display: grid;
+        gap: 10px;
+        padding: 10px;
+        background: #f8faf5;
+    }
+
+    .tess-mobile-card {
+        border: 1px solid var(--fmp-border);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 3px 16px rgba(0,0,0,.08);
+        padding: 12px;
+    }
+
+    .tess-mobile-card__top {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+    }
+
+    .tess-mobile-card__select {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: var(--fmp-muted);
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .tess-mobile-card__name {
+        display: grid;
+        gap: 2px;
+        padding-bottom: 9px;
+        margin-bottom: 2px;
+        border-bottom: 1px solid #eaede4;
+    }
+
+    .tess-mobile-card__name span {
+        font-size: 1rem;
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+    }
+
+    .tess-mobile-card__name strong {
+        font-size: 1.16rem;
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+    }
+
+    .tess-mobile-card__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 36px;
+        padding: 7px 0;
+        border-bottom: 1px solid #eaede4;
+    }
+
+    .tess-mobile-card__row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .tess-mobile-card__row > span {
+        color: var(--fmp-muted);
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .06em;
+        line-height: 1.15;
+        text-transform: uppercase;
+    }
+
+    .tess-mobile-card__row > strong,
+    .tess-mobile-card__empty {
+        color: var(--fmp-text);
+        font-size: .92rem;
+        font-weight: 700;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .badge-tessera,
+    .badge-minorenne--si,
+    .badge-minorenne--no,
+    .partita-pill {
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .tess-mobile-card__row .btn-tess {
+        min-height: 36px;
+        padding: 6px 12px;
+    }
+
+    .tess-check {
+        width: 18px;
+        height: 18px;
+    }
+
+    .tess-footer-nav {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .tess-modal .modal-dialog {
+        margin: 10px;
+    }
+
+    .tess-modal .modal-footer {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 380px) {
+    .tess-filters__actions {
+        grid-template-columns: 1fr;
+    }
+
+    .tess-table tbody tr {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .tess-mobile-card__row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .tess-mobile-card__row > strong,
+    .tess-mobile-card__empty {
+        text-align: left;
+    }
 }

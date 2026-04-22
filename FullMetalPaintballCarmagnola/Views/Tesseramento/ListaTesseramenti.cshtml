@@ -105,6 +105,70 @@
                     .OrderByDescending(t => t.DataPartita)
                     .ThenByDescending(t => t.PartitaId);
 
+                <div class="tess-mobile-list">
+                    @foreach (var t in sortedModel)
+                    {
+                        var scadenza = new DateTime(t.DataCreazione.Year, 12, 31);
+                        var hasTessera = !string.IsNullOrEmpty(t.Tessera);
+
+                        <article class="tess-mobile-card">
+                            <div class="tess-mobile-card__top">
+                                <label class="tess-mobile-card__select">
+                                    <span>Seleziona</span>
+                                    <input type="checkbox" name="tesseratiIds" value="@t.Id"
+                                           class="tess-check select-item tess-mobile-check" />
+                                </label>
+                            </div>
+
+                            <div class="tess-mobile-card__name">
+                                <span>@t.Nome</span>
+                                <strong>@t.Cognome</strong>
+                            </div>
+
+                            <div class="tess-mobile-card__row">
+                                <span>Data partita</span>
+                                <strong>@(t.DataPartita?.ToString("dd/MM/yyyy") ?? "Non indicata")</strong>
+                            </div>
+
+                            <div class="tess-mobile-card__row">
+                                <span>Tessera</span>
+                                @if (hasTessera)
+                                {
+                                    <strong class="badge-tessera badge-tessera--active">
+                                        <i class="bi bi-check-circle-fill"></i> @t.Tessera
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <strong class="badge-tessera badge-tessera--none">
+                                        <i class="bi bi-dash-circle"></i> Nessuna
+                                    </strong>
+                                }
+                            </div>
+
+                            <div class="tess-mobile-card__row">
+                                <span>Azione</span>
+                                @if (hasTessera)
+                                {
+                                    <button type="button" class="btn-tess btn-tess--ghost"
+                                            onclick="dissociaTessera(@t.Id)">
+                                        <i class="bi bi-scissors"></i> Dissocia
+                                    </button>
+                                }
+                                else
+                                {
+                                    <strong class="tess-mobile-card__empty">Nessuna azione</strong>
+                                }
+                            </div>
+
+                            <div class="tess-mobile-card__row">
+                                <span>Scadenza</span>
+                                <strong>@scadenza.ToShortDateString()</strong>
+                            </div>
+                        </article>
+                    }
+                </div>
+
                 <div class="tess-table-wrap">
                     <table class="tess-table">
                         <thead>
@@ -285,19 +349,21 @@
         const selectAllEl   = document.getElementById('selectAll');
         const counterEl     = document.getElementById('selectedCounter');
         const countSpan     = document.getElementById('selectedCount');
-        const items         = () => document.querySelectorAll('.select-item');
+        const items         = () => Array.from(document.querySelectorAll('.select-item')).filter(cb => cb.offsetParent !== null);
 
         function updateCounter() {
-            const n = document.querySelectorAll('.select-item:checked').length;
+            const n = items().filter(cb => cb.checked).length;
             countSpan.textContent = n;
             if (n > 0) { counterEl.classList.add('visible'); }
             else        { counterEl.classList.remove('visible'); }
         }
 
-        selectAllEl.addEventListener('change', function () {
-            items().forEach(cb => cb.checked = this.checked);
-            updateCounter();
-        });
+        if (selectAllEl) {
+            selectAllEl.addEventListener('change', function () {
+                items().forEach(cb => cb.checked = this.checked);
+                updateCounter();
+            });
+        }
 
         document.addEventListener('change', e => {
             if (e.target.classList.contains('select-item')) updateCounter();
