@@ -19,7 +19,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var spese = await _db.Spese.OrderByDescending(s => s.Data).ThenByDescending(s => s.Ora).ToListAsync();
+            var spese = await _db.Spese
+                .OrderByDescending(s => s.Data)
+                .ToListAsync();
+
             return View(spese);
         }
 
@@ -27,10 +30,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Aggiungi([FromBody] Spesa nuova)
         {
-            if (nuova == null || string.IsNullOrWhiteSpace(nuova.Descrizione) || nuova.Importo <= 0)
+            if (nuova == null || nuova.Data == default || string.IsNullOrWhiteSpace(nuova.Descrizione) || nuova.Importo <= 0)
                 return BadRequest(new { message = "Dati della spesa non validi." });
 
-            nuova.Data = DateTime.SpecifyKind(nuova.Data, DateTimeKind.Utc);
+            nuova.Data = DateTime.SpecifyKind(nuova.Data.Date, DateTimeKind.Utc);
 
             if (!string.IsNullOrEmpty(nuova.Riferimento))
             {
@@ -42,6 +45,41 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _db.Spese.Add(nuova);
             await _db.SaveChangesAsync();
             return Ok(new { message = "Spesa aggiunta con successo." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Duplica([FromBody] DuplicaSpesaDTO dati)
+        {
+            if (dati == null || dati.Id <= 0 || dati.Date == null || !dati.Date.Any())
+                return BadRequest(new { message = "Dati duplicazione non validi." });
+
+            var spesaOrigine = await _db.Spese.FindAsync(dati.Id);
+            if (spesaOrigine == null)
+                return NotFound(new { message = "Spesa da duplicare non trovata." });
+
+            var dateValide = dati.Date
+                .Where(data => data != default)
+                .Select(data => DateTime.SpecifyKind(data.Date, DateTimeKind.Utc))
+                .Distinct()
+                .ToList();
+
+            if (!dateValide.Any())
+                return BadRequest(new { message = "Inserisci almeno una data valida." });
+
+            var nuoveSpese = dateValide.Select(data => new Spesa
+            {
+                Data = data,
+                Descrizione = spesaOrigine.Descrizione,
+                Importo = spesaOrigine.Importo,
+                Riferimento = spesaOrigine.Riferimento,
+                Rimborsato = spesaOrigine.Rimborsato
+            }).ToList();
+
+            _db.Spese.AddRange(nuoveSpese);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = $"{nuoveSpese.Count} spese duplicate con successo." });
         }
 
         [HttpPost]
@@ -102,5 +140,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return StatusCode(500, new { message = "Errore interno durante l'eliminazione." });
             }
         }
+    }
+
+    public class DuplicaSpesaDTO
+    {
+        public int Id { get; set; }
+        public List<DateTime>? Date { get; set; }
     }
 }

@@ -11,9 +11,6 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         [Required]
         public DateTime Data { get; set; }
 
-        [Required]
-        public TimeSpan Ora { get; set; }
-        
         [MaxLength(50)]
         public string? Riferimento { get; set; }
 

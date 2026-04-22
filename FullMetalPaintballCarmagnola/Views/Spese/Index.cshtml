@@ -15,7 +15,6 @@
         <thead>
             <tr>
                 <th>Data</th>
-                <th>Ora</th>
                 <th>Descrizione</th>
                 <th>Importo (€)</th>
                 <th>Rimborsato</th>
@@ -23,7 +22,7 @@
                 <th>Azioni</th>
             </tr>
             <tr>
-                @for (int i = 0; i < 6; i++)
+                @for (int i = 0; i < 5; i++)
                 {
                     <th><input type="text" placeholder="Filtra" class="form-control column-filter-input" data-column-index="@i" /></th>
                 }
@@ -34,15 +33,19 @@
             @foreach (var item in Model)
             {
                 <tr data-id="@item.Id">
-                    <td>@item.Data.ToString("dd/MM/yyyy")</td>
-                    <td>@item.Ora.ToString(@"hh\:mm")</td>
+                    <td data-order="@item.Data.ToString("yyyyMMdd")">@item.Data.ToString("dd/MM/yyyy")</td>
                     <td>@item.Descrizione</td>
-                    <td>@item.Importo.ToString("0.00")</td>
+                    <td data-order="@item.Importo.ToString(System.Globalization.CultureInfo.InvariantCulture)">@item.Importo.ToString("0.00")</td>
                     <td>
                         <input type="checkbox" class="form-check-input rimborsato-checkbox" @(item.Rimborsato ? "checked" : "") />
                     </td>
                     <td>@item.Riferimento</td>
                     <td>
+                        <button class="btn btn-sm btn-secondary duplica-spesa-btn"
+                                data-id="@item.Id"
+                                data-descrizione="@item.Descrizione">
+                            Duplica
+                        </button>
                         <button class="btn btn-sm btn-danger" onclick="eliminaSpesa(@item.Id)">Elimina</button>
                     </td>
                 </tr>
@@ -72,10 +75,6 @@
                         <input type="date" class="form-control" id="spesaData" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Ora</label>
-                        <input type="time" class="form-control" id="spesaOra" required>
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Descrizione</label>
                         <input type="text" class="form-control" id="spesaDescrizione" required>
                     </div>
@@ -102,12 +101,40 @@
     </div>
 </div>
 
+<!-- Modale Duplicazione -->
+<div class="modal fade" id="modaleDuplicaSpesa" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Duplica Spesa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="duplicaSpesaId">
+                <p class="mb-3">Seleziona una o più date su cui duplicare: <strong id="duplicaSpesaDescrizione"></strong></p>
+                <div id="duplicaDateContainer">
+                    <div class="input-group mb-2 duplica-date-row">
+                        <input type="date" class="form-control duplica-date-input" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="rimuoviDataDuplicazione(this)">Rimuovi</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="aggiungiDataDuplicazione()">Aggiungi data</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="duplicaSpesaBtn">Duplica</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
             var table = $('#tabellaSpese').DataTable({
                 orderCellsTop: true,
                 fixedHeader: true,
+                order: [[0, 'desc']],
                 paging: true,
                 searching: true,
                 info: true,
@@ -134,18 +161,20 @@
                 aggiornaRimborsato(id, nuovoValore);
             });
 
-                    $('#salvaSpesaBtn').on('click', function () {
-            const dataInserita = $('#spesaData').val(); // Deve essere yyyy-MM-dd
-            const oraInserita = $('#spesaOra').val();   // Deve essere HH:mm
+            $('#tabellaSpese').on('click', '.duplica-spesa-btn', function () {
+                apriModaleDuplicazione($(this).data('id'), $(this).data('descrizione'));
+            });
 
-            if (!dataInserita || !oraInserita) {
-                alert("Data e ora sono obbligatorie.");
+            $('#salvaSpesaBtn').on('click', function () {
+            const dataInserita = $('#spesaData').val();
+
+            if (!dataInserita) {
+                alert("La data è obbligatoria.");
                 return;
             }
 
             const nuovaSpesa = {
-                Data: dataInserita,                          // formato yyyy-MM-dd
-                Ora: oraInserita + ":00",                   // Completiamo come HH:mm:ss
+                Data: dataInserita,
                 Descrizione: $('#spesaDescrizione').val(),
                 Importo: parseFloat($('#spesaImporto').val()),
                 Riferimento: $('#spesaRiferimento').val()
@@ -169,6 +198,37 @@
             })
             .catch(() => alert('Errore nella richiesta.'));
         });
+
+            $('#duplicaSpesaBtn').on('click', function () {
+                const id = parseInt($('#duplicaSpesaId').val(), 10);
+                const date = $('.duplica-date-input')
+                    .map(function () { return $(this).val(); })
+                    .get()
+                    .filter(value => value);
+
+                if (!id || date.length === 0) {
+                    alert("Inserisci almeno una data valida.");
+                    return;
+                }
+
+                fetch('/Spese/Duplica', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({ Id: id, Date: date })
+                })
+                .then(r => {
+                    if (r.ok) {
+                        location.reload();
+                    } else {
+                        r.text().then(t => console.error("Risposta server:", t));
+                        alert('Errore nella duplicazione. Controlla le date inserite.');
+                    }
+                })
+                .catch(() => alert('Errore nella richiesta.'));
+            });
 
         });
 
@@ -202,11 +262,40 @@
             modal.show();
         }
 
+        function apriModaleDuplicazione(id, descrizione) {
+            $('#duplicaSpesaId').val(id);
+            $('#duplicaSpesaDescrizione').text(descrizione || '');
+            $('#duplicaDateContainer').html(creaRigaDataDuplicazione());
+            var modal = new bootstrap.Modal(document.getElementById('modaleDuplicaSpesa'));
+            modal.show();
+        }
+
+        function creaRigaDataDuplicazione() {
+            return `
+                <div class="input-group mb-2 duplica-date-row">
+                    <input type="date" class="form-control duplica-date-input" required>
+                    <button type="button" class="btn btn-outline-danger" onclick="rimuoviDataDuplicazione(this)">Rimuovi</button>
+                </div>`;
+        }
+
+        function aggiungiDataDuplicazione() {
+            $('#duplicaDateContainer').append(creaRigaDataDuplicazione());
+        }
+
+        function rimuoviDataDuplicazione(button) {
+            if ($('.duplica-date-row').length <= 1) {
+                $(button).closest('.duplica-date-row').find('input').val('');
+                return;
+            }
+
+            $(button).closest('.duplica-date-row').remove();
+        }
+
         function aggiornaTotale(dataTable) {
             var totale = 0;
             dataTable.rows({ search: 'applied' }).every(function () {
-                var data = this.data();
-                totale += parseFloat(data[3]) || 0;
+                var importo = $(this.node()).find('td').eq(2).data('order');
+                totale += parseFloat(importo) || 0;
             });
             $('#totaleImporto').text(totale.toFixed(2) + ' €');
         }

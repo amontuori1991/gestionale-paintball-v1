@@ -10,8 +10,10 @@
 
 	<title>@ViewData["Title"] - Full Metal Paintball Carmagnola</title>
 
-	<link rel="manifest" href="/manifest.json">
-	<meta name="theme-color" content="#0d6efd">
+	<environment include="Production">
+		<link rel="manifest" href="/manifest.json">
+		<meta name="theme-color" content="#0d6efd">
+	</environment>
 
 
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
@@ -103,43 +105,45 @@
 
 	@await RenderSectionAsync("Scripts", required: false)
 
-	<script>
-		if ('serviceWorker' in navigator) {
-			navigator.serviceWorker.register('/service-worker.js')
-				.then(function (registration) {
-					console.log('✅ Service Worker registrato con successo:', registration);
-				})
-				.catch(function (error) {
-					console.error('❌ Errore durante la registrazione del Service Worker:', error);
-				});
-		}
-
-		window.addEventListener('beforeinstallprompt', (e) => {
-
-			const url = window.location.href.toLowerCase();
-
-			if (url.includes('/tesseramento')) {
-				console.log("🔒 Banner PWA disattivato sulla pagina tesseramento");
-				return;
+	<environment include="Production">
+		<script>
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('/service-worker.js')
+					.then(function (registration) {
+						console.log('✅ Service Worker registrato con successo:', registration);
+					})
+					.catch(function (error) {
+						console.error('❌ Errore durante la registrazione del Service Worker:', error);
+					});
 			}
 
-			e.preventDefault();
-			let deferredPrompt = e;
+			window.addEventListener('beforeinstallprompt', (e) => {
 
-			setTimeout(() => {
-				deferredPrompt.prompt();
+				const url = window.location.href.toLowerCase();
 
-				deferredPrompt.userChoice.then((choiceResult) => {
-					if (choiceResult.outcome === 'accepted') {
-						console.log('✅ App aggiunta alla schermata Home');
-					} else {
-						console.log('ℹ️ Utente ha ignorato il banner');
-					}
-					deferredPrompt = null;
-				});
-			}, 2000);
-		});
-	</script>
+				if (url.includes('/tesseramento')) {
+					console.log("🔒 Banner PWA disattivato sulla pagina tesseramento");
+					return;
+				}
+
+				e.preventDefault();
+				let deferredPrompt = e;
+
+				setTimeout(() => {
+					deferredPrompt.prompt();
+
+					deferredPrompt.userChoice.then((choiceResult) => {
+						if (choiceResult.outcome === 'accepted') {
+							console.log('✅ App aggiunta alla schermata Home');
+						} else {
+							console.log('ℹ️ Utente ha ignorato il banner');
+						}
+						deferredPrompt = null;
+					});
+				}, 2000);
+			});
+		</script>
+	</environment>
 
 
 </body>
