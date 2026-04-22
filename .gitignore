@@ -11,3 +11,4 @@ obj/
 
 # Configurazioni locali
 *.local.json
+.data-protection-keys/

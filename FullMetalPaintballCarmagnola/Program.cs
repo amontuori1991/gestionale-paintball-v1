@@ -3,6 +3,7 @@ using Full_Metal_Paintball_Carmagnola.Data;
 using Full_Metal_Paintball_Carmagnola.Models;
 using Full_Metal_Paintball_Carmagnola.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,17 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 // Stringa di connessione dal file appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"]
+    ?? Environment.GetEnvironmentVariable("DATA_PROTECTION_KEYS_PATH")
+    ?? (builder.Environment.IsProduction()
+        ? "/var/data/DataProtection-Keys"
+        : Path.Combine(builder.Environment.ContentRootPath, ".data-protection-keys"));
+
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .SetApplicationName("FullMetalPaintballCarmagnola")
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 
 // CONFIGURAZIONE POSTGRESQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -79,9 +91,14 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Identity/Account/Login";
     options.AccessDeniedPath = "/AccessDenied/Custom";
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    options.ExpireTimeSpan = TimeSpan.FromDays(365);
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
+    options.Cookie.Name = "FullMetalPaintball.Auth";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = builder.Environment.IsProduction()
+        ? CookieSecurePolicy.Always
+        : CookieSecurePolicy.SameAsRequest;
 });
 
 var app = builder.Build();

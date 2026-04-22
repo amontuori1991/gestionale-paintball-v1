@@ -64,6 +64,7 @@ namespace Full_Metal_Paintball_Carmagnola.Areas.Identity.Pages.Account
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             ReturnUrl = returnUrl ?? Url.Content("~/");
+            Input = new InputModel { RememberMe = true };
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -89,7 +90,8 @@ namespace Full_Metal_Paintball_Carmagnola.Areas.Identity.Pages.Account
                     }
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                Input.RememberMe = true;
+                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: true, lockoutOnFailure: false);
                 Console.WriteLine($"LOGIN DEBUG - Email: {Input.Email}, Result: {result.Succeeded}, IsLockedOut: {result.IsLockedOut}, RequiresTwoFactor: {result.RequiresTwoFactor}");
 
                 if (result.Succeeded)
