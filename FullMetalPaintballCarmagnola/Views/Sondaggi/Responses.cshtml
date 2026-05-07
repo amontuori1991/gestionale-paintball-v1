@@ -1,0 +1,68 @@
+﻿@model (Full_Metal_Paintball_Carmagnola.Models.Survey survey, System.Collections.Generic.IEnumerable<Full_Metal_Paintball_Carmagnola.Models.SurveyResponse> responses)
+@using Full_Metal_Paintball_Carmagnola.Models
+@{
+    ViewData["Title"] = "Risposte";
+    var survey = Model.survey;
+    var responses = Model.responses ?? Enumerable.Empty<SurveyResponse>();
+    var questions = (IEnumerable<SurveyQuestion>)(ViewBag.Questions ?? Array.Empty<SurveyQuestion>());
+    var optionMap = ViewBag.OptionMap as IDictionary<int, string> ?? new Dictionary<int, string>();
+}
+<link href="~/css/sondaggi-responsive.css" rel="stylesheet" />
+
+<div class="container py-3 sondaggi-page sondaggi-responses-page">
+    <div class="text-center mb-3">
+        <h2 class="mb-2">Risposte: @survey.Title</h2>
+        <a class="btn btn-outline-dark" asp-action="ExportCsv" asp-route-id="@survey.Id">Export CSV</a>
+    </div>
+
+    @if (!responses.Any())
+    {
+        <div class="alert alert-info">Nessuna risposta al momento.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle sondaggi-table sondaggi-responses-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data invio</th>
+                        @foreach (var q in questions)
+                        {
+                            <th>@q.Text</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in responses)
+                    {
+                        <tr>
+                            <td data-label="ID">@r.Id</td>
+                            <td data-label="Data invio">@r.SubmittedAt.ToLocalTime()</td>
+                            @foreach (var q in questions)
+                            {
+                                var ans = r.Answers?.Where(a => a.QuestionId == q.Id).ToList() ?? new List<SurveyAnswer>();
+                                <td data-label="@q.Text">
+                                    @if (ans.Count == 0)
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                    else
+                                    {
+                                        @string.Join(" | ", ans.Select(a =>
+                                        a.OptionId.HasValue
+                                        ? (optionMap.TryGetValue(a.OptionId.Value, out var txt) ? txt : $"Opt#{a.OptionId}")
+                                        : a.AnswerText))
+                                                }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <div class="mt-3">
+        <a class="btn btn-outline-secondary" asp-action="Index">Torna all'elenco</a>
+    </div>
+</div>

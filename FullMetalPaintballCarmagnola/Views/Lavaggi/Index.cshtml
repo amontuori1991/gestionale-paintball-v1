@@ -1,0 +1,1017 @@
+@model Full_Metal_Paintball_Carmagnola.Models.LavaggiDashboardViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Lavaggi";
+    var culture = CultureInfo.GetCultureInfo("it-IT");
+    var state = Model.State;
+}
+
+<style>
+    body {
+        background: #ced4b5;
+    }
+
+    .lavaggi-shell {
+        max-width: 1120px;
+        margin: 32px auto;
+        padding: 0 16px 32px;
+    }
+
+    .lavaggi-card,
+    .history-card {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 24px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        padding: 28px;
+    }
+
+    .lavaggi-title {
+        text-align: center;
+        margin-bottom: 10px;
+        color: #1f2937;
+        font-weight: 800;
+    }
+
+    .lavaggi-subtitle {
+        text-align: center;
+        margin-bottom: 24px;
+        color: #475569;
+    }
+
+    .lavaggi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 18px;
+    }
+
+    .lavaggio-box {
+        background: linear-gradient(180deg, rgba(248,250,252,0.95), rgba(241,245,249,0.95));
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 20px;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    .lavaggio-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .lavaggio-emoji {
+        font-size: 2.2rem;
+        line-height: 1;
+    }
+
+    .lavaggio-name {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .counter-row {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr) 64px;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 16px;
+        width: 100%;
+    }
+
+    .counter-btn {
+        border: none;
+        border-radius: 16px;
+        font-size: 1.7rem;
+        font-weight: 700;
+        min-height: 64px;
+        min-width: 0;
+        background: #1d4ed8;
+        color: white;
+        box-shadow: 0 8px 18px rgba(29, 78, 216, 0.2);
+    }
+
+    .counter-btn.minus {
+        background: #dc2626;
+        box-shadow: 0 8px 18px rgba(220, 38, 38, 0.2);
+    }
+
+    .counter-input {
+        min-height: 78px;
+        min-width: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 800;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: white;
+        color: #0f172a;
+        padding: 0 8px;
+    }
+
+    .money-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .money-field label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: #334155;
+    }
+
+    .money-field input {
+        width: 100%;
+        min-height: 48px;
+        min-width: 0;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        padding: 10px 14px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .subtotal {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #0f172a;
+        background: rgba(15, 23, 42, 0.05);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+    }
+
+    .due-box {
+        background: rgba(251, 191, 36, 0.14);
+        border: 1px solid rgba(251, 191, 36, 0.28);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        color: #78350f;
+    }
+
+    .due-box strong {
+        display: block;
+        font-size: 1.15rem;
+        color: #92400e;
+        margin: 4px 0;
+    }
+
+    .box-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .reset-btn,
+    .undo-btn {
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        padding: 10px 14px;
+    }
+
+    .reset-btn {
+        background: rgba(220, 38, 38, 0.12);
+        color: #991b1b;
+    }
+
+    .undo-btn {
+        background: rgba(29, 78, 216, 0.12);
+        color: #1d4ed8;
+        white-space: nowrap;
+    }
+
+    .grand-total {
+        margin-top: 24px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: white;
+        padding: 22px;
+        display: grid;
+        gap: 8px;
+    }
+
+    .grand-total strong {
+        font-size: 2.1rem;
+    }
+
+    .save-status {
+        margin-top: 16px;
+        text-align: center;
+        color: #334155;
+        font-weight: 600;
+        min-height: 24px;
+    }
+
+    .history-card {
+        margin-top: 24px;
+    }
+
+    .history-header {
+        margin-bottom: 16px;
+    }
+
+    .history-header h2 {
+        margin: 0 0 6px;
+        color: #111827;
+        font-size: 1.35rem;
+        font-weight: 800;
+    }
+
+    .history-header p {
+        margin: 0;
+        color: #475569;
+    }
+
+    .history-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .history-pill {
+        background: rgba(15, 23, 42, 0.06);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .history-table-wrap {
+        overflow-x: auto;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .history-table th {
+        font-size: 0.95rem;
+        color: #334155;
+    }
+
+    .history-empty {
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.05);
+        color: #475569;
+        font-weight: 600;
+    }
+
+    .history-mobile-list {
+        display: none;
+        gap: 12px;
+    }
+
+    .history-mobile-item {
+        background: rgba(248,250,252,0.95);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 16px;
+        padding: 14px;
+        display: grid;
+        gap: 8px;
+    }
+
+    .history-mobile-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .history-mobile-title strong {
+        color: #111827;
+        font-size: 1rem;
+    }
+
+    .history-mobile-amount {
+        color: #0f172a;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .history-mobile-meta {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.45;
+    }
+
+    .history-mobile-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 4px;
+    }
+
+    .undo-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.58);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 1100;
+    }
+
+    .undo-modal-backdrop.show {
+        display: flex;
+    }
+
+    .undo-modal {
+        max-width: 440px;
+        width: 100%;
+        background: white;
+        border-radius: 22px;
+        padding: 22px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+    }
+
+    .undo-modal h3 {
+        margin: 0 0 10px;
+        color: #111827;
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+
+    .undo-modal p {
+        margin: 0 0 14px;
+        color: #475569;
+    }
+
+    .undo-modal-info {
+        background: rgba(15, 23, 42, 0.05);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .undo-modal-actions {
+        display: grid;
+        gap: 10px;
+    }
+
+    .undo-choice-btn {
+        border: none;
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-weight: 800;
+    }
+
+    .undo-choice-btn.merge {
+        background: rgba(29, 78, 216, 0.12);
+        color: #1d4ed8;
+    }
+
+    .undo-choice-btn.replace {
+        background: rgba(251, 191, 36, 0.18);
+        color: #92400e;
+    }
+
+    .undo-choice-btn.cancel {
+        background: rgba(15, 23, 42, 0.08);
+        color: #334155;
+    }
+
+    @@media (max-width: 640px) {
+        .lavaggi-shell {
+            padding: 0 10px 24px;
+        }
+
+        .lavaggi-card,
+        .history-card {
+            padding: 16px;
+            border-radius: 20px;
+        }
+
+        .lavaggio-box {
+            padding: 16px;
+        }
+
+        .lavaggi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .counter-row {
+            grid-template-columns: 52px minmax(0, 1fr) 52px;
+            gap: 8px;
+        }
+
+        .counter-btn {
+            min-height: 56px;
+            border-radius: 14px;
+            font-size: 1.45rem;
+        }
+
+        .counter-input {
+            font-size: 1.55rem;
+            min-height: 64px;
+        }
+
+        .due-box strong,
+        .subtotal {
+            font-size: 1rem;
+        }
+
+        .history-table-wrap {
+            display: none !important;
+        }
+
+        .history-mobile-list {
+            display: grid;
+        }
+    }
+</style>
+
+<div class="lavaggi-shell">
+    <div class="lavaggi-card">
+        <h1 class="lavaggi-title">Conteggio Lavaggi</h1>
+        <p class="lavaggi-subtitle">Contatore rapido per caschi e pettorine con saldo da pagare aggiornato in tempo reale e storico dei reset.</p>
+
+        <form id="lavaggiForm" asp-action="Save" asp-controller="Lavaggi" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="lavaggi-grid">
+                <section class="lavaggio-box" data-category="caschi">
+                    <div class="lavaggio-header">
+                        <div class="lavaggio-emoji">🪖</div>
+                        <div class="lavaggio-name">Caschi</div>
+                    </div>
+
+                    <div class="counter-row">
+                        <button type="button" class="counter-btn minus" data-action="decrement" data-target="CaschiCount">-</button>
+                        <input id="CaschiCount" name="CaschiCount" class="counter-input" type="number" min="0" step="1" value="@state.CaschiCount" />
+                        <button type="button" class="counter-btn" data-action="increment" data-target="CaschiCount">+</button>
+                    </div>
+
+                    <div class="money-row">
+                        <div class="money-field">
+                            <label for="CaschiUnitPrice">Valore per casco</label>
+                            <input id="CaschiUnitPrice" name="CaschiUnitPrice" type="number" min="0" step="0.01" value="@state.CaschiUnitPrice.ToString("0.00", CultureInfo.InvariantCulture)" />
+                        </div>
+                    </div>
+
+                    <div class="subtotal">
+                        Totale caschi: <span id="CaschiTotal">€ 0,00</span>
+                    </div>
+
+                    <div class="due-box">
+                        Importo dovuto da
+                        <strong>Montuo: <span id="CaschiDueAmount">€ 0,00</span></strong>
+                        <div>Periodo conteggio attuale: <span id="CaschiPeriodStart">@state.CaschiPeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</span></div>
+                    </div>
+
+                    <div class="box-actions">
+                        <button type="button" class="reset-btn" data-reset="caschi">Reset caschi</button>
+                    </div>
+                </section>
+
+                <section class="lavaggio-box" data-category="pettorine">
+                    <div class="lavaggio-header">
+                        <div class="lavaggio-emoji">🦺</div>
+                        <div class="lavaggio-name">Pettorine</div>
+                    </div>
+
+                    <div class="counter-row">
+                        <button type="button" class="counter-btn minus" data-action="decrement" data-target="PettorineCount">-</button>
+                        <input id="PettorineCount" name="PettorineCount" class="counter-input" type="number" min="0" step="1" value="@state.PettorineCount" />
+                        <button type="button" class="counter-btn" data-action="increment" data-target="PettorineCount">+</button>
+                    </div>
+
+                    <div class="money-row">
+                        <div class="money-field">
+                            <label for="PettorineUnitPrice">Valore per pettorina</label>
+                            <input id="PettorineUnitPrice" name="PettorineUnitPrice" type="number" min="0" step="0.01" value="@state.PettorineUnitPrice.ToString("0.00", CultureInfo.InvariantCulture)" />
+                        </div>
+                    </div>
+
+                    <div class="subtotal">
+                        Totale pettorine: <span id="PettorineTotal">€ 0,00</span>
+                    </div>
+
+                    <div class="due-box">
+                        Importo dovuto da
+                        <strong>Flavio: <span id="PettorineDueAmount">€ 0,00</span></strong>
+                        <div>Periodo conteggio attuale: <span id="PettorinePeriodStart">@state.PettorinePeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</span></div>
+                    </div>
+
+                    <div class="box-actions">
+                        <button type="button" class="reset-btn" data-reset="pettorine">Reset pettorine</button>
+                    </div>
+                </section>
+            </div>
+
+            <section class="grand-total">
+                <div>Saldo complessivo da pagare</div>
+                <strong id="GrandTotal">€ 0,00</strong>
+                <div id="LastSavedLabel">
+                    Ultimo aggiornamento:
+                    @state.LastUpdatedUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+                </div>
+            </section>
+
+            <div id="saveStatus" class="save-status"></div>
+        </form>
+    </div>
+
+    <section class="history-card">
+        <div class="history-header">
+            <h2>Riepilogo Lavaggi Resettati</h2>
+            <p>Lo storico tiene memoria di chi deve pagare e quanto, quanti pezzi sono stati conteggiati, il valore unitario e il periodo coperto.</p>
+        </div>
+
+        <div class="history-summary">
+            <div class="history-pill">Voci storiche: <span id="HistoryCount">@Model.History.Count</span></div>
+            <div class="history-pill">Totale storico: <span id="HistoryTotal">@Model.History.Sum(x => x.TotalAmount).ToString("C", culture)</span></div>
+        </div>
+
+        <div id="HistoryEmptyState" class="history-empty" @(Model.History.Any() ? "style=display:none;" : "")>
+            Nessun reset registrato per ora.
+        </div>
+
+        <div id="HistoryTableWrap" class="history-table-wrap" @(Model.History.Any() ? "" : "style=display:none;")>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Dovuto da</th>
+                        <th>Pezzi</th>
+                        <th>Valore unitario</th>
+                        <th>Importo</th>
+                        <th>Periodo</th>
+                        <th>Reset</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="HistoryTableBody">
+                    @foreach (var entry in Model.History.OrderByDescending(x => x.ResetAtUtc))
+                    {
+                        <tr>
+                            <td>@entry.CategoryName</td>
+                            <td>@entry.PersonName</td>
+                            <td>@entry.PieceCount</td>
+                            <td>@entry.UnitPrice.ToString("C", culture)</td>
+                            <td>@entry.TotalAmount.ToString("C", culture)</td>
+                            <td>@entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <button type="button" class="undo-btn" data-undo-id="@entry.EntryId">Annulla</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                </table>
+        </div>
+
+        <div id="HistoryMobileList" class="history-mobile-list" @(Model.History.Any() ? "" : "style=display:none;")>
+            @foreach (var entry in Model.History.OrderByDescending(x => x.ResetAtUtc))
+            {
+                <article class="history-mobile-item">
+                    <div class="history-mobile-title">
+                        <div>
+                            <strong>@entry.CategoryName</strong>
+                            <div class="history-mobile-meta">Dovuto da @entry.PersonName</div>
+                        </div>
+                        <div class="history-mobile-amount">@entry.TotalAmount.ToString("C", culture)</div>
+                    </div>
+                    <div class="history-mobile-meta">Pezzi: @entry.PieceCount</div>
+                    <div class="history-mobile-meta">Valore unitario: @entry.UnitPrice.ToString("C", culture)</div>
+                    <div class="history-mobile-meta">Periodo: @entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="history-mobile-meta">Reset: @entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="history-mobile-actions">
+                        <button type="button" class="undo-btn" data-undo-id="@entry.EntryId">Annulla</button>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+</div>
+
+<div id="UndoDecisionModal" class="undo-modal-backdrop" aria-hidden="true">
+    <div class="undo-modal">
+        <h3>Parziali gia presenti</h3>
+        <p>Per questa categoria ci sono gia nuovi conteggi attivi. Scegli come gestire il ripristino del reset annullato.</p>
+        <div id="UndoDecisionInfo" class="undo-modal-info"></div>
+        <div class="undo-modal-actions">
+            <button type="button" id="UndoMergeButton" class="undo-choice-btn merge">Somma ai parziali attuali</button>
+            <button type="button" id="UndoReplaceButton" class="undo-choice-btn replace">Sostituisci i parziali attuali</button>
+            <button type="button" id="UndoCancelButton" class="undo-choice-btn cancel">Annulla</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById('lavaggiForm');
+            const caschiCount = document.getElementById('CaschiCount');
+            const caschiUnitPrice = document.getElementById('CaschiUnitPrice');
+            const caschiTotal = document.getElementById('CaschiTotal');
+            const caschiDueAmount = document.getElementById('CaschiDueAmount');
+            const caschiPeriodStart = document.getElementById('CaschiPeriodStart');
+            const pettorineCount = document.getElementById('PettorineCount');
+            const pettorineUnitPrice = document.getElementById('PettorineUnitPrice');
+            const pettorineTotal = document.getElementById('PettorineTotal');
+            const pettorineDueAmount = document.getElementById('PettorineDueAmount');
+            const pettorinePeriodStart = document.getElementById('PettorinePeriodStart');
+            const grandTotal = document.getElementById('GrandTotal');
+            const saveStatus = document.getElementById('saveStatus');
+            const lastSavedLabel = document.getElementById('LastSavedLabel');
+            const historyCount = document.getElementById('HistoryCount');
+            const historyTotal = document.getElementById('HistoryTotal');
+            const historyEmptyState = document.getElementById('HistoryEmptyState');
+            const historyTableWrap = document.getElementById('HistoryTableWrap');
+            const historyTableBody = document.getElementById('HistoryTableBody');
+            const historyMobileList = document.getElementById('HistoryMobileList');
+            const undoDecisionModal = document.getElementById('UndoDecisionModal');
+            const undoDecisionInfo = document.getElementById('UndoDecisionInfo');
+            const undoMergeButton = document.getElementById('UndoMergeButton');
+            const undoReplaceButton = document.getElementById('UndoReplaceButton');
+            const undoCancelButton = document.getElementById('UndoCancelButton');
+            const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+            let saveTimer = null;
+            let pendingUndoDecision = null;
+
+            const parseIntSafe = (value) => Math.max(0, parseInt(value || '0', 10) || 0);
+            const parseDecimalSafe = (value) => {
+                const normalized = String(value ?? '0').replace(',', '.');
+                const parsed = parseFloat(normalized);
+                return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+            };
+
+            const toServerDecimal = (value) => parseDecimalSafe(value).toFixed(2).replace('.', ',');
+
+            const formatCurrency = (value) => new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(value);
+
+            const setNumericInputValue = (input, value) => {
+                const numericValue = Number(value ?? 0);
+                const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
+                const formatted = safeValue.toFixed(2);
+                input.value = formatted;
+                input.setAttribute('value', formatted);
+
+                if (input.value === '' && 'valueAsNumber' in input) {
+                    input.valueAsNumber = safeValue;
+                    input.setAttribute('value', safeValue.toString());
+                }
+            };
+
+            const closeUndoModal = () => {
+                pendingUndoDecision = null;
+                undoDecisionModal.classList.remove('show');
+                undoDecisionModal.setAttribute('aria-hidden', 'true');
+            };
+
+            const openUndoModal = (result) => {
+                pendingUndoDecision = result;
+                undoDecisionInfo.innerHTML = `
+                    Categoria: <strong>${result.categoryName}</strong><br />
+                    Ripristino reset: <strong>${result.pieceCount} pezzi</strong> per ${formatCurrency(result.totalAmount)}<br />
+                    Parziale attuale: <strong>${result.currentCount} pezzi</strong> a ${formatCurrency(result.currentUnitPrice)}
+                `;
+                undoDecisionModal.classList.add('show');
+                undoDecisionModal.setAttribute('aria-hidden', 'false');
+            };
+
+            const refreshTotals = () => {
+                const caschiValue = parseIntSafe(caschiCount.value);
+                const caschiPriceValue = parseDecimalSafe(caschiUnitPrice.value);
+                const pettorineValue = parseIntSafe(pettorineCount.value);
+                const pettorinePriceValue = parseDecimalSafe(pettorineUnitPrice.value);
+
+                const caschiSubtotal = caschiValue * caschiPriceValue;
+                const pettorineSubtotal = pettorineValue * pettorinePriceValue;
+                const overall = caschiSubtotal + pettorineSubtotal;
+
+                caschiTotal.textContent = formatCurrency(caschiSubtotal);
+                caschiDueAmount.textContent = formatCurrency(caschiSubtotal);
+                pettorineTotal.textContent = formatCurrency(pettorineSubtotal);
+                pettorineDueAmount.textContent = formatCurrency(pettorineSubtotal);
+                grandTotal.textContent = formatCurrency(overall);
+            };
+
+            const bindUndoButtons = () => {
+                document.querySelectorAll('[data-undo-id]').forEach(button => {
+                    button.onclick = async () => {
+                        saveStatus.textContent = 'Ripristino operazione in corso...';
+                        closeUndoModal();
+
+                        const payload = new URLSearchParams();
+                        payload.set('__RequestVerificationToken', token);
+                        payload.set('entryId', button.dataset.undoId);
+
+                        try {
+                            const response = await fetch('@Url.Action("UndoHistoryEntry", "Lavaggi")', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                                },
+                                body: payload.toString()
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Errore durante l\'annullamento');
+                            }
+
+                            const result = await response.json();
+                            if (result.requiresDecision) {
+                                openUndoModal(result);
+                                saveStatus.textContent = 'Scelta richiesta per il ripristino';
+                                return;
+                            }
+
+                            if (!result.success) {
+                                throw new Error('Errore durante l\'annullamento');
+                            }
+
+                            caschiCount.value = result.caschiCount ?? caschiCount.value;
+                            pettorineCount.value = result.pettorineCount ?? pettorineCount.value;
+                            setNumericInputValue(caschiUnitPrice, result.caschiUnitPrice);
+                            setNumericInputValue(pettorineUnitPrice, result.pettorineUnitPrice);
+                            caschiPeriodStart.textContent = result.caschiPeriodStart ?? caschiPeriodStart.textContent;
+                            pettorinePeriodStart.textContent = result.pettorinePeriodStart ?? pettorinePeriodStart.textContent;
+                            lastSavedLabel.textContent = `Ultimo aggiornamento: ${result.lastUpdated}`;
+                            refreshTotals();
+                            refreshHistory(result.history);
+                            saveStatus.textContent = 'Operazione annullata';
+                        } catch (error) {
+                            saveStatus.textContent = 'Errore durante l\'annullamento';
+                        }
+                    };
+                });
+            };
+
+            const refreshHistory = (historyEntries) => {
+                const items = Array.isArray(historyEntries) ? historyEntries : [];
+                historyCount.textContent = items.length;
+                historyTotal.textContent = formatCurrency(items.reduce((sum, item) => sum + parseDecimalSafe(item.totalAmount), 0));
+                historyTableBody.innerHTML = '';
+                historyMobileList.innerHTML = '';
+
+                if (!items.length) {
+                    historyEmptyState.style.display = '';
+                    historyTableWrap.style.display = 'none';
+                    historyMobileList.style.display = 'none';
+                    bindUndoButtons();
+                    return;
+                }
+
+                historyEmptyState.style.display = 'none';
+                historyTableWrap.style.display = '';
+                historyMobileList.style.display = '';
+
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.categoryName}</td>
+                        <td>${item.personName}</td>
+                        <td>${item.pieceCount}</td>
+                        <td>${formatCurrency(item.unitPrice)}</td>
+                        <td>${formatCurrency(item.totalAmount)}</td>
+                        <td>${item.periodStart} - ${item.periodEnd}</td>
+                        <td>${item.resetAt}</td>
+                        <td><button type="button" class="undo-btn" data-undo-id="${item.entryId}">Annulla</button></td>
+                    `;
+                    historyTableBody.appendChild(row);
+
+                    const mobileItem = document.createElement('article');
+                    mobileItem.className = 'history-mobile-item';
+                    mobileItem.innerHTML = `
+                        <div class="history-mobile-title">
+                            <div>
+                                <strong>${item.categoryName}</strong>
+                                <div class="history-mobile-meta">Dovuto da ${item.personName}</div>
+                            </div>
+                            <div class="history-mobile-amount">${formatCurrency(item.totalAmount)}</div>
+                        </div>
+                        <div class="history-mobile-meta">Pezzi: ${item.pieceCount}</div>
+                        <div class="history-mobile-meta">Valore unitario: ${formatCurrency(item.unitPrice)}</div>
+                        <div class="history-mobile-meta">Periodo: ${item.periodStart} - ${item.periodEnd}</div>
+                        <div class="history-mobile-meta">Reset: ${item.resetAt}</div>
+                        <div class="history-mobile-actions">
+                            <button type="button" class="undo-btn" data-undo-id="${item.entryId}">Annulla</button>
+                        </div>
+                    `;
+                    historyMobileList.appendChild(mobileItem);
+                });
+
+                bindUndoButtons();
+            };
+
+            const saveState = async () => {
+                saveStatus.textContent = 'Salvataggio in corso...';
+
+                const payload = new URLSearchParams();
+                payload.set('__RequestVerificationToken', token);
+                payload.set('CaschiCount', parseIntSafe(caschiCount.value));
+                payload.set('CaschiUnitPrice', toServerDecimal(caschiUnitPrice.value));
+                payload.set('PettorineCount', parseIntSafe(pettorineCount.value));
+                payload.set('PettorineUnitPrice', toServerDecimal(pettorineUnitPrice.value));
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        body: payload.toString()
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Errore di salvataggio');
+                    }
+
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error('Errore di salvataggio');
+                    }
+
+                    caschiTotal.textContent = formatCurrency(result.caschiTotal ?? 0);
+                    caschiDueAmount.textContent = formatCurrency(result.caschiTotal ?? 0);
+                    pettorineTotal.textContent = formatCurrency(result.pettorineTotal ?? 0);
+                    pettorineDueAmount.textContent = formatCurrency(result.pettorineTotal ?? 0);
+                    grandTotal.textContent = formatCurrency(result.grandTotal ?? 0);
+                    caschiPeriodStart.textContent = result.caschiPeriodStart ?? caschiPeriodStart.textContent;
+                    pettorinePeriodStart.textContent = result.pettorinePeriodStart ?? pettorinePeriodStart.textContent;
+                    lastSavedLabel.textContent = `Ultimo aggiornamento: ${result.lastUpdated}`;
+                    saveStatus.textContent = 'Salvato';
+                } catch (error) {
+                    saveStatus.textContent = 'Errore durante il salvataggio';
+                }
+            };
+
+            const queueSave = (delay = 350) => {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(saveState, delay);
+            };
+
+            document.querySelectorAll('[data-action="increment"], [data-action="decrement"]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const target = document.getElementById(button.dataset.target);
+                    const currentValue = parseIntSafe(target.value);
+                    const nextValue = button.dataset.action === 'increment'
+                        ? currentValue + 1
+                        : Math.max(0, currentValue - 1);
+
+                    target.value = nextValue;
+                    refreshTotals();
+                    queueSave(100);
+                });
+            });
+
+            document.querySelectorAll('[data-reset]').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const category = button.dataset.reset;
+                    saveStatus.textContent = 'Reset in corso...';
+
+                    const payload = new URLSearchParams();
+                    payload.set('__RequestVerificationToken', token);
+                    payload.set('category', category);
+
+                    try {
+                        const response = await fetch('@Url.Action("ResetCategory", "Lavaggi")', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                            },
+                            body: payload.toString()
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Errore durante il reset');
+                        }
+
+                        const result = await response.json();
+                        if (!result.success) {
+                            throw new Error('Errore durante il reset');
+                        }
+
+                        if (category === 'caschi') {
+                            caschiCount.value = 0;
+                            caschiPeriodStart.textContent = result.lastUpdated;
+                        }
+
+                        if (category === 'pettorine') {
+                            pettorineCount.value = 0;
+                            pettorinePeriodStart.textContent = result.lastUpdated;
+                        }
+
+                        refreshTotals();
+                        lastSavedLabel.textContent = `Ultimo aggiornamento: ${result.lastUpdated}`;
+                        refreshHistory(result.history);
+                        saveStatus.textContent = 'Reset registrato';
+                    } catch (error) {
+                        saveStatus.textContent = 'Errore durante il reset';
+                    }
+                });
+            });
+
+            [caschiCount, caschiUnitPrice, pettorineCount, pettorineUnitPrice].forEach(input => {
+                input.addEventListener('input', () => {
+                    refreshTotals();
+                    queueSave();
+                });
+
+                input.addEventListener('change', () => {
+                    refreshTotals();
+                    queueSave(100);
+                });
+            });
+
+            undoMergeButton.addEventListener('click', async () => {
+                if (!pendingUndoDecision?.entryId) {
+                    closeUndoModal();
+                    return;
+                }
+
+                await executeUndoWithResolution(pendingUndoDecision.entryId, 'merge');
+            });
+
+            undoReplaceButton.addEventListener('click', async () => {
+                if (!pendingUndoDecision?.entryId) {
+                    closeUndoModal();
+                    return;
+                }
+
+                await executeUndoWithResolution(pendingUndoDecision.entryId, 'replace');
+            });
+
+            undoCancelButton.addEventListener('click', () => {
+                closeUndoModal();
+                saveStatus.textContent = 'Ripristino annullato';
+            });
+
+            undoDecisionModal.addEventListener('click', (event) => {
+                if (event.target === undoDecisionModal) {
+                    closeUndoModal();
+                }
+            });
+
+            const executeUndoWithResolution = async (entryId, resolution) => {
+                saveStatus.textContent = 'Ripristino operazione in corso...';
+
+                const payload = new URLSearchParams();
+                payload.set('__RequestVerificationToken', token);
+                payload.set('entryId', entryId);
+                payload.set('resolution', resolution);
+
+                try {
+                    const response = await fetch('@Url.Action("UndoHistoryEntry", "Lavaggi")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        body: payload.toString()
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Errore durante l\'annullamento');
+                    }
+
+                    const result = await response.json();
+                    if (!result.success) {
+                        throw new Error('Errore durante l\'annullamento');
+                    }
+
+                    closeUndoModal();
+                    caschiCount.value = result.caschiCount ?? caschiCount.value;
+                    pettorineCount.value = result.pettorineCount ?? pettorineCount.value;
+                    setNumericInputValue(caschiUnitPrice, result.caschiUnitPrice);
+                    setNumericInputValue(pettorineUnitPrice, result.pettorineUnitPrice);
+                    caschiPeriodStart.textContent = result.caschiPeriodStart ?? caschiPeriodStart.textContent;
+                    pettorinePeriodStart.textContent = result.pettorinePeriodStart ?? pettorinePeriodStart.textContent;
+                    lastSavedLabel.textContent = `Ultimo aggiornamento: ${result.lastUpdated}`;
+                    refreshTotals();
+                    refreshHistory(result.history);
+                    saveStatus.textContent = resolution === 'replace'
+                        ? 'Operazione annullata e parziali sostituiti'
+                        : 'Operazione annullata e parziali sommati';
+                } catch (error) {
+                    saveStatus.textContent = 'Errore durante l\'annullamento';
+                }
+            };
+
+            refreshTotals();
+            bindUndoButtons();
+        })();
+    </script>
+}

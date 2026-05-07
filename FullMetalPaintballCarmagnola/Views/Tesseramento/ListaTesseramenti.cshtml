@@ -1,0 +1,560 @@
+﻿@model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.TesseramentoViewModel>
+
+@{
+    ViewData["Title"] = "Elenco Tesseramenti";
+    Layout = "_Layout";
+}
+<link href="~/css/tesseramenti-responsive.css" rel="stylesheet" />
+
+<div class="tess-page">
+
+
+    <div class="tess-header">
+        <div class="tess-header__icon">
+            <i class="bi bi-person-badge"></i>
+        </div>
+        <div>
+            <h2 class="tess-header__title">Elenco Tesseramenti</h2>
+            <p class="tess-header__sub">Full Metal Paintball Carmagnola</p>
+        </div>
+    </div>
+
+
+    <div class="tess-card">
+        <div class="tess-card__body">
+            <form method="get" asp-action="ListaTesseramenti" id="filtersForm">
+                <div class="tess-filters__grid">
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">ID Partita</label>
+                        <input type="number" name="partitaId" value="@ViewBag.PartitaId"
+                               placeholder="es. 42" class="tess-filters__input" style="width:110px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Nome</label>
+                        <input type="text" name="searchNome" value="@ViewBag.SearchNome"
+                               placeholder="Nome…" class="tess-filters__input" style="width:130px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Cognome</label>
+                        <input type="text" name="searchCognome" value="@ViewBag.SearchCognome"
+                               placeholder="Cognome…" class="tess-filters__input" style="width:130px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Numero tessera</label>
+                        <input type="text" name="searchTessera" value="@ViewBag.SearchTessera"
+                               placeholder="Tessera…" class="tess-filters__input" style="width:130px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Data partita dal</label>
+                        <input type="date" name="dataDa" value="@ViewBag.DataDa" class="tess-filters__input" style="width:150px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Data partita al</label>
+                        <input type="date" name="dataA" value="@ViewBag.DataA" class="tess-filters__input" style="width:150px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Associazione partita</label>
+                        <select name="soloSenzaPartita" class="tess-filters__input" style="width:180px;">
+                            @if (ViewBag.SoloSenzaPartita == true)
+                            {
+                                <option value="">Tutti</option>
+                                <option value="true" selected>Solo senza partita</option>
+                            }
+                            else
+                            {
+                                <option value="" selected>Tutti</option>
+                                <option value="true">Solo senza partita</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="tess-filters__field">
+                        <label class="tess-filters__label">Tessere ACSI</label>
+                        <select name="soloTessereDaAssociare" class="tess-filters__input" style="width:220px;">
+                            @if (ViewBag.SoloTessereDaAssociare == true)
+                            {
+                                <option value="">Tutti</option>
+                                <option value="true" selected>Con tessera da associare</option>
+                            }
+                            else
+                            {
+                                <option value="" selected>Tutti</option>
+                                <option value="true">Con tessera da associare</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="tess-filters__actions">
+                        <button type="submit" class="btn-tess btn-tess--primary" data-manual-submit="true">
+                            <i class="bi bi-funnel-fill"></i> Filtra
+                        </button>
+                        <a href="@Url.Action("ListaTesseramenti")" class="btn-tess btn-tess--secondary">
+                            <i class="bi bi-x-lg"></i> Reset
+                        </a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="tess-card">
+
+        <form method="post" id="bulkActionsForm">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" name="searchNome" value="@ViewBag.SearchNome" />
+            <input type="hidden" name="searchCognome" value="@ViewBag.SearchCognome" />
+            <input type="hidden" name="searchTessera" value="@ViewBag.SearchTessera" />
+            <input type="hidden" name="dataDa" value="@ViewBag.DataDa" />
+            <input type="hidden" name="dataA" value="@ViewBag.DataA" />
+            <input type="hidden" name="partitaId" value="@ViewBag.PartitaId" />
+            <input type="hidden" name="soloSenzaPartita" value="@(ViewBag.SoloSenzaPartita == true ? "true" : "")" />
+            <input type="hidden" name="soloTessereDaAssociare" value="@(ViewBag.SoloTessereDaAssociare == true ? "true" : "")" />
+
+
+            <div class="tess-toolbar">
+                <span class="tess-toolbar__label"><i class="bi bi-lightning-charge-fill me-1"></i>Azioni sui selezionati</span>
+
+                <span class="selected-counter" id="selectedCounter">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span id="selectedCount">0</span> selezionati
+                </span>
+
+                <button type="submit" class="btn-tess btn-tess--success" id="exportAcsiButton"
+                        formaction="@Url.Action("ExportAcsiOds")">
+                    <i class="bi bi-filetype-ods"></i> Export ACSI ODS
+                </button>
+
+                <button type="submit" class="btn-tess btn-tess--info"
+                        formaction="@Url.Action("AssegnaTessere")">
+                    <i class="bi bi-card-checklist"></i> Assegna Tessere
+                </button>
+
+                <button type="submit" class="btn-tess btn-tess--danger"
+                        formaction="@Url.Action("DissociaTessereSelezionate")">
+                    <i class="bi bi-scissors"></i> Dissocia Tessere
+                </button>
+            </div>
+
+
+            <div id="tesseramentiResultsContent">
+                @await Html.PartialAsync("_ListaTesseramentiResults", Model)
+            </div>
+
+        </form>
+    </div>
+
+
+    <div class="tess-footer-nav">
+        <a href="@Url.Action("Index", "Tesseramento")" class="btn-tess btn-tess--primary">
+            <i class="bi bi-plus-circle-fill"></i> Nuovo Tesseramento
+        </a>
+        <a href="@Url.Action("Index", "Home")" class="btn-tess btn-tess--secondary">
+            <i class="bi bi-house-fill"></i> Torna alla Home
+        </a>
+    </div>
+
+</div>
+
+<div class="modal fade tess-modal" id="associaPartitaModal" tabindex="-1" aria-labelledby="associaPartitaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="associaPartitaModalLabel">
+                    <i class="bi bi-link-45deg me-2"></i>Associa tesserato a partita
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">
+                    Tesserato: <strong id="associaTesseratoNome">-</strong>
+                </p>
+
+                <input type="hidden" id="associaTesseratoId" />
+
+                <div class="d-flex flex-column flex-md-row gap-2 align-items-md-end mb-3">
+                    <div class="flex-grow-1">
+                        <label class="tess-filters__label" for="associaDataPartita">Giorno partita</label>
+                        <input type="date" id="associaDataPartita" class="tess-filters__input w-100" />
+                    </div>
+                    <button type="button" class="btn-tess btn-tess--primary" id="cercaPartiteAssociazioneBtn">
+                        <i class="bi bi-search"></i> Cerca partite
+                    </button>
+                </div>
+
+                <div id="associaPartiteFeedback" class="text-muted small mb-2">
+                    Seleziona una data per visualizzare le partite disponibili.
+                </div>
+
+                <div id="associaPartiteList" class="d-grid gap-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-tess btn-tess--secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Chiudi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade tess-modal" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Conferma dissociazione
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sei sicuro di voler <strong>dissociare la tessera</strong> da questo tesserato?</p>
+                <p style="font-size:.85rem;color:var(--fmp-muted);">Questa operazione non può essere annullata automaticamente.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-tess btn-tess--secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Annulla
+                </button>
+                <button type="button" id="confirmBtn" class="btn-tess btn-tess--danger">
+                    <i class="bi bi-scissors"></i> Dissocia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+                <div class="fw-semibold">Generazione export in corso...</div>
+                <div class="text-muted small mt-2">Attendi qualche secondo, il download partirà automaticamente.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const filtersForm = document.getElementById('filtersForm');
+        const bulkActionsForm = document.getElementById('bulkActionsForm');
+        const resultsContent = document.getElementById('tesseramentiResultsContent');
+        const filterInputs = filtersForm
+            ? Array.from(filtersForm.querySelectorAll('input[name], select[name]'))
+            : [];
+        let filterSubmitTimer = null;
+        let filterFetchController = null;
+
+        function getFiltersUrl() {
+            const url = new URL(filtersForm.getAttribute('action') || window.location.pathname, window.location.origin);
+            const formData = new FormData(filtersForm);
+
+            formData.forEach((value, key) => {
+                if (value !== null && value.toString().trim() !== '') {
+                    url.searchParams.set(key, value);
+                }
+            });
+
+            return url;
+        }
+
+        function syncBulkHiddenFilters() {
+            if (!bulkActionsForm || !filtersForm) return;
+
+            new FormData(filtersForm).forEach((value, key) => {
+                const hidden = bulkActionsForm.querySelector(`input[type="hidden"][name="${key}"]`);
+                if (hidden) hidden.value = value;
+            });
+        }
+
+        function submitFiltersDebounced() {
+            if (!filtersForm || !resultsContent) return;
+
+            syncBulkHiddenFilters();
+            clearTimeout(filterSubmitTimer);
+            filterSubmitTimer = setTimeout(async () => {
+                const url = getFiltersUrl();
+
+                if (filterFetchController) {
+                    filterFetchController.abort();
+                }
+
+                filterFetchController = new AbortController();
+                resultsContent.classList.add('is-filtering');
+
+                try {
+                    const response = await fetch(url.toString(), {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: filterFetchController.signal
+                    });
+
+                    if (!response.ok) throw new Error('Errore durante il filtro.');
+
+                    const html = await response.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const updatedResults = doc.getElementById('tesseramentiResultsContent');
+
+                    if (!updatedResults) throw new Error('Risultati non trovati.');
+
+                    resultsContent.innerHTML = updatedResults.innerHTML;
+                    window.history.replaceState({}, '', url.toString());
+                    syncBulkHiddenFilters();
+                    updateCounter();
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Errore filtro tesseramenti:', error);
+                        fmpNotify('Errore durante l\'aggiornamento dei risultati.', 'error');
+                    }
+                } finally {
+                    resultsContent.classList.remove('is-filtering');
+                }
+            }, 550);
+        }
+
+        filterInputs.forEach(input => {
+            const eventName = input.tagName === 'SELECT' || input.type === 'date' || input.type === 'number' ? 'change' : 'input';
+            input.addEventListener(eventName, submitFiltersDebounced);
+        });
+
+        // Select all / deselect + counter
+        const counterEl     = document.getElementById('selectedCounter');
+        const countSpan     = document.getElementById('selectedCount');
+        const items         = () => Array.from(document.querySelectorAll('.select-item')).filter(cb => cb.offsetParent !== null);
+
+        function updateCounter() {
+            const n = items().filter(cb => cb.checked).length;
+            countSpan.textContent = n;
+            if (n > 0) { counterEl.classList.add('visible'); }
+            else        { counterEl.classList.remove('visible'); }
+        }
+
+        document.addEventListener('change', e => {
+            if (e.target.id === 'selectAll') {
+                items().forEach(cb => cb.checked = e.target.checked);
+                updateCounter();
+            }
+
+            if (e.target.classList.contains('select-item')) updateCounter();
+        });
+
+        // Dissocia singola
+        let tesseraDaDissociare = null;
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        const exportModalElement = document.getElementById('exportModal');
+        const exportModal = exportModalElement ? new bootstrap.Modal(exportModalElement, {
+            backdrop: 'static',
+            keyboard: false
+        }) : null;
+
+        function dissociaTessera(id) {
+            tesseraDaDissociare = id;
+            confirmModal.show();
+        }
+
+        const associaPartitaModalElement = document.getElementById('associaPartitaModal');
+        const associaPartitaModal = associaPartitaModalElement ? new bootstrap.Modal(associaPartitaModalElement) : null;
+        const associaTesseratoId = document.getElementById('associaTesseratoId');
+        const associaTesseratoNome = document.getElementById('associaTesseratoNome');
+        const associaDataPartita = document.getElementById('associaDataPartita');
+        const associaPartiteFeedback = document.getElementById('associaPartiteFeedback');
+        const associaPartiteList = document.getElementById('associaPartiteList');
+        const cercaPartiteAssociazioneBtn = document.getElementById('cercaPartiteAssociazioneBtn');
+
+        function apriAssociaPartita(tesseratoId, nominativo) {
+            associaTesseratoId.value = tesseratoId;
+            associaTesseratoNome.textContent = nominativo || 'Tesserato selezionato';
+            associaPartiteList.innerHTML = '';
+            associaPartiteFeedback.textContent = 'Seleziona una data per visualizzare le partite disponibili.';
+            associaDataPartita.value = '';
+            associaPartitaModal?.show();
+        }
+
+        function escapeHtml(value) {
+            return (value ?? '').toString().replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        async function cercaPartitePerAssociazione() {
+            const data = associaDataPartita.value;
+            associaPartiteList.innerHTML = '';
+
+            if (!data) {
+                associaPartiteFeedback.textContent = 'Seleziona prima il giorno della partita.';
+                return;
+            }
+
+            cercaPartiteAssociazioneBtn.disabled = true;
+            associaPartiteFeedback.textContent = 'Ricerca partite in corso...';
+
+            try {
+                const url = new URL('@Url.Action("CercaPartitePerAssociazione", "Tesseramento")', window.location.origin);
+                url.searchParams.set('data', data);
+
+                const response = await fetch(url.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const result = await response.json();
+
+                if (!result.success) {
+                    associaPartiteFeedback.textContent = result.message || 'Impossibile cercare le partite.';
+                    return;
+                }
+
+                if (!result.partite.length) {
+                    associaPartiteFeedback.textContent = 'Nessuna partita trovata per questa data.';
+                    return;
+                }
+
+                associaPartiteFeedback.textContent = `${result.partite.length} partit${result.partite.length === 1 ? 'a trovata' : 'e trovate'} per questa data.`;
+                associaPartiteList.innerHTML = result.partite.map(partita => `
+                    <button type="button" class="btn-tess btn-tess--secondary justify-content-between text-start associa-partita-option"
+                            data-partita-id="${partita.id}">
+                        <span>
+                            <strong>#${partita.id}</strong> - ${escapeHtml(partita.ora)} - ${escapeHtml(partita.tipo || 'Tipo non indicato')}
+                            <small class="d-block text-muted">
+                                ${escapeHtml(partita.riferimento || 'Senza riferimento')} - ${escapeHtml(partita.partecipanti)} partecipanti - ${escapeHtml(partita.durata)}h
+                            </small>
+                        </span>
+                        <i class="bi bi-plus-circle-fill"></i>
+                    </button>
+                `).join('');
+            } catch (error) {
+                console.error('Errore ricerca partite:', error);
+                associaPartiteFeedback.textContent = 'Errore durante la ricerca delle partite.';
+            } finally {
+                cercaPartiteAssociazioneBtn.disabled = false;
+            }
+        }
+
+        async function associaTesseratoAPartita(partitaId) {
+            const tesseratoId = associaTesseratoId.value;
+            const token = document.querySelector('form[method="post"] input[name="__RequestVerificationToken"]').value;
+
+            if (!tesseratoId || !partitaId) return;
+
+            try {
+                const response = await fetch('@Url.Action("AssociaTesseratoAPartita", "Tesseramento")', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        tesseratoId,
+                        partitaId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    fmpNotify(result.message || 'Associazione non riuscita.', 'error');
+                    return;
+                }
+
+                associaPartitaModal?.hide();
+                await fmpNotify(result.message || 'Tesserato associato alla partita.', 'success');
+                location.reload();
+            } catch (error) {
+                console.error('Errore associazione partita:', error);
+                fmpNotify('Errore di connessione durante l\'associazione alla partita.', 'error');
+            }
+        }
+
+        cercaPartiteAssociazioneBtn?.addEventListener('click', cercaPartitePerAssociazione);
+        associaDataPartita?.addEventListener('change', cercaPartitePerAssociazione);
+        associaPartiteList?.addEventListener('click', event => {
+            const option = event.target.closest('.associa-partita-option');
+            if (option) associaTesseratoAPartita(option.dataset.partitaId);
+        });
+
+        document.getElementById('confirmBtn').addEventListener('click', async () => {
+            if (!tesseraDaDissociare) return;
+
+            const token = document.querySelector('form[method="post"] input[name="__RequestVerificationToken"]').value;
+
+            try {
+                const response = await fetch('@Url.Action("DissociaTessera", "Tesseramento")', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `tesseratoId=${tesseraDaDissociare}`
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    confirmModal.hide();
+                    location.reload();
+                } else {
+                    fmpNotify(data.message || 'Errore nella dissociazione tessera.', 'error');
+                }
+            } catch (error) {
+                console.error('Errore fetch:', error);
+                fmpNotify('Errore di connessione durante la dissociazione della tessera.', 'error');
+            }
+        });
+
+        const exportButton = document.getElementById('exportAcsiButton');
+
+        exportButton?.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            const form = exportButton.closest('form');
+            if (!form) return;
+
+            exportModal?.show();
+            exportButton.disabled = true;
+
+            try {
+                syncBulkHiddenFilters();
+                const formData = new FormData(form);
+                const response = await fetch(exportButton.formAction, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Errore durante la generazione dell\'export.');
+                }
+
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const contentDisposition = response.headers.get('Content-Disposition') || '';
+                const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+                const fileName = fileNameMatch?.[1] || 'Tesseramenti_ACSI.zip';
+
+                link.href = downloadUrl;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(downloadUrl);
+            } catch (error) {
+                console.error('Errore export:', error);
+                fmpNotify(error.message || 'Si è verificato un errore durante la generazione dell\'export.', 'error');
+            } finally {
+                exportButton.disabled = false;
+                exportModal?.hide();
+            }
+        });
+    </script>
+}

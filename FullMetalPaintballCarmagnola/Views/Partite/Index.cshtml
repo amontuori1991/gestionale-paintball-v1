@@ -1,0 +1,888 @@
+﻿@using Full_Metal_Paintball_Carmagnola.Models
+
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Gestione Partite";
+    var partiteFuture = ViewBag.PartiteFuture as List<Partita>;
+    var partitePassate = ViewBag.PartitePassate as List<Partita>;
+    var partiteCancellate = ViewBag.PartiteCancellate as List<Partita>;
+    var oggiIndex = DateTime.UtcNow.Date;
+    var settimanaCorrente = WeekStart(oggiIndex);
+    var segnalazioniIscritti = (partiteFuture ?? new List<Partita>())
+        .Select(p => new
+        {
+            Partita = p,
+            Iscritti = p.Tesseramenti?.Count ?? 0,
+            Extra = (p.Tesseramenti?.Count ?? 0) - p.NumeroPartecipanti
+        })
+        .Where(x => x.Extra > 0)
+        .OrderBy(x => x.Partita.Data + x.Partita.OraInizio)
+        .ToList();
+}
+
+@functions {
+    private static DateTime WeekStart(DateTime date)
+    {
+        var diff = ((int)date.DayOfWeek + 6) % 7;
+        return date.Date.AddDays(-diff);
+    }
+
+    private static string WeekTitle(DateTime weekStart)
+    {
+        var it = CultureInfo.GetCultureInfo("it-IT");
+        var weekEnd = weekStart.AddDays(6);
+        var startMonth = it.DateTimeFormat.GetMonthName(weekStart.Month);
+        var endMonth = it.DateTimeFormat.GetMonthName(weekEnd.Month);
+
+        return weekStart.Month == weekEnd.Month
+            ? $"dal {weekStart.Day} al {weekEnd.Day} {endMonth}"
+            : $"dal {weekStart.Day} {startMonth} al {weekEnd.Day} {endMonth}";
+    }
+}
+
+<link href="~/css/partite-responsive.css?v=@DateTime.UtcNow.Ticks" rel="stylesheet" />
+<style>
+    .overlay-spinner {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 6px solid rgba(255,255,255,0.25);
+        border-top-color: rgba(255,255,255,0.95);
+        animation: overlaySpin 0.9s linear infinite;
+    }
+
+    @@keyframes overlaySpin {
+        to
+
+    {
+        transform: rotate(360deg);
+    }
+
+    }
+
+    .partite-week-accordion .accordion-item {
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: 18px;
+        margin-bottom: 14px;
+        overflow: hidden;
+    }
+
+    .partite-week-accordion .accordion-button {
+        background: linear-gradient(135deg, rgba(230, 0, 126, .10), rgba(247, 127, 0, .12));
+        font-weight: 900;
+        gap: 10px;
+    }
+
+    .partite-week-count {
+        background: #111;
+        border-radius: 999px;
+        color: white;
+        display: inline-flex;
+        font-size: .8rem;
+        font-weight: 900;
+        min-width: 30px;
+        justify-content: center;
+        padding: 4px 9px;
+    }
+
+    .partite-group-heading {
+        align-items: center;
+        color: #141711;
+        display: flex;
+        gap: 12px;
+        margin: 28px 4px 12px;
+    }
+
+    .partite-group-heading:first-child {
+        margin-top: 4px;
+    }
+
+    .partite-group-heading::after {
+        background: linear-gradient(90deg, rgba(20, 23, 17, .28), rgba(20, 23, 17, 0));
+        content: "";
+        flex: 1;
+        height: 1px;
+    }
+
+    .partite-group-heading__label {
+        background: rgba(255, 255, 255, .72);
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 999px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, .08);
+        font-size: .82rem;
+        font-weight: 950;
+        letter-spacing: .08em;
+        padding: 8px 14px;
+        text-transform: uppercase;
+    }
+
+    .iscritti-count {
+        align-items: center;
+        border-radius: 999px;
+        display: inline-flex;
+        font-weight: 950;
+        justify-content: center;
+        min-width: 34px;
+        padding: 4px 10px;
+    }
+
+    .iscritti-count--ok {
+        background: #d4edda;
+        color: #146c2e;
+    }
+
+    .iscritti-count--under {
+        background: #fff3cd;
+        color: #8a6200;
+    }
+
+    .iscritti-count--over {
+        background: #f8d7da;
+        color: #9f1d2c;
+    }
+
+    .weather-pill {
+        align-items: center;
+        background: rgba(255, 255, 255, .78);
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 999px;
+        display: inline-flex;
+        gap: 6px;
+        max-width: 260px;
+        padding: 4px 9px;
+        white-space: nowrap;
+    }
+
+    .weather-pill__icon {
+        font-size: 1.08rem;
+        line-height: 1;
+    }
+
+    .weather-pill__text {
+        font-size: .76rem;
+        font-weight: 850;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .weather-pill--empty {
+        color: #777;
+        justify-content: center;
+        min-width: 34px;
+    }
+
+    .staff-weather-inline {
+        display: inline-flex;
+        margin-left: 8px;
+        margin-right: 22px;
+        vertical-align: middle;
+    }
+
+    .staff-weather-inline .weather-pill {
+        max-width: none;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .staff-weather-inline .weather-pill__text {
+        overflow: visible;
+        text-overflow: initial;
+    }
+
+    .pm-weather {
+        align-items: center;
+        background: rgba(255, 255, 255, .78);
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 999px;
+        display: inline-flex;
+        gap: 5px;
+        max-width: 100%;
+        padding: 3px 8px;
+    }
+
+    .pm-weather-top {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 10px;
+        width: 100%;
+    }
+
+    .pm-weather-top .pm-weather {
+        max-width: min(100%, 320px);
+        padding: 5px 12px;
+    }
+
+    .pm-weather small {
+        font-size: .72rem;
+        font-weight: 850;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .partite-overbook-alert {
+        background: linear-gradient(135deg, rgba(248, 215, 218, .96), rgba(255, 243, 205, .82));
+        border: 1px solid rgba(159, 29, 44, .22);
+        border-radius: 22px;
+        box-shadow: 0 18px 44px rgba(159, 29, 44, .10);
+        color: #4f1219;
+    }
+
+    .partite-overbook-alert__title {
+        align-items: center;
+        display: flex;
+        font-weight: 950;
+        gap: 10px;
+        letter-spacing: .02em;
+        margin-bottom: 10px;
+    }
+
+    .partite-overbook-alert__item {
+        align-items: center;
+        background: rgba(255, 255, 255, .62);
+        border: 1px solid rgba(159, 29, 44, .12);
+        border-radius: 16px;
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        padding: 10px 12px;
+    }
+
+    .partite-overbook-alert__item + .partite-overbook-alert__item {
+        margin-top: 8px;
+    }
+
+    .partite-overbook-jump {
+        background: #111;
+        border: 0;
+        border-radius: 999px;
+        color: white;
+        font-weight: 900;
+        padding: 7px 12px;
+        white-space: nowrap;
+    }
+
+    .partita-jump-highlight {
+        animation: partitaJumpPulse 1.8s ease-in-out 1;
+        outline: 3px solid rgba(248, 85, 39, .65);
+        outline-offset: 3px;
+    }
+
+    @@keyframes partitaJumpPulse {
+        0%, 100% { box-shadow: none; }
+        25%, 75% { box-shadow: 0 0 0 8px rgba(248, 85, 39, .16); }
+    }
+
+    @@media (max-width: 767px) {
+        .partite-overbook-alert__item {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="ios26-page" id="partite-page">
+
+
+    <!-- Header / Large Title + Toolbar -->
+    <div class="card-v p-3 p-lg-4 mb-3">
+        <div class="d-flex flex-column gap-3">
+            <h1 class="large-title m-0">Gestione Partite</h1>
+
+            <div class="partite-actions">
+                <a class="pbtn pbtn-green" href="@Url.Action("Create", "Partite")">
+                    <i class="bi bi-plus-circle me-1"></i> Aggiungi Partita
+                </a>
+                <a class="pbtn pbtn-gray" href="@Url.Action("Archivio", "Partite")">
+                    <i class="bi bi-folder2-open me-1"></i> Archivio
+                </a>
+                <a class="pbtn pbtn-blue" href="@Url.Action("Semplificata", "Partite")">
+                    <i class="bi bi-stars me-1"></i> Visualizzazione Semplificata
+                </a>
+            </div>
+            <!-- FILTRI -->
+            <div class="d-flex flex-wrap gap-2 mt-2 align-items-end justify-content-center">
+                <!-- Stato -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Stato</label>
+                    <select id="filtro-stato" class="form-select form-select-sm" style="min-width:140px;">
+                        <option value="">Tutti</option>
+                        <option value="confermata">Confermata</option>
+                        <option value="attesa">In Attesa</option>
+                    </select>
+                </div>
+                <!-- Data da -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Dal</label>
+                    <input type="date" id="filtro-data-da" class="form-control form-control-sm" style="min-width:140px;" />
+                </div>
+                <!-- Data a -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Al</label>
+                    <input type="date" id="filtro-data-a" class="form-control form-control-sm" style="min-width:140px;" />
+                </div>
+                <!-- Reset -->
+                <div>
+                    <button id="btn-reset-filtri" class="pbtn pbtn-gray mt-auto">
+                        <i class="bi bi-x-circle me-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @if (segnalazioniIscritti.Any())
+    {
+        <div class="partite-overbook-alert p-3 p-lg-4 mb-3">
+            <div class="partite-overbook-alert__title">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Attenzione iscritti oltre soglia</span>
+            </div>
+
+            @foreach (var segnalazione in segnalazioniIscritti)
+            {
+                var partita = segnalazione.Partita;
+                <div class="partite-overbook-alert__item">
+                    <div>
+                        <strong>Partita @partita.Id</strong>
+                        <span>
+                            del @partita.Data.ToString("dd/MM/yyyy") alle @partita.OraInizio.ToString(@"hh\:mm"):
+                            @segnalazione.Iscritti iscritti su @partita.NumeroPartecipanti prenotanti
+                            (<strong>+@segnalazione.Extra</strong>).
+                        </span>
+                    </div>
+                    <button type="button" class="partite-overbook-jump" data-partita-id="@partita.Id">
+                        Vai alla partita
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Sezioni Tabelle -->
+    <div class="partite-week-accordion accordion" id="partiteWeekAccordion">
+        @{
+            var sezioni = new[]
+            {
+                new { Key = "future", Titolo = "Prossime Partite", Items = partiteFuture ?? new List<Partita>(), DefaultOpen = true },
+                new { Key = "passate", Titolo = "Partite Disputate", Items = partitePassate ?? new List<Partita>(), DefaultOpen = false },
+                new { Key = "cancellate", Titolo = "Partite Annullate", Items = partiteCancellate ?? new List<Partita>(), DefaultOpen = false }
+            };
+        }
+
+        @foreach (var sezione in sezioni)
+        {
+            <div class="partite-group-heading" data-section="@sezione.Key">
+                <span class="partite-group-heading__label">@sezione.Titolo</span>
+            </div>
+
+            var gruppi = sezione.Items
+                .GroupBy(p => WeekStart(p.Data))
+                .OrderBy(g => sezione.Key == "future" ? g.Key.Ticks : -g.Key.Ticks)
+                .ToList();
+
+            if (!gruppi.Any())
+            {
+                <div class="card-v p-3 p-lg-4 mb-3">
+                    <h4 class="partite-section-title">@sezione.Titolo</h4>
+                    <p class="text-muted mb-0">Nessuna partita in questa sezione.</p>
+                </div>
+                continue;
+            }
+
+            var hasCurrentWeek = gruppi.Any(g => g.Key == settimanaCorrente);
+
+            foreach (var gruppo in gruppi)
+            {
+                var open = sezione.DefaultOpen && (gruppo.Key == settimanaCorrente || (!hasCurrentWeek && gruppo.Key == gruppi.First().Key));
+                var collapseId = $"week-{sezione.Key}-{gruppo.Key:yyyyMMdd}";
+                var title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(WeekTitle(gruppo.Key));
+                var items = gruppo.OrderBy(p => p.Data + p.OraInizio).ToList();
+                if (sezione.Key != "future")
+                {
+                    items = gruppo.OrderByDescending(p => p.Data + p.OraInizio).ToList();
+                }
+
+                <div class="accordion-item" data-section="@sezione.Key" data-default-open="@(open ? "true" : "false")">
+                    <h2 class="accordion-header" id="heading-@collapseId">
+                        <button class="accordion-button @(open ? "" : "collapsed")" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#@collapseId"
+                                aria-expanded="@(open ? "true" : "false")"
+                                aria-controls="@collapseId">
+                            <span class="partite-week-count">@items.Count</span>
+                            <span>@title</span>
+                        </button>
+                    </h2>
+                    <div id="@collapseId" class="accordion-collapse collapse @(open ? "show" : "")"
+                         aria-labelledby="heading-@collapseId">
+                        <div class="accordion-body card-v p-3 p-lg-4">
+                            @await Html.PartialAsync("_PartiteTable", items)
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Modal Riferimento -->
+<div class="modal fade" id="riferimentoModal" tabindex="-1" aria-labelledby="riferimentoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Riferimento Prenotazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+            </div>
+            <div class="modal-body">
+                <span id="riferimentoContent"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay di attesa per invio recensione -->
+<div id="overlay-recensione" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background-color:rgba(0,0,0,0.7);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px;">
+        <div class="overlay-spinner" aria-hidden="true"></div>
+        <div style="font-size:1.25rem; color:white; font-weight:700;">
+            Invio recensione in corso, attendere...
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        function showRiferimento(rif) {
+            const modal = new bootstrap.Modal(document.getElementById('riferimentoModal'));
+            document.getElementById('riferimentoContent').textContent = rif ?? "";
+            modal.show();
+        }
+
+        $(document).ready(function () {
+
+            $('.staff-select').on('change', function () {
+                var select = $(this);
+                var campo = select.data('campo');
+                var partitaId = select.data('partita');
+                var valore = select.val();
+
+                $.ajax({
+                    url: '@Url.Action("AggiornaStaff", "Partite")',
+                    method: 'POST',
+                    data: { id: partitaId, campo: campo, valore: valore },
+                    success: function (response) {
+                        if (!response.success) {
+                            fmpNotify(response.message || "Errore durante l'aggiornamento dello staff", "error");
+                            console.error("Errore dal server:", response);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        fmpNotify('Errore durante l\'aggiornamento dello staff', "error");
+                        console.error("Dettaglio errore:", error, xhr.responseText);
+                    }
+                });
+            });
+
+        $('.btn-invia-recensione').on('click', function () {
+            const btn = $(this);
+            var partitaId = btn.data('id');
+
+                Swal.fire({
+                    title: 'Sei sicuro?',
+                    text: "Vuoi inviare la richiesta di recensione per la partita selezionata?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Invia',
+                    cancelButtonText: 'Annulla'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.prop('disabled', true);
+                        $('#overlay-recensione').css('display', 'flex');
+                        $.ajax({
+                            url: '@Url.Action("InviaRecensione", "Partite")',
+                            method: 'POST',
+                            data: { id: partitaId },
+                            success: function (response) {
+                                $('#overlay-recensione').hide();
+                                btn.prop('disabled', false);
+                                if (response.success) {
+                                    fmpNotify(response.message || 'Email inviate con successo!', 'success', 'Inviato!');
+                                } else {
+                                    fmpNotify(response.message || 'Errore nell\'invio delle email.', 'error');
+                                }
+                            },
+        error: function () {
+            $('#overlay-recensione').hide();
+            btn.prop('disabled', false);
+            fmpNotify('Errore nell\'invio delle email.', 'error');
+        }
+
+                        });
+                    }
+                });
+            });
+
+            $('.btn-messaggio-prenotazione').on('click', function () {
+                var partitaId = $(this).data('id');
+
+                $.ajax({
+                    url: '@Url.Action("GeneraMessaggioPrenotazione", "Partite")',
+                    method: 'GET',
+                    data: { id: partitaId },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Messaggio Prenotazione',
+                                html: `<div id="messaggioTestoSelezionabile" style="width:100%;max-height:400px;overflow-y:auto;border:1px solid #ccc;padding:10px;text-align:left;user-select:text;-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;white-space:pre-wrap;word-break:break-word;">${response.messaggio}</div>`,
+                                icon: 'info',
+                                confirmButtonText: 'Chiudi',
+                                showConfirmButton: true,
+                                showDenyButton: true,
+                                denyButtonText: 'Copia Testo',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    document.getElementById('messaggioTestoSelezionabile').focus();
+                                },
+                                preDeny: () => {
+                                    const textElement = document.getElementById('messaggioTestoSelezionabile');
+                                    if (textElement) {
+                                        const range = document.createRange();
+                                        range.selectNodeContents(textElement);
+                                        const selection = window.getSelection();
+                                        selection.removeAllRanges();
+                                        selection.addRange(range);
+
+                                        try {
+                                            const ok = document.execCommand('copy');
+                                            if (ok) {
+                                                fmpNotify('Il testo è stato copiato negli appunti.', 'success', 'Copiato!');
+                                            } else {
+                                                navigator.clipboard.writeText(textElement.innerText)
+                                                    .then(() => fmpNotify('Il testo è stato copiato negli appunti.', 'success', 'Copiato!'))
+                                                    .catch(err => {
+                                                        fmpNotify('Impossibile copiare automaticamente. Seleziona manualmente.', 'error');
+                                                        console.error('Clipboard API:', err);
+                                                    });
+                                            }
+                                        } catch (err) {
+                                            navigator.clipboard.writeText(textElement.innerText)
+                                                .then(() => fmpNotify('Il testo è stato copiato negli appunti.', 'success', 'Copiato!'))
+                                                .catch(err => {
+                                                    fmpNotify('Impossibile copiare automaticamente. Seleziona manualmente.', 'error');
+                                                    console.error('Clipboard API:', err);
+                                                });
+                                        }
+                                    }
+                                    return false;
+                                }
+                            });
+                        } else {
+                            fmpNotify(response.messaggio || 'Impossibile generare il messaggio.', 'error');
+                        }
+                    },
+                    error: function () {
+                        fmpNotify('Errore durante la generazione del messaggio.', 'error');
+                    }
+                });
+            });
+
+        });
+
+        $(document).on('click', '.btn-verifica-presenze', function () {
+            var data = $(this).data('data');
+            $.get('/Partite/PresenzeStaffPopup', { data: data })
+                .done(function (response) {
+                    Swal.fire({
+                        title: 'Presenze Staff',
+                        html: response,
+                        width: '600px',
+                        showConfirmButton: false
+                    });
+                })
+                .fail(function () {
+                    fmpNotify('Impossibile recuperare le presenze.', 'error');
+                });
+        });
+
+        // =================== FILTRI ===================
+        function hasActiveFilters() {
+            return Boolean($('#filtro-stato').val() || $('#filtro-data-da').val() || $('#filtro-data-a').val());
+        }
+
+        function toggleAccordionGroup(item, shouldOpen) {
+            const collapseEl = item.find('.accordion-collapse').get(0);
+            const button = item.find('.accordion-button').first();
+
+            if (!collapseEl || !window.bootstrap?.Collapse) {
+                item.find('.accordion-collapse').toggleClass('show', shouldOpen);
+                button.toggleClass('collapsed', !shouldOpen).attr('aria-expanded', shouldOpen ? 'true' : 'false');
+                return;
+            }
+
+            const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+            shouldOpen ? collapse.show() : collapse.hide();
+            button.toggleClass('collapsed', !shouldOpen).attr('aria-expanded', shouldOpen ? 'true' : 'false');
+        }
+
+        function updateSectionHeadings() {
+            $('.partite-group-heading').each(function () {
+                const section = $(this).data('section');
+                const hasVisibleGroups = $(`.accordion-item[data-section="${section}"]`).filter(function () {
+                    return $(this).is(':visible');
+                }).length > 0;
+
+                $(this).toggle(hasVisibleGroups);
+            });
+        }
+
+        function matchPartita(statoTxt, rowDate, stato, dataDa, dataA) {
+            let show = true;
+
+            if (stato) {
+                if (stato === 'confermata' && !statoTxt.includes('confermata')) show = false;
+                if (stato === 'attesa' && !statoTxt.includes('attesa')) show = false;
+            }
+            if (dataDa && rowDate && rowDate < new Date(dataDa)) show = false;
+            if (dataA && rowDate && rowDate > new Date(dataA)) show = false;
+
+            return show;
+        }
+
+        function applyFiltri() {
+            const stato = $('#filtro-stato').val().toLowerCase();
+            const dataDa = $('#filtro-data-da').val(); // "yyyy-MM-dd"
+            const dataA  = $('#filtro-data-a').val();
+            const filtriAttivi = hasActiveFilters();
+
+            $('.partite-week-accordion .accordion-item').each(function () {
+                const item = $(this);
+                let visibleMatches = 0;
+
+                // ---- DESKTOP: righe tabella ----
+                // Ogni partita occupa 2 <tr> consecutivi; il primo ha la cella "Stato" e data-label="Data"
+                item.find('table.responsive-table tbody').each(function () {
+                    const rows = $(this).children('tr');
+                    let i = 0;
+                    while (i < rows.length) {
+                        const mainRow  = rows.eq(i);
+                        const staffRow = rows.eq(i + 1);
+                        i += 2;
+
+                        const statoTxt = mainRow.find('td[data-label="Stato"] span').text().trim().toLowerCase();
+                        const dataTxt  = mainRow.find('td[data-label="Data"]').text().trim();
+                        const dateParts = dataTxt.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                        const rowDate = dateParts ? new Date(`${dateParts[3]}-${dateParts[2]}-${dateParts[1]}`) : null;
+                        const show = matchPartita(statoTxt, rowDate, stato, dataDa, dataA);
+
+                        mainRow.toggle(show);
+                        if (staffRow.length) staffRow.toggle(show);
+                        if (show) visibleMatches++;
+                    }
+                });
+
+                // ---- MOBILE: card ----
+                item.find('.pm-card').each(function () {
+                    const card = $(this);
+                    const statoTxt = card.find('.pm-status').text().trim().toLowerCase();
+                    const dataAttr = card.data('date'); // "2025-06-23"
+                    const rowDate = dataAttr ? new Date(dataAttr) : null;
+                    const show = matchPartita(statoTxt, rowDate, stato, dataDa, dataA);
+
+                    card.toggle(show);
+                });
+
+                item.toggle(!filtriAttivi || visibleMatches > 0);
+                toggleAccordionGroup(item, filtriAttivi ? visibleMatches > 0 : item.data('default-open') === true);
+            });
+
+            updateSectionHeadings();
+        }
+
+        $('#filtro-stato, #filtro-data-da, #filtro-data-a').on('change input', applyFiltri);
+
+        $('#btn-reset-filtri').on('click', function () {
+            $('#filtro-stato').val('');
+            $('#filtro-data-da').val('');
+            $('#filtro-data-a').val('');
+            applyFiltri();
+        });
+
+        function mapWeatherClient(code) {
+            if (code === 0) return { icon: '\u2600\uFE0F', label: 'Sereno' };
+            if ([1, 2].includes(code)) return { icon: '\uD83C\uDF24\uFE0F', label: 'Poco nuvoloso' };
+            if (code === 3) return { icon: '\u2601\uFE0F', label: 'Nuvoloso' };
+            if ([45, 48].includes(code)) return { icon: '\uD83C\uDF2B\uFE0F', label: 'Nebbia' };
+            if ([51, 53, 55, 56, 57].includes(code)) return { icon: '\uD83C\uDF26\uFE0F', label: 'Pioviggine' };
+            if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { icon: '\uD83C\uDF27\uFE0F', label: 'Pioggia' };
+            if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: '\u2744\uFE0F', label: 'Neve' };
+            if ([95, 96, 99].includes(code)) return { icon: '\u26C8\uFE0F', label: 'Temporale' };
+            return { icon: '\uD83C\uDF24\uFE0F', label: 'Meteo' };
+        }
+
+        function weatherSummaryClient(point) {
+            const mapped = mapWeatherClient(point.code);
+            const details = [];
+            if (Number.isFinite(point.temp)) details.push(`${Math.round(point.temp)}°C`);
+            if (Number.isFinite(point.pop)) details.push(`${point.pop}% pioggia`);
+
+            return {
+                icon: mapped.icon,
+                text: details.length ? `${mapped.label} · ${details.join(' · ')}` : mapped.label
+            };
+        }
+
+        function setWeatherElement(el, weather) {
+            const $el = $(el);
+            $el.removeClass('weather-pill--empty').attr('title', weather.text);
+            $el.find('.weather-pill__icon').text(weather.icon);
+            $el.find('.weather-pill__text').text(weather.text);
+        }
+
+        async function loadClientWeatherFallback() {
+            const markers = $('.weather-js').filter(function () {
+                return $(this).find('.weather-pill__icon').text().trim() === '-';
+            });
+
+            if (!markers.length) return;
+
+            const requestedDates = markers.map(function () {
+                return $(this).data('weather-date');
+            }).get().filter(Boolean);
+
+            if (!requestedDates.length) return;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const maxDate = requestedDates
+                .map(d => new Date(`${d}T00:00:00`))
+                .filter(d => !Number.isNaN(d.getTime()))
+                .reduce((max, d) => d > max ? d : max, today);
+
+            const forecastDays = Math.max(1, Math.min(16, Math.floor((maxDate - today) / 86400000) + 1));
+            const cacheKey = `fmp-weather-carmagnola-${forecastDays}`;
+            let data = null;
+
+            try {
+                const cachedRaw = localStorage.getItem(cacheKey);
+                if (cachedRaw) {
+                    const cached = JSON.parse(cachedRaw);
+                    if (cached.savedAt && (Date.now() - cached.savedAt) < 2 * 60 * 60 * 1000) {
+                        data = cached.data;
+                    }
+                }
+            } catch {
+                data = null;
+            }
+
+            if (!data) {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=44.8496&longitude=7.7203&hourly=weather_code,temperature_2m,precipitation_probability&timezone=Europe%2FRome&forecast_days=${forecastDays}`;
+                const response = await fetch(url);
+                if (!response.ok) return;
+                data = await response.json();
+
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), data }));
+                } catch {
+                    // Cache opzionale: se il browser la blocca, il meteo funziona comunque.
+                }
+            }
+
+            const hourly = data?.hourly;
+            if (!hourly?.time?.length) return;
+
+            const points = hourly.time.map((time, index) => ({
+                time,
+                date: new Date(time),
+                code: hourly.weather_code?.[index],
+                temp: hourly.temperature_2m?.[index],
+                pop: hourly.precipitation_probability?.[index]
+            }));
+
+            markers.each(function () {
+                const $marker = $(this);
+                const date = $marker.data('weather-date');
+                const time = $marker.data('weather-time');
+                if (!date || !time) return;
+
+                const target = new Date(`${date}T${time}`);
+                if (Number.isNaN(target.getTime())) return;
+
+                let best = null;
+                let bestDiff = Number.POSITIVE_INFINITY;
+
+                for (const point of points) {
+                    const diff = Math.abs(point.date - target);
+                    if (diff < bestDiff) {
+                        best = point;
+                        bestDiff = diff;
+                    }
+                }
+
+                if (best && bestDiff <= 60 * 60 * 1000) {
+                    setWeatherElement(this, weatherSummaryClient(best));
+                }
+            });
+        }
+
+        loadClientWeatherFallback().catch(function (error) {
+            console.warn('Meteo non disponibile dal browser:', error);
+        });
+
+        $(document).on('click', '.partite-overbook-jump', function () {
+            const partitaId = $(this).data('partita-id');
+            const isMobile = window.matchMedia('(max-width: 767px)').matches;
+            const desktopTarget = $(`#partita-row-${partitaId}`);
+            const mobileTarget = $(`#partita-card-${partitaId}`);
+            const candidates = $([desktopTarget.get(0), mobileTarget.get(0)].filter(Boolean));
+            let target = isMobile ? mobileTarget : desktopTarget;
+
+            if (!target.length) {
+                target = candidates.filter(':visible').first();
+            }
+
+            if (!target.length) return;
+
+            const accordionItem = target.closest('.accordion-item');
+            if (accordionItem.length) {
+                accordionItem.show();
+                toggleAccordionGroup(accordionItem, true);
+                updateSectionHeadings();
+            }
+
+            setTimeout(function () {
+                const preferredTarget = isMobile ? mobileTarget : desktopTarget;
+                const visibleTarget = preferredTarget.filter(':visible').length
+                    ? preferredTarget
+                    : (candidates.filter(':visible').first().length ? candidates.filter(':visible').first() : target);
+
+                $('.partita-jump-highlight').removeClass('partita-jump-highlight');
+                visibleTarget.addClass('partita-jump-highlight');
+
+                const staffRow = $(`[data-parent-partita-id="${partitaId}"]`);
+                if (!isMobile) {
+                    staffRow.addClass('partita-jump-highlight');
+                }
+
+                visibleTarget.get(0)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                setTimeout(function () {
+                    visibleTarget.removeClass('partita-jump-highlight');
+                    staffRow.removeClass('partita-jump-highlight');
+                }, 2200);
+            }, 520);
+        });
+    </script>
+}

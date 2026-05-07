@@ -1,0 +1,650 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    var permessiVisibili = (ViewBag.PermessiVisibili as List<string>) ?? new List<string>();
+    var dashboardFeaturesVisibili = (ViewBag.DashboardFeaturesVisibili as List<string>) ?? permessiVisibili;
+    Func<string, bool> Mostra = feature => dashboardFeaturesVisibili.Contains(feature);
+    var dashboardButtons = new Dictionary<string, (string ButtonClass, string Icon, string Url)>
+    {
+        ["Tesserati"] = ("btn-outline-primary", "bi-people", Url.Action("ListaTesseramenti", "Tesseramento") ?? "#"),
+        ["Prenotazioni"] = ("btn-outline-success", "bi-calendar-check", Url.Action("Index", "Partite") ?? "#"),
+        ["Caparre"] = ("btn-outline-warning", "bi-wallet2", Url.Action("Caparre", "Partite") ?? "#"),
+        ["Presenze Staff"] = ("btn-outline-info", "bi-people-fill", Url.Action("Index", "PresenzeStaff") ?? "#"),
+        ["Gestione Utenti"] = ("btn-outline-dark", "bi-person-badge", Url.Action("GestionePermessi", "Ruoli") ?? "#"),
+        ["Statistiche"] = ("btn-outline-secondary", "bi-bar-chart-line", Url.Action("Index", "Statistiche") ?? "#"),
+        ["Prezzi"] = ("btn-outline-purple", "bi-currency-euro", Url.Action("Index", "Prezzi") ?? "#"),
+        ["Calendario Assenze"] = ("btn-outline-info calendar", "bi-calendar-event", Url.Action("Index", "CalendarioAssenze") ?? "#"),
+        ["ACSI"] = ("btn-outline-secondary", "bi-card-text", Url.Action("Index", "TessereAcsi") ?? "#"),
+        ["Documenti"] = ("btn-outline-info", "bi-folder", Url.Action("Index", "Documenti") ?? "#"),
+        ["Documenti ASD"] = ("btn-outline-info", "bi-file-earmark-ruled-fill", Url.Action("Index", "DocumentiAsd") ?? "#"),
+        ["ToDoList"] = ("btn-outline-success", "bi-card-checklist", Url.Action("Index", "ToDoList") ?? "#"),
+        ["Movimenti"] = ("btn-outline-warning", "bi-cash-coin", Url.Action("Index", "Movimenti") ?? "#"),
+        ["Spese"] = ("btn-outline-dark", "bi-receipt-cutoff", Url.Action("Index", "Spese") ?? "#"),
+        ["Codici Promo"] = ("btn-outline-info", "bi-gift", Url.Action("VerificaCodici", "CodiciPromo") ?? "#"),
+        ["Sondaggi"] = ("btn-outline-info", "bi-ui-checks-grid", Url.Action("Index", "Sondaggi") ?? "#"),
+        ["Lavaggi"] = ("btn-outline-warning", "bi-bucket", Url.Action("Index", "Lavaggi") ?? "#"),
+        ["Disponibilita Campo"] = ("btn-outline-field", "bi-brightness-alt-high", Url.Action("Index", "DisponibilitaCampo") ?? "#"),
+        ["NewsLetter"] = ("btn-outline-info", "bi-envelope-paper-heart", Url.Action("Index", "NewsLetter") ?? "#")
+    };
+}
+
+<style>
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        height: 100%;
+        overflow-x: hidden;
+    }
+
+    .dashboard-container {
+        position: relative;
+        z-index: 2;
+        padding: 50px 20px;
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .background-logo {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 20px auto;
+        background: url('/img/logo.gif') no-repeat center center;
+        background-size: contain;
+        pointer-events: none;
+        opacity: 1;
+        position: relative;
+    }
+
+    .dashboard-title {
+        font-size: 2.5rem;
+        color: #0d6efd;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-toolbar {
+        align-items: flex-start;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 24px;
+    }
+
+    .preferences-panel {
+        background: #fff;
+        border: 1px solid #d0d7de;
+        border-radius: 8px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        max-width: 420px;
+        text-align: left;
+        width: 100%;
+    }
+
+    .preferences-panel summary {
+        cursor: pointer;
+        font-weight: 700;
+        list-style: none;
+        padding: 12px 14px;
+    }
+
+    .preferences-panel summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .preferences-panel summary::after {
+        content: "▾";
+        float: right;
+    }
+
+    .preferences-panel[open] summary::after {
+        content: "▴";
+    }
+
+    .preferences-body {
+        border-top: 1px solid #e5e7eb;
+        padding: 14px;
+    }
+
+    .feature-options {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: 1fr;
+        margin-bottom: 12px;
+    }
+
+    .feature-option {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        flex: 1 1 auto;
+    }
+
+    .feature-option-row {
+        align-items: center;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(23, 24, 15, 0.1);
+        border-radius: 14px;
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+        padding: 8px 10px;
+    }
+
+    .feature-order-actions {
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    .feature-order-actions .btn {
+        align-items: center;
+        display: inline-flex;
+        height: 28px;
+        justify-content: center;
+        padding: 0;
+        width: 28px;
+    }
+
+    .feature-option input {
+        height: 18px;
+        width: 18px;
+    }
+
+    .preferences-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .dashboard-alert {
+        margin: 0 auto 18px;
+        max-width: 420px;
+    }
+
+    .dashboard-btns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 20px;
+        justify-items: center;
+    }
+
+        .dashboard-btns .btn-container {
+            display: inline-block;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease-in-out;
+            background-color: inherit;
+            width: 140px;
+            height: 140px;
+        }
+
+    .btn-container:hover {
+        transform: scale(1.05);
+    }
+
+    .dashboard-btns .btn-container .btn {
+        font-size: 1.3rem;
+        padding: 10px 20px 15px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+        width: 100%;
+        height: 100%;
+        border: none;
+        color: inherit;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .dashboard-btns .btn-container .btn i {
+            font-size: 3rem;
+            color: inherit;
+            transition: color 0.3s ease;
+        }
+
+        .dashboard-btns .btn-container .btn:hover,
+        .dashboard-btns .btn-container .btn:hover i {
+            color: #fff !important;
+        }
+
+    .btn-outline-primary {
+        background-color: #f5d2e7;
+        color: #c2185b;
+        border: none;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: #c2185b;
+        }
+
+    .btn-outline-success {
+        background-color: #c7e5cd;
+        color: #2e7d32;
+        border: none;
+    }
+
+        .btn-outline-success:hover {
+            background-color: #2e7d32;
+        }
+
+    .btn-outline-warning {
+        background-color: #ffe8b3;
+        color: #f57c00;
+        border: none;
+    }
+
+        .btn-outline-warning:hover {
+            background-color: #f57c00;
+        }
+
+    .btn-outline-info {
+        background-color: #b2f0f7;
+        color: #00838f;
+        border: none;
+    }
+
+        .btn-outline-info:hover {
+            background-color: #00838f;
+        }
+
+        .btn-outline-info.calendar {
+            background-color: #d0f0ff;
+            color: #0077b6;
+        }
+
+            .btn-outline-info.calendar:hover {
+                background-color: #0077b6;
+            }
+
+    .btn-outline-dark {
+        background-color: #d3d3d3;
+        color: #212529;
+        border: none;
+    }
+
+        .btn-outline-dark:hover {
+            background-color: #212529;
+        }
+
+    .btn-outline-secondary {
+        background-color: #b0b0b0;
+        color: #495057;
+        border: none;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #495057;
+        }
+
+    .btn-outline-purple {
+        background-color: #d9c6f4;
+        color: #6f42c1;
+        border: none;
+    }
+
+        .btn-outline-purple:hover {
+            background-color: #6f42c1;
+        }
+
+    .dashboard-btns .btn-container::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 15%;
+        width: 70%;
+        height: 10px;
+        border-radius: 0 0 12px 12px;
+        background-color: #a0a0a0;
+        z-index: 1;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-outline-primary::after {
+        background-color: #c2185b;
+    }
+
+    .btn-outline-success::after {
+        background-color: #2e7d32;
+    }
+
+    .btn-outline-warning::after {
+        background-color: #f57c00;
+    }
+
+    .btn-outline-info::after {
+        background-color: #00838f;
+    }
+
+    .btn-outline-info.calendar::after {
+        background-color: #0077b6;
+    }
+
+    .btn-outline-dark::after {
+        background-color: #212529;
+    }
+
+    .btn-outline-secondary::after {
+        background-color: #495057;
+    }
+
+    .btn-outline-purple::after {
+        background-color: #6f42c1;
+    }
+
+    .btn-outline-field {
+        background-color: #d9ead3;
+        color: #386641;
+        border: none;
+    }
+
+        .btn-outline-field:hover {
+            background-color: #386641;
+        }
+
+    .btn-outline-field::after {
+        background-color: #386641;
+    }
+
+    /* Paintball theme override: keeps the existing dashboard logic intact. */
+    body {
+        background:
+            radial-gradient(circle at 12% 16%, rgba(226, 10, 131, 0.18), transparent 24rem),
+            radial-gradient(circle at 88% 12%, rgba(138, 197, 31, 0.22), transparent 22rem),
+            radial-gradient(circle at 72% 92%, rgba(244, 123, 22, 0.19), transparent 26rem),
+            linear-gradient(135deg, #f8f3df 0%, #d9e0b9 48%, #f6dfc5 100%);
+        font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+    }
+
+    .dashboard-container {
+        overflow: hidden;
+        max-width: 1060px;
+        margin: 24px auto 48px;
+        padding: clamp(1.5rem, 4vw, 3rem);
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 32px;
+        background:
+            linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.78)),
+            radial-gradient(circle at 18% 20%, rgba(226, 10, 131, 0.18), transparent 14rem),
+            radial-gradient(circle at 86% 18%, rgba(138, 197, 31, 0.2), transparent 16rem),
+            radial-gradient(circle at 74% 88%, rgba(244, 123, 22, 0.2), transparent 15rem);
+        box-shadow: 0 22px 60px rgba(5, 5, 7, 0.16);
+        backdrop-filter: blur(14px);
+    }
+
+    .background-logo {
+        width: min(220px, 58vw);
+        height: min(220px, 58vw);
+        margin-bottom: 10px;
+        opacity: 0.92;
+        filter: drop-shadow(0 18px 28px rgba(5, 5, 7, 0.18));
+    }
+
+    .dashboard-title {
+        color: #050507;
+        font-size: clamp(2rem, 5vw, 4rem);
+        font-weight: 950;
+        line-height: 0.98;
+        letter-spacing: -0.055em;
+        text-transform: uppercase;
+    }
+
+    .dashboard-title::after {
+        content: "";
+        display: block;
+        width: min(280px, 66vw);
+        height: 8px;
+        margin: 1rem auto 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #8ac51f, #e20a83, #f47b16);
+    }
+
+    .dashboard-subtitle {
+        color: rgba(23, 24, 15, 0.72);
+        font-weight: 700;
+    }
+
+    .preferences-panel {
+        border: 1px solid rgba(23, 24, 15, 0.12);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 14px 34px rgba(5, 5, 7, 0.1);
+    }
+
+    .dashboard-btns {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 18px;
+    }
+
+    .dashboard-btns .btn-container {
+        position: relative;
+        overflow: hidden;
+        width: 150px;
+        height: 150px;
+        border: 1px solid rgba(255, 255, 255, 0.82);
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.74);
+        box-shadow: 0 14px 34px rgba(5, 5, 7, 0.12);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        --tile-accent: #e20a83;
+        --tile-accent-2: #f8c1df;
+        --tile-text: #17180f;
+    }
+
+    .dashboard-btns .btn-container:hover {
+        transform: translateY(-5px) rotate(-0.5deg);
+        box-shadow: 0 20px 40px rgba(5, 5, 7, 0.16);
+    }
+
+    .dashboard-btns .btn-container .btn {
+        border-radius: 26px;
+        background:
+            radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--tile-accent) 28%, transparent), transparent 58px),
+            linear-gradient(145deg, color-mix(in srgb, var(--tile-accent-2) 72%, #fff), #fff 74%);
+        color: var(--tile-text);
+        font-weight: 900;
+    }
+
+    .dashboard-btns .btn-container .btn i {
+        font-size: 2.7rem;
+    }
+
+    .dashboard-btns .btn-container::after {
+        left: 18%;
+        width: 64%;
+        height: 8px;
+        border-radius: 999px 999px 0 0;
+        background-color: var(--tile-accent);
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n+1) {
+        --tile-accent: #e20a83;
+        --tile-accent-2: #f8c1df;
+        --tile-text: #8b0754;
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n+2) {
+        --tile-accent: #8ac51f;
+        --tile-accent-2: #dff2b7;
+        --tile-text: #39590b;
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n+3) {
+        --tile-accent: #f47b16;
+        --tile-accent-2: #ffe0bc;
+        --tile-text: #884207;
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n+4) {
+        --tile-accent: #17180f;
+        --tile-accent-2: #e7e0c8;
+        --tile-text: #17180f;
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n+5) {
+        --tile-accent: #c1005f;
+        --tile-accent-2: #ffd7e9;
+        --tile-text: #7e064d;
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n+6) {
+        --tile-accent: #5f8f10;
+        --tile-accent-2: #e9f5c7;
+        --tile-text: #3e5d0b;
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n+7) {
+        --tile-accent: #be5f08;
+        --tile-accent-2: #ffe6c8;
+        --tile-text: #7a3d05;
+    }
+
+    .dashboard-btns .btn-container:nth-child(8n) {
+        --tile-accent: #050507;
+        --tile-accent-2: #ded8c1;
+        --tile-text: #17180f;
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-purple:hover {
+        background: linear-gradient(135deg, #e20a83, #9c075d);
+    }
+
+    .btn-outline-success:hover,
+    .btn-outline-field:hover {
+        background: linear-gradient(135deg, #8ac51f, #c9ed62);
+    }
+
+    .btn-outline-warning:hover {
+        background: linear-gradient(135deg, #f47b16, #ffd064);
+    }
+
+    .btn-outline-info:hover,
+    .btn-outline-secondary:hover,
+    .btn-outline-dark:hover,
+    .btn-outline-info.calendar:hover {
+        background: linear-gradient(135deg, #202318, #050507);
+    }
+
+    @@media (max-width: 520px) {
+        .dashboard-container {
+            margin: 8px auto 28px;
+            padding: 1.1rem;
+            border-radius: 24px;
+        }
+
+        .dashboard-btns {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .dashboard-btns .btn-container {
+            width: 100%;
+            height: 118px;
+        }
+
+        .dashboard-btns .btn-container .btn {
+            font-size: 0.9rem;
+            gap: 6px;
+        }
+
+        .dashboard-btns .btn-container .btn i {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="background-logo"></div>
+    <h1 class="dashboard-title">Benvenuto @ViewBag.FullName!</h1>
+    <p class="dashboard-subtitle">Seleziona una sezione per iniziare a gestire l'associazione.</p>
+
+    @if (TempData["DashboardMessage"] != null)
+    {
+        <div class="alert alert-success dashboard-alert">@TempData["DashboardMessage"]</div>
+    }
+
+    <div class="dashboard-toolbar">
+        <details class="preferences-panel">
+            <summary>Personalizza pulsanti dashboard</summary>
+            <form asp-action="SalvaPreferenzeDashboard" asp-controller="Dashboard" method="post" class="preferences-body">
+                @Html.AntiForgeryToken()
+                <div class="feature-options">
+                    @foreach (var feature in permessiVisibili)
+                    {
+                        var inputId = $"dashboard-feature-{feature.Replace(" ", "-").Replace("/", "-")}";
+                        <div class="feature-option-row" data-feature="@feature">
+                            <label class="feature-option" for="@inputId">
+                                <input class="feature-order-input" type="hidden" name="featureOrder" value="@feature" />
+                                <input id="@inputId"
+                                       type="checkbox"
+                                       name="visibleFeatures"
+                                       value="@feature"
+                                       checked="@dashboardFeaturesVisibili.Contains(feature)" />
+                                <span>@feature</span>
+                            </label>
+                            <span class="feature-order-actions" aria-label="Ordina @feature">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-move-feature="up" title="Sposta su">
+                                    <i class="bi bi-arrow-up"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-move-feature="down" title="Sposta giù">
+                                    <i class="bi bi-arrow-down"></i>
+                                </button>
+                            </span>
+                        </div>
+                    }
+                </div>
+                <div class="preferences-actions">
+                    <button type="submit" class="btn btn-sm btn-primary">Salva</button>
+                </div>
+            </form>
+        </details>
+    </div>
+
+    <div class="dashboard-btns">
+
+        @foreach (var feature in dashboardFeaturesVisibili.Where(dashboardButtons.ContainsKey))
+        {
+            var button = dashboardButtons[feature];
+            <div class="btn-container">
+                <a class="btn @button.ButtonClass" href="@button.Url">
+                    <i class="bi @button.Icon"></i>
+                    @feature
+                </a>
+            </div>
+        }
+
+    </div>
+</div>
+
+<script>
+    (() => {
+        const options = document.querySelector('.feature-options');
+        if (!options) return;
+
+        options.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-move-feature]');
+            if (!button) return;
+
+            const row = button.closest('.feature-option-row');
+            if (!row) return;
+
+            if (button.dataset.moveFeature === 'up' && row.previousElementSibling) {
+                options.insertBefore(row, row.previousElementSibling);
+            }
+
+            if (button.dataset.moveFeature === 'down' && row.nextElementSibling) {
+                options.insertBefore(row.nextElementSibling, row);
+            }
+        });
+    })();
+</script>

@@ -1,0 +1,99 @@
+@model Full_Metal_Paintball_Carmagnola.Models.Tesseramento?
+
+@{
+    Layout = null;
+    var email = Model?.Email ?? string.Empty;
+}
+
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Disiscrizione Newsletter</title>
+    <style>
+        body {
+            align-items: center;
+            background: radial-gradient(circle at top left, rgba(230, 0, 126, .16), transparent 34%), #fffaf1;
+            color: #151711;
+            display: flex;
+            font-family: Arial, Helvetica, sans-serif;
+            justify-content: center;
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, .08);
+            border-radius: 28px;
+            box-shadow: 0 24px 58px rgba(0, 0, 0, .12);
+            max-width: 560px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        img {
+            border-radius: 999px;
+            height: 86px;
+            object-fit: contain;
+            width: 86px;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 6vw, 2.6rem);
+            margin: 18px 0 10px;
+        }
+
+        p {
+            color: #5e5a4d;
+            font-size: 1.05rem;
+            line-height: 1.55;
+        }
+
+        button {
+            background: linear-gradient(135deg, #e6007e, #f77f00);
+            border: 0;
+            border-radius: 999px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 900;
+            margin-top: 16px;
+            padding: 13px 24px;
+        }
+
+        .muted {
+            font-size: .92rem;
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <img src="https://i.imgur.com/K9Ugseg.gif" alt="Full Metal Paintball Carmagnola" />
+
+        @if (Model == null)
+        {
+            <h1>Link non valido</h1>
+            <p>Non siamo riusciti a trovare una preferenza newsletter collegata a questo link.</p>
+        }
+        else if (!Model.NewsletterConsent)
+        {
+            <h1>Già disiscritto</h1>
+            <p>L'indirizzo <strong>@email</strong> risulta già escluso dalle comunicazioni newsletter.</p>
+        }
+        else
+        {
+            <h1>Disiscrizione newsletter</h1>
+            <p>Confermi di non voler più ricevere comunicazioni newsletter da Full Metal Paintball Carmagnola all'indirizzo <strong>@email</strong>?</p>
+            <form asp-action="ConfermaDisiscrizione" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="token" value="@Model.NewsletterUnsubscribeToken" />
+                <button type="submit">Conferma disiscrizione</button>
+            </form>
+            <p class="muted">Le comunicazioni operative legate a prenotazioni o tesseramenti potrebbero comunque essere inviate se necessarie.</p>
+        }
+    </main>
+</body>
+</html>

@@ -1,0 +1,40 @@
+﻿@model List<Full_Metal_Paintball_Carmagnola.Models.UtenteRuoloViewModel>
+
+<link href="~/css/permessi-responsive.css" rel="stylesheet" />
+
+<div class="content-container">
+    <h2 class="text-center">Gestione Ruoli Utenti</h2>
+
+    <div class="table-responsive">
+        <table class="responsive-table">
+            <thead>
+                <tr>
+                    <th>Nome Completo</th>
+                    <th>Email</th>
+                    <th>Ruolo Attuale</th>
+                    <th>Assegna Ruolo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var utente in Model)
+                {
+                    <tr>
+                        <td data-label="Nome Completo">@utente.NomeCompleto</td>
+                        <td data-label="Email">@utente.Email</td>
+                        <td data-label="Ruolo Attuale">@utente.Ruolo</td>
+                        <td data-label="Assegna Ruolo">
+                            <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="d-flex align-items-center justify-content-start">
+                                <input type="hidden" name="userId" value="@utente.Id" />
+                                <select name="ruolo" class="form-select w-auto me-2">
+                                    <option value="Admin" selected="@(@utente.Ruolo == "Admin")">Admin</option>
+                                    <option value="Staff" selected="@(@utente.Ruolo == "Staff")">Staff</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">Salva</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

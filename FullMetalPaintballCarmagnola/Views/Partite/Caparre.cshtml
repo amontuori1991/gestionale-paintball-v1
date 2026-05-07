@@ -1,0 +1,186 @@
+﻿@model List<Full_Metal_Paintball_Carmagnola.Models.Partita>
+
+@{
+    ViewData["Title"] = "Gestione Caparre";
+}
+
+<link href="~/css/caparre-responsive.css" rel="stylesheet" />
+
+<div class="cap-page">
+
+    @* Header *@
+    <div class="cap-header">
+        <div class="cap-header__icon">
+            <i class="bi bi-cash-coin"></i>
+        </div>
+        <div>
+            <h2 class="cap-header__title">Riepilogo Caparre</h2>
+            <p class="cap-header__sub">Full Metal Paintball Carmagnola</p>
+        </div>
+    </div>
+
+    @* Tabella *@
+    <div class="cap-card">
+        <div class="cap-table-wrap">
+
+            @{
+                var caparre = Model
+                .Where(p => p.Caparra > 0)
+                .OrderByDescending(p => p.Data)
+                .ToList();
+            }
+
+            @if (caparre.Any())
+            {
+                <table class="cap-table">
+                    <thead>
+                        <tr>
+                            <th>Stato</th>
+                            <th>Data</th>
+                            <th>Riferimento</th>
+                            <th>Importo</th>
+                            <th>Metodo Pagamento</th>
+                            <th>Ricevuta</th>
+                            <th>Annotazioni</th>
+                            <th>Rimborso</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var partita in caparre)
+                        {
+                            <tr class="@(partita.IsDeleted ? "row-cancellata" : "")">
+
+                                <td data-label="Stato">
+                                    @if (partita.IsDeleted)
+                                    {
+                                        <span class="badge-stato badge-stato--cancellata">
+                                            <i class="bi bi-x-circle-fill"></i> Cancellata
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-stato badge-stato--attiva">
+                                            <i class="bi bi-check-circle-fill"></i> Attiva
+                                        </span>
+                                    }
+                                </td>
+
+                                <td data-label="Data">
+                                    <div class="data-pill">
+                                        <span class="data-pill__giorno">@partita.Data.ToString("dddd")</span>
+                                        <span class="data-pill__data">@partita.Data.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                </td>
+
+                                <td data-label="Riferimento">
+                                    <strong>@partita.Riferimento</strong>
+                                </td>
+
+                                <td data-label="Importo Caparra">
+                                    <span class="importo-pill">@($"{partita.Caparra:0.00}€")</span>
+                                </td>
+
+                                <td data-label="Metodo Pagamento">
+                                    @(string.IsNullOrWhiteSpace(partita.MetodoPagamentoCaparra) ? "—" : partita.MetodoPagamentoCaparra)
+                                </td>
+
+                                <td data-label="Ricevuta">
+                                    @if (partita.CaparraConfermata)
+                                    {
+                                        <span class="badge-ricevuta badge-ricevuta--si">
+                                            <i class="bi bi-check-lg"></i> Sì
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-ricevuta badge-ricevuta--no">
+                                            <i class="bi bi-clock"></i> No
+                                        </span>
+                                    }
+                                </td>
+
+                                <td data-label="Annotazioni">
+                                    <input type="text"
+                                           name="annotazioni"
+                                           value="@partita.Annotazioni"
+                                           data-partita-id="@partita.Id"
+                                           placeholder="Nessuna nota…" />
+                                </td>
+
+                                <td data-label="Rimborso">
+                                    <select name="rimborso" data-partita-id="@partita.Id">
+                                        <option value="">—</option>
+                                        <option value="SI" selected="@(partita.Rimborso == "SI" ? "selected" : null)">Sì</option>
+                                        <option value="NO" selected="@(partita.Rimborso == "NO" ? "selected" : null)">No</option>
+                                    </select>
+                                </td>
+
+                                <td data-label="Azioni">
+                                    <button class="btn-cancella btn-cancella-caparra"
+                                            data-id="@partita.Id">
+                                        <i class="bi bi-trash3"></i> Cancella
+                                    </button>
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="cap-empty">
+                    <div class="cap-empty__icon"><i class="bi bi-cash-stack"></i></div>
+                    <p class="cap-empty__text">Nessuna caparra presente</p>
+                    <p style="font-size:.85rem;color:var(--fmp-muted);margin-top:6px;">
+                        Le caparre inserite nelle partite appariranno qui.
+                    </p>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    @* Footer nav *@
+    <div class="cap-footer-nav">
+        <a href="@Url.Action("Index", "Home")" class="btn-nav btn-nav--secondary">
+            <i class="bi bi-house-fill"></i> Torna alla Home
+        </a>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.btn-cancella-caparra').on('click', function () {
+                var partitaId = $(this).data('id');
+
+                fmpConfirm("La caparra sarà rimossa definitivamente!", {
+                    title: "Sei sicuro?",
+                    icon: "warning",
+                    confirmButtonText: "Sì, cancella"
+                }).then((confirmed) => {
+                    if (confirmed) {
+                        $.ajax({
+                            url: '@Url.Action("CancellaCaparra", "Partite")',
+                            type: 'POST',
+                            data: { id: partitaId },
+                            success: function (response) {
+                                if (response.success) {
+                                    fmpNotify('La caparra è stata eliminata.', 'success', 'Cancellata!').then(() => { location.reload(); });
+                                } else {
+                                    fmpNotify(response.message || 'Errore nella cancellazione.', 'error');
+                                }
+                            },
+                            error: function () {
+                                fmpNotify('Errore nella cancellazione della caparra.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

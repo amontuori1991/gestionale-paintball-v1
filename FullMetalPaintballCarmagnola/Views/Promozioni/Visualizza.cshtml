@@ -1,0 +1,52 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Promozione
+
+@{
+    ViewData["Title"] = "Promo " + Model.Nome;
+    var isEvento = string.Equals(Model.PromotionType, "EventoRichiedeDati", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="container text-center mt-5">
+    <h2 class="mb-3">🎁 Promo: @Model.Nome</h2>
+
+    <p>
+        <strong>Tipo:</strong> @Model.PromotionType
+        @if (Model.EditionYear.HasValue)
+        {
+            <span> — Edizione @Model.EditionYear.Value</span>
+        }
+    </p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Descrizione))
+    {
+        <p><strong>Descrizione:</strong> @Model.Descrizione</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.CosaDaDiritto))
+    {
+        <p><strong>Il buono dà diritto a:</strong> @Model.CosaDaDiritto</p>
+    }
+
+    <p><strong>Valida fino al:</strong> @Model.DataScadenza.ToString("dd/MM/yyyy")</p>
+
+    <div class="mt-4">
+        <a class="btn btn-success"
+           asp-controller="CodiciPromo"
+           asp-action="RichiediDaAlias"
+           asp-route-alias="@Model.Alias">
+            Richiedi il tuo codice
+        </a>
+    </div>
+
+    <p class="mt-4 text-muted">
+        <em>
+            Mostra questo alias in caso di necessità: <strong>@Model.Alias</strong><br />
+            @if (isEvento)
+            {
+                <span>Ti verranno chiesti Nome, Cognome, Data/Comune di nascita e Comune di residenza.</span>
+            }
+            else
+            {
+                <span>Ti verrà chiesto il tuo account Instagram.</span>
+            }
+        </em>
+    </p>
+</div>

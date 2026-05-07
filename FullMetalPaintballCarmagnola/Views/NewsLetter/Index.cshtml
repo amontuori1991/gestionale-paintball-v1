@@ -1,0 +1,761 @@
+@model Full_Metal_Paintball_Carmagnola.Models.NewsLetterIndexViewModel
+
+@{
+    ViewData["Title"] = "NewsLetter";
+}
+
+<style>
+    .newsletter-page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 22px 14px 48px;
+    }
+
+    .newsletter-hero {
+        background:
+            radial-gradient(circle at top left, rgba(230, 0, 126, .16), transparent 36%),
+            radial-gradient(circle at bottom right, rgba(247, 127, 0, .18), transparent 34%),
+            rgba(255, 250, 241, .92);
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 30px;
+        box-shadow: 0 24px 58px rgba(0, 0, 0, .10);
+        padding: clamp(22px, 4vw, 38px);
+    }
+
+    .newsletter-eyebrow {
+        color: #e6007e;
+        font-size: .8rem;
+        font-weight: 950;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .newsletter-title {
+        color: #141711;
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        font-weight: 950;
+        line-height: .98;
+        margin: 8px 0 10px;
+    }
+
+    .newsletter-subtitle {
+        color: #58564c;
+        font-size: 1.05rem;
+        margin: 0;
+        max-width: 780px;
+    }
+
+    .newsletter-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
+        margin-top: 24px;
+    }
+
+    .newsletter-card {
+        background: rgba(255, 255, 255, .82);
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 26px;
+        box-shadow: 0 18px 42px rgba(0, 0, 0, .08);
+        padding: clamp(16px, 3vw, 24px);
+    }
+
+    .newsletter-stats {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 22px;
+    }
+
+    .newsletter-stat {
+        background: rgba(255, 255, 255, .72);
+        border: 1px solid rgba(0, 0, 0, .07);
+        border-radius: 20px;
+        padding: 14px 16px;
+    }
+
+    .newsletter-stat strong {
+        color: #151711;
+        display: block;
+        font-size: clamp(1.55rem, 4vw, 2.25rem);
+        font-weight: 950;
+        line-height: 1;
+    }
+
+    .newsletter-stat span {
+        color: #666352;
+        display: block;
+        font-size: .82rem;
+        font-weight: 900;
+        letter-spacing: .05em;
+        margin-top: 6px;
+        text-transform: uppercase;
+    }
+
+    .template-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .template-link {
+        background: rgba(255, 250, 241, .92);
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 18px;
+        color: #151711;
+        display: block;
+        font-weight: 900;
+        padding: 12px 14px;
+        text-decoration: none;
+    }
+
+    .template-link.is-active {
+        background: linear-gradient(135deg, rgba(230, 0, 126, .14), rgba(247, 127, 0, .16));
+        border-color: rgba(230, 0, 126, .28);
+    }
+
+    .template-link small {
+        color: #6d6a5c;
+        display: block;
+        font-weight: 700;
+        margin-top: 4px;
+    }
+
+    .newsletter-help {
+        background: rgba(206, 212, 181, .44);
+        border: 1px solid rgba(0, 0, 0, .06);
+        border-radius: 20px;
+        color: #4d5141;
+        font-size: .95rem;
+        padding: 14px 16px;
+    }
+
+    .newsletter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .newsletter-submit {
+        background: linear-gradient(135deg, #e6007e, #f77f00);
+        border: 0;
+        border-radius: 999px;
+        color: white;
+        font-weight: 950;
+        padding: 12px 22px;
+        box-shadow: 0 14px 28px rgba(230, 0, 126, .20);
+    }
+
+    .newsletter-submit:hover {
+        color: white;
+        filter: brightness(.98);
+    }
+
+    .preview-shell {
+        background: #f4f0df;
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 22px;
+        margin-top: 18px;
+        overflow: hidden;
+    }
+
+    .preview-toolbar {
+        align-items: center;
+        background: rgba(255, 255, 255, .75);
+        border-bottom: 1px solid rgba(0, 0, 0, .08);
+        display: flex;
+        font-size: .85rem;
+        font-weight: 900;
+        justify-content: space-between;
+        padding: 10px 14px;
+    }
+
+    .newsletter-preview {
+        background: #f4f0df;
+        border: 0;
+        box-sizing: border-box;
+        display: block;
+        height: 620px;
+        overflow: auto;
+        padding: 28px 12px;
+        width: 100%;
+    }
+
+    .newsletter-preview-email {
+        background: #fffaf1;
+        border: 1px solid #eadfbd;
+        border-radius: 28px;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, .10);
+        margin: 0 auto;
+        max-width: 640px;
+        overflow: hidden;
+    }
+
+    .newsletter-preview-header {
+        color: white;
+        padding: 28px 28px 18px;
+        text-align: center;
+    }
+
+    .newsletter-preview-logo {
+        background: white;
+        border-radius: 999px;
+        display: block;
+        height: 88px;
+        margin: 0 auto 16px;
+        padding: 8px;
+        width: 88px;
+    }
+
+    .newsletter-preview-brand {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .newsletter-preview-title {
+        color: white;
+        font-size: 30px;
+        font-weight: 900;
+        line-height: 1.12;
+        margin: 8px 0 0;
+    }
+
+    .newsletter-preview-banner {
+        display: block;
+        max-height: 280px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .newsletter-preview-message {
+        font-size: 17px;
+        line-height: 1.65;
+        padding: 30px 30px 18px;
+        white-space: pre-wrap;
+    }
+
+    .newsletter-preview-cta-wrap {
+        padding: 8px 30px 30px;
+        text-align: center;
+    }
+
+    .newsletter-preview-cta {
+        border-radius: 999px;
+        color: white;
+        display: inline-block;
+        font-weight: 900;
+        padding: 13px 22px;
+        text-decoration: none;
+    }
+
+    .newsletter-preview-footer {
+        color: #6d6a5c;
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 18px 30px 30px;
+    }
+
+    .newsletter-preview-footer-inner {
+        border-top: 1px solid #eadfbd;
+        padding-top: 18px;
+    }
+
+    @@media (max-width: 900px) {
+        .newsletter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .newsletter-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="newsletter-page">
+    <section class="newsletter-hero">
+        <div class="newsletter-eyebrow">Template e invio test</div>
+        <h1 class="newsletter-title">NewsLetter</h1>
+        <p class="newsletter-subtitle">
+            Crea template riutilizzabili, personalizza colori, immagine, testo e pulsante.
+            Per ora l'invio resta singolo e controllato, così possiamo testare con calma prima dell'invio massivo.
+        </p>
+
+        <div class="newsletter-stats">
+            <div class="newsletter-stat">
+                <strong>@Model.EmailAttiveUniche</strong>
+                <span>Email attive uniche</span>
+            </div>
+            <div class="newsletter-stat">
+                <strong>@Model.EmailTotaliUniche</strong>
+                <span>Email totali uniche</span>
+            </div>
+            <div class="newsletter-stat">
+                <strong>@Model.TesseramentiDisiscritti</strong>
+                <span>Tesseramenti disiscritti</span>
+            </div>
+        </div>
+
+        @if (TempData["NewsLetterSuccess"] is string successMessage)
+        {
+            <div class="alert alert-success mt-4 mb-0">@successMessage</div>
+        }
+
+        <div class="newsletter-grid">
+            <aside class="newsletter-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 fw-black mb-0">Template</h2>
+                    <a class="btn btn-sm btn-outline-dark rounded-pill" asp-action="Index">Nuovo</a>
+                </div>
+
+                @if (Model.Templates.Any())
+                {
+                    <div class="template-list">
+                        @foreach (var template in Model.Templates.OrderByDescending(t => t.UpdatedAtUtc))
+                        {
+                            var active = template.Id == Model.Template.Id;
+                            <div>
+                                <a class="template-link @(active ? "is-active" : "")" asp-action="Index" asp-route-templateId="@template.Id">
+                                    @template.Nome
+                                    <small>@template.UpdatedAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                                </a>
+                                <form asp-action="DeleteTemplate" method="post" class="mt-1" onsubmit="return confirm('Eliminare questo template?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@template.Id" />
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0">Elimina</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="newsletter-help">Nessun template salvato. Compila l'editor e premi "Salva template".</div>
+                }
+            </aside>
+
+            <main class="newsletter-card">
+                <form id="newsletterForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="Template.Id" type="hidden" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="newsletter-help mb-4">
+                        Suggerimento: salva prima il template, poi invia una mail di test. L'anteprima sotto si aggiorna mentre scrivi.
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-5">
+                            <label asp-for="Template.Nome" class="form-label fw-bold">Nome template</label>
+                            <input asp-for="Template.Nome" class="form-control form-control-lg js-preview-field" />
+                            <span asp-validation-for="Template.Nome" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-7">
+                            <label asp-for="Template.Oggetto" class="form-label fw-bold">Oggetto email</label>
+                            <input asp-for="Template.Oggetto" class="form-control form-control-lg js-preview-field" />
+                            <span asp-validation-for="Template.Oggetto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-7">
+                            <label asp-for="Template.Titolo" class="form-label fw-bold">Titolo visibile</label>
+                            <input asp-for="Template.Titolo" class="form-control form-control-lg js-preview-field" />
+                            <span asp-validation-for="Template.Titolo" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-5">
+                            <label asp-for="Template.Sopratitolo" class="form-label fw-bold">Sopratitolo / badge</label>
+                            <input asp-for="Template.Sopratitolo" class="form-control form-control-lg js-preview-field" />
+                            <span asp-validation-for="Template.Sopratitolo" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-7">
+                            <label asp-for="Template.Anteprima" class="form-label fw-bold">Testo anteprima inbox</label>
+                            <input asp-for="Template.Anteprima" class="form-control form-control-lg js-preview-field" />
+                            <span asp-validation-for="Template.Anteprima" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Template.ImmagineUrl" class="form-label fw-bold">Immagine banner opzionale</label>
+                            <input asp-for="Template.ImmagineUrl" class="form-control js-preview-field" placeholder="https://..." />
+                            <span asp-validation-for="Template.ImmagineUrl" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-8">
+                            <label asp-for="Template.LogoUrl" class="form-label fw-bold">Logo opzionale</label>
+                            <input asp-for="Template.LogoUrl" class="form-control js-preview-field" placeholder="https://..." />
+                            <span asp-validation-for="Template.LogoUrl" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-4 d-flex align-items-end">
+                            <div class="form-check form-switch mb-2">
+                                <input asp-for="Template.MostraLogo" class="form-check-input js-preview-field" />
+                                <label asp-for="Template.MostraLogo" class="form-check-label fw-bold">Mostra logo</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Template.Messaggio" class="form-label fw-bold">Messaggio</label>
+                            <textarea asp-for="Template.Messaggio" class="form-control js-preview-field" rows="10"></textarea>
+                            <span asp-validation-for="Template.Messaggio" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <label asp-for="Template.TestoPulsante" class="form-label fw-bold">Testo pulsante opzionale</label>
+                            <input asp-for="Template.TestoPulsante" class="form-control js-preview-field" />
+                            <span asp-validation-for="Template.TestoPulsante" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <label asp-for="Template.LinkPulsante" class="form-label fw-bold">Link pulsante opzionale</label>
+                            <input asp-for="Template.LinkPulsante" class="form-control js-preview-field" placeholder="https://..." />
+                            <span asp-validation-for="Template.LinkPulsante" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                            <label asp-for="Template.ColorePrimario" class="form-label fw-bold">Colore 1</label>
+                            <input asp-for="Template.ColorePrimario" type="color" class="form-control form-control-color js-preview-field" />
+                            <span asp-validation-for="Template.ColorePrimario" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                            <label asp-for="Template.ColoreSecondario" class="form-label fw-bold">Colore 2</label>
+                            <input asp-for="Template.ColoreSecondario" type="color" class="form-control form-control-color js-preview-field" />
+                            <span asp-validation-for="Template.ColoreSecondario" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                            <label asp-for="Template.ColoreSfondo" class="form-label fw-bold">Sfondo email</label>
+                            <input asp-for="Template.ColoreSfondo" type="color" class="form-control form-control-color js-preview-field" />
+                            <span asp-validation-for="Template.ColoreSfondo" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                            <label asp-for="Template.ColoreScheda" class="form-label fw-bold">Sfondo scheda</label>
+                            <input asp-for="Template.ColoreScheda" type="color" class="form-control form-control-color js-preview-field" />
+                            <span asp-validation-for="Template.ColoreScheda" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Template.FooterPersonalizzato" class="form-label fw-bold">Footer personalizzato</label>
+                            <textarea asp-for="Template.FooterPersonalizzato" class="form-control js-preview-field" rows="2" placeholder="Es. Ricevi questa email perche hai lasciato il consenso durante il tesseramento."></textarea>
+                            <span asp-validation-for="Template.FooterPersonalizzato" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <label asp-for="EmailTest" class="form-label fw-bold"></label>
+                            <input asp-for="EmailTest" class="form-control" placeholder="email per test" />
+                            <span asp-validation-for="EmailTest" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <label asp-for="SegmentoDestinatari" class="form-label fw-bold">Segmento destinatari</label>
+                            <select asp-for="SegmentoDestinatari" class="form-select">
+                                <option value="all">Tutti i consenzienti</option>
+                                <option value="currentYear">Tesserati con partita nell'anno corrente</option>
+                                <option value="last12Months">Tesserati / iscritti negli ultimi 12 mesi</option>
+                            </select>
+                            <small class="text-muted">Stima attuale su tutti i consenzienti: @Model.DestinatariStimati destinatari unici.</small>
+                        </div>
+
+                        <div class="col-12 col-lg-6">
+                            <label asp-for="DataOraProgrammata" class="form-label fw-bold">Data e ora invio programmato</label>
+                            <input asp-for="DataOraProgrammata" type="datetime-local" class="form-control" />
+                            <span asp-validation-for="DataOraProgrammata" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="newsletter-actions mt-4">
+                        <button type="submit" formaction="@Url.Action("SaveTemplate", "NewsLetter")" class="btn btn-outline-dark rounded-pill fw-bold px-4">
+                            <i class="bi bi-save me-1"></i> Salva template
+                        </button>
+                        <button type="submit" formaction="@Url.Action("SendTest", "NewsLetter")" class="newsletter-submit">
+                            <i class="bi bi-send me-1"></i> Invia test
+                        </button>
+                        <button type="submit" formaction="@Url.Action("ScheduleBulk", "NewsLetter")" class="btn btn-outline-primary rounded-pill fw-bold px-4">
+                            <i class="bi bi-clock me-1"></i> Programma invio
+                        </button>
+                        <button type="submit"
+                                formaction="@Url.Action("SendBulk", "NewsLetter")"
+                                class="btn btn-danger rounded-pill fw-bold px-4"
+                                onclick="return confirm('Confermi invio massivo ai destinatari selezionati?');">
+                            <i class="bi bi-broadcast me-1"></i> Invia massivo
+                        </button>
+                    </div>
+                </form>
+
+                <div class="preview-shell">
+                    <div class="preview-toolbar">
+                        <span>Anteprima template</span>
+                        <span id="PreviewSubject">@Model.Template.Oggetto</span>
+                    </div>
+                    <div id="NewsletterPreview" class="newsletter-preview" role="region" aria-label="Anteprima newsletter"></div>
+                </div>
+
+                <div class="row g-3 mt-3">
+                    <div class="col-12 col-lg-5">
+                        <div class="newsletter-help h-100">
+                            <h3 class="h6 fw-black">Invii programmati</h3>
+                            @if (Model.InviiProgrammati.Any())
+                            {
+                                @foreach (var scheduled in Model.InviiProgrammati.OrderBy(x => x.DataOraProgrammataUtc))
+                                {
+                                    <div class="border-top pt-2 mt-2">
+                                        <strong>@scheduled.Template.Nome</strong><br />
+                                        <small>@scheduled.DataOraProgrammataUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @scheduled.SegmentoDestinatari</small>
+                                        <form asp-action="DeleteScheduled" method="post" class="mt-1">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@scheduled.Id" />
+                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0">Annulla programmazione</button>
+                                        </form>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div>Nessun invio programmato.</div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-7">
+                        <div class="newsletter-help h-100">
+                            <h3 class="h6 fw-black">Storico invii</h3>
+                            @if (Model.StoricoInvii.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Oggetto</th>
+                                                <th>Inviate</th>
+                                                <th>Errori</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model.StoricoInvii.Take(10))
+                                            {
+                                                <tr>
+                                                    <td>@item.SentAtUtc.ToLocalTime().ToString("dd/MM HH:mm")</td>
+                                                    <td>@item.Oggetto</td>
+                                                    <td>@item.Inviate / @item.Destinatari</td>
+                                                    <td>@item.Errori</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>Nessun invio registrato.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @* <script type="text/plain" id="NewsletterPreviewLegacyScript">
+        const field = (name) => document.querySelector(`[name="${name}"]`);
+        const htmlEscape = (value) => (value || '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[char]));
+
+        function buildPreviewHtml() {
+            const title = htmlEscape(field('Template.Titolo')?.value || 'Novità dal campo');
+            const subject = field('Template.Oggetto')?.value || '';
+            const message = htmlEscape(field('Template.Messaggio')?.value || '').replace(/\n/g, '<br />');
+            const imageUrl = field('Template.ImmagineUrl')?.value?.trim();
+            const buttonText = field('Template.TestoPulsante')?.value?.trim();
+            const buttonUrl = field('Template.LinkPulsante')?.value?.trim();
+            const color1 = field('Template.ColorePrimario')?.value || '#e6007e';
+            const color2 = field('Template.ColoreSecondario')?.value || '#f77f00';
+
+            document.getElementById('PreviewSubject').textContent = subject;
+
+            const image = imageUrl
+                ? `<tr><td><img src="${htmlEscape(imageUrl)}" style="width:100%;display:block;max-height:280px;object-fit:cover;"></td></tr>`
+                : '';
+            const button = buttonText && buttonUrl
+                ? `<tr><td style="padding:8px 30px 30px;text-align:center;"><a href="${htmlEscape(buttonUrl)}" style="display:inline-block;background:linear-gradient(135deg,${color1},${color2});color:#fff;text-decoration:none;border-radius:999px;padding:13px 22px;font-weight:900;">${htmlEscape(buttonText)}</a></td></tr>`
+                : '';
+
+            return `<!doctype html><html lang="it"><body style="margin:0;padding:0;background:#f4f0df;font-family:Arial,Helvetica,sans-serif;color:#141711;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f0df;padding:28px 12px;">
+                    <tr><td align="center">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#fffaf1;border-radius:28px;overflow:hidden;border:1px solid #eadfbd;box-shadow:0 18px 45px rgba(0,0,0,.10);">
+                            <tr><td style="padding:28px 28px 18px;text-align:center;background:linear-gradient(135deg,${color1},${color2});">
+                                <img src="https://i.imgur.com/K9Ugseg.gif" alt="Full Metal Paintball Carmagnola" style="width:88px;height:88px;border-radius:999px;background:#fff;padding:8px;display:block;margin:0 auto 16px;">
+                                <div style="color:#fff;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;">Full Metal Paintball Carmagnola</div>
+                                <h1 style="color:#fff;font-size:30px;line-height:1.12;margin:8px 0 0;font-weight:900;">${title}</h1>
+                            </td></tr>
+                            ${image}
+                            <tr><td style="padding:30px 30px 18px;font-size:17px;line-height:1.65;">${message}</td></tr>
+                            ${button}
+                            <tr><td style="padding:18px 30px 30px;"><div style="border-top:1px solid #eadfbd;padding-top:18px;color:#6d6a5c;font-size:13px;line-height:1.5;">Messaggio inviato da A.S.D. Full Metal Paintball Carmagnola.<br>Questa è una versione di test della newsletter.</div></td></tr>
+                        </table>
+                    </td></tr>
+                </table>
+            </body></html>`;
+        }
+
+        function updatePreview() {
+            const iframe = document.getElementById('NewsletterPreview');
+            if (!iframe) {
+                return;
+            }
+
+            const previewHtml = buildPreviewHtml();
+            const previewDocument = iframe.contentDocument || iframe.contentWindow?.document;
+            if (previewDocument) {
+                previewDocument.open();
+                previewDocument.write(previewHtml);
+                previewDocument.close();
+            } else {
+                iframe.setAttribute('srcdoc', previewHtml);
+            }
+        }
+
+        document.querySelectorAll('.js-preview-field').forEach(input => {
+            input.addEventListener('input', updatePreview);
+            input.addEventListener('change', updatePreview);
+        });
+
+        updatePreview();
+        window.addEventListener('load', updatePreview);
+    </script>
+    *@
+    <script>
+        (() => {
+            const field = (name) => document.querySelector('[name="' + name + '"]');
+
+            function appendText(element, text) {
+                element.textContent = text || '';
+            }
+
+            function updateNewsletterPreview() {
+                const preview = document.getElementById('NewsletterPreview');
+                if (!preview) {
+                    return;
+                }
+
+                const title = field('Template.Titolo')?.value || 'Novit\u00e0 dal campo';
+                const eyebrowText = field('Template.Sopratitolo')?.value?.trim();
+                const subject = field('Template.Oggetto')?.value || '';
+                const message = field('Template.Messaggio')?.value || '';
+                const imageUrl = field('Template.ImmagineUrl')?.value?.trim();
+                const logoUrl = field('Template.LogoUrl')?.value?.trim();
+                const showLogo = field('Template.MostraLogo')?.checked ?? true;
+                const buttonText = field('Template.TestoPulsante')?.value?.trim();
+                const buttonUrl = field('Template.LinkPulsante')?.value?.trim();
+                const footerText = field('Template.FooterPersonalizzato')?.value?.trim();
+                const color1 = field('Template.ColorePrimario')?.value || '#e6007e';
+                const color2 = field('Template.ColoreSecondario')?.value || '#f77f00';
+                const backgroundColor = field('Template.ColoreSfondo')?.value || '#f4f0df';
+                const cardColor = field('Template.ColoreScheda')?.value || '#fffaf1';
+
+                const subjectPreview = document.getElementById('PreviewSubject');
+                if (subjectPreview) {
+                    subjectPreview.textContent = subject;
+                }
+
+                preview.replaceChildren();
+                preview.style.background = backgroundColor;
+
+                const email = document.createElement('div');
+                email.className = 'newsletter-preview-email';
+                email.style.background = cardColor;
+
+                const header = document.createElement('div');
+                header.className = 'newsletter-preview-header';
+                header.style.background = 'linear-gradient(135deg, ' + color1 + ', ' + color2 + ')';
+
+                if (showLogo && logoUrl) {
+                    const logo = document.createElement('img');
+                    logo.className = 'newsletter-preview-logo';
+                    logo.src = logoUrl;
+                    logo.alt = 'Full Metal Paintball Carmagnola';
+                    header.appendChild(logo);
+                }
+
+                if (eyebrowText) {
+                    const brand = document.createElement('div');
+                    brand.className = 'newsletter-preview-brand';
+                    brand.textContent = eyebrowText;
+                    header.appendChild(brand);
+                }
+
+                const titleElement = document.createElement('h1');
+                titleElement.className = 'newsletter-preview-title';
+                appendText(titleElement, title);
+                header.appendChild(titleElement);
+
+                email.appendChild(header);
+
+                if (imageUrl) {
+                    const image = document.createElement('img');
+                    image.className = 'newsletter-preview-banner';
+                    image.src = imageUrl;
+                    image.alt = '';
+                    email.appendChild(image);
+                }
+
+                const messageElement = document.createElement('div');
+                messageElement.className = 'newsletter-preview-message';
+                appendText(messageElement, message);
+                email.appendChild(messageElement);
+
+                if (buttonText && buttonUrl) {
+                    const buttonWrap = document.createElement('div');
+                    buttonWrap.className = 'newsletter-preview-cta-wrap';
+
+                    const button = document.createElement('a');
+                    button.className = 'newsletter-preview-cta';
+                    button.href = buttonUrl;
+                    button.target = '_blank';
+                    button.rel = 'noopener';
+                    button.style.background = 'linear-gradient(135deg, ' + color1 + ', ' + color2 + ')';
+                    appendText(button, buttonText);
+
+                    buttonWrap.appendChild(button);
+                    email.appendChild(buttonWrap);
+                }
+
+                const footer = document.createElement('div');
+                footer.className = 'newsletter-preview-footer';
+
+                const footerInner = document.createElement('div');
+                footerInner.className = 'newsletter-preview-footer-inner';
+                footerInner.innerHTML = '';
+                appendText(footerInner, footerText || 'Messaggio inviato da A.S.D. Full Metal Paintball Carmagnola.');
+                footerInner.appendChild(document.createElement('br'));
+                footerInner.append('Questa \u00e8 una versione di test della newsletter.');
+                footer.appendChild(footerInner);
+
+                email.appendChild(footer);
+                preview.appendChild(email);
+            }
+
+            document.querySelectorAll('.js-preview-field').forEach(input => {
+                input.addEventListener('input', updateNewsletterPreview);
+                input.addEventListener('change', updateNewsletterPreview);
+            });
+
+            updateNewsletterPreview();
+            window.addEventListener('load', updateNewsletterPreview);
+        })();
+    </script>
+}

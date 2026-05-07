@@ -1,0 +1,842 @@
+﻿@using System.Globalization
+@{
+    ViewData["Title"] = "Statistiche";
+
+    int meseCorrente = ViewBag.MeseCorrente;
+    int annoCorrente = ViewBag.AnnoCorrente;
+    int annoPrecedente = ViewBag.AnnoPrecedente;
+    string labelMese = ViewBag.LabelMese;
+    string oggiLabel = ViewBag.OggiLabel;
+    string oggiLabelAnnoPrecedente = ViewBag.OggiLabelAnnoPrecedente;
+
+    int chart1TopPrevYear = ViewBag.Chart1TopPrevYear;
+    int chart1TopPrevValue = ViewBag.Chart1TopPrevValue;
+    int chart1TopPrevCancellate = ViewBag.Chart1TopPrevCancellate;
+    int chart1CurrentValue = ViewBag.Chart1CurrentValue;
+    bool chart1CurrentIsTop = ViewBag.Chart1CurrentIsTop;
+    int chart1CurrentCancellate = ViewBag.Chart1CurrentCancellate;
+
+    int chart2CurrentValue = ViewBag.Chart2CurrentValue;
+    int chart2PrevValue = ViewBag.Chart2PrevValue;
+    int chart2CurrentCancellate = ViewBag.Chart2CurrentCancellate;
+    int chart2PrevCancellate = ViewBag.Chart2PrevCancellate;
+
+    var anni = ViewBag.Anni as List<int>;
+    var totalsPerYear = ViewBag.TotalsPerYear as Dictionary<int, int>;
+    var cancellatePerYear = ViewBag.CancellatePerYear as Dictionary<int, int>;
+    int topYearOverall = ViewBag.TopYearOverall;
+    int topOverallValue = ViewBag.TopOverallValue;
+
+    var ytdLabels = ViewBag.YtdLabels as List<string>;
+    var ytdCorrenteValues = ViewBag.YtdCorrenteValues as List<int>;
+    var ytdPrecedenteValues = ViewBag.YtdPrecedenteValues as List<int>;
+    var ytdCancellateCorrenteValues = ViewBag.YtdCancellateCorrenteValues as List<int>;
+    var ytdCancellatePrecedenteValues = ViewBag.YtdCancellatePrecedenteValues as List<int>;
+
+    var comuneMapPoints = ViewBag.ComuneMapPoints as List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheComuneMappaPunto>;
+    int comuneMapMatched = ViewBag.ComuneMapMatched;
+    int comuneMapExcluded = ViewBag.ComuneMapExcluded;
+    int comuneMapForeign = ViewBag.ComuneMapForeign;
+    string comuneMapTopLabel = ViewBag.ComuneMapTopLabel;
+    int comuneMapTopValue = ViewBag.ComuneMapTopValue;
+
+    var europeMapCountries = ViewBag.EuropeMapCountries as List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheNazioneMappaDato>;
+    int europeMapMatched = ViewBag.EuropeMapMatched;
+    int europeMapExcluded = ViewBag.EuropeMapExcluded;
+    string europeMapTopLabel = ViewBag.EuropeMapTopLabel;
+    int europeMapTopValue = ViewBag.EuropeMapTopValue;
+
+    string distanceReferenceLabel = ViewBag.DistanceReferenceLabel;
+    var distanceMonthLabels = ViewBag.DistanceMonthLabels as List<string>;
+    var distanceMonthlyCurrent = ViewBag.DistanceMonthlyCurrent as List<double>;
+    var distanceMonthlyPrevious = ViewBag.DistanceMonthlyPrevious as List<double>;
+    var distanceYearlyAverages = ViewBag.DistanceYearlyAverages as List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheDistanzaAnnualeDato>;
+    double distanceCurrentAverage = ViewBag.DistanceCurrentAverage;
+    double distanceCurrentMedian = ViewBag.DistanceCurrentMedian;
+    int distanceCurrentWithin25Pct = ViewBag.DistanceCurrentWithin25Pct;
+    int distanceCurrentOver50Pct = ViewBag.DistanceCurrentOver50Pct;
+}
+
+<link href="~/css/statistiche-responsive.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<div class="background-logo"></div>
+
+<div class="statistiche-container">
+    <h2>Statistiche Partite – @labelMese (@annoCorrente)</h2>
+
+    <!-- Navigazione mese -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary">← Mese precedente</a>
+        <div style="font-weight:700; letter-spacing:.5px;">@labelMese.ToUpper()</div>
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary">Mese successivo →</a>
+    </div>
+
+    <!-- Legenda cancellate -->
+    <div style="display:flex; align-items:center; gap:18px; margin-bottom:20px; flex-wrap:wrap; font-size:.9rem;">
+        <div style="display:flex; align-items:center; gap:6px;">
+            <div style="width:18px; height:18px; border-radius:3px; background:rgba(59,130,246,0.85);"></div>
+            <span>Partite confermate</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+            <div style="width:18px; height:18px; border-radius:3px; background:rgba(220,38,38,0.75);"></div>
+            <span>Partite cancellate (sovrapposte)</span>
+        </div>
+    </div>
+
+    <!-- GRAFICO 1: TOP storico vs Anno Corrente -->
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">TOP storico vs @annoCorrente (mese: @labelMese)</h4>
+        <div style="position:relative; height:340px;">
+            <canvas id="chartTopVsCurrent"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Il TOP considera gli anni precedenti. Se @annoCorrente supera il TOP, diventa lui il nuovo TOP.
+            Le barre rosse indicano le partite cancellate nello stesso periodo.
+        </div>
+    </div>
+
+    <!-- GRAFICO 2: Anno Corrente vs Anno Precedente sul mese -->
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">@annoCorrente vs @annoPrecedente (mese: @labelMese)</h4>
+        <div style="position:relative; height:300px;">
+            <canvas id="chartCurrentVsPrev"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Le barre rosse indicano le partite cancellate nello stesso periodo.
+        </div>
+    </div>
+
+    <!-- GRAFICO 3: Totali per anno + TOP assoluto + anno corrente -->
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Totali per anno (con evidenza TOP e anno in corso)</h4>
+        <div style="position:relative; height:360px;">
+            <canvas id="chartYearTotals"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            TOP assoluto: <strong>@topYearOverall</strong> – <strong>@topOverallValue</strong> partite.
+            Le barre rosse indicano le partite cancellate per anno.
+        </div>
+    </div>
+
+    <!-- GRAFICO 4: Progressivo YTD -->
+    <div class="chart-card">
+        <h4 style="margin:0 0 10px 0; text-align:center;">
+            Progressivo YTD: @annoCorrente vs @annoPrecedente
+            <span style="font-size:.8rem; font-weight:400; opacity:.8;">(dal 01/01 al @oggiLabel)</span>
+        </h4>
+        <div style="position:relative; height:360px;">
+            <canvas id="chartYtd"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Confronto cumulativo dall'inizio dell'anno fino ad oggi (@oggiLabel).
+            Per l'anno precedente il confronto si ferma al corrispondente @oggiLabelAnnoPrecedente.
+            Le linee tratteggiate rosse indicano le cancellate cumulative.
+        </div>
+    </div>
+
+    <div class="chart-card" style="margin-top:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Distanza Media Tesserati dalla Struttura - Solo Italia</h4>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; font-size:.92rem;">
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(59,130,246,0.1);">
+                Media @annoCorrente: <strong>@distanceCurrentAverage.ToString("0.0", CultureInfo.InvariantCulture) km</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(16,185,129,0.12);">
+                Mediana @annoCorrente: <strong>@distanceCurrentMedian.ToString("0.0", CultureInfo.InvariantCulture) km</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(234,179,8,0.12);">
+                Entro 25 km: <strong>@distanceCurrentWithin25Pct%</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(220,38,38,0.10);">
+                Oltre 50 km: <strong>@distanceCurrentOver50Pct%</strong>
+            </div>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-bottom:14px;">
+            Distanza calcolata solo sui tesserati con residenza italiana classificata e collegati a una partita, usando la <strong>data della partita</strong> e prendendo come riferimento <strong>@distanceReferenceLabel</strong>.
+        </div>
+        <div style="position:relative; height:320px; margin-bottom:18px;">
+            <canvas id="chartDistanceMonthly"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-bottom:18px;">
+            Confronto mese per mese tra <strong>@annoCorrente</strong> e <strong>@annoPrecedente</strong> della distanza media dei tesserati italiani.
+        </div>
+        <div style="position:relative; height:320px;">
+            <canvas id="chartDistanceYearly"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Vista anno per anno della distanza media: se cresce nel tempo, il bacino si sta allargando.
+        </div>
+    </div>
+
+    <div class="chart-card" style="margin-top:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Affluenza Tesserati per Comune di Residenza</h4>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; font-size:.92rem;">
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(59,130,246,0.1);">
+                Localizzati: <strong>@comuneMapMatched</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(220,38,38,0.08);">
+                Residenti estero esclusi: <strong>@comuneMapForeign</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(15,23,42,0.06);">
+                Non classificabili: <strong>@comuneMapExcluded</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(234,179,8,0.12);">
+                Comune principale: <strong>@comuneMapTopLabel</strong> (@comuneMapTopValue)
+            </div>
+        </div>
+        <div id="comuniHeatmap" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Sono visualizzati solo i tesserati con comune di residenza italiano normalizzato nel formato <strong>Comune (PV)</strong>.
+            I cerchi più grandi e più rossi indicano una maggiore affluenza da quel comune.
+        </div>
+    </div>
+
+    <div class="chart-card" style="margin-top:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Affluenza Tesserati Esteri per Paese</h4>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; font-size:.92rem;">
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(59,130,246,0.1);">
+                Paesi mappati: <strong>@europeMapMatched</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(15,23,42,0.06);">
+                Estero non classificabile: <strong>@europeMapExcluded</strong>
+            </div>
+            <div style="padding:8px 12px; border-radius:999px; background:rgba(234,179,8,0.12);">
+                Paese principale: <strong>@europeMapTopLabel</strong> (@europeMapTopValue)
+            </div>
+        </div>
+        <div id="europeChoropleth" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            I paesi europei vengono colorati in base al numero di tesserati con residenza estera classificata.
+            Più il rosso è intenso, più alta è l'affluenza da quel paese.
+        </div>
+    </div>
+</div>
+
+<script>
+    // =============================================================================
+    // Plugin: etichette sopra le barre (bar charts)
+    // =============================================================================
+    const barLabelPlugin = {
+        id: 'barLabelPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            ctx.save();
+            const isMobile = window.innerWidth < 768;
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                const meta = chart.getDatasetMeta(datasetIndex);
+                if (!meta || meta.hidden) return;
+
+                if (datasetIndex === 0) {
+                    // Dataset confermate: etichetta testuale completa (customLabels)
+                    meta.data.forEach((bar, index) => {
+                        const val = dataset.data[index];
+                        if (val === null || val === undefined) return;
+                        const label = (dataset.customLabels && dataset.customLabels[index]) ? dataset.customLabels[index] : null;
+                        if (!label) return;
+
+                        ctx.font = isMobile ? 'bold 10px sans-serif' : 'bold 12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        const x = bar.x;
+                        const y = bar.y - 8;
+
+                        ctx.lineWidth = 3;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                        ctx.strokeText(label, x, y);
+                        ctx.fillStyle = 'rgba(20,20,20,0.95)';
+                        ctx.fillText(label, x, y);
+                    });
+                } else if (datasetIndex === 1) {
+                    // Dataset cancellate: mostra solo il numero se > 0, in rosso scuro
+                    meta.data.forEach((bar, index) => {
+                        const val = dataset.data[index];
+                        if (!val || val <= 0) return; // non scrivere nulla se zero
+
+                        const label = `${val} ann.`;
+                        ctx.font = isMobile ? 'bold 9px sans-serif' : 'bold 11px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        const x = bar.x;
+                        const y = bar.y - 5;
+
+                        ctx.lineWidth = 3;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                        ctx.strokeText(label, x, y);
+                        ctx.fillStyle = 'rgba(153,27,27,1)'; // rosso scuro leggibile
+                        ctx.fillText(label, x, y);
+                    });
+                }
+            });
+
+            ctx.restore();
+        }
+    };
+
+    // =============================================================================
+    // Colori comuni
+    // =============================================================================
+    const COLOR_CONF_CURR  = 'rgba(59,130,246,0.85)';   // blu anno corrente
+    const COLOR_CONF_PREV  = 'rgba(59,130,246,0.45)';   // blu chiaro anno precedente / TOP
+    const COLOR_CANC       = 'rgba(220,38,38,0.75)';    // rosso cancellate
+    const COLOR_CANC_LIGHT = 'rgba(220,38,38,0.45)';    // rosso chiaro (anno precedente YTD)
+    const COLOR_BORDER_CURR = 'rgba(37,99,235,1)';
+    const COLOR_BORDER_PREV = 'rgba(37,99,235,0.6)';
+    const COLOR_BORDER_CANC = 'rgba(185,28,28,1)';
+    const COLOR_BORDER_CANC_L = 'rgba(185,28,28,0.6)';
+
+    // =============================================================================
+    // CHART 1: TOP storico vs Anno Corrente
+    // =============================================================================
+    const topPrevYear  = @chart1TopPrevYear;
+    const topPrevVal   = @chart1TopPrevValue;
+    const topPrevCanc  = @chart1TopPrevCancellate;
+
+    const currentYear     = @annoCorrente;
+    const currentVal      = @chart1CurrentValue;
+    const currentIsTop    = @Html.Raw(Json.Serialize(chart1CurrentIsTop));
+    const currentCancellate = @chart1CurrentCancellate;
+
+    const chart1Labels = ['TOP', currentYear.toString()];
+
+    const topPrevLabel = (topPrevYear && topPrevYear > 0)
+        ? `TOP: ${topPrevYear} – ${topPrevVal} partite`
+        : `TOP: N/D – 0 partite`;
+
+    const chart1CustomLabels = [
+        topPrevLabel,
+        currentIsTop
+            ? `TOP: ${currentYear} – ${currentVal} partite`
+            : `${currentYear}: ${currentVal} partite`
+    ];
+
+    new Chart(document.getElementById('chartTopVsCurrent').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chart1Labels,
+            datasets: [
+                {
+                    label: 'Confermate',
+                    data: [topPrevVal, currentVal],
+                    backgroundColor: [COLOR_CONF_PREV, COLOR_CONF_CURR],
+                    borderColor: [COLOR_BORDER_PREV, COLOR_BORDER_CURR],
+                    borderWidth: 1,
+                    customLabels: chart1CustomLabels
+                },
+                {
+                    label: 'Cancellate',
+                    data: [topPrevCanc, currentCancellate],
+                    backgroundColor: COLOR_CANC,
+                    borderColor: COLOR_BORDER_CANC,
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 44 } },
+            plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} partite`
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: false },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
+    // =============================================================================
+    // CHART 2: Anno Corrente vs Anno Precedente (mese)
+    // =============================================================================
+    const chart2Labels = ['@annoPrecedente', '@annoCorrente'];
+    const chart2DataConf = [@chart2PrevValue, @chart2CurrentValue];
+    const chart2DataCanc = [@chart2PrevCancellate, @chart2CurrentCancellate];
+
+    const chart2CustomLabels = [
+        `${@annoPrecedente}: ${@chart2PrevValue} conf.`,
+        `${@annoCorrente}: ${@chart2CurrentValue} conf.`
+    ];
+
+    new Chart(document.getElementById('chartCurrentVsPrev').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chart2Labels,
+            datasets: [
+                {
+                    label: 'Confermate',
+                    data: chart2DataConf,
+                    backgroundColor: [COLOR_CONF_PREV, COLOR_CONF_CURR],
+                    borderColor: [COLOR_BORDER_PREV, COLOR_BORDER_CURR],
+                    borderWidth: 1,
+                    customLabels: chart2CustomLabels
+                },
+                {
+                    label: 'Cancellate',
+                    data: chart2DataCanc,
+                    backgroundColor: COLOR_CANC,
+                    borderColor: COLOR_BORDER_CANC,
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 44 } },
+            plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} partite`
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: false },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
+    // =============================================================================
+    // CHART 3: Totali per anno
+    // =============================================================================
+    const anni           = @Html.Raw(Json.Serialize(anni));
+    const totalsPerYear  = @Html.Raw(Json.Serialize(totalsPerYear));
+    const cancellatePerY = @Html.Raw(Json.Serialize(cancellatePerYear));
+    const topYearOverall = @topYearOverall;
+    const topOverallValue = @topOverallValue;
+
+    const chart3Labels = anni.map(a => a.toString());
+    const chart3DataConf = anni.map(a => totalsPerYear[a] || 0);
+    const chart3DataCanc = anni.map(a => cancellatePerY[a] || 0);
+
+    // Colore barra per anno: oro per TOP, blu più vivace per anno corrente, blu standard per altri
+    const chart3Colors = anni.map(a => {
+        if (a === topYearOverall) return 'rgba(234,179,8,0.85)';   // oro = TOP
+        if (a === currentYear)    return COLOR_CONF_CURR;
+        return COLOR_CONF_PREV;
+    });
+    const chart3BorderColors = anni.map(a => {
+        if (a === topYearOverall) return 'rgba(161,120,0,1)';
+        if (a === currentYear)    return COLOR_BORDER_CURR;
+        return COLOR_BORDER_PREV;
+    });
+
+    const chart3CustomLabels = anni.map(a => {
+        const val = totalsPerYear[a] || 0;
+        if (a === topYearOverall) return `TOP: ${a} – ${val}`;
+        if (a === currentYear)    return `${a} (in corso): ${val}`;
+        return `${a}: ${val}`;
+    });
+
+    new Chart(document.getElementById('chartYearTotals').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chart3Labels,
+            datasets: [
+                {
+                    label: 'Confermate',
+                    data: chart3DataConf,
+                    backgroundColor: chart3Colors,
+                    borderColor: chart3BorderColors,
+                    borderWidth: 1,
+                    customLabels: chart3CustomLabels
+                },
+                {
+                    label: 'Cancellate',
+                    data: chart3DataCanc,
+                    backgroundColor: COLOR_CANC,
+                    borderColor: COLOR_BORDER_CANC,
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 44 } },
+            plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} partite`
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: false },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
+    // =============================================================================
+    // CHART 4: Progressivo YTD (line chart)
+    // =============================================================================
+    const ytdLabels     = @Html.Raw(Json.Serialize(ytdLabels));
+    const ytdCorrente   = @Html.Raw(Json.Serialize(ytdCorrenteValues));
+    const ytdPrecedente = @Html.Raw(Json.Serialize(ytdPrecedenteValues));
+    const ytdCancCurr   = @Html.Raw(Json.Serialize(ytdCancellateCorrenteValues));
+    const ytdCancPrev   = @Html.Raw(Json.Serialize(ytdCancellatePrecedenteValues));
+    const distanceMonthLabels = @Html.Raw(Json.Serialize(distanceMonthLabels));
+    const distanceMonthlyCurrent = @Html.Raw(Json.Serialize(distanceMonthlyCurrent));
+    const distanceMonthlyPrevious = @Html.Raw(Json.Serialize(distanceMonthlyPrevious));
+    const distanceYearlyAverages = @Html.Raw(Json.Serialize(distanceYearlyAverages));
+    const comuneMapPoints = @Html.Raw(Json.Serialize(comuneMapPoints ?? new List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheComuneMappaPunto>()));
+    const europeMapCountries = @Html.Raw(Json.Serialize(europeMapCountries ?? new List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheNazioneMappaDato>()));
+
+    new Chart(document.getElementById('chartYtd').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ytdLabels,
+            datasets: [
+                {
+                    label: `Confermate ${currentYear}`,
+                    data: ytdCorrente,
+                    borderColor: COLOR_BORDER_CURR,
+                    backgroundColor: 'rgba(59,130,246,0.12)',
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    fill: false,
+                    tension: 0.3
+                },
+                {
+                    label: `Confermate @annoPrecedente`,
+                    data: ytdPrecedente,
+                    borderColor: COLOR_BORDER_PREV,
+                    backgroundColor: 'rgba(59,130,246,0.06)',
+                    borderWidth: 2,
+                    borderDash: [6, 3],
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: false,
+                    tension: 0.3
+                },
+                {
+                    label: `Cancellate ${currentYear}`,
+                    data: ytdCancCurr,
+                    borderColor: COLOR_BORDER_CANC,
+                    backgroundColor: 'rgba(220,38,38,0.08)',
+                    borderWidth: 2,
+                    borderDash: [4, 4],
+                    pointRadius: 4,
+                    pointStyle: 'crossRot',
+                    pointHoverRadius: 6,
+                    fill: false,
+                    tension: 0.3
+                },
+                {
+                    label: `Cancellate @annoPrecedente`,
+                    data: ytdCancPrev,
+                    borderColor: COLOR_BORDER_CANC_L,
+                    backgroundColor: 'rgba(220,38,38,0.04)',
+                    borderWidth: 1.5,
+                    borderDash: [3, 5],
+                    pointRadius: 3,
+                    pointStyle: 'crossRot',
+                    pointHoverRadius: 5,
+                    fill: false,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} partite cumulative`
+                    }
+                }
+            },
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Partite cumulative' }
+                },
+                x: {
+                    title: { display: true, text: 'Mese' }
+                }
+            }
+        }
+    });
+
+    // =============================================================================
+    // CHART 5: Distanza media tesserati - Solo Italia
+    // =============================================================================
+    new Chart(document.getElementById('chartDistanceMonthly').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: distanceMonthLabels,
+            datasets: [
+                {
+                    label: '@annoCorrente',
+                    data: distanceMonthlyCurrent,
+                    borderColor: 'rgba(59,130,246,1)',
+                    backgroundColor: 'rgba(59,130,246,0.12)',
+                    pointBackgroundColor: 'rgba(59,130,246,1)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: '@annoPrecedente',
+                    data: distanceMonthlyPrevious,
+                    borderColor: 'rgba(234,179,8,0.95)',
+                    backgroundColor: 'rgba(234,179,8,0.12)',
+                    pointBackgroundColor: 'rgba(234,179,8,0.95)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y ?? 0;
+                            return `${context.dataset.label}: ${value.toFixed(1)} km`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Distanza media (km)'
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartDistanceYearly').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: distanceYearlyAverages.map(item => item.anno),
+            datasets: [{
+                label: 'Distanza media annua (km)',
+                data: distanceYearlyAverages.map(item => item.mediaKm),
+                backgroundColor: distanceYearlyAverages.map(item =>
+                    item.anno === @annoCorrente ? 'rgba(59,130,246,0.85)' : 'rgba(15,23,42,0.55)'
+                ),
+                borderColor: distanceYearlyAverages.map(item =>
+                    item.anno === @annoCorrente ? 'rgba(37,99,235,1)' : 'rgba(15,23,42,0.85)'
+                ),
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y ?? 0;
+                            return `${value.toFixed(1)} km`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Distanza media (km)'
+                    }
+                }
+            }
+        }
+    });
+
+    // =============================================================================
+    // MAPPA: Affluenza per comune
+    // =============================================================================
+    if (document.getElementById('comuniHeatmap')) {
+        const map = L.map('comuniHeatmap', {
+            scrollWheelZoom: false,
+            dragging: true,
+            touchZoom: true,
+            doubleClickZoom: true,
+            tap: false
+        }).setView([45.1, 9.3], 7);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        if (comuneMapPoints.length > 0) {
+            const pointCount = (point) => point.totale ?? point.Totale ?? 0;
+            const pointComune = (point) => point.comune ?? point.Comune ?? '';
+            const pointProvincia = (point) => point.provincia ?? point.Provincia ?? '';
+            const pointLat = (point) => point.lat ?? point.Lat ?? 0;
+            const pointLon = (point) => point.lon ?? point.Lon ?? 0;
+
+            const maxCount = Math.max(...comuneMapPoints.map(pointCount), 1);
+            const bounds = [];
+            const nordItaliaBounds = L.latLngBounds(
+                [44.0, 6.2],
+                [46.9, 13.3]
+            );
+
+            comuneMapPoints.forEach(point => {
+                const intensity = pointCount(point) / maxCount;
+                const radius = 4000 + (intensity * 18000);
+                const fillOpacity = 0.18 + (intensity * 0.5);
+                const strokeOpacity = 0.35 + (intensity * 0.45);
+
+                L.circle([pointLat(point), pointLon(point)], {
+                    radius,
+                    color: `rgba(185, 28, 28, ${strokeOpacity})`,
+                    weight: 1,
+                    fillColor: '#dc2626',
+                    fillOpacity
+                })
+                .bindPopup(`<strong>${pointComune(point)} (${pointProvincia(point)})</strong><br/>Tesserati: ${pointCount(point)}`)
+                .addTo(map);
+
+                bounds.push([pointLat(point), pointLon(point)]);
+            });
+
+            if (bounds.length > 0) {
+                const pointBounds = L.latLngBounds(bounds);
+                const boundsToUse = nordItaliaBounds.intersects(pointBounds)
+                    ? nordItaliaBounds
+                    : pointBounds;
+
+                map.fitBounds(boundsToUse, { padding: [28, 28] });
+            }
+        }
+    }
+
+    // =============================================================================
+    // MAPPA: Affluenza estero per paese europeo
+    // =============================================================================
+    if (document.getElementById('europeChoropleth')) {
+        const europeMap = L.map('europeChoropleth', {
+            scrollWheelZoom: false,
+            dragging: true,
+            touchZoom: true,
+            doubleClickZoom: true,
+            tap: false
+        }).setView([51.0, 11.0], 4);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(europeMap);
+
+        const countryEntries = europeMapCountries.map(country => ({
+            iso2: (country.iso2 ?? country.Iso2 ?? '').toUpperCase(),
+            iso3: (country.iso3 ?? country.Iso3 ?? '').toUpperCase(),
+            nome: country.nome ?? country.Nome ?? '',
+            totale: country.totale ?? country.Totale ?? 0
+        }));
+
+        const countByIso2 = Object.fromEntries(countryEntries.map(country => [country.iso2, country]));
+        const maxCountryCount = Math.max(...countryEntries.map(country => country.totale), 1);
+
+        const getCountryStyle = (feature) => {
+            const iso2 = (feature?.properties?.ISO2 ?? '').toUpperCase();
+            const country = countByIso2[iso2];
+
+            if (!country) {
+                return {
+                    color: 'rgba(148,163,184,0.55)',
+                    weight: 1,
+                    fillColor: '#e2e8f0',
+                    fillOpacity: 0.18
+                };
+            }
+
+            const intensity = country.totale / maxCountryCount;
+            return {
+                color: 'rgba(127,29,29,0.85)',
+                weight: 1.2,
+                fillColor: '#dc2626',
+                fillOpacity: 0.2 + (intensity * 0.55)
+            };
+        };
+
+        fetch('/data/europe.geojson')
+            .then(response => response.json())
+            .then(geojson => {
+                const layer = L.geoJSON(geojson, {
+                    style: getCountryStyle,
+                    onEachFeature: (feature, layer) => {
+                        const iso2 = (feature?.properties?.ISO2 ?? '').toUpperCase();
+                        const defaultName = feature?.properties?.NAME ?? iso2;
+                        const country = countByIso2[iso2];
+                        const displayName = country?.nome ?? defaultName;
+                        const total = country?.totale ?? 0;
+
+                        layer.bindPopup(`<strong>${displayName}</strong><br/>Tesserati: ${total}`);
+                        layer.on('mouseover', () => {
+                            layer.setStyle({
+                                weight: 2,
+                                fillOpacity: country ? Math.min((getCountryStyle(feature).fillOpacity ?? 0.4) + 0.12, 0.95) : 0.3
+                            });
+                        });
+                        layer.on('mouseout', () => {
+                            layer.setStyle(getCountryStyle(feature));
+                        });
+                    }
+                }).addTo(europeMap);
+
+                const europeBounds = L.latLngBounds(
+                    [35.0, -12.0],
+                    [71.5, 32.0]
+                );
+
+                europeMap.fitBounds(europeBounds, { padding: [24, 24] });
+            });
+    }
+</script>

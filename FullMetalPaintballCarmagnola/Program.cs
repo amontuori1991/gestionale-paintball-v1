@@ -1,0 +1,195 @@
+using Full_Metal_Paintball_Carmagnola.Authorization;
+using Full_Metal_Paintball_Carmagnola.Data;
+using Full_Metal_Paintball_Carmagnola.Models;
+using Full_Metal_Paintball_Carmagnola.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+// Stringa di connessione dal file appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"]
+    ?? Environment.GetEnvironmentVariable("DATA_PROTECTION_KEYS_PATH")
+    ?? (builder.Environment.IsProduction()
+        ? "/var/data/DataProtection-Keys"
+        : Path.Combine(builder.Environment.ContentRootPath, ".data-protection-keys"));
+
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .SetApplicationName("FullMetalPaintballCarmagnola")
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+
+// CONFIGURAZIONE POSTGRESQL
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString));
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddDbContext<TesseramentoDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Configura Identity
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = true;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<WeatherForecastService>();
+builder.Services.AddScoped<AcsiOdsExportService>();
+builder.Services.AddScoped<PricingCatalogService>();
+builder.Services.AddScoped<StaffRegistryService>();
+builder.Services.AddTransient<IEmailService, EmailSender>();
+builder.Services.AddTransient<IEmailSender, EmailSender>(); // Fondamentale per Identity
+
+
+// Autorizzazioni basate su Feature
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuthorizationHandler, FeatureAuthorizationHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Tesserati", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Tesserati")));
+    options.AddPolicy("Prenotazioni", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Prenotazioni")));
+    options.AddPolicy("Caparre", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Caparre")));
+    options.AddPolicy("Presenze Staff", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Presenze Staff")));
+    options.AddPolicy("Gestione Utenti", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Gestione Utenti")));
+    options.AddPolicy("Statistiche", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Statistiche")));
+    options.AddPolicy("Prezzi", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Prezzi")));
+    options.AddPolicy("Calendario Assenze", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Calendario Assenze")));
+    options.AddPolicy("ACSI", policy =>
+        policy.Requirements.Add(new FeatureRequirement("ACSI")));
+    options.AddPolicy("ToDoList", policy =>
+        policy.Requirements.Add(new FeatureRequirement("ToDoList")));
+    options.AddPolicy("Movimenti", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Movimenti")));
+    options.AddPolicy("Spese", policy =>
+    policy.Requirements.Add(new FeatureRequirement("Spese")));
+    options.AddPolicy("Sondaggi", policy =>
+    policy.Requirements.Add(new FeatureRequirement("Sondaggi")));
+    options.AddPolicy("Lavaggi", policy =>
+    policy.Requirements.Add(new FeatureRequirement("Lavaggi")));
+    options.AddPolicy("Disponibilita Campo", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Disponibilita Campo")));
+    options.AddPolicy("NewsLetter", policy =>
+        policy.Requirements.Add(new FeatureRequirement("NewsLetter")));
+
+});
+
+// Cookie di autenticazione
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/AccessDenied/Custom";
+    options.ExpireTimeSpan = TimeSpan.FromDays(365);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.Name = "FullMetalPaintball.Auth";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = builder.Environment.IsProduction()
+        ? CookieSecurePolicy.Always
+        : CookieSecurePolicy.SameAsRequest;
+});
+
+var app = builder.Build();
+
+// Pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+var staticFileContentTypeProvider = new FileExtensionContentTypeProvider();
+staticFileContentTypeProvider.Mappings[".geojson"] = "application/geo+json";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = staticFileContentTypeProvider
+});
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapRazorPages();
+
+// SEED iniziale ruoli e dati
+// SEED iniziale ruoli e dati
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<TesseramentoDbContext>();
+    await dbContext.Database.ExecuteSqlRawAsync(@"
+        CREATE TABLE IF NOT EXISTS ""AppSettings"" (
+            ""Key"" character varying(100) NOT NULL,
+            ""Value"" text NULL,
+            CONSTRAINT ""PK_AppSettings"" PRIMARY KEY (""Key"")
+        );
+        ALTER TABLE ""AppSettings"" ALTER COLUMN ""Value"" TYPE text;");
+
+    string[] roles = { "Admin", "Staff" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    var adminEmail = "alexmontuori1991@gmail.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser != null && !await userManager.IsInRoleAsync(adminUser, "Admin"))
+    {
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
+
+    if (!await dbContext.Topics.AnyAsync())
+    {
+        var topics = new List<Topic>
+        {
+            new Topic { Name = "Container" },
+            new Topic { Name = "Ostacoli" },
+            new Topic { Name = "Fucili" }
+        };
+        await dbContext.Topics.AddRangeAsync(topics);
+        await dbContext.SaveChangesAsync();
+    }
+}
+
+// Imposta lingua italiana globale
+var cultureInfo = new System.Globalization.CultureInfo("it-IT");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
+app.Run();
+

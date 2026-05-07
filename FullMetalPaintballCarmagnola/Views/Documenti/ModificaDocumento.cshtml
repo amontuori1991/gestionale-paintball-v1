@@ -1,0 +1,133 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.DocumentoViewModel
+@{
+    ViewData["Title"] = "Modifica Documento";
+    var fornitori = ViewBag.Fornitori as List<Full_Metal_Paintball_Carmagnola.Models.DocumentoFornitore>;
+}
+
+<style>
+    /* Stili copiati da TessereAcsi/Index.cshtml per coerenza */
+    body {
+        background-color: #CED4B5;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .background-logo {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        background: url('https://i.imgur.com/K9Ugseg.gif') no-repeat center center;
+        background-size: contain;
+        margin: 40px auto 20px auto;
+    }
+
+    .content-container {
+        background-color: white;
+        border-radius: 10px;
+        max-width: 900px; /* Larghezza del contenitore principale, adattalo se la form è molto larga */
+        margin: 0 auto 40px auto;
+        padding: 30px 40px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .content-container h2 {
+            font-size: 2rem;
+            color: #0d6efd;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+    /* Stili per i form */
+    form {
+        max-width: 600px; /* Larghezza della form, centra anche questa */
+        margin: 0 auto;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+    }
+
+    .text-danger {
+        font-size: 0.875em;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+</style>
+
+<div class="background-logo"></div>
+
+<div class="content-container">
+    <h2>Modifica Documento</h2>
+
+    @if (TempData["ModelErrors"] != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Errori di validazione:</strong> @TempData["ModelErrors"]
+        </div>
+    }
+
+    <form asp-action="ModificaDocumento" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label asp-for="TipoDocumento" class="form-label"></label>
+            <select asp-for="TipoDocumento" class="form-select" required>
+                <option value="Ordine" selected="@(Model.TipoDocumento == "Ordine")">Ordine</option>
+                <option value="Fattura" selected="@(Model.TipoDocumento == "Fattura")">Fattura</option>
+            </select>
+            <span asp-validation-for="TipoDocumento" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="DataDocumento" class="form-label"></label>
+            <input asp-for="DataDocumento" class="form-control" type="date" required />
+            <span asp-validation-for="DataDocumento" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NumeroDocumento" class="form-label"></label>
+            <input asp-for="NumeroDocumento" class="form-control" maxlength="100" required />
+            <span asp-validation-for="NumeroDocumento" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="FornitoreId" class="form-label"></label>
+            <select asp-for="FornitoreId" class="form-select" required>
+                <option value="">Seleziona fornitore</option>
+                @foreach (var f in fornitori)
+                {
+                    <option value="@f.Id" selected="@(Model.FornitoreId == f.Id)">@f.Nome</option>
+                }
+            </select>
+            <span asp-validation-for="FornitoreId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Importo" class="form-label"></label>
+            <input asp-for="Importo" class="form-control" type="number" step="0.01" min="0" required />
+            <span asp-validation-for="Importo" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Note" class="form-label"></label>
+            <textarea asp-for="Note" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Note" class="text-danger"></span>
+        </div>
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <button type="submit" class="btn btn-primary">Salva modifiche</button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Annulla</a>
+    </form>
+
+</div> @* Chiusura di .content-container *@
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

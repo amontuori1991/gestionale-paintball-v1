@@ -1,0 +1,55 @@
+﻿@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Registrazione completata";
+}
+
+<style>
+    body {
+        background-color: #CED4B5;
+    }
+
+    .confirmation-container {
+        max-width: 600px;
+        margin: 100px auto;
+        padding: 2rem;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .confirmation-logo img {
+        max-height: 80px;
+        margin-bottom: 1rem;
+    }
+
+    h1 {
+        color: #0d6efd;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .btn-login {
+        margin-top: 1.5rem;
+    }
+</style>
+
+<div class="confirmation-container">
+    <div class="confirmation-logo">
+        <img src="/img/logo.gif" alt="Logo Full Metal Paintball" />
+    </div>
+
+    <h1>Registrazione completata!</h1>
+
+    <p>Grazie per esserti registrato. Ora puoi accedere con le tue credenziali.</p>
+
+    <div class="btn-login">
+        <a class="btn btn-primary" asp-page="./Login">Vai al Login</a>
+    </div>
+</div>

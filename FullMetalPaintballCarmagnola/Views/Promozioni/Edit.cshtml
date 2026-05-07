@@ -1,0 +1,69 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Promozione
+
+@{
+    ViewData["Title"] = "Modifica Promozione";
+}
+
+<div class="container mt-5">
+    <h2>Modifica promozione</h2>
+
+    <form asp-action="Edit" method="post" class="mt-4">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="DataCreazione" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label class="form-label">Nome Promozione</label>
+            <input asp-for="Nome" class="form-control" required />
+            <span asp-validation-for="Nome" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Alias (per URL)</label>
+            <input asp-for="Alias" class="form-control" required />
+            <small class="text-muted">Esempio: estate2025</small>
+            <span asp-validation-for="Alias" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Descrizione</label>
+            <textarea asp-for="Descrizione" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">A cosa dà diritto il buono</label>
+            <textarea asp-for="CosaDaDiritto" class="form-control" rows="3" placeholder="Es. 1 partita gratuita, 10% sconto..."></textarea>
+            <small class="text-muted">Comparirà sul buono, sul poster e nell’email.</small>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Data di Scadenza</label>
+                <input asp-for="DataScadenza" type="date" class="form-control" required />
+                <span asp-validation-for="DataScadenza" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Tipo promozione</label>
+                <select asp-for="PromotionType" class="form-select">
+                    <option value="Instagram">Instagram</option>
+                    <option value="EventoRichiedeDati">EventoRichiedeDati</option>
+                </select>
+                <small class="text-muted d-block mt-1">
+                    Instagram → richiede solo account IG. EventoRichiedeDati → richiede Nome, Cognome, Data/Comune nascita e Comune residenza.
+                </small>
+                <span asp-validation-for="PromotionType" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Anno edizione (opzionale)</label>
+            <input asp-for="EditionYear" type="number" class="form-control" min="2000" max="2100" />
+            <small class="text-muted">Es. 2025 per “Sport in Piazza 21/09/2025”.</small>
+            <span asp-validation-for="EditionYear" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Salva</button>
+        <a href="@Url.Action("Archivio")" class="btn btn-secondary ms-2">Annulla</a>
+    </form>
+</div>

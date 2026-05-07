@@ -1,0 +1,104 @@
+﻿html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f4f6f8; /* Più chiaro del grigio verde */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Container principale */
+.container-custom {
+    padding-top: 50px;
+    padding-bottom: 50px;
+    max-width: 95%;
+    margin: auto;
+}
+
+/* Tabella */
+.tabella-semplificata {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+}
+
+    .tabella-semplificata th,
+    .tabella-semplificata td {
+        text-align: center;
+        padding: 14px 12px;
+        border-bottom: 1px solid #e0e0e0;
+        transition: background-color 0.2s ease;
+    }
+
+    .tabella-semplificata th {
+        background: linear-gradient(to right, #4caf50, #43a047);
+        color: white;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #388e3c;
+    }
+
+    .tabella-semplificata tr:hover td {
+        background-color: #f9f9f9;
+    }
+
+/* Colori dinamici */
+.calendario-bg-success {
+    background-color: #28a745 !important;
+    color: white !important;
+    font-weight: bold;
+    border-radius: 6px;
+}
+
+.calendario-bg-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+    font-weight: bold;
+    border-radius: 6px;
+}
+
+.calendario-bg-warning {
+    background-color: #ffc107 !important;
+    color: black !important;
+    font-weight: bold;
+    border-radius: 6px;
+}
+
+/* Responsive migliorato */
+@media (max-width: 768px) {
+    .tabella-semplificata {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+        .tabella-semplificata thead {
+            display: table-header-group;
+        }
+
+        .tabella-semplificata th,
+        .tabella-semplificata td {
+            padding: 10px 8px;
+            font-size: 0.9rem;
+        }
+}

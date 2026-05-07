@@ -1,0 +1,347 @@
+﻿@using System.Globalization
+@{
+    ViewData["Title"] = "Presenze Staff";
+    var dateList = ViewBag.DateList as List<DateTime>;
+    var reperibilitaList = ViewBag.ReperibilitaList as List<Full_Metal_Paintball_Carmagnola.Models.AssenzaCalendario>;
+    var presenzaList = ViewBag.PresenzaList as List<Full_Metal_Paintball_Carmagnola.Models.PresenzaStaff>;
+    var staff = ViewBag.StaffList as List<string> ?? new List<string>();
+}
+
+<link href="~/css/presenze-responsive.css" rel="stylesheet" />
+
+<style>
+    .riga-infrasettimanale {
+        background-color: #fff3cd !important; /* Stile giallo chiaro su tutta la riga */
+    }
+
+    .staff-registry-card {
+        background: #ffffff;
+        border: 1px solid #e7e7e7;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        margin: 0 auto 1.25rem;
+        max-width: 900px;
+        padding: 1rem;
+    }
+
+    .staff-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .staff-chip {
+        align-items: center;
+        background: #f5f7fa;
+        border: 1px solid #dde3ea;
+        border-radius: 999px;
+        display: inline-flex;
+        gap: .5rem;
+        padding: .35rem .45rem .35rem .75rem;
+    }
+
+    .staff-chip form {
+        margin: 0;
+    }
+
+    .staff-confirm-backdrop {
+        align-items: center;
+        background: rgba(15, 23, 42, 0.58);
+        display: none;
+        inset: 0;
+        justify-content: center;
+        padding: 20px;
+        position: fixed;
+        z-index: 1100;
+    }
+
+    .staff-confirm-backdrop.show {
+        display: flex;
+    }
+
+    .staff-confirm-modal {
+        background: #ffffff;
+        border-radius: 22px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+        max-width: 440px;
+        padding: 22px;
+        width: 100%;
+    }
+
+    .staff-confirm-modal h3 {
+        color: #111827;
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin: 0 0 10px;
+    }
+
+    .staff-confirm-modal p {
+        color: #475569;
+        margin: 0 0 14px;
+    }
+
+    .staff-confirm-info {
+        background: rgba(15, 23, 42, 0.05);
+        border-radius: 14px;
+        color: #1e293b;
+        font-weight: 700;
+        margin-bottom: 16px;
+        padding: 12px 14px;
+    }
+
+    .staff-confirm-actions {
+        display: grid;
+        gap: 10px;
+    }
+
+    .staff-confirm-btn {
+        border: none;
+        border-radius: 14px;
+        font-weight: 800;
+        padding: 12px 14px;
+    }
+
+    .staff-confirm-btn.confirm {
+        background: rgba(220, 38, 38, 0.12);
+        color: #b91c1c;
+    }
+
+    .staff-confirm-btn.cancel {
+        background: rgba(100, 116, 139, 0.14);
+        color: #334155;
+    }
+
+    @@media (max-width: 576px) {
+        .staff-registry-form {
+            flex-direction: column;
+        }
+
+        .staff-registry-form .btn,
+        .staff-registry-form .form-control {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="content-container presenze-page">
+
+    <h2 class="text-center">Gestione Presenze Staff</h2>
+
+    <div class="staff-registry-card">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div>
+                <h5 class="mb-1">Anagrafiche staff</h5>
+                <p class="text-muted mb-0">Aggiungi o rimuovi i nomi utilizzabili per presenze e gestione partite.</p>
+            </div>
+            <form asp-action="AggiungiAnagrafica" method="post" class="d-flex gap-2 staff-registry-form">
+                @Html.AntiForgeryToken()
+                <input type="text" name="nome" class="form-control" placeholder="Nuovo nome" maxlength="80" required />
+                <button type="submit" class="btn btn-primary">Aggiungi</button>
+            </form>
+        </div>
+
+        @if (TempData["StaffRegistryMessage"] is string staffMessage)
+        {
+            <div class="alert alert-success mt-3 mb-0">@staffMessage</div>
+        }
+        @if (TempData["StaffRegistryError"] is string staffError)
+        {
+            <div class="alert alert-warning mt-3 mb-0">@staffError</div>
+        }
+
+        <div class="staff-chip-list mt-3">
+            @foreach (var nome in staff)
+            {
+                <span class="staff-chip">
+                    <strong>@nome</strong>
+                    <form asp-action="RimuoviAnagrafica" method="post" class="staff-remove-form" data-name="@nome">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="nome" value="@nome" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Rimuovi</button>
+                    </form>
+                </span>
+            }
+        </div>
+    </div>
+
+    <div class="mb-3 text-center">
+        <button id="aggiungiInfrasettimanale" class="btn btn-warning">Inserisci data infrasettimanale</button>
+    </div>
+
+    <div class="d-flex justify-content-center mb-3">
+        <input type="text" id="filtroPresenze" placeholder="Filtra per giorno, data o nome..." class="form-control" style="max-width: 300px;" />
+    </div>
+
+    <div class="table-responsive">
+        <table class="responsive-table">
+            <thead>
+                <tr>
+                    <th>Giorno</th>
+                    <th>Data</th>
+                    <th>Reperibile</th>
+                    @foreach (var m in staff)
+                    {
+                        <th>@m</th>
+                    }
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var giorno in dateList)
+                {
+                    var giornoSet = giorno.ToString("dddd", new CultureInfo("it-IT"));
+                    var isWeekend = giorno.DayOfWeek == DayOfWeek.Saturday || giorno.DayOfWeek == DayOfWeek.Sunday;
+                    var rep = reperibilitaList.FirstOrDefault(r => r.Data.Date == giorno.Date);
+                    var sceltaRep = string.IsNullOrWhiteSpace(rep?.Reperibile) ? "In attesa" : rep.Reperibile.Trim();
+                    var repClass = sceltaRep == "Nessuno" ? "bg-danger" :
+                    sceltaRep == "In attesa" ? "bg-warning" : "bg-success";
+
+                    <tr data-data="@giorno.ToString("yyyy-MM-dd")" class="@(isWeekend ? "" : "riga-infrasettimanale")">
+                        <td data-label="Giorno">@giornoSet</td>
+                        <td data-label="Data">@giorno.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Reperibile" class="@repClass">@sceltaRep</td>
+
+                        @foreach (var membro in staff)
+                        {
+                            var prs = presenzaList.FirstOrDefault(p => p.Data.Date == giorno.Date && p.NomeStaff == membro);
+                            var currentSelection = prs?.Presente == true ? "SI" :
+                            prs?.Presente == false ? "NO" : "In attesa";
+
+                            var bgClass = currentSelection == "SI" ? "bg-success" :
+                            currentSelection == "NO" ? "bg-danger" : "bg-warning";
+
+                            <td data-label="@membro" class="presenza-staff-cell @bgClass">
+                                <select class="presente-select form-select" data-data="@giorno.ToString("yyyy-MM-dd")" data-nome="@membro">
+                                    <option value="In attesa" selected="@(currentSelection == "In attesa" ? "selected" : null)">In attesa</option>
+                                    <option value="SI" selected="@(currentSelection == "SI" ? "selected" : null)">SI</option>
+                                    <option value="NO" selected="@(currentSelection == "NO" ? "selected" : null)">NO</option>
+                                </select>
+                            </td>
+                        }
+
+                        <td data-label="Azioni" class="presenze-actions-cell @(isWeekend ? "presenze-actions-cell--empty" : "")">
+                            @if (!isWeekend)
+                            {
+                                <button class="btn btn-danger btn-sm btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="StaffConfirmModal" class="staff-confirm-backdrop" aria-hidden="true">
+    <div class="staff-confirm-modal">
+        <h3>Rimuovere anagrafica?</h3>
+        <p>Il nome non sara' piu disponibile nelle nuove selezioni staff.</p>
+        <div id="StaffConfirmInfo" class="staff-confirm-info"></div>
+        <div class="staff-confirm-actions">
+            <button type="button" id="StaffConfirmButton" class="staff-confirm-btn confirm">Rimuovi dalla lista attiva</button>
+            <button type="button" id="StaffCancelButton" class="staff-confirm-btn cancel">Annulla</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            const staffConfirmModal = document.getElementById('StaffConfirmModal');
+            const staffConfirmInfo = document.getElementById('StaffConfirmInfo');
+            const staffConfirmButton = document.getElementById('StaffConfirmButton');
+            const staffCancelButton = document.getElementById('StaffCancelButton');
+            let pendingStaffRemoveForm = null;
+
+            function closeStaffConfirmModal() {
+                staffConfirmModal.classList.remove('show');
+                staffConfirmModal.setAttribute('aria-hidden', 'true');
+                pendingStaffRemoveForm = null;
+            }
+
+            $('.staff-remove-form').on('submit', function (event) {
+                event.preventDefault();
+                pendingStaffRemoveForm = this;
+                const name = this.dataset.name || 'questa anagrafica';
+                staffConfirmInfo.textContent = `${name}: le presenze e le partite storiche non verranno cancellate.`;
+                staffConfirmModal.classList.add('show');
+                staffConfirmModal.setAttribute('aria-hidden', 'false');
+            });
+
+            staffConfirmButton.addEventListener('click', function () {
+                if (pendingStaffRemoveForm) {
+                    pendingStaffRemoveForm.submit();
+                }
+            });
+
+            staffCancelButton.addEventListener('click', closeStaffConfirmModal);
+
+            staffConfirmModal.addEventListener('click', function (event) {
+                if (event.target === staffConfirmModal) {
+                    closeStaffConfirmModal();
+                }
+            });
+
+            $('.presente-select').on('change', function () {
+                const sel = $(this);
+                const data = sel.data('data');
+                const nome = sel.data('nome');
+                const val = sel.val();
+                const td = sel.closest('td');
+
+                let presenteValue = null;
+                if (val === 'SI') presenteValue = true;
+                else if (val === 'NO') presenteValue = false;
+
+                $.post('/PresenzeStaff/AggiornaPresenza', { data: data, nomeStaff: nome, presente: presenteValue })
+                    .done(() => {
+                        td.removeClass('bg-success bg-danger bg-warning');
+                        if (val === 'SI') td.addClass('bg-success');
+                        else if (val === 'NO') td.addClass('bg-danger');
+                        else td.addClass('bg-warning');
+                    })
+                    .fail((xhr) => {
+                        fmpNotify(xhr.responseText || "Errore durante il salvataggio della presenza.", "error");
+                    });
+            });
+
+            $('#aggiungiInfrasettimanale').on('click', function () {
+                fmpPrompt("Inserisci una data in formato GG/MM/AAAA:", {
+                    title: "Aggiungi data infrasettimanale",
+                    placeholder: "GG/MM/AAAA",
+                    required: true,
+                    requiredMessage: "Inserisci una data valida."
+                }).then((dataSelezionata) => {
+                    if (!dataSelezionata) return;
+
+                    $.post("/PresenzeStaff/InserisciDataInfrasettimanale", { data: dataSelezionata })
+                        .done(() => location.reload())
+                        .fail(() => fmpNotify("Errore nell'inserimento della data.", "error"));
+                });
+            });
+
+            $('.elimina-data').on('click', function () {
+                const data = $(this).data('data');
+                fmpConfirm(`Vuoi eliminare la data ${data}?`, {
+                    title: "Eliminare la data?",
+                    icon: "warning",
+                    confirmButtonText: "Elimina"
+                }).then((confirmed) => {
+                    if (!confirmed) return;
+
+                    $.post("/PresenzeStaff/EliminaDataInfrasettimanale", { data: data })
+                        .done(() => location.reload())
+                        .fail(() => fmpNotify("Errore nell'eliminazione della data.", "error"));
+                });
+            });
+
+            $('#filtroPresenze').on('input', function () {
+                const filtro = $(this).val().toLowerCase();
+                $('.responsive-table tbody tr').each(function () {
+                    const testoRiga = $(this).text().toLowerCase();
+                    $(this).toggle(testoRiga.includes(filtro));
+                });
+            });
+        });
+    </script>
+}

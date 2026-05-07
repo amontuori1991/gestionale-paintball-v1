@@ -1,0 +1,123 @@
+﻿@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Registrazione Completata"; /* Tradotto */
+    // Variabili colore, se vuoi mantenerle in pagina per personalizzazione rapida
+    var accentColor = "#00838f";
+    var primaryBtnColor = "#0d6efd";
+    // Questa pagina userà il layout predefinito (_Layout.cshtml)
+}
+
+<style>
+    /* Stili generali della pagina, copiati da Login.cshtml */
+    body {
+        background-color: #CED4B5 !important;
+    }
+
+    .login-wrapper { /* Riusato lo stesso wrapper per centratura e padding */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 120px);
+        width: 100%;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        perspective: 1000px;
+    }
+
+    @@media (max-width: 768px) {
+        .login-wrapper {
+            min-height: calc(100vh - 100px);
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+    }
+
+    .login-container { /* Riusato lo stesso stile per il contenitore */
+        max-width: 600px; /* Leggermente più largo per il testo di conferma */
+        width: 90%;
+        padding: 2.5rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        border: none;
+        text-align: center; /* Centra il testo */
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        transform-style: preserve-3d;
+    }
+
+        .login-container:hover {
+            transform: translateY(-3px) scale(1.005);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+    .login-logo { /* Logo, riusato da Login.cshtml */
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+        .login-logo img {
+            max-height: 80px;
+            filter: none;
+            transition: none;
+        }
+
+            .login-logo img:hover {
+                transform: none;
+            }
+
+    h1 { /* Titolo, riusato da Login.cshtml */
+        text-align: center;
+        color: #0d6efd;
+        font-size: 1.8rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        letter-spacing: normal;
+    }
+
+    p { /* Stile per i paragrafi di testo, riusato da ForgotPasswordConfirmation */
+        font-size: 1.1rem;
+        color: #333;
+        line-height: 1.5;
+        margin-bottom: 1.5rem; /* Spazio sotto il testo */
+    }
+
+    .btn-primary { /* Bottone Vai al Login */
+        background-color: @primaryBtnColor;
+        border-color: @primaryBtnColor;
+        font-weight: 400;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.25rem;
+        box-shadow: none;
+        transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        letter-spacing: normal;
+        text-transform: none;
+    }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+            transform: none;
+            box-shadow: none;
+        }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-container">
+        <div class="login-logo">
+            <img src="https://i.imgur.com/K9Ugseg.gif'" alt="Logo Full Metal Paintball" />
+        </div>
+
+        <h1>@ViewData["Title"]</h1>
+
+        <p>
+            Grazie per esserti registrato.<br />
+            Ti abbiamo inviato una email di conferma: clicca sul link ricevuto per verificare la tua email.<br />
+            Successivamente, attendi l'approvazione da parte dell'amministratore prima di poter accedere.
+        </p>
+
+        <div class="btn-login">
+            <a class="btn btn-primary" asp-page="./Login">Vai al Login</a>
+        </div>
+    </div>
+</div> 

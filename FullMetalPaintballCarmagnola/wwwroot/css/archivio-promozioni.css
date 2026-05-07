@@ -1,0 +1,33 @@
+﻿.promo-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    padding: 15px;
+    margin-bottom: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.promo-card-label {
+    font-weight: bold;
+    color: #333;
+}
+
+.promo-card .full-width {
+    grid-column: 1 / -1;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .promo-card {
+        grid-template-columns: 1fr 1fr;
+        font-size: 0.95rem;
+    }
+
+        .promo-card .btn {
+            width: 100%;
+        }
+}

@@ -1,0 +1,153 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.GestionePermessiViewModel
+
+<link href="~/css/permessi-responsive.css" rel="stylesheet" />
+
+<div class="content-container permessi-page">
+    <h2 class="text-center">Gestione Permessi</h2>
+
+    <div class="mb-4 p-3 border rounded bg-light">
+        <h3 class="h5 mb-2">Registrazione gestionale</h3>
+        <form asp-action="AggiornaRegistroGestionale" asp-controller="Ruoli" method="post" class="d-flex align-items-center flex-wrap gap-3">
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="registerEnabled" name="registerEnabled" @(ViewBag.RegisterEnabled == true ? "checked" : "") />
+                <label class="form-check-label" for="registerEnabled">
+                    Abilita pagina Register per nuovi utenti del gestionale
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Salva</button>
+        </form>
+    </div>
+
+    <div class="mb-4 p-3 border rounded bg-light">
+        <h3 class="h5 mb-2">Tesseramento pubblico svincolato</h3>
+        <form asp-action="AggiornaTesseramentoLibero" asp-controller="Ruoli" method="post" class="d-flex align-items-center flex-wrap gap-3">
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="tesseramentoLiberoEnabled" name="tesseramentoLiberoEnabled" @(ViewBag.TesseramentoLiberoEnabled == true ? "checked" : "") />
+                <label class="form-check-label" for="tesseramentoLiberoEnabled">
+                    Abilita link /Tesseramento senza ID partita
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Salva</button>
+        </form>
+        <small class="text-muted d-block mt-2">
+            Se disabilitato, resta raggiungibile solo il link con partitaId, ad esempio /Tesseramento?partitaId=113.
+        </small>
+    </div>
+
+    <form asp-action="SalvaPermessi" method="post">
+        <div class="table-responsive">
+            <table class="responsive-table permessi-table">
+                <thead>
+                    <tr>
+                        <th>Funzionalità</th>
+                        <th>Consenti Admin</th>
+                        <th>Nega Admin</th>
+                        <th>Consenti Staff</th>
+                        <th>Nega Staff</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var tutteLeFeature = Model.Permessi.Select(m => m.FeatureName).Distinct().ToList();
+                        if (!tutteLeFeature.Contains("Movimenti")) tutteLeFeature.Add("Movimenti");
+                        if (!tutteLeFeature.Contains("Spese")) tutteLeFeature.Add("Spese");
+                    }
+                    @foreach (var feature in tutteLeFeature)
+                    {
+                        <tr>
+                            <td data-label="Funzionalità">@feature</td>
+                            @{
+                                var consentiAdmin = Model.Permessi.FirstOrDefault(x => x.RoleName == "Admin" && x.FeatureName == feature);
+                                var consentiStaff = Model.Permessi.FirstOrDefault(x => x.RoleName == "Staff" && x.FeatureName == feature);
+                            }
+                            <td data-label="Consenti Admin">
+                                <input type="radio" name="permessi[@feature]_Admin" value="consenti" @(consentiAdmin?.IsAllowed == true ? "checked" : "") />
+                            </td>
+                            <td data-label="Nega Admin">
+                                <input type="radio" name="permessi[@feature]_Admin" value="nega" @(consentiAdmin?.IsAllowed == false ? "checked" : "") />
+                            </td>
+                            <td data-label="Consenti Staff">
+                                <input type="radio" name="permessi[@feature]_Staff" value="consenti" @(consentiStaff?.IsAllowed == true ? "checked" : "") />
+                            </td>
+                            <td data-label="Nega Staff">
+                                <input type="radio" name="permessi[@feature]_Staff" value="nega" @(consentiStaff?.IsAllowed == false ? "checked" : "") />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Salva Permessi</button>
+    </form>
+
+    <hr />
+
+    <h2 class="text-center">Gestione Ruoli Utenti</h2>
+
+    <div class="table-responsive">
+        <table class="responsive-table utenti-table">
+            <thead>
+                <tr>
+                    <th>Nome Completo</th>
+                    <th>Email</th>
+                    <th>Ruolo Attuale</th>
+                    <th>Approvato</th>
+                    <th>Assegna Ruolo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var utente in Model.Utenti)
+                {
+                    <tr>
+                        <td data-label="Nome Completo">@utente.NomeCompleto</td>
+                        <td data-label="Email">@utente.Email</td>
+                        <td data-label="Ruolo Attuale">@utente.Ruolo</td>
+                        <td data-label="Approvato">
+                            <form asp-action="CambiaApprovazione" asp-controller="Ruoli" method="post" class="d-inline">
+                                <input type="hidden" name="userId" value="@utente.Id" />
+                                <input type="checkbox" name="isApproved" onchange="this.form.submit()" @(utente.IsApproved ? "checked" : "") />
+                            </form>
+                        </td>
+                        <td data-label="Assegna Ruolo">
+                            <div class="d-flex align-items-center justify-content-start flex-wrap gap-1">
+                                <form asp-action="AssegnaRuolo" asp-controller="Ruoli" method="post" class="d-flex align-items-center">
+                                    <input type="hidden" name="userId" value="@utente.Id" />
+                                    <select name="ruolo" class="form-select w-auto me-2">
+                                        <option value="Admin" selected="@(@utente.Ruolo == "Admin")">Admin</option>
+                                        <option value="Staff" selected="@(@utente.Ruolo == "Staff")">Staff</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Salva</button>
+                                </form>
+
+                                <form asp-action="EliminaUtente" asp-controller="Ruoli" method="post"
+                                      data-confirm-message="Sei sicuro di voler eliminare questo utente?"
+                                      data-confirm-title="Eliminare l'utente?"
+                                      data-confirm-button="Elimina">
+                                    <input type="hidden" name="id" value="@utente.Id" />
+                                    <button type="submit" class="btn btn-danger" title="Elimina utente">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var successMessage = @Html.Raw(Json.Serialize(TempData["SuccessMessage"]));
+            var errorMessage = @Html.Raw(Json.Serialize(TempData["ErrorMessage"]));
+
+            if (successMessage && successMessage.trim() !== '') {
+                fmpNotify(successMessage, 'success');
+            } else if (errorMessage && errorMessage.trim() !== '') {
+                fmpNotify(errorMessage, 'error');
+            }
+        });
+    </script>
+}

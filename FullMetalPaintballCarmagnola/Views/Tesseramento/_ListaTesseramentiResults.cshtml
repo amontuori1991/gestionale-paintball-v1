@@ -1,0 +1,302 @@
+@model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.TesseramentoViewModel>
+@using System.Text.Encodings.Web
+
+@if (Model != null && Model.Any())
+{
+    var sortedModel = Model
+        .OrderByDescending(t => t.DataPartita)
+        .ThenByDescending(t => t.PartitaId);
+    var dataAvvioFabbisognoTessere = new DateTime(2026, 5, 1);
+
+    <div class="tess-mobile-list">
+        @foreach (var t in sortedModel)
+        {
+            var scadenza = new DateTime(t.DataCreazione.Year, 12, 31);
+            var hasTessera = !string.IsNullOrEmpty(t.Tessera);
+            var hasPartita = t.PartitaId.HasValue;
+            var noTesseramento = t.NoTesseramento;
+            var tesseraDaAssociare = !hasTessera && !noTesseramento && t.DataPartita.HasValue && t.DataPartita.Value.Date >= dataAvvioFabbisognoTessere;
+
+            <article class="tess-mobile-card">
+                <div class="tess-mobile-card__top">
+                    <label class="tess-mobile-card__select">
+                        <span>Seleziona</span>
+                        <input type="checkbox" name="tesseratiIds" value="@t.Id"
+                               class="tess-check select-item tess-mobile-check" />
+                    </label>
+                </div>
+
+                <div class="tess-mobile-card__name">
+                    <span>@t.Nome</span>
+                    <strong>@t.Cognome</strong>
+                </div>
+
+                <div class="tess-mobile-card__row">
+                    <span>Data partita</span>
+                    @if (hasPartita)
+                    {
+                        <strong>@(t.DataPartita?.ToString("dd/MM/yyyy") ?? "Non indicata")</strong>
+                    }
+                    else
+                    {
+                        <strong class="badge-tessera badge-tessera--none">
+                            <i class="bi bi-link-45deg"></i> Non associato
+                        </strong>
+                    }
+                </div>
+
+                <div class="tess-mobile-card__row">
+                    <span>Tessera</span>
+                    @if (hasTessera)
+                    {
+                        <strong class="badge-tessera badge-tessera--active">
+                            <i class="bi bi-check-circle-fill"></i> @t.Tessera
+                        </strong>
+                    }
+                    else if (noTesseramento)
+                    {
+                        <strong class="badge-tessera badge-tessera--none">
+                            <i class="bi bi-shield-check"></i> No Tesseramento
+                        </strong>
+                    }
+                    else if (tesseraDaAssociare)
+                    {
+                        <strong class="badge-tessera badge-tessera--pending">
+                            <i class="bi bi-exclamation-circle-fill"></i> Da associare
+                        </strong>
+                    }
+                    else
+                    {
+                        <strong class="badge-tessera badge-tessera--none">
+                            <i class="bi bi-dash-circle"></i> Nessuna
+                        </strong>
+                    }
+                </div>
+
+                <div class="tess-mobile-card__row">
+                    <span>Origine</span>
+                    @if (t.NatoEstero)
+                    {
+                        <strong class="badge-minorenne--si">
+                            <i class="bi bi-globe-europe-africa"></i> Estero
+                        </strong>
+                    }
+                    else
+                    {
+                        <strong class="badge-minorenne--no">Italia</strong>
+                    }
+                </div>
+
+                <div class="tess-mobile-card__row">
+                    <span>Azione</span>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        @if (!hasPartita)
+                        {
+                            <button type="button" class="btn-tess btn-tess--info"
+                                    onclick="apriAssociaPartita(@t.Id, '@JavaScriptEncoder.Default.Encode($"{t.Nome} {t.Cognome}")')">
+                                <i class="bi bi-link-45deg"></i> Associa a partita
+                            </button>
+                        }
+
+                        @if (hasTessera)
+                        {
+                            <button type="button" class="btn-tess btn-tess--ghost"
+                                    onclick="dissociaTessera(@t.Id)">
+                                <i class="bi bi-scissors"></i> Dissocia
+                            </button>
+                        }
+
+                        @if (hasPartita && !hasTessera)
+                        {
+                            <strong class="tess-mobile-card__empty">Nessuna azione</strong>
+                        }
+                    </div>
+                </div>
+
+                <div class="tess-mobile-card__row">
+                    <span>Scadenza</span>
+                    <strong>@scadenza.ToShortDateString()</strong>
+                </div>
+            </article>
+        }
+    </div>
+
+    <div class="tess-table-wrap">
+        <table class="tess-table">
+            <thead>
+                <tr>
+                    <th style="width:36px;">
+                        <input type="checkbox" id="selectAll" class="tess-check" />
+                    </th>
+                    <th>Partita ID</th>
+                    <th>Data Partita</th>
+                    <th>Nome</th>
+                    <th>Cognome</th>
+                    <th>Data Nascita</th>
+                    <th>Genere</th>
+                    <th>Origine</th>
+                    <th>Comune Nascita</th>
+                    <th>Comune Residenza</th>
+                    <th>Email</th>
+                    <th>Cellulare</th>
+                    <th>Codice Fiscale</th>
+                    <th>Tessera</th>
+                    <th>Azione</th>
+                    <th>Minorenne</th>
+                    <th>Nome Genitore</th>
+                    <th>Cognome Genitore</th>
+                    <th>Creazione</th>
+                    <th>Scadenza</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in sortedModel)
+                {
+                    var scadenza = new DateTime(t.DataCreazione.Year, 12, 31);
+                    var hasTessera = !string.IsNullOrEmpty(t.Tessera);
+                    var hasPartita = t.PartitaId.HasValue;
+                    var noTesseramento = t.NoTesseramento;
+                    var tesseraDaAssociare = !hasTessera && !noTesseramento && t.DataPartita.HasValue && t.DataPartita.Value.Date >= dataAvvioFabbisognoTessere;
+
+                    <tr>
+                        <td data-label="Sel.">
+                            <input type="checkbox" name="tesseratiIds" value="@t.Id"
+                                   class="tess-check select-item" />
+                        </td>
+
+                        <td data-label="Partita ID">
+                            @if (hasPartita)
+                            {
+                                <span class="partita-pill">@t.PartitaId</span>
+                            }
+                            else
+                            {
+                                <span class="badge-tessera badge-tessera--none">
+                                    <i class="bi bi-link-45deg"></i> Non associato
+                                </span>
+                            }
+                        </td>
+
+                        <td data-label="Data Partita">
+                            @t.DataPartita?.ToString("dd/MM/yyyy")
+                        </td>
+
+                        <td data-label="Nome">@t.Nome</td>
+                        <td data-label="Cognome"><strong>@t.Cognome</strong></td>
+
+                        <td data-label="Data Nascita">
+                            @(t.DataNascita?.ToString("dd/MM/yyyy") ?? "-")
+                        </td>
+
+                        <td data-label="Genere">@t.Genere</td>
+                        <td data-label="Origine">
+                            @if (t.NatoEstero)
+                            {
+                                <span class="badge-minorenne--si"><i class="bi bi-globe-europe-africa"></i> Estero</span>
+                            }
+                            else
+                            {
+                                <span class="badge-minorenne--no">Italia</span>
+                            }
+                        </td>
+                        <td data-label="Comune Nascita">@t.ComuneNascita</td>
+                        <td data-label="Comune Residenza">@t.ComuneResidenza</td>
+                        <td data-label="Email">
+                            <a href="mailto:@t.Email" style="color:var(--fmp-blue);text-decoration:none;font-size:.78rem;">@t.Email</a>
+                        </td>
+                        <td data-label="Cellulare">@t.Cellulare</td>
+                        <td data-label="Codice Fiscale">
+                            <span style="font-family:monospace;font-size:.78rem;letter-spacing:.03em;">@t.CodiceFiscale</span>
+                        </td>
+
+                        <td data-label="Tessera">
+                            @if (hasTessera)
+                            {
+                                <span class="badge-tessera badge-tessera--active">
+                                    <i class="bi bi-check-circle-fill"></i> @t.Tessera
+                                </span>
+                            }
+                            else if (noTesseramento)
+                            {
+                                <span class="badge-tessera badge-tessera--none">
+                                    <i class="bi bi-shield-check"></i> No Tesseramento
+                                </span>
+                            }
+                            else if (tesseraDaAssociare)
+                            {
+                                <span class="badge-tessera badge-tessera--pending">
+                                    <i class="bi bi-exclamation-circle-fill"></i> Da associare
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-tessera badge-tessera--none">
+                                    <i class="bi bi-dash-circle"></i> Nessuna
+                                </span>
+                            }
+                        </td>
+
+                        <td data-label="Azione">
+                            <div class="d-flex flex-wrap gap-2">
+                                @if (!hasPartita)
+                                {
+                                    <button type="button" class="btn-tess btn-tess--info"
+                                            onclick="apriAssociaPartita(@t.Id, '@JavaScriptEncoder.Default.Encode($"{t.Nome} {t.Cognome}")')">
+                                        <i class="bi bi-link-45deg"></i> Associa
+                                    </button>
+                                }
+
+                                @if (hasTessera)
+                                {
+                                    <button type="button" class="btn-tess btn-tess--ghost"
+                                            onclick="dissociaTessera(@t.Id)">
+                                        <i class="bi bi-scissors"></i> Dissocia
+                                    </button>
+                                }
+
+                                @if (hasPartita && !hasTessera)
+                                {
+                                    <span style="color:var(--fmp-muted);font-size:.78rem;">-</span>
+                                }
+                            </div>
+                        </td>
+
+                        <td data-label="Minorenne">
+                            @if (t.Minorenne?.ToString().ToLower() == "si" ||
+                                t.Minorenne?.ToString().ToLower() == "sì" ||
+                                t.Minorenne?.ToString() == "true")
+                            {
+                                <span class="badge-minorenne--si"><i class="bi bi-person-fill-exclamation"></i> Sì</span>
+                            }
+                            else
+                            {
+                                <span class="badge-minorenne--no">No</span>
+                            }
+                        </td>
+
+                        <td data-label="Nome Genitore">@t.NomeGenitore</td>
+                        <td data-label="Cognome Genitore">@t.CognomeGenitore</td>
+
+                        <td data-label="Creazione">
+                            @t.DataCreazione.ToShortDateString()
+                        </td>
+
+                        <td data-label="Scadenza">
+                            @scadenza.ToShortDateString()
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="tess-empty">
+        <div class="tess-empty__icon"><i class="bi bi-inbox"></i></div>
+        <p class="tess-empty__text">Nessun tesseramento trovato</p>
+        <p style="font-size:.85rem;color:var(--fmp-muted);margin-top:6px;">
+            Prova a modificare i filtri o crea un nuovo tesseramento.
+        </p>
+    </div>
+}

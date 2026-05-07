@@ -1,0 +1,256 @@
+﻿@model List<Full_Metal_Paintball_Carmagnola.Models.ViewModels.CodicePromozionaleViewModel>
+@using Full_Metal_Paintball_Carmagnola.Models.ViewModels
+
+@{
+    ViewData["Title"] = "Verifica Codici Promozionali";
+}
+<link rel="stylesheet" href="~/css/verifica-codici.css" />
+
+<div class="verifica-codici-page">
+
+<div class="text-center mb-4 verifica-codici-nav">
+    <a href="@Url.Action("Archivio", "Promozioni")" class="btn btn-outline-secondary">
+        📚 Archivio Promozioni
+    </a>
+</div>
+
+<div class="d-flex align-items-center justify-content-center gap-3 mb-3 flex-wrap verifica-codici-search">
+    <input type="text" id="ricercaCodice" class="form-control" placeholder="🔎 Inserisci o scansiona un codice">
+    <button type="button" id="attivaScanner" class="btn btn-outline-success">📷 Scansiona QR</button>
+</div>
+
+<div id="qr-reader" style="width: 300px; margin: 0 auto; display: none;"></div>
+
+<div class="container mt-5 verifica-codici-container">
+    <h2 class="text-center">Verifica Codici Promozionali</h2>
+
+    <!-- ✅ DESKTOP: tabella -->
+    <div class="d-none d-md-block">
+        <table class="table table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>Codice</th>
+                    <th>Tipo</th>
+                    <th>Promo</th>
+                    <th>Richiedente</th>
+                    <th>Generato</th>
+                    <th>Scadenza</th>
+                    <th>Utilizzato</th>
+                    <th>Buono</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    var isEvento = c.RequiresPersonalData;
+                    <tr>
+                        <td>@c.Codice</td>
+                        <td>@c.PromotionType</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(c.PromozioneNome))
+                            {
+                                <span>@c.PromozioneNome</span>
+                                if (!string.IsNullOrEmpty(c.Alias))
+                                {
+
+                                    <span> — <code>@c.Alias</code></span>
+                                    ;
+                                }
+                                if (c.EditionYear.HasValue)
+                                {
+
+                                    <span> — Ed. @c.EditionYear</span>
+                                    ;
+                                }
+                            }
+                            else if (!string.IsNullOrEmpty(c.Alias))
+                            {
+                                <code>@c.Alias</code>
+                            }
+                        </td>
+                        <td>
+                            @if (!isEvento)
+                            {
+                                <!-- IG -->
+                                @(string.IsNullOrEmpty(c.InstagramHandle) ? "-" : c.InstagramHandle)
+                            }
+                            else
+                            {
+                                <!-- Evento: dati anagrafici -->
+                                <div><strong>@(string.IsNullOrEmpty(c.Cognome) ? "-" : c.Cognome) @(string.IsNullOrEmpty(c.Nome) ? "" : c.Nome)</strong></div>
+                                <div class="small text-muted">
+                                    @(c.DataNascita.HasValue? c.DataNascita.Value.ToString("dd/MM/yyyy") : "-")
+                                    @if (!string.IsNullOrEmpty(c.ComuneNascita))
+                                    {
+                                        <span> — Nasc.: @c.ComuneNascita</span>
+                                        ;
+                                    }
+                                    @if (!string.IsNullOrEmpty(c.ComuneResidenza))
+                                    {
+                                        <span> — Res.: @c.ComuneResidenza</span>
+                                        ;
+                                    }
+                                </div>
+                            }
+                        </td>
+                        <td>@c.DataCreazione.ToString("dd/MM/yyyy")</td>
+                        <td>@c.DataScadenza.ToString("dd/MM/yyyy")</td>
+                        <td class="text-center">
+                            <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
+                        </td>
+                        <td class="text-center">
+                            <a href="@Url.Action("VisualizzaBuono", "CodiciPromo", new { id = c.Id })" class="btn btn-sm btn-outline-primary">
+                                📄 Visualizza
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ✅ MOBILE: card -->
+    <div class="d-block d-md-none responsive-table">
+        @foreach (var c in Model)
+        {
+            var isEvento = c.RequiresPersonalData;
+            <div class="promo-card" data-code="@c.Codice">
+                <div data-label="Codice">@c.Codice</div>
+                <div data-label="Tipo">@c.PromotionType</div>
+                <div data-label="Promo">
+                    @if (!string.IsNullOrEmpty(c.PromozioneNome))
+                    {
+                        <span>@c.PromozioneNome</span>
+                        if (!string.IsNullOrEmpty(c.Alias))
+                        {
+
+                            <span> — <code>@c.Alias</code></span>
+                            ;
+                        }
+                        if (c.EditionYear.HasValue)
+                        {
+
+                            <span> — Ed. @c.EditionYear</span>
+                            ;
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(c.Alias))
+                    {
+                        <code>@c.Alias</code>
+                    }
+                </div>
+
+                @if (!isEvento)
+                {
+                    <div data-label="Instagram">@(!string.IsNullOrEmpty(c.InstagramHandle) ? c.InstagramHandle : "-")</div>
+                }
+                else
+                {
+                    <div data-label="Richiedente">
+                        <div><strong>@(string.IsNullOrEmpty(c.Cognome) ? "-" : c.Cognome) @(string.IsNullOrEmpty(c.Nome) ? "" : c.Nome)</strong></div>
+                        <div class="small text-muted">
+                            @(c.DataNascita.HasValue? c.DataNascita.Value.ToString("dd/MM/yyyy") : "-")
+                            @if (!string.IsNullOrEmpty(c.ComuneNascita))
+                            {
+                                <span> — Nasc.: @c.ComuneNascita</span>
+                                ;
+                            }
+                            @if (!string.IsNullOrEmpty(c.ComuneResidenza))
+                            {
+                                <span> — Res.: @c.ComuneResidenza</span>
+                                ;
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div data-label="Generato">@c.DataCreazione.ToString("dd/MM/yyyy")</div>
+                <div data-label="Scadenza">@c.DataScadenza.ToString("dd/MM/yyyy")</div>
+                <div data-label="Utilizzato">
+                    <input type="checkbox" class="form-check-input toggle-utilizzato" data-id="@c.Id" @(c.Utilizzato ? "checked" : "") />
+                </div>
+                <div data-label="Buono">
+                    <a href="@Url.Action("VisualizzaBuono", "CodiciPromo", new { id = c.Id })" class="btn btn-sm btn-outline-primary">
+                        📄 Visualizza
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script>
+        $('.toggle-utilizzato').on('change', function () {
+            const id = $(this).data('id');
+            const stato = $(this).is(':checked');
+
+            $.post('/CodiciPromo/SegnaUtilizzato', { id: id, utilizzato: stato })
+                .fail(() => fmpNotify("Errore nel salvataggio dello stato.", "error"));
+        });
+
+        let scannerAttivo = false;
+
+        $('#attivaScanner').on('click', function () {
+            if (scannerAttivo) return;
+
+            $('#qr-reader').show();
+            const qrScanner = new Html5Qrcode("qr-reader");
+
+            qrScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    $('#ricercaCodice').val(decodedText);
+                    qrScanner.stop().then(() => {
+                        $('#qr-reader').hide();
+                        scannerAttivo = false;
+                        $('#ricercaCodice').trigger('input');
+                    });
+                },
+                () => {}
+            ).then(() => { scannerAttivo = true; });
+        });
+
+        $('#ricercaCodice').on('input', function () {
+            const valore = ($(this).val() || '').toString().toLowerCase();
+            let trovato = false;
+
+            const $table = $('table');
+            $('tbody tr').each(function () {
+                const codice = $(this).find('td:first').text().toLowerCase();
+                const match = codice.includes(valore);
+
+                $(this).toggle(match);
+
+                if (match) {
+                    trovato = true;
+                    $(this).addClass('table-warning');
+                    setTimeout(() => $(this).removeClass('table-warning'), 1500);
+                }
+            });
+
+            $('.promo-card').each(function () {
+                const codice = ($(this).data('code') || '').toString().toLowerCase();
+                const match = codice.includes(valore);
+                $(this).toggle(match);
+                if (match && valore !== '') {
+                    $(this).addClass('promo-card--match');
+                    setTimeout(() => $(this).removeClass('promo-card--match'), 1500);
+                }
+            });
+
+            if (!trovato && valore !== '') {
+                if ($('#noMatchMsg').length === 0) {
+                    $('<div id="noMatchMsg" class="alert alert-danger mt-3">Codice non trovato.</div>').insertAfter($table);
+                }
+            } else {
+                $('#noMatchMsg').remove();
+            }
+        });
+    </script>
+}

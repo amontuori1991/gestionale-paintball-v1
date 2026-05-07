@@ -1,0 +1,132 @@
+﻿@using System.Globalization
+@model Full_Metal_Paintball_Carmagnola.Models.ArchivioViewModel
+
+@{
+    ViewData["Title"] = "Archivio Partite";
+}
+<link href="~/css/archivio-responsive.css" rel="stylesheet" />
+
+<h2 class="mb-4">Archivio Partite</h2>
+
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-secondary">&larr; Torna alle Prenotazioni</a>
+</div>
+
+@foreach (var anno in Model.Archivio.OrderByDescending(a => a.Key))
+{
+    <div class="mb-4">
+        <h4>Anno @anno.Key</h4>
+
+        @foreach (var mese in anno.Value.OrderByDescending(m => m.Key))
+        {
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Mese: @CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(mese.Key)</span>
+                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#mese-@anno.Key-@mese.Key">Apri</button>
+                </div>
+                <div id="mese-@anno.Key-@mese.Key" class="collapse">
+                    <div class="card-body">
+
+                        <h6 class="titolo-sezione-archivio">Partite Disputate</h6>
+                        <table class="table responsive-table">
+                            <thead>
+                                <tr>
+                                    <th>Data e Ora</th>
+                                    <th>Tipo</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in mese.Value.Where(p => !p.IsDeleted))
+                                {
+                                    <tr>
+                                        <td data-label="Data e Ora">@p.Data.ToString("dd/MM/yyyy") - @p.OraInizio</td>
+                                        <td data-label="Tipo">@p.Tipo</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-info btn-dettagli" data-id="@p.Id">Dettagli</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <h6 class="titolo-sezione-archivio">Partite Cancellate</h6>
+                        <table class="table responsive-table">
+                            <thead>
+                                <tr>
+                                    <th>Data e Ora</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in mese.Value.Where(p => p.IsDeleted))
+                                {
+                                    <tr>
+                                        <td data-label="Data e Ora">@p.Data.ToString("dd/MM/yyyy") - @p.OraInizio</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-info btn-dettagli" data-id="@p.Id">Dettagli</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Modal dettagli -->
+<div class="modal fade" id="dettagliModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dettagli Partita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contenutoDettagli"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tesserati -->
+<div class="modal fade" id="tesseratiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tesserati</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contenutoTesserati"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.btn-dettagli').on('click', function () {
+                const id = $(this).data('id');
+                $.get('/Partite/GeneraMessaggioDettagli', { id: id })
+                    .done(res => {
+                        if (res.success) {
+                            const dettagli = res.messaggio + '<hr><button class="btn btn-sm btn-secondary btn-tesserati" data-id="' + id + '">Visualizza Tesserati</button>';
+                            $('#contenutoDettagli').html(dettagli);
+                            $('#dettagliModal').modal('show');
+                        }
+                    });
+            });
+
+            $(document).on('click', '.btn-tesserati', function () {
+                const id = $(this).data('id');
+                $.get('/Partite/TesseratiPerPopup', { id: id })
+                    .done(res => {
+                        $('#contenutoTesserati').html(res);
+                        $('#tesseratiModal').modal('show');
+                    });
+            });
+        });
+    </script>
+}

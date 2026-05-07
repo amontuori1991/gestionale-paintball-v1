@@ -1,0 +1,451 @@
+﻿<!DOCTYPE html>
+
+@using Full_Metal_Paintball_Carmagnola.Helpers
+@using Full_Metal_Paintball_Carmagnola.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> LayoutUserManager
+@inject TesseramentoDbContext LayoutDb
+
+<html lang="it">
+
+<head>
+
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<title>@ViewData["Title"] - Full Metal Paintball Carmagnola</title>
+
+	<environment include="Production">
+		<link rel="manifest" href="/manifest.json">
+		<meta name="theme-color" content="#17180f">
+	</environment>
+
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	
+
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+
+	<link rel="icon" type="image/png" href="~/favicon.png">
+
+	@RenderSection("Styles", required: false)
+
+
+</head>
+
+<body class="@(((Context?.Request?.Query["view"].ToString() ?? string.Empty).ToLower() == "mobile") ? "view-mobile" : "view-desktop")">
+
+
+	@{
+		var hideNavbar = ViewBag.HideNavbar as bool? ?? false;
+		var hideFooter = ViewBag.HideFooter as bool? ?? false;
+		var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+		var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+		var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+		string? backController = null;
+		string? backAction = null;
+		var navFeatures = new List<string>();
+		var navLinks = new Dictionary<string, (string Icon, string Url, string[] Controllers, string[] Actions)>();
+
+		if (isAuthenticated)
+		{
+			var layoutUser = await LayoutUserManager.GetUserAsync(User!);
+			if (layoutUser != null)
+			{
+				var layoutRoles = await LayoutUserManager.GetRolesAsync(layoutUser);
+				var layoutRole = layoutRoles.FirstOrDefault() ?? "Nessuno";
+
+				navFeatures = layoutRole == "Admin"
+					? Features.AllFeatures.ToList()
+					: await LayoutDb.RolePermissions
+						.Where(p => p.RoleName == layoutRole && p.IsAllowed)
+						.Select(p => p.FeatureName)
+						.ToListAsync();
+
+				var layoutFeatureOrder = new List<string>();
+				if (!string.IsNullOrWhiteSpace(layoutUser.DashboardFeatureOrder))
+				{
+					try
+					{
+						layoutFeatureOrder = (System.Text.Json.JsonSerializer.Deserialize<List<string>>(layoutUser.DashboardFeatureOrder) ?? new List<string>())
+							.Where(feature => !string.IsNullOrWhiteSpace(feature))
+							.Select(feature => feature.Trim())
+							.ToList();
+					}
+					catch
+					{
+						layoutFeatureOrder = new List<string>();
+					}
+				}
+
+				var layoutHiddenFeatures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				if (!string.IsNullOrWhiteSpace(layoutUser.DashboardHiddenFeatures))
+				{
+					try
+					{
+						layoutHiddenFeatures = (System.Text.Json.JsonSerializer.Deserialize<List<string>>(layoutUser.DashboardHiddenFeatures) ?? new List<string>())
+							.Select(feature => feature.Trim())
+							.ToHashSet(StringComparer.OrdinalIgnoreCase);
+					}
+					catch
+					{
+						layoutHiddenFeatures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+					}
+				}
+
+				var availableNavFeatures = navFeatures.ToHashSet(StringComparer.OrdinalIgnoreCase);
+				var orderedNavFeatures = layoutFeatureOrder
+					.Where(feature => availableNavFeatures.Contains(feature))
+					.Distinct(StringComparer.OrdinalIgnoreCase)
+					.ToList();
+
+				orderedNavFeatures.AddRange(navFeatures.Where(feature =>
+					!orderedNavFeatures.Contains(feature, StringComparer.OrdinalIgnoreCase)));
+
+				navFeatures = orderedNavFeatures
+					.Where(feature => !layoutHiddenFeatures.Contains(feature.Trim()))
+					.ToList();
+			}
+
+			navLinks = new Dictionary<string, (string Icon, string Url, string[] Controllers, string[] Actions)>
+			{
+				["Tesserati"] = ("bi-people", Url.Action("ListaTesseramenti", "Tesseramento") ?? "#", new[] { "Tesseramento" }, Array.Empty<string>()),
+				["Prenotazioni"] = ("bi-calendar-check", Url.Action("Index", "Partite") ?? "#", new[] { "Partite" }, new[] { "Index", "Crea", "Modifica", "Dettagli" }),
+				["Caparre"] = ("bi-wallet2", Url.Action("Caparre", "Partite") ?? "#", new[] { "Partite" }, new[] { "Caparre" }),
+				["Presenze Staff"] = ("bi-people-fill", Url.Action("Index", "PresenzeStaff") ?? "#", new[] { "PresenzeStaff" }, Array.Empty<string>()),
+				["Gestione Utenti"] = ("bi-person-badge", Url.Action("GestionePermessi", "Ruoli") ?? "#", new[] { "Ruoli" }, Array.Empty<string>()),
+				["Statistiche"] = ("bi-bar-chart-line", Url.Action("Index", "Statistiche") ?? "#", new[] { "Statistiche" }, Array.Empty<string>()),
+				["Prezzi"] = ("bi-currency-euro", Url.Action("Index", "Prezzi") ?? "#", new[] { "Prezzi" }, Array.Empty<string>()),
+				["Calendario Assenze"] = ("bi-calendar-event", Url.Action("Index", "CalendarioAssenze") ?? "#", new[] { "CalendarioAssenze" }, Array.Empty<string>()),
+				["ACSI"] = ("bi-card-text", Url.Action("Index", "TessereAcsi") ?? "#", new[] { "TessereAcsi" }, Array.Empty<string>()),
+				["Documenti"] = ("bi-folder", Url.Action("Index", "Documenti") ?? "#", new[] { "Documenti" }, Array.Empty<string>()),
+				["Documenti ASD"] = ("bi-file-earmark-ruled-fill", Url.Action("Index", "DocumentiAsd") ?? "#", new[] { "DocumentiAsd" }, Array.Empty<string>()),
+				["ToDoList"] = ("bi-card-checklist", Url.Action("Index", "ToDoList") ?? "#", new[] { "ToDoList" }, Array.Empty<string>()),
+				["Movimenti"] = ("bi-cash-coin", Url.Action("Index", "Movimenti") ?? "#", new[] { "Movimenti" }, Array.Empty<string>()),
+				["Spese"] = ("bi-receipt-cutoff", Url.Action("Index", "Spese") ?? "#", new[] { "Spese" }, Array.Empty<string>()),
+				["Codici Promo"] = ("bi-gift", Url.Action("VerificaCodici", "CodiciPromo") ?? "#", new[] { "CodiciPromo" }, Array.Empty<string>()),
+				["Sondaggi"] = ("bi-ui-checks-grid", Url.Action("Index", "Sondaggi") ?? "#", new[] { "Sondaggi" }, Array.Empty<string>()),
+				["Lavaggi"] = ("bi-bucket", Url.Action("Index", "Lavaggi") ?? "#", new[] { "Lavaggi" }, Array.Empty<string>()),
+				["Disponibilita Campo"] = ("bi-brightness-alt-high", Url.Action("Index", "DisponibilitaCampo") ?? "#", new[] { "DisponibilitaCampo" }, Array.Empty<string>()),
+				["NewsLetter"] = ("bi-envelope-paper-heart", Url.Action("Index", "NewsLetter") ?? "#", new[] { "NewsLetter" }, Array.Empty<string>())
+			};
+
+			switch (currentController)
+			{
+				case "Tesseramento":
+					if (currentAction == "ListaTesseramenti")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					else if (currentAction is not "Index" and not "Successo" and not "Duplicato")
+					{
+						backController = "Tesseramento";
+						backAction = "ListaTesseramenti";
+					}
+					break;
+				case "Partite":
+					if (currentAction is "Index" or "Caparre")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					else
+					{
+						backController = "Partite";
+						backAction = "Index";
+					}
+					break;
+				case "Documenti":
+					if (currentAction == "Index")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					else
+					{
+						backController = "Documenti";
+						backAction = "Index";
+					}
+					break;
+				case "DocumentiAsd":
+					if (currentAction == "Index")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					else
+					{
+						backController = "DocumentiAsd";
+						backAction = "Index";
+					}
+					break;
+				case "CodiciPromo":
+					if (currentAction == "VerificaCodici")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					else
+					{
+						backController = "CodiciPromo";
+						backAction = "VerificaCodici";
+					}
+					break;
+				case "Sondaggi":
+					if (currentAction == "Index")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					else
+					{
+						backController = "Sondaggi";
+						backAction = "Index";
+					}
+					break;
+				case "Ruoli":
+					if (currentAction == "GestionePermessi")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					else
+					{
+						backController = "Ruoli";
+						backAction = "GestionePermessi";
+					}
+					break;
+				case "PresenzeStaff":
+				case "Statistiche":
+				case "Prezzi":
+				case "CalendarioAssenze":
+				case "TessereAcsi":
+				case "ToDoList":
+				case "Movimenti":
+				case "Spese":
+				case "Lavaggi":
+				case "DisponibilitaCampo":
+				case "NewsLetter":
+					if (currentAction == "Index")
+					{
+						backController = "Dashboard";
+						backAction = "Index";
+					}
+					break;
+			}
+		}
+	}
+
+	<style>
+		.page-backbar {
+			padding: 12px 16px 0;
+		}
+
+		.page-backbar .btn {
+			border-radius: 999px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+			font-weight: 600;
+		}
+	</style>
+
+	@if (!hideNavbar)
+	{
+		<header>
+			<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light fmp-navbar">
+
+				<div class="container-fluid">
+
+					<a class="navbar-brand fmp-brand" asp-area="" asp-controller="Home" asp-action="Index">
+						<img src="~/img/logo.gif" alt="Full Metal Paintball Carmagnola" class="fmp-brand-logo" />
+						<span>Full Metal Paintball Carmagnola</span>
+					</a>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+							aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+						@if (isAuthenticated)
+						{
+							<div class="fmp-radial-nav">
+								<input class="fmp-radial-toggle" type="checkbox" id="fmpRadialNavToggle" aria-hidden="true" />
+								<label class="fmp-radial-trigger" for="fmpRadialNavToggle" aria-label="Apri menu sezioni">
+									<span class="fmp-radial-trigger-icon"><i class="bi bi-crosshair"></i></span>
+									<span class="fmp-radial-trigger-text">Menu sezioni</span>
+									<span class="fmp-radial-trigger-caret"><i class="bi bi-chevron-down"></i></span>
+								</label>
+
+								<div class="fmp-radial-panel" role="navigation" aria-label="Sezioni gestionale">
+									@{
+										var isDashboardActive = string.Equals(currentController, "Dashboard", StringComparison.OrdinalIgnoreCase);
+									}
+									<a class="fmp-radial-item fmp-radial-home @(isDashboardActive ? "is-active" : null)" asp-controller="Dashboard" asp-action="Index" aria-current="@(isDashboardActive ? "page" : null)">
+										<i class="bi bi-house-door"></i>
+										<span>Dashboard</span>
+									</a>
+									@foreach (var feature in navFeatures.Where(navLinks.ContainsKey))
+									{
+										var link = navLinks[feature];
+										var isFeatureActive = link.Controllers.Contains(currentController ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+											&& (!link.Actions.Any() || link.Actions.Contains(currentAction ?? string.Empty, StringComparer.OrdinalIgnoreCase));
+										<a class="fmp-radial-item @(isFeatureActive ? "is-active" : null)" href="@link.Url" aria-current="@(isFeatureActive ? "page" : null)">
+											<i class="bi @link.Icon"></i>
+											<span>@feature</span>
+										</a>
+									}
+								</div>
+							</div>
+						}
+						else
+						{
+							<ul class="navbar-nav flex-grow-1">
+								<li class="nav-item">
+									<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+								</li>
+							</ul>
+						}
+						<partial name="_LoginPartial" />
+					</div>
+				</div>
+			</nav>
+		</header>
+	}
+
+
+	<div class="container-fluid">
+
+		@if (!string.IsNullOrWhiteSpace(backController) && !string.IsNullOrWhiteSpace(backAction))
+		{
+			<div class="page-backbar">
+				<a class="btn btn-outline-secondary"
+				   asp-controller="@backController"
+				   asp-action="@backAction">
+					<i class="bi bi-arrow-left"></i> Indietro
+				</a>
+			</div>
+		}
+
+		<main role="main" class="pb-3">
+
+			@RenderBody()
+
+		</main>
+
+	</div>
+
+	<div id="fmp-loading-overlay" class="fmp-loading-overlay" aria-live="polite" aria-hidden="true">
+		<div class="fmp-loading-card" role="status">
+			<div class="fmp-loading-spinner" aria-hidden="true"></div>
+			<div>
+				<strong id="fmp-loading-message">Operazione in corso...</strong>
+				<span>Attendere qualche istante, stiamo salvando i dati.</span>
+			</div>
+		</div>
+	</div>
+
+
+
+	@if (!hideFooter)
+	{
+		<footer class="footer text-muted">
+			<div class="container">
+				&copy; 2025 - Full Metal Paintball Carmagnola - Tutti i diritti riservati.
+			</div>
+		</footer>
+	}
+
+
+
+
+	<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+	<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+
+	<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+	<script src="~/js/site.js" asp-append-version="true"></script>
+
+	@await RenderSectionAsync("Scripts", required: false)
+
+	<script>
+		document.addEventListener('click', function (event) {
+			const menu = document.querySelector('.fmp-radial-nav');
+			const toggle = document.getElementById('fmpRadialNavToggle');
+
+			if (!menu || !toggle || !toggle.checked) {
+				return;
+			}
+
+			if (!menu.contains(event.target)) {
+				toggle.checked = false;
+			}
+		});
+
+		document.querySelectorAll('.fmp-radial-item').forEach(function (item) {
+			item.addEventListener('click', function () {
+				const toggle = document.getElementById('fmpRadialNavToggle');
+				if (toggle) {
+					toggle.checked = false;
+				}
+			});
+		});
+	</script>
+
+	<environment include="Production">
+		<script>
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('/service-worker.js')
+					.then(function (registration) {
+						console.log('✅ Service Worker registrato con successo:', registration);
+					})
+					.catch(function (error) {
+						console.error('❌ Errore durante la registrazione del Service Worker:', error);
+					});
+			}
+
+			window.addEventListener('beforeinstallprompt', (e) => {
+
+				const url = window.location.href.toLowerCase();
+
+				if (url.includes('/tesseramento')) {
+					console.log("🔒 Banner PWA disattivato sulla pagina tesseramento");
+					return;
+				}
+
+				e.preventDefault();
+				let deferredPrompt = e;
+
+				setTimeout(() => {
+					deferredPrompt.prompt();
+
+					deferredPrompt.userChoice.then((choiceResult) => {
+						if (choiceResult.outcome === 'accepted') {
+							console.log('✅ App aggiunta alla schermata Home');
+						} else {
+							console.log('ℹ️ Utente ha ignorato il banner');
+						}
+						deferredPrompt = null;
+					});
+				}, 2000);
+			});
+		</script>
+	</environment>
+
+
+</body>
+
+</html>
+

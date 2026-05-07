@@ -1,0 +1,88 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Tesseramento non disponibile";
+}
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tesseramento non disponibile</title>
+    <style>
+        :root {
+            --fmp-pink: #e6007e;
+            --fmp-orange: #f77f00;
+            --fmp-green: #8fd12f;
+            --fmp-ink: #11140f;
+            --fmp-muted: #66695f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            align-items: center;
+            background:
+                radial-gradient(circle at 20% 25%, rgba(143, 209, 47, .28), transparent 26rem),
+                radial-gradient(circle at 82% 18%, rgba(230, 0, 126, .22), transparent 24rem),
+                radial-gradient(circle at 72% 82%, rgba(247, 127, 0, .24), transparent 26rem),
+                #f8f5ea;
+            color: var(--fmp-ink);
+            display: flex;
+            font-family: "Trebuchet MS", Arial, sans-serif;
+            justify-content: center;
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .blocked-card {
+            background: rgba(255, 255, 255, .88);
+            border: 1px solid rgba(0, 0, 0, .08);
+            border-radius: 28px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .16);
+            max-width: 560px;
+            padding: clamp(28px, 6vw, 46px);
+            text-align: center;
+        }
+
+        .blocked-card__mark {
+            align-items: center;
+            background: linear-gradient(135deg, var(--fmp-pink), var(--fmp-orange));
+            border-radius: 24px;
+            color: white;
+            display: inline-flex;
+            font-size: 2.2rem;
+            height: 72px;
+            justify-content: center;
+            margin-bottom: 22px;
+            width: 72px;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 7vw, 2.5rem);
+            line-height: 1.05;
+            margin: 0 0 14px;
+        }
+
+        p {
+            color: var(--fmp-muted);
+            font-size: 1.05rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <main class="blocked-card">
+        <div class="blocked-card__mark" aria-hidden="true">!</div>
+        <h1>Tesseramento non disponibile</h1>
+        <p>
+            Il tesseramento libero senza partita non è attualmente abilitato.
+            Usa il link ricevuto dallo staff per la tua partita.
+        </p>
+    </main>
+</body>
+</html>

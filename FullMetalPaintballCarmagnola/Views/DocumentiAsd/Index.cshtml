@@ -1,0 +1,96 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.DocumentiAsdViewModelList
+@{
+    ViewData["Title"] = "Documenti ASD";
+}
+
+<link href="~/css/documenti-asd-responsive.css" rel="stylesheet" />
+
+<div class="content-container">
+    <h2 class="text-center">Documenti ASD</h2>
+
+    <form method="get" class="mb-3 d-flex justify-content-center">
+        <div class="input-group" style="max-width: 450px;">
+            <input type="text" name="filtroDescrizione" value="@Model.FiltroDescrizione" placeholder="Filtra per descrizione..." class="form-control" />
+            <button type="submit" class="btn btn-primary">Filtra</button>
+            <a asp-action="Index" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <p class="text-center">
+        <a asp-action="Create" class="btn btn-success">➕ Carica Documento</a>
+    </p>
+
+    @if (TempData["Successo"] != null)
+    {
+        <div class="alert alert-success">@TempData["Successo"]</div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped responsive-table">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Descrizione</th>
+                    <th>Data Caricamento</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var doc in Model.Documenti)
+                {
+                    <tr>
+                        <td data-label="File">
+                            <a asp-action="Download" asp-route-id="@doc.Id" target="_blank" style="text-decoration:none;">
+                                @if (doc.OriginalFileName != null && doc.OriginalFileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: red;"></i>
+                                }
+                                else if (doc.OriginalFileName != null && (doc.OriginalFileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase) || doc.OriginalFileName.EndsWith(".doc", StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    <i class="bi bi-file-earmark-word" style="font-size: 1.5rem; color: blue;"></i>
+                                }
+                                @doc.OriginalFileName
+                            </a>
+                        </td>
+                        <td data-label="Descrizione">@doc.Descrizione</td>
+                        <td data-label="Data Caricamento">@(doc.DataCaricamento?.ToString("dd/MM/yyyy") ?? "")</td>
+                        <td data-label="Azioni">
+                            <a asp-action="Edit" asp-route-id="@doc.Id" class="btn btn-sm btn-warning">Modifica</a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="confermaElimina('@doc.Id', '@doc.OriginalFileName')">Elimina</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="modal fade" id="confermaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Vuoi davvero eliminare il documento <strong id="nomeDocumento"></strong>?
+            </div>
+            <div class="modal-footer">
+                <form id="formElimina" method="post">
+                    <button type="submit" class="btn btn-danger">Elimina</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confermaElimina(id, nome) {
+        document.getElementById("nomeDocumento").innerText = nome;
+        document.getElementById("formElimina").action = `/DocumentiAsd/Delete/${id}`;
+        var myModal = new bootstrap.Modal(document.getElementById('confermaModal'));
+        myModal.show();
+    }
+</script>

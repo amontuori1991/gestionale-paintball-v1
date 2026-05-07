@@ -1,0 +1,107 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.CodicePromozionale
+
+@{
+    ViewData["Title"] = "Codice Generato";
+    var pt = (ViewBag.PromotionType as string) ?? "Instagram";
+    var isEvento = string.Equals(pt, "EventoRichiedeDati", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="text-center">
+    <h2>🎉 Il tuo codice è pronto!</h2>
+
+    <div id="buonoContainer" class="mx-auto mt-4 p-4" style="max-width: 400px; background-color: white; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+
+        <!-- LOGO -->
+        <img src="~/img/logo.gif" alt="Logo" style="max-width: 150px; margin-bottom: 20px;" />
+
+        <!-- QR Code -->
+        @if (ViewBag.QRCode != null)
+        {
+            var qrSrc = $"data:image/png;base64,{ViewBag.QRCode}";
+            <img id="qrImage" src="@qrSrc" alt="QR Code" style="width: 180px; height: 180px; margin-bottom: 20px;" />
+            <a id="apriQRCode" class="btn btn-sm btn-outline-secondary d-block mx-auto mb-3" target="_blank" href="@qrSrc">
+                📷 Apri immagine in nuova scheda
+            </a>
+        }
+        else
+        {
+            <p class="text-danger">⚠️ Errore nella generazione del QR code.</p>
+        }
+
+        @if (ViewBag.DescrizionePromo != null)
+        {
+            <p class="mt-3"><strong>@ViewBag.DescrizionePromo</strong></p>
+        }
+        @if (!string.IsNullOrWhiteSpace((string)ViewBag.BenefitPromo))
+        {
+            <div class="mt-2 p-2" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                <div class="small text-muted">Il buono dà diritto a:</div>
+                <div><strong>@ViewBag.BenefitPromo</strong></div>
+            </div>
+        }
+
+        <h3 class="text-success">@Model.Codice</h3>
+        <p>Valido fino al <strong>@Model.DataScadenza.ToString("dd/MM/yyyy")</strong></p>
+
+        @* --- Mostra IG solo per promo Instagram --- *@
+        @if (!isEvento && !string.IsNullOrWhiteSpace(Model.InstagramAccount))
+        {
+            <p><strong>Instagram:</strong> @Model.InstagramAccount</p>
+        }
+
+        @* --- Dati richiedente per EventoRichiedeDati --- *@
+        @if (isEvento)
+        {
+            <div class="text-start small text-muted mt-2">
+                @if (!string.IsNullOrWhiteSpace(Model.Cognome) || !string.IsNullOrWhiteSpace(Model.Nome))
+                {
+                    <div><strong>@Model.Cognome @Model.Nome</strong></div>
+                }
+                @if (Model.DataNascita.HasValue)
+                {
+                    <div>Data di nascita: @Model.DataNascita.Value.ToString("dd/MM/yyyy")</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.ComuneNascita))
+                {
+                    <div>Comune di nascita: @Model.ComuneNascita</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.ComuneResidenza))
+                {
+                    <div>Residenza: @Model.ComuneResidenza</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                {
+                    <div>Email: @Model.Email</div>
+                }
+            </div>
+        }
+
+        @* Avviso IG solo se NON evento *@
+        @if (!isEvento)
+        {
+            <div class="alert alert-warning mt-3">
+                ⚠️ Ricorda: per poter utilizzare il buono, è necessario seguire la nostra pagina Instagram.
+            </div>
+        }
+    </div>
+
+    <div class="mt-4">
+        <a href="/" class="btn btn-outline-primary me-2">🏠 Torna alla Home</a>
+        <button id="downloadBtn" class="btn btn-outline-success">⬇️ Scarica Buono</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function () {
+            const container = document.getElementById('buonoContainer');
+            html2canvas(container, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'buono_promozionale.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        });
+    </script>
+}

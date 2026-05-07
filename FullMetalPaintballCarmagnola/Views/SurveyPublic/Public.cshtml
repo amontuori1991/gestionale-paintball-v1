@@ -1,0 +1,53 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Survey
+@using Full_Metal_Paintball_Carmagnola.Models
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_Layout";
+    ViewBag.HideNavbar = true; // pagina pubblica pulita
+}
+<div class="container py-4" style="max-width: 720px;">
+    <h2 class="mb-2">@Model.Title</h2>
+    @if (!string.IsNullOrWhiteSpace(Model.Description))
+    {
+        <p class="text-muted">@Model.Description</p>
+    }
+
+    <form method="post">
+        @foreach (var q in Model.Questions.OrderBy(q => q.Order))
+        {
+            <div class="mb-4">
+                <label class="form-label fw-semibold">@q.Text</label>
+
+                @if (q.Type == QuestionType.OpenText)
+                {
+                    <textarea class="form-control" name="q_@q.Id" rows="3" placeholder="Scrivi la tua risposta..."></textarea>
+                }
+                else
+                {
+                    if (q.AllowMultiple)
+                    {
+                        foreach (var opt in q.Options.OrderBy(o => o.Order))
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="@opt.Id" name="@($"q_{q.Id}_opt")" />
+                                <label class="form-check-label">@opt.Text</label>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        foreach (var opt in q.Options.OrderBy(o => o.Order))
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" value="@opt.Id" name="@($"q_{q.Id}_opt")" />
+                                <label class="form-check-label">@opt.Text</label>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        }
+
+        <button class="btn btn-primary" type="submit">Invia</button>
+    </form>
+</div>

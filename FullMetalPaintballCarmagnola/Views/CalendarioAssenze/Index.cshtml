@@ -1,0 +1,121 @@
+﻿@using Full_Metal_Paintball_Carmagnola.Models
+@model List<AssenzaCalendario>
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Calendario Assenze";
+}
+
+<div class="container-custom">
+    <h2 class="text-center">Calendario Assenze</h2>
+
+    <div class="d-flex justify-content-center mb-3">
+        <input type="text" id="filtroCalendario" placeholder="Filtra per giorno, data o nome..." class="form-control" style="max-width: 300px;" />
+    </div>
+
+    <div class="table-responsive calendario-table-wrapper">
+        <table class="calendario-table">
+            <thead>
+                <tr>
+                    <th>Giorno</th>
+                    <th>Data</th>
+                    <th>Reperibile</th>
+                    <th>Montuo</th>
+                    <th>Flavio</th>
+                    <th>Bosax</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var giorno in Model)
+                {
+                    var giornoSet = giorno.Data.ToString("dddd", new CultureInfo("it-IT"));
+                    var repClass = giorno.Reperibile == "In attesa" ? "calendario-bg-warning"
+                    : giorno.Reperibile == "Nessuno" ? "calendario-bg-danger" : "calendario-bg-success";
+
+                    <tr>
+                        <td data-label="Giorno">@giornoSet</td>
+                        <td data-label="Data">@giorno.Data.ToString("dd/MM/yyyy")</td>
+
+                        <td data-label="Reperibile" class="@repClass">
+                            <select class="reperibile-select" data-id="@giorno.Id">
+                                <option value="In attesa" selected="@(giorno.Reperibile == "In attesa" ? "selected" : null)">In attesa</option>
+                                <option value="Montuo" selected="@(giorno.Reperibile == "Montuo" ? "selected" : null)">Montuo</option>
+                                <option value="Flavio" selected="@(giorno.Reperibile == "Flavio" ? "selected" : null)">Flavio</option>
+                                <option value="Bosax" selected="@(giorno.Reperibile == "Bosax" ? "selected" : null)">Bosax</option>
+                                <option value="Nessuno" selected="@(giorno.Reperibile == "Nessuno" ? "selected" : null)">Nessuno</option>
+                            </select>
+                        </td>
+
+                        @foreach (var membro in new[] { "Montuo", "Flavio", "Bosax" })
+                        {
+                            var assenza = membro switch
+                            {
+                                "Montuo" => giorno.Montuo,
+                                "Flavio" => giorno.Flavio,
+                                "Bosax" => giorno.Bosax,
+                                _ => null
+                            };
+
+                            var bgClass = assenza == "assente" ? "calendario-bg-danger" : "calendario-bg-warning";
+
+                            <td data-label="@membro" class="@bgClass">
+                                <select class="assenza-select" data-id="@giorno.Id" data-nome="@membro">
+                                    <option value="" selected="@(string.IsNullOrWhiteSpace(assenza) ? "selected" : null)"></option>
+                                    <option value="assente" selected="@(assenza == "assente" ? "selected" : null)">assente</option>
+                                </select>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<link href="~/css/assenze-calendario-responsive.css" rel="stylesheet" />
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('.reperibile-select').on('change', function () {
+                const sel = $(this);
+                const id = sel.data('id');
+                const val = sel.val();
+                const td = sel.closest('td');
+
+                $.post('/CalendarioAssenze/AggiornaReperibile', { id: id, reperibile: val })
+                    .done(() => {
+                        td.removeClass('calendario-bg-success calendario-bg-danger calendario-bg-warning');
+                        if (val === 'Nessuno') td.addClass('calendario-bg-danger');
+                        else if (val === 'In attesa') td.addClass('calendario-bg-warning');
+                        else td.addClass('calendario-bg-success');
+                    })
+                    .fail(() => fmpNotify("Errore durante il salvataggio della reperibilità.", "error"));
+            });
+
+            $('.assenza-select').on('change', function () {
+                const sel = $(this);
+                const id = sel.data('id');
+                const nome = sel.data('nome');
+                const val = sel.val();
+                const td = sel.closest('td');
+
+                $.post('/CalendarioAssenze/AggiornaAssenza', { id: id, nome: nome, stato: val })
+                    .done(() => {
+                        td.removeClass('calendario-bg-success calendario-bg-danger calendario-bg-warning');
+                        if (val === "assente") td.addClass('calendario-bg-danger');
+                        else td.addClass('calendario-bg-warning');
+                    })
+                    .fail(() => fmpNotify("Errore durante il salvataggio dell'assenza.", "error"));
+            });
+
+            $('#filtroCalendario').on('input', function () {
+                const filtro = $(this).val().toLowerCase();
+                $('.calendario-table tbody tr').each(function () {
+                    const testoRiga = $(this).text().toLowerCase();
+                    $(this).toggle(testoRiga.includes(filtro));
+                });
+            });
+        });
+    </script>
+}

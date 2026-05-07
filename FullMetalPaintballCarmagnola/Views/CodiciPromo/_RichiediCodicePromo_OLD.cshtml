@@ -1,0 +1,63 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.Promozione
+
+@{
+    ViewData["Title"] = "Richiedi Codice Promozionale";
+    var requiresPersonal = string.Equals(Model.PromotionType, "EventoRichiedeDati", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="container text-center mt-5">
+    <h2>@Model.Nome</h2>
+    <p class="lead">@Model.Descrizione</p>
+
+    @if (TempData["Errore"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Errore"]</div>
+    }
+
+    <form method="post" asp-controller="CodiciPromo" asp-action="GeneraDaAlias" class="text-start mx-auto" style="max-width:520px;">
+        <input type="hidden" name="alias" value="@Model.Alias" />
+
+        @if (!requiresPersonal)
+        {
+            <!-- Caso Instagram -->
+            <div class="mb-3">
+                <label class="form-label">Account Instagram</label>
+                <input type="text" name="instagramHandle" class="form-control" placeholder="es. &#64;tuoaccount" required />
+            </div>
+        }
+        else
+        {
+            <!-- Caso Evento: dati anagrafici -->
+            <div class="mb-3">
+                <label class="form-label">Nome</label>
+                <input type="text" name="nome" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Cognome</label>
+                <input type="text" name="cognome" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Data di nascita</label>
+                <input type="date" name="dataNascita" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Comune di nascita</label>
+                <input type="text" name="comuneNascita" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Comune di residenza</label>
+                <input type="text" name="comuneResidenza" class="form-control" required />
+            </div>
+        }
+
+        <button type="submit" class="btn btn-success w-100">Ottieni il tuo codice</button>
+    </form>
+
+    <p class="mt-3 text-muted">
+        <strong>Promo valida fino al @Model.DataScadenza.ToString("dd/MM/yyyy")</strong>
+        @if (Model.EditionYear.HasValue)
+        {
+            <span> — Edizione @Model.EditionYear.Value</span>
+        }
+    </p>
+</div>

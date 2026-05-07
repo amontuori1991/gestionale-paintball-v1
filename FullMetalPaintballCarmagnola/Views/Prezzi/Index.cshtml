@@ -1,0 +1,363 @@
+@model Full_Metal_Paintball_Carmagnola.Models.PricingCatalog
+@using Full_Metal_Paintball_Carmagnola.Models
+@using Full_Metal_Paintball_Carmagnola.Services
+
+@{
+    ViewData["Title"] = "Prezzi";
+    var previousListino = Model.GetLegacyListino();
+    var currentListino = Model.GetCurrentListino();
+    var canManagePricing = ViewBag.CanManagePricing as bool? == true;
+
+    PricingEntry? GetEntry(string code) => Model.GetEntry(code);
+    string Money(decimal amount) => PricingCatalogService.FormatCurrency(amount);
+}
+
+<style>
+    .pricing-table td,
+    .pricing-table th {
+        vertical-align: middle;
+    }
+
+    .pricing-mobile-cards {
+        display: none;
+    }
+
+    .pricing-mobile-card {
+        border: 1px solid #e7dfc7;
+        border-radius: 18px;
+        background: #fffdf6;
+        padding: 14px;
+        box-shadow: 0 8px 18px rgba(40, 30, 10, 0.06);
+    }
+
+    .pricing-mobile-card + .pricing-mobile-card {
+        margin-top: 12px;
+    }
+
+    .pricing-mobile-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 10px;
+        color: #3f3010;
+    }
+
+    .pricing-mobile-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 0;
+        border-top: 1px dashed #e6ddc2;
+    }
+
+    .pricing-mobile-row:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+    }
+
+    .pricing-mobile-label {
+        color: #6f6345;
+        font-size: 0.9rem;
+        max-width: 58%;
+    }
+
+    .pricing-mobile-value {
+        font-weight: 700;
+        text-align: right;
+        color: #2d2512;
+    }
+
+    @@media (max-width: 768px) {
+        .pricing-table-wrap {
+            display: none;
+        }
+
+        .pricing-mobile-cards {
+            display: block;
+        }
+    }
+</style>
+
+<div class="content-container">
+    @if (canManagePricing)
+    {
+        <div class="list-container mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h2 class="mb-1">Listini</h2>
+                    <p class="text-muted mb-0">La consultazione resta disponibile a staff e admin. La modifica dei listini e' riservata agli admin.</p>
+                </div>
+                <a class="btn btn-primary" href="@Url.Action("Manage", "Prezzi")">Gestione listini</a>
+            </div>
+        </div>
+    }
+
+    <div class="list-container">
+        <h2 class="text-center">Prezzi Partite - Adulti</h2>
+        <div class="table-responsive pricing-table-wrap">
+            <table class="table pricing-table">
+                <thead>
+                    <tr>
+                        <th>Durata</th>
+                        <th>Colpi</th>
+                        <th>@previousListino.Name</th>
+                        <th>@currentListino.Name</th>
+                        <th>Colpi illimitati - @previousListino.Name</th>
+                        <th>Colpi illimitati - @currentListino.Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in new[]
+                    {
+                        new
+                        {
+                            Duration = "1 ora",
+                            Standard = GetEntry(PricingEntryCodes.AdultStandard1Hour),
+                            Unlimited = GetEntry(PricingEntryCodes.AdultUnlimited1Hour)
+                        },
+                        new
+                        {
+                            Duration = "1 ora e 30",
+                            Standard = GetEntry(PricingEntryCodes.AdultStandard90Minutes),
+                            Unlimited = GetEntry(PricingEntryCodes.AdultUnlimited90Minutes)
+                        },
+                        new
+                        {
+                            Duration = "2 ore",
+                            Standard = GetEntry(PricingEntryCodes.AdultStandard2Hours),
+                            Unlimited = (PricingEntry?)null
+                        }
+                    })
+                    {
+                        <tr>
+                            <td>@row.Duration</td>
+                            <td>@(row.Standard?.IncludedShots ?? "-")</td>
+                            <td>@Money(row.Standard?.GetPrice(previousListino.Id) ?? 0m)</td>
+                            <td>@Money(row.Standard?.GetPrice(currentListino.Id) ?? 0m)</td>
+                            <td>@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(previousListino.Id)))</td>
+                            <td>@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(currentListino.Id)))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="pricing-mobile-cards">
+            @foreach (var row in new[]
+            {
+                new
+                {
+                    Duration = "1 ora",
+                    Standard = GetEntry(PricingEntryCodes.AdultStandard1Hour),
+                    Unlimited = GetEntry(PricingEntryCodes.AdultUnlimited1Hour)
+                },
+                new
+                {
+                    Duration = "1 ora e 30",
+                    Standard = GetEntry(PricingEntryCodes.AdultStandard90Minutes),
+                    Unlimited = GetEntry(PricingEntryCodes.AdultUnlimited90Minutes)
+                },
+                new
+                {
+                    Duration = "2 ore",
+                    Standard = GetEntry(PricingEntryCodes.AdultStandard2Hours),
+                    Unlimited = (PricingEntry?)null
+                }
+            })
+            {
+                <div class="pricing-mobile-card">
+                    <div class="pricing-mobile-title">@row.Duration</div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">Colpi standard</span>
+                        <span class="pricing-mobile-value">@(row.Standard?.IncludedShots ?? "-")</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@previousListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(row.Standard?.GetPrice(previousListino.Id) ?? 0m)</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@currentListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(row.Standard?.GetPrice(currentListino.Id) ?? 0m)</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">Illimitati - @previousListino.Name</span>
+                        <span class="pricing-mobile-value">@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(previousListino.Id)))</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">Illimitati - @currentListino.Name</span>
+                        <span class="pricing-mobile-value">@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(currentListino.Id)))</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="list-container">
+        <h2 class="text-center">Prezzi Torneo - Adulti</h2>
+        <div class="table-responsive pricing-table-wrap">
+            <table class="table pricing-table">
+                <thead>
+                    <tr>
+                        <th>Formula</th>
+                        <th>Colpi</th>
+                        <th>@previousListino.Name</th>
+                        <th>@currentListino.Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.GetSectionEntries(PricingSections.AdultsTournament))
+                    {
+                        <tr>
+                            <td>@entry.Label</td>
+                            <td>@entry.IncludedShots</td>
+                            <td>@Money(entry.GetPrice(previousListino.Id))</td>
+                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="pricing-mobile-cards">
+            @foreach (var entry in Model.GetSectionEntries(PricingSections.AdultsTournament))
+            {
+                <div class="pricing-mobile-card">
+                    <div class="pricing-mobile-title">@entry.Label</div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">Colpi</span>
+                        <span class="pricing-mobile-value">@entry.IncludedShots</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@previousListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@currentListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="list-container">
+        <h2 class="text-center">Prezzi Partite - Kids</h2>
+        <p class="text-muted text-center">⚠️ @Model.KidsPricingNote</p>
+        <div class="table-responsive pricing-table-wrap">
+            <table class="table pricing-table">
+                <thead>
+                    <tr>
+                        <th>Formula</th>
+                        <th>Colpi</th>
+                        <th>@previousListino.Name</th>
+                        <th>@currentListino.Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.GetSectionEntries(PricingSections.Kids).Concat(Model.GetSectionEntries(PricingSections.KidsTournament)))
+                    {
+                        <tr>
+                            <td>@entry.Label</td>
+                            <td>@entry.IncludedShots</td>
+                            <td>@Money(entry.GetPrice(previousListino.Id))</td>
+                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="pricing-mobile-cards">
+            @foreach (var entry in Model.GetSectionEntries(PricingSections.Kids).Concat(Model.GetSectionEntries(PricingSections.KidsTournament)))
+            {
+                <div class="pricing-mobile-card">
+                    <div class="pricing-mobile-title">@entry.Label</div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">Colpi</span>
+                        <span class="pricing-mobile-value">@entry.IncludedShots</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@previousListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@currentListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="list-container">
+        <h2 class="text-center">Prezzi Colpi Extra</h2>
+        <div class="table-responsive pricing-table-wrap">
+            <table class="table pricing-table">
+                <thead>
+                    <tr>
+                        <th>Quantita</th>
+                        <th>Prezzo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.GetSectionEntries(PricingSections.ExtraReloads))
+                    {
+                        <tr>
+                            <td>@entry.IncludedShots</td>
+                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="pricing-mobile-cards">
+            @foreach (var entry in Model.GetSectionEntries(PricingSections.ExtraReloads))
+            {
+                <div class="pricing-mobile-card">
+                    <div class="pricing-mobile-title">Ricarica @entry.IncludedShots colpi</div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">Prezzo</span>
+                        <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="list-container">
+        <h2 class="text-center">Caccia al Coniglio</h2>
+        <div class="table-responsive pricing-table-wrap">
+            <table class="table pricing-table">
+                <thead>
+                    <tr>
+                        <th>Opzione</th>
+                        <th>@previousListino.Name</th>
+                        <th>@currentListino.Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.GetSectionEntries(PricingSections.RabbitHunt))
+                    {
+                        <tr>
+                            <td>@entry.Label</td>
+                            <td>@Money(entry.GetPrice(previousListino.Id))</td>
+                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="pricing-mobile-cards">
+            @foreach (var entry in Model.GetSectionEntries(PricingSections.RabbitHunt))
+            {
+                <div class="pricing-mobile-card">
+                    <div class="pricing-mobile-title">@entry.Label</div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@previousListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
+                    </div>
+                    <div class="pricing-mobile-row">
+                        <span class="pricing-mobile-label">@currentListino.Name</span>
+                        <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

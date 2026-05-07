@@ -1,0 +1,575 @@
+@model Full_Metal_Paintball_Carmagnola.Models.CampoDisponibilitaViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Disponibilità Campo";
+    var it = CultureInfo.GetCultureInfo("it-IT");
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #d8dec1 0%, #eef1df 52%, #c8d7c2 100%);
+    }
+
+    .availability-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 28px 16px 46px;
+    }
+
+    .availability-hero {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(93, 110, 74, 0.18);
+        border-radius: 24px;
+        box-shadow: 0 18px 40px rgba(30, 41, 59, 0.12);
+        margin-bottom: 22px;
+        padding: 24px;
+    }
+
+    .availability-hero h1 {
+        color: #22311f;
+        font-size: clamp(1.7rem, 4vw, 2.6rem);
+        font-weight: 900;
+        margin: 0 0 8px;
+    }
+
+    .availability-hero p {
+        color: #52604d;
+        margin: 0;
+    }
+
+    .availability-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .availability-filter {
+        align-items: end;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(93, 110, 74, 0.16);
+        border-radius: 18px;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: minmax(180px, 1fr) auto auto;
+        margin-top: 18px;
+        padding: 14px;
+    }
+
+    .availability-filter label {
+        color: #334155;
+        display: grid;
+        font-size: .9rem;
+        font-weight: 800;
+        gap: 6px;
+        text-align: left;
+    }
+
+    .availability-filter input {
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 12px;
+    }
+
+    .availability-filter button {
+        border: none;
+        border-radius: 12px;
+        font-weight: 900;
+        padding: 10px 14px;
+    }
+
+    .availability-filter .filter-primary {
+        background: #386641;
+        color: white;
+    }
+
+    .availability-filter .filter-secondary {
+        background: rgba(100, 116, 139, 0.16);
+        color: #334155;
+    }
+
+    .filter-message {
+        color: #92400e;
+        display: none;
+        font-weight: 800;
+        grid-column: 1 / -1;
+        text-align: left;
+    }
+
+    .customer-check-card {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(93, 110, 74, 0.18);
+        border-radius: 24px;
+        box-shadow: 0 18px 40px rgba(30, 41, 59, 0.12);
+        margin-bottom: 22px;
+        padding: 22px;
+    }
+
+    .customer-check-card h2 {
+        color: #22311f;
+        font-size: 1.45rem;
+        font-weight: 900;
+        margin: 0 0 6px;
+    }
+
+    .customer-check-card p {
+        color: #52604d;
+        margin: 0 0 16px;
+    }
+
+    .customer-check-form {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .customer-check-form label {
+        color: #334155;
+        display: grid;
+        font-size: .9rem;
+        font-weight: 800;
+        gap: 6px;
+    }
+
+    .customer-check-form input,
+    .customer-check-form select {
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 12px;
+        width: 100%;
+    }
+
+    .customer-check-form button {
+        align-self: end;
+        background: #386641;
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-weight: 900;
+        padding: 10px 14px;
+    }
+
+    .customer-result {
+        display: none;
+        margin-top: 18px;
+    }
+
+    .customer-result.show {
+        display: block;
+    }
+
+    .customer-status {
+        border-radius: 16px;
+        font-weight: 900;
+        margin-bottom: 12px;
+        padding: 12px 14px;
+    }
+
+    .customer-status.available {
+        background: rgba(22, 163, 74, 0.14);
+        color: #166534;
+    }
+
+    .customer-status.unavailable {
+        background: rgba(220, 38, 38, 0.12);
+        color: #991b1b;
+    }
+
+    .customer-message-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+    }
+
+    .copy-message-btn {
+        background: rgba(56, 102, 65, 0.12);
+        border: 1px solid rgba(56, 102, 65, 0.22);
+        border-radius: 12px;
+        color: #386641;
+        font-weight: 900;
+        padding: 9px 12px;
+    }
+
+    .customer-message {
+        background: #f8fafc;
+        border: 1px solid #dbe4ee;
+        border-radius: 16px;
+        color: #1e293b;
+        font-family: Consolas, "Courier New", monospace;
+        min-height: 260px;
+        padding: 14px;
+        resize: vertical;
+        white-space: pre-wrap;
+        width: 100%;
+    }
+
+    .legend-pill {
+        border-radius: 999px;
+        font-weight: 800;
+        padding: 8px 12px;
+    }
+
+    .legend-free {
+        background: rgba(22, 163, 74, 0.14);
+        color: #166534;
+    }
+
+    .legend-busy {
+        background: rgba(220, 38, 38, 0.13);
+        color: #991b1b;
+    }
+
+    .legend-short {
+        background: rgba(245, 158, 11, 0.16);
+        color: #92400e;
+    }
+
+    .day-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .day-card {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(93, 110, 74, 0.16);
+        border-radius: 22px;
+        box-shadow: 0 12px 26px rgba(30, 41, 59, 0.09);
+        overflow: hidden;
+    }
+
+    .day-header {
+        align-items: center;
+        background: linear-gradient(135deg, rgba(60, 88, 49, 0.12), rgba(205, 219, 183, 0.5));
+        display: flex;
+        gap: 14px;
+        justify-content: space-between;
+        padding: 16px 18px;
+    }
+
+    .day-title {
+        color: #1f2f1d;
+        font-size: 1.18rem;
+        font-weight: 900;
+    }
+
+    .day-meta {
+        color: #52604d;
+        font-size: .95rem;
+        font-weight: 700;
+    }
+
+    .slot-list {
+        display: grid;
+        gap: 10px;
+        padding: 16px 18px 18px;
+    }
+
+    .slot-row {
+        align-items: center;
+        border-radius: 16px;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 150px 120px 1fr;
+        padding: 12px 14px;
+    }
+
+    .slot-row.free {
+        background: rgba(22, 163, 74, 0.11);
+        border: 1px solid rgba(22, 163, 74, 0.18);
+    }
+
+    .slot-row.busy {
+        background: rgba(220, 38, 38, 0.1);
+        border: 1px solid rgba(220, 38, 38, 0.16);
+    }
+
+    .slot-row.short {
+        background: rgba(245, 158, 11, 0.13);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .slot-time {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 900;
+    }
+
+    .slot-badge {
+        border-radius: 999px;
+        font-size: .82rem;
+        font-weight: 900;
+        padding: 7px 10px;
+        text-align: center;
+    }
+
+    .free .slot-badge {
+        background: #16a34a;
+        color: white;
+    }
+
+    .busy .slot-badge {
+        background: #dc2626;
+        color: white;
+    }
+
+    .short .slot-badge {
+        background: #f59e0b;
+        color: #3b2600;
+    }
+
+    .slot-detail {
+        color: #334155;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    @@media (max-width: 720px) {
+        .availability-shell {
+            padding-inline: 10px;
+        }
+
+        .availability-filter {
+            grid-template-columns: 1fr;
+        }
+
+        .customer-check-form {
+            grid-template-columns: 1fr;
+        }
+
+        .customer-message-actions {
+            justify-content: stretch;
+        }
+
+        .copy-message-btn {
+            width: 100%;
+        }
+
+        .availability-hero,
+        .day-card {
+            border-radius: 18px;
+        }
+
+        .day-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .slot-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .slot-badge {
+            text-align: left;
+            width: fit-content;
+        }
+    }
+</style>
+
+<div class="availability-shell">
+    <section class="availability-hero">
+        <h1>Disponibilità campo</h1>
+        <p>
+            Consultazione dei soli weekend dei prossimi 6 mesi. Ogni prenotazione blocca il campo da 30 minuti prima
+            fino a 30 minuti dopo la fine partita. L'ultima partita deve terminare almeno 30 minuti prima del tramonto a Carmagnola (TO).
+        </p>
+        <div class="availability-legend">
+            <span class="legend-pill legend-free">Libero: slot prenotabile</span>
+            <span class="legend-pill legend-busy">Occupato: campo bloccato</span>
+            <span class="legend-pill legend-short">Non utile: meno di 1 ora</span>
+        </div>
+        <div class="availability-filter">
+            <label>
+                Cerca disponibilità per data
+                <input type="date" id="AvailabilityDateFilter" />
+            </label>
+            <button type="button" id="AvailabilitySearchButton" class="filter-primary">Cerca</button>
+            <button type="button" id="AvailabilityResetButton" class="filter-secondary">Mostra tutti</button>
+            <div id="AvailabilityFilterMessage" class="filter-message"></div>
+        </div>
+    </section>
+
+    <section class="customer-check-card">
+        <h2>Verifica richiesta cliente</h2>
+        <p>Inserisci solo la data per proporre tutte le disponibilità del giorno, oppure aggiungi anche orario e durata per verificare uno slot specifico.</p>
+        <form id="CustomerAvailabilityForm" class="customer-check-form">
+            @Html.AntiForgeryToken()
+            <label>
+                Tipo gruppo
+                <select id="CustomerGroupType" name="TipoGruppo">
+                    <option value="Completo">Completo</option>
+                    <option value="Adulti">Adulti</option>
+                    <option value="Kids">Kids</option>
+                    <option value="Caccia">Adulti + caccia al coniglio</option>
+                </select>
+            </label>
+            <label>
+                Data richiesta
+                <input type="date" id="CustomerDate" name="Data" required />
+            </label>
+            <label>
+                Orario richiesto (opzionale)
+                <input type="time" id="CustomerStartTime" name="OraInizio" min="09:00" step="1800" />
+            </label>
+            <label>
+                Ore di gioco (solo se inserisci orario)
+                <select id="CustomerDuration" name="Durata">
+                    <option value="1">1 ora</option>
+                    <option value="1.5">1 ora e mezza</option>
+                    <option value="2">2 ore</option>
+                </select>
+            </label>
+            <button type="submit">Genera risposta</button>
+        </form>
+
+        <div id="CustomerResult" class="customer-result">
+            <div id="CustomerStatus" class="customer-status"></div>
+            <div class="customer-message-actions">
+                <button type="button" id="CopyCustomerMessage" class="copy-message-btn">Copia testo</button>
+            </div>
+            <textarea id="CustomerMessage" class="customer-message" readonly></textarea>
+        </div>
+    </section>
+
+    <div class="day-grid">
+        @foreach (var giorno in Model.Giorni)
+        {
+            <article class="day-card" data-date="@giorno.Data.ToString("yyyy-MM-dd")">
+                <header class="day-header">
+                    <div>
+                        <div class="day-title">@giorno.GiornoLabel @giorno.Data.ToString("dd/MM/yyyy", it)</div>
+                        <div class="day-meta">Apertura @giorno.Apertura.ToString(@"hh\:mm") · Tramonto @giorno.Tramonto.ToString(@"hh\:mm")</div>
+                    </div>
+                    <div class="day-meta">Ultima fine partita: @giorno.UltimaFinePartita.ToString(@"hh\:mm")</div>
+                </header>
+
+                <div class="slot-list">
+                    @foreach (var fascia in giorno.Fasce)
+                    {
+                        var rowClass = fascia.Stato == "Occupato" ? "busy" : fascia.Prenotabile ? "free" : "short";
+                        <div class="slot-row @rowClass">
+                            <div class="slot-time">@fascia.Inizio.ToString(@"hh\:mm") - @fascia.Fine.ToString(@"hh\:mm")</div>
+                            <div class="slot-badge">@fascia.Stato</div>
+                            <div class="slot-detail">
+                                @fascia.Dettaglio
+                                @if (fascia.Prenotabile)
+                                {
+                                    <span> · @fascia.DurataOre.ToString("0.#", it) ore disponibili</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const input = document.getElementById('AvailabilityDateFilter');
+            const searchButton = document.getElementById('AvailabilitySearchButton');
+            const resetButton = document.getElementById('AvailabilityResetButton');
+            const message = document.getElementById('AvailabilityFilterMessage');
+            const cards = Array.from(document.querySelectorAll('.day-card'));
+            const customerForm = document.getElementById('CustomerAvailabilityForm');
+            const customerResult = document.getElementById('CustomerResult');
+            const customerStatus = document.getElementById('CustomerStatus');
+            const customerMessage = document.getElementById('CustomerMessage');
+            const copyCustomerMessage = document.getElementById('CopyCustomerMessage');
+
+            function showMessage(text) {
+                message.textContent = text;
+                message.style.display = text ? 'block' : 'none';
+            }
+
+            function resetFilter() {
+                cards.forEach(card => card.style.display = '');
+                input.value = '';
+                showMessage('');
+            }
+
+            function applyFilter() {
+                const selectedDate = input.value;
+                if (!selectedDate) {
+                    resetFilter();
+                    return;
+                }
+
+                const matchingCard = cards.find(card => card.dataset.date === selectedDate);
+                cards.forEach(card => {
+                    card.style.display = card === matchingCard ? '' : 'none';
+                });
+
+                if (matchingCard) {
+                    showMessage('');
+                    matchingCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    return;
+                }
+
+                const selected = new Date(`${selectedDate}T00:00:00`);
+                const isWeekend = selected.getDay() === 0 || selected.getDay() === 6;
+                showMessage(isWeekend
+                    ? 'La data selezionata non rientra nei prossimi weekend mostrati.'
+                    : 'La data selezionata e infrasettimanale: questa pagina mostra solo sabato e domenica.');
+            }
+
+            searchButton.addEventListener('click', applyFilter);
+            resetButton.addEventListener('click', resetFilter);
+            input.addEventListener('change', applyFilter);
+
+            customerForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                customerStatus.className = 'customer-status';
+                customerStatus.textContent = 'Verifica in corso...';
+                customerResult.classList.add('show');
+                customerMessage.value = '';
+
+                const payload = new URLSearchParams(new FormData(customerForm));
+
+                try {
+                    const response = await fetch('@Url.Action("VerificaRichiesta", "DisponibilitaCampo")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        body: payload.toString()
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Errore durante la verifica');
+                    }
+
+                    const result = await response.json();
+                    customerStatus.classList.add(result.disponibile ? 'available' : 'unavailable');
+                    const hasSpecificTime = !!document.getElementById('CustomerStartTime').value;
+                    customerStatus.textContent = result.disponibile
+                        ? (hasSpecificTime ? 'Disponibile: puoi proporre lo slot richiesto.' : 'Disponibilità trovate: il messaggio propone tutte le fasce libere del giorno.')
+                        : (hasSpecificTime ? 'Non disponibile: il messaggio propone le alternative disponibili.' : 'Nessuna disponibilità per il giorno selezionato.');
+                    customerMessage.value = result.message || '';
+                } catch (error) {
+                    customerStatus.classList.add('unavailable');
+                    customerStatus.textContent = 'Errore durante la verifica della disponibilità.';
+                }
+            });
+
+            copyCustomerMessage.addEventListener('click', async () => {
+                if (!customerMessage.value) return;
+
+                try {
+                    await navigator.clipboard.writeText(customerMessage.value);
+                    copyCustomerMessage.textContent = 'Testo copiato';
+                    setTimeout(() => copyCustomerMessage.textContent = 'Copia testo', 1800);
+                } catch (error) {
+                    customerMessage.select();
+                    document.execCommand('copy');
+                    copyCustomerMessage.textContent = 'Testo copiato';
+                    setTimeout(() => copyCustomerMessage.textContent = 'Copia testo', 1800);
+                }
+            });
+        })();
+    </script>
+}

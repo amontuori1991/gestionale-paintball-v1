@@ -1,0 +1,227 @@
+﻿@model Full_Metal_Paintball_Carmagnola.Models.DocumentiViewModel
+@{
+    ViewData["Title"] = "Documenti";
+}
+
+<link href="~/css/documenti-responsive.css" rel="stylesheet" />
+
+<div class="content-container">
+    <h2 class="text-center">Documenti</h2>
+
+    @if (TempData["SuccessoFornitore"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessoFornitore"]</div>
+    }
+    @if (TempData["ErroreFornitore"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErroreFornitore"]</div>
+    }
+    @if (TempData["Successo"] != null)
+    {
+        <div class="alert alert-success">@TempData["Successo"]</div>
+    }
+    @if (TempData["Errore"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Errore"]</div>
+    }
+
+    <form method="get" class="mb-4">
+        <div class="row g-3 align-items-center justify-content-center">
+            <div class="col-auto">
+                <select name="filtroTipoDocumento" class="form-select">
+                    <option value="">Tutti i tipi</option>
+                    <option value="Ordine" selected="@(Model.FiltroTipoDocumento == "Ordine")">Ordine</option>
+                    <option value="Fattura" selected="@(Model.FiltroTipoDocumento == "Fattura")">Fattura</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <input type="date" name="filtroDataDocumento" class="form-control" value="@(Model.FiltroDataDocumento?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+            <div class="col-auto">
+                <select name="filtroFornitoreId" class="form-select">
+                    <option value="">Tutti i fornitori</option>
+                    @foreach (var f in Model.Fornitori)
+                    {
+                        <option value="@f.Id" selected="@(Model.FiltroFornitoreId == f.Id)">@f.Nome</option>
+                    }
+                </select>
+            </div>
+            <div class="col-auto">
+                <input type="text" name="filtroNote" class="form-control" placeholder="Note contiene..." value="@Model.FiltroNote" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filtra</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="btn-toolbar justify-content-center">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inserisciFornitoreModal">Inserisci Fornitore</button>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadPdfModal">Carica PDF</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>PDF</th>
+                    <th>Data Caricamento</th>
+                    <th>Tipo Documento</th>
+                    <th>Data Documento</th>
+                    <th>Numero Documento</th>
+                    <th>Fornitore</th>
+                    <th>Importo (€)</th>
+                    <th>Note</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var doc in Model.Documenti)
+                {
+                    <tr>
+                        <td data-label="PDF">
+                            <a href="@Url.Action("DownloadPdf", "Documenti", new { id = doc.Id })" target="_blank">
+                                <i class="bi bi-file-earmark-pdf" style="font-size: 1.5rem; color: red;"></i>
+                            </a>
+                        </td>
+                        <td data-label="Data Caricamento">@doc.DataCaricamento.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Tipo Documento">@doc.TipoDocumento</td>
+                        <td data-label="Data Documento">@doc.DataDocumento.ToString("dd/MM/yyyy")</td>
+                        <td data-label="Numero Documento">@doc.NumeroDocumento</td>
+                        <td data-label="Fornitore">@doc.FornitoreNome</td>
+                        <td data-label="Importo">@doc.Importo.ToString("F2")</td>
+                        <td data-label="Note">@doc.Note</td>
+                        <td data-label="Azioni">
+                            <a class="btn btn-sm btn-warning" href="@Url.Action("ModificaDocumento", new { id = doc.Id })">Modifica</a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="confermaElimina('@doc.Id', '@doc.NumeroDocumento')">Elimina</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<div class="modal fade" id="inserisciFornitoreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-action="InserisciFornitore">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuovo Fornitore</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="NomeFornitore" class="form-label">Nome Fornitore</label>
+                        <input type="text" name="NomeFornitore" id="NomeFornitore" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE CARICA DOCUMENTO -->
+<div class="modal fade" id="uploadPdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-action="UploadPdf" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title">Carica Documento PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="PdfFile" class="form-label">Seleziona PDF</label>
+                        <input type="file" name="PdfFile" id="PdfFile" class="form-control" accept=".pdf" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TipoDocumento" class="form-label">Tipo Documento</label>
+                        <select name="TipoDocumento" id="TipoDocumento" class="form-select" required>
+                            <option value="">Seleziona...</option>
+                            <option value="Ordine">Ordine</option>
+                            <option value="Fattura">Fattura</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="DataDocumento" class="form-label">Data Documento</label>
+                        <input type="date" name="DataDocumento" id="DataDocumento" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="NumeroDocumento" class="form-label">Numero Documento</label>
+                        <input type="text" name="NumeroDocumento" id="NumeroDocumento" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="FornitoreId" class="form-label">Fornitore</label>
+                        <select name="FornitoreId" id="FornitoreId" class="form-select" required>
+                            <option value="">Seleziona...</option>
+                            @foreach (var f in Model.Fornitori)
+                            {
+                                <option value="@f.Id">@f.Nome</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Importo" class="form-label">Importo (€)</label>
+                        <input type="number" step="0.01" name="Importo" id="Importo" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Note" class="form-label">Note</label>
+                        <textarea name="Note" id="Note" class="form-control"></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Carica</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confermaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Conferma Eliminazione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Vuoi davvero eliminare il documento <strong id="nomeDocumento"></strong>?
+            </div>
+            <div class="modal-footer">
+                <form id="formElimina" method="post">
+                    <input type="hidden" name="id" id="documentoIdHidden" />
+                    <button type="submit" class="btn btn-danger">Elimina</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confermaElimina(id, numeroDoc) {
+            document.getElementById('nomeDocumento').innerText = numeroDoc;
+            document.getElementById('documentoIdHidden').value = id;
+            const modal = new bootstrap.Modal(document.getElementById('confermaModal'));
+            modal.show();
+            document.getElementById('formElimina').action = '/Documenti/EliminaDocumento';
+        }
+    </script>
+}
