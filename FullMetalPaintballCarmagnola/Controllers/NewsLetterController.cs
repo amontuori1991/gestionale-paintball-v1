@@ -275,7 +275,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             catch
             {
                 return new List<NewsLetterTemplate>();
-            }
+            } 
         }
 
         private async Task SaveTemplatesAsync(List<NewsLetterTemplate> templates)
