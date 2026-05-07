@@ -159,9 +159,21 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var inizio = GetInizioFabbisognoAnnoCorrente();
             var fine = DateTime.SpecifyKind(new DateTime(inizio.Year + 1, 1, 1), DateTimeKind.Utc);
 
-            return await _dbContext.Partite
+            var partecipantiPrevisti = await _dbContext.Partite
                 .Where(p => !p.IsDeleted && p.Data >= inizio && p.Data < fine)
                 .SumAsync(p => p.NumeroPartecipanti);
+
+            var tessereGiaAssegnateNelPeriodo = await _dbContext.Tesseramenti
+                .Where(t =>
+                    t.PartitaId != null &&
+                    !string.IsNullOrWhiteSpace(t.Tessera) &&
+                    t.Partita != null &&
+                    !t.Partita.IsDeleted &&
+                    t.Partita.Data >= inizio &&
+                    t.Partita.Data < fine)
+                .CountAsync();
+
+            return Math.Max(0, partecipantiPrevisti - tessereGiaAssegnateNelPeriodo);
         }
 
 
