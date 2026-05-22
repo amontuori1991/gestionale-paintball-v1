@@ -48,6 +48,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 model.PartitaId = partitaId;
 
             model.Lingua = NormalizeLanguage(lang);
+            ApplyLanguageDefaults(model);
             ViewBag.Lingua = model.Lingua;
 
             return View(model);
@@ -298,6 +299,16 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private static string NormalizeLanguage(string? lang)
         {
             return string.Equals(lang, "en", StringComparison.OrdinalIgnoreCase) ? "en" : "it";
+        }
+
+        private static void ApplyLanguageDefaults(TesseramentoViewModel model)
+        {
+            if (!string.Equals(model.Lingua, "en", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            model.NazioneNascita = string.Empty;
+            model.NazioneCittadinanza = string.Empty;
+            model.NazioneResidenza = string.Empty;
         }
 
         [AllowAnonymous]
