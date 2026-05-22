@@ -889,6 +889,7 @@ Ti aspettiamo! 🎯";
         private async Task PopulateListinoLabelsAsync()
         {
             var catalog = await _pricingCatalogService.GetCatalogAsync();
+            ViewBag.PricingCatalog = catalog;
             ViewBag.ListinoLabels = catalog.Listini.ToDictionary(l => l.Id, l => l.Name);
             ViewBag.CurrentListinoId = catalog.CurrentListinoId;
         }

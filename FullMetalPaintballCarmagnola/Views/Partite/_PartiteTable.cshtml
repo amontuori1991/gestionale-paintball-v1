@@ -1,10 +1,12 @@
 ﻿@using System.Globalization
+@using Full_Metal_Paintball_Carmagnola.Models
 @model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.Partita>
 
 @{
     var staffDefault = ViewBag.StaffList as List<string> ?? new List<string>();
     var staffDisponibiliPerData = ViewBag.StaffDisponibiliPerData as Dictionary<DateTime, List<string>>;
     var listinoLabels = ViewBag.ListinoLabels as IDictionary<short, string> ?? new Dictionary<short, string>();
+    var pricingCatalog = ViewBag.PricingCatalog as PricingCatalog ?? new PricingCatalog();
     var weatherByPartitaId = ViewBag.WeatherByPartitaId as IReadOnlyDictionary<int, Full_Metal_Paintball_Carmagnola.Models.PartitaWeatherViewModel>
         ?? new Dictionary<int, Full_Metal_Paintball_Carmagnola.Models.PartitaWeatherViewModel>();
     short currentListinoId = ViewBag.CurrentListinoId is short currentValue ? currentValue : (short)2;
@@ -13,6 +15,71 @@
 
     string GetListinoLabel(short id) =>
         listinoLabels.TryGetValue(id, out var label) ? label : $"Listino {id}";
+
+    string Money(decimal amount) => $"{amount.ToString("0.00", it)}€";
+
+    bool MatchesDuration(double actual, double expected) => Math.Abs(actual - expected) < 0.01;
+
+    PricingEntry? ResolvePriceEntry(Partita partita)
+    {
+        var isKids = partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) ?? false;
+        if (isKids)
+        {
+            if (partita.Torneo)
+            {
+                var tournamentEntry = pricingCatalog.GetEntry(PricingEntryCodes.KidsTournament);
+                if (tournamentEntry != null && tournamentEntry.GetPrice(partita.Listino) > 0m)
+                    return tournamentEntry;
+            }
+
+            if (MatchesDuration(partita.Durata, 1.0)) return pricingCatalog.GetEntry(PricingEntryCodes.Kids1Hour);
+            if (MatchesDuration(partita.Durata, 1.5)) return pricingCatalog.GetEntry(PricingEntryCodes.Kids90Minutes);
+            if (MatchesDuration(partita.Durata, 2.0)) return pricingCatalog.GetEntry(PricingEntryCodes.Kids2Hours);
+            return null;
+        }
+
+        if (partita.Torneo)
+            return pricingCatalog.GetEntry(partita.ColpiIllimitati
+                ? PricingEntryCodes.AdultTournamentUnlimited
+                : PricingEntryCodes.AdultTournamentStandard);
+
+        if (partita.ColpiIllimitati)
+        {
+            if (MatchesDuration(partita.Durata, 1.0)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultUnlimited1Hour);
+            if (MatchesDuration(partita.Durata, 1.5)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultUnlimited90Minutes);
+        }
+
+        if (MatchesDuration(partita.Durata, 1.0)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultStandard1Hour);
+        if (MatchesDuration(partita.Durata, 1.5)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultStandard90Minutes);
+        if (MatchesDuration(partita.Durata, 2.0)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultStandard2Hours);
+        return null;
+    }
+
+    decimal GetRabbitPrice(Partita partita)
+    {
+        if (!partita.Caccia)
+            return 0m;
+
+        var entry = pricingCatalog.GetEntry(partita.CacciaDoppia
+            ? PricingEntryCodes.RabbitDouble
+            : PricingEntryCodes.RabbitSingle);
+        return entry?.GetPrice(partita.Listino) ?? 0m;
+    }
+
+    (decimal? PrezzoBase, decimal Caparra, decimal? Saldo, string Dettaglio) EstimateSaldo(Partita partita)
+    {
+        var entry = ResolvePriceEntry(partita);
+        if (entry == null)
+            return (null, partita.Caparra, null, "Listino non trovato");
+
+        var prezzoUnitario = entry.GetPrice(partita.Listino);
+        var prezzoExtra = GetRabbitPrice(partita);
+        var prezzoBase = (prezzoUnitario * partita.NumeroPartecipanti) + prezzoExtra;
+        var dettaglio = prezzoExtra > 0m
+            ? $"{Money(prezzoUnitario)} x {partita.NumeroPartecipanti} + {Money(prezzoExtra)} extra"
+            : $"{Money(prezzoUnitario)} x {partita.NumeroPartecipanti}";
+        return (prezzoBase, partita.Caparra, prezzoBase - partita.Caparra, dettaglio);
+    }
 }
 
 <!-- =========================
@@ -30,7 +97,6 @@
                 <th>Durata</th>
                 <th>Nr. P.</th>
                 <th>Iscritti</th>
-                <th>Caparra</th>
                 <th>Listino</th>
                 <th>Torneo</th>
                 <th>Illimitati</th>
@@ -83,7 +149,6 @@
                     <td data-label="Iscritti">
                         <span class="iscritti-count @iscrittiClass">@iscritti</span>
                     </td>
-                    <td data-label="Caparra">@($"{partita.Caparra:0.00}€")</td>
 
                     <td data-label="Listino">@GetListinoLabel(partita.Listino)</td>
 
@@ -113,7 +178,25 @@
                 </tr>
 
 <tr class="partita-staff-row" data-parent-partita-id="@partita.Id" style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
-    <td colspan="16" style="background-color: inherit;">
+    <td colspan="15" style="background-color: inherit;">
+        @{
+            var saldoStimato = EstimateSaldo(partita);
+        }
+        <div class="saldo-strip">
+            <div class="saldo-box saldo-box--base" title="@saldoStimato.Dettaglio">
+                <span class="saldo-label">Prezzo base</span>
+                <strong>@(saldoStimato.PrezzoBase.HasValue ? Money(saldoStimato.PrezzoBase.Value) : "N/D")</strong>
+            </div>
+            <div class="saldo-box">
+                <span class="saldo-label">Caparra</span>
+                <strong>@Money(saldoStimato.Caparra)</strong>
+            </div>
+            <div class="saldo-box saldo-box--due">
+                <span class="saldo-label">Saldo fine partita</span>
+                <strong>@(saldoStimato.Saldo.HasValue ? Money(saldoStimato.Saldo.Value) : "N/D")</strong>
+            </div>
+        </div>
+
         <span class="staff-weather-inline">
             @if (weather != null)
             {
@@ -201,6 +284,7 @@
     var statoLabel = partita.CaparraConfermata ? "Confermata" : "In attesa";
     var statoClass = partita.CaparraConfermata ? "pm-status-ok" : "pm-status-wait";
     weatherByPartitaId.TryGetValue(partita.Id, out var weather);
+    var saldoStimato = EstimateSaldo(partita);
 
     var tipoLabel = (partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) ?? false)
         ? "KIDS"
@@ -242,7 +326,6 @@
             <div class="pm-kv"><div class="pm-k">Durata</div><div class="pm-v">@partita.Durata h</div></div>
             <div class="pm-kv"><div class="pm-k">Nr. P.</div><div class="pm-v">@partita.NumeroPartecipanti</div></div>
             <div class="pm-kv"><div class="pm-k">Iscritti</div><div class="pm-v"><span class="iscritti-count @iscrittiClass">@iscritti</span></div></div>
-            <div class="pm-kv"><div class="pm-k">Caparra</div><div class="pm-v">@($"{partita.Caparra:0.00}€")</div></div>
         </div>
 
         <div class="pm-row-actions">
@@ -255,6 +338,20 @@
 
             <summary>Gestita da: </summary>
             <div class="pm-details-body">
+                <div class="saldo-strip saldo-strip--mobile">
+                    <div class="saldo-box saldo-box--base">
+                        <span class="saldo-label">Prezzo base</span>
+                        <strong>@(saldoStimato.PrezzoBase.HasValue ? Money(saldoStimato.PrezzoBase.Value) : "N/D")</strong>
+                    </div>
+                    <div class="saldo-box">
+                        <span class="saldo-label">Caparra</span>
+                        <strong>@Money(saldoStimato.Caparra)</strong>
+                    </div>
+                    <div class="saldo-box saldo-box--due">
+                        <span class="saldo-label">Saldo fine partita</span>
+                        <strong>@(saldoStimato.Saldo.HasValue ? Money(saldoStimato.Saldo.Value) : "N/D")</strong>
+                    </div>
+                </div>
  <div class="pm-staff-grid">
     @{
         var dataKey = partita.Data.Date;

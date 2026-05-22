@@ -47,6 +47,65 @@
         .responsive-table td, .responsive-table th {
             white-space: nowrap;
         }
+
+    #partite-page .saldo-strip {
+        display: inline-flex;
+        align-items: stretch;
+        gap: 10px;
+        margin-right: 18px;
+        vertical-align: middle;
+    }
+}
+
+#partite-page .saldo-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: stretch;
+}
+
+#partite-page .saldo-box {
+    min-width: 130px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,.10);
+    background: rgba(255,255,255,.76);
+    box-shadow: 0 6px 16px rgba(0,0,0,.05);
+    text-align: left;
+}
+
+#partite-page .saldo-box--base {
+    background: linear-gradient(135deg, rgba(206, 235, 128, .35), rgba(255,255,255,.85));
+}
+
+#partite-page .saldo-box--due {
+    background: linear-gradient(135deg, rgba(255, 127, 30, .18), rgba(255,255,255,.85));
+}
+
+#partite-page .saldo-label {
+    display: block;
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    opacity: .68;
+    line-height: 1.1;
+}
+
+#partite-page .saldo-box strong {
+    display: block;
+    margin-top: 2px;
+    font-size: 1.02rem;
+    font-weight: 950;
+    color: #0b0c0f;
+}
+
+@media (min-width: 769px) {
+    #partite-page .partita-staff-row .saldo-strip {
+        display: inline-flex;
+        margin-right: 18px;
+        vertical-align: middle;
+    }
 }
 /* =========================
    DESKTOP/TABLET: NASCONDI LE CARD MOBILE
@@ -210,9 +269,21 @@
 
     .pm-grid {
         display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 8px !important;
         margin-top: 6px !important;
+    }
+
+    .saldo-strip--mobile {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .saldo-strip--mobile .saldo-box {
+        min-width: 0 !important;
+        text-align: center !important;
+        padding: 10px 12px !important;
     }
 
     .pm-kv {
