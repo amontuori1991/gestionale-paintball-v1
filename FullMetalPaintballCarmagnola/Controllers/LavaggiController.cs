@@ -165,6 +165,34 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdatePaidStatus([FromForm] Guid entryId, [FromForm] bool isPaid)
+        {
+            if (entryId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
+            var history = await LoadHistoryAsync();
+            var entry = history.FirstOrDefault(x => x.EntryId == entryId);
+            if (entry == null)
+            {
+                return NotFound();
+            }
+
+            entry.IsPaid = isPaid;
+            await SaveHistoryAsync(history);
+
+            return Json(new
+            {
+                success = true,
+                entryId = entry.EntryId,
+                isPaid = entry.IsPaid,
+                history = history.Select(MapHistoryEntry).ToList()
+            });
+        }
+
         private async Task<LavaggiTrackerState> LoadStateAsync()
         {
             var rawValue = await _dbContext.AppSettings
@@ -338,7 +366,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 totalAmount = entry.TotalAmount,
                 periodStart = entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
                 periodEnd = entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                resetAt = entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                resetAt = entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                isPaid = entry.IsPaid
             };
         }
 

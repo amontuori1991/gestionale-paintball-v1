@@ -14,5 +14,6 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public DateTime PeriodStartUtc { get; set; }
         public DateTime PeriodEndUtc { get; set; }
         public DateTime ResetAtUtc { get; set; }
+        public bool IsPaid { get; set; }
     }
 }

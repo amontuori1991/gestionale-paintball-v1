@@ -185,6 +185,59 @@
         white-space: nowrap;
     }
 
+    .paid-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        user-select: none;
+        font-weight: 800;
+        color: #334155;
+    }
+
+    .paid-switch input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .paid-switch-track {
+        width: 48px;
+        height: 28px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.35);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        position: relative;
+        transition: background .18s ease, border-color .18s ease;
+        flex: 0 0 auto;
+    }
+
+    .paid-switch-track::after {
+        content: "";
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        top: 2px;
+        left: 2px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 3px 8px rgba(15, 23, 42, 0.2);
+        transition: transform .18s ease;
+    }
+
+    .paid-switch input:checked + .paid-switch-track {
+        background: #22c55e;
+        border-color: #16a34a;
+    }
+
+    .paid-switch input:checked + .paid-switch-track::after {
+        transform: translateX(20px);
+    }
+
+    .paid-switch-text {
+        min-width: 72px;
+    }
+
     .grand-total {
         margin-top: 24px;
         border-radius: 22px;
@@ -556,6 +609,7 @@
                         <th>Importo</th>
                         <th>Periodo</th>
                         <th>Reset</th>
+                        <th>Pagato</th>
                         <th>Azioni</th>
                     </tr>
                 </thead>
@@ -570,6 +624,13 @@
                             <td>@entry.TotalAmount.ToString("C", culture)</td>
                             <td>@entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <label class="paid-switch">
+                                    <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" checked="@entry.IsPaid" />
+                                    <span class="paid-switch-track"></span>
+                                    <span class="paid-switch-text">@(entry.IsPaid ? "Pagato" : "Da pagare")</span>
+                                </label>
+                            </td>
                             <td>
                                 <button type="button" class="undo-btn" data-undo-id="@entry.EntryId">Annulla</button>
                             </td>
@@ -594,6 +655,11 @@
                     <div class="history-mobile-meta">Valore unitario: @entry.UnitPrice.ToString("C", culture)</div>
                     <div class="history-mobile-meta">Periodo: @entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
                     <div class="history-mobile-meta">Reset: @entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    <label class="paid-switch">
+                        <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" checked="@entry.IsPaid" />
+                        <span class="paid-switch-track"></span>
+                        <span class="paid-switch-text">@(entry.IsPaid ? "Pagato" : "Da pagare")</span>
+                    </label>
                     <div class="history-mobile-actions">
                         <button type="button" class="undo-btn" data-undo-id="@entry.EntryId">Annulla</button>
                     </div>
@@ -760,6 +826,55 @@
                 });
             };
 
+            const renderPaidSwitch = (entryId, isPaid) => `
+                <label class="paid-switch">
+                    <input type="checkbox" class="paid-toggle" data-paid-id="${entryId}" ${isPaid ? 'checked' : ''} />
+                    <span class="paid-switch-track"></span>
+                    <span class="paid-switch-text">${isPaid ? 'Pagato' : 'Da pagare'}</span>
+                </label>
+            `;
+
+            const bindPaidSwitches = () => {
+                document.querySelectorAll('[data-paid-id]').forEach(input => {
+                    input.onchange = async () => {
+                        const payload = new URLSearchParams();
+                        payload.set('__RequestVerificationToken', token);
+                        payload.set('entryId', input.dataset.paidId);
+                        payload.set('isPaid', input.checked ? 'true' : 'false');
+                        saveStatus.textContent = 'Aggiornamento pagamento in corso...';
+
+                        try {
+                            const response = await fetch('@Url.Action("UpdatePaidStatus", "Lavaggi")', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                                },
+                                body: payload.toString()
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Errore durante l\'aggiornamento del pagamento');
+                            }
+
+                            const result = await response.json();
+                            if (!result.success) {
+                                throw new Error('Errore durante l\'aggiornamento del pagamento');
+                            }
+
+                            refreshHistory(result.history);
+                            saveStatus.textContent = input.checked ? 'Pagamento segnato come saldato' : 'Pagamento segnato come da pagare';
+                        } catch (error) {
+                            input.checked = !input.checked;
+                            const text = input.closest('.paid-switch')?.querySelector('.paid-switch-text');
+                            if (text) {
+                                text.textContent = input.checked ? 'Pagato' : 'Da pagare';
+                            }
+                            saveStatus.textContent = 'Errore durante l\'aggiornamento del pagamento';
+                        }
+                    };
+                });
+            };
+
             const refreshHistory = (historyEntries) => {
                 const items = Array.isArray(historyEntries) ? historyEntries : [];
                 historyCount.textContent = items.length;
@@ -789,6 +904,7 @@
                         <td>${formatCurrency(item.totalAmount)}</td>
                         <td>${item.periodStart} - ${item.periodEnd}</td>
                         <td>${item.resetAt}</td>
+                        <td>${renderPaidSwitch(item.entryId, item.isPaid)}</td>
                         <td><button type="button" class="undo-btn" data-undo-id="${item.entryId}">Annulla</button></td>
                     `;
                     historyTableBody.appendChild(row);
@@ -807,6 +923,7 @@
                         <div class="history-mobile-meta">Valore unitario: ${formatCurrency(item.unitPrice)}</div>
                         <div class="history-mobile-meta">Periodo: ${item.periodStart} - ${item.periodEnd}</div>
                         <div class="history-mobile-meta">Reset: ${item.resetAt}</div>
+                        ${renderPaidSwitch(item.entryId, item.isPaid)}
                         <div class="history-mobile-actions">
                             <button type="button" class="undo-btn" data-undo-id="${item.entryId}">Annulla</button>
                         </div>
@@ -815,6 +932,7 @@
                 });
 
                 bindUndoButtons();
+                bindPaidSwitches();
             };
 
             const saveState = async () => {
@@ -1012,6 +1130,7 @@
 
             refreshTotals();
             bindUndoButtons();
+            bindPaidSwitches();
         })();
     </script>
 }
