@@ -370,7 +370,8 @@
 
             <div class="form-group" id="ComuneResidenzaSection">
                 <label asp-for="ComuneResidenza">@T("ComuneResidenza")</label>
-                <input asp-for="ComuneResidenza" class="form-control" />
+                <input asp-for="ComuneResidenza" class="form-control" list="comuniResidenzaList" autocomplete="off" />
+                <datalist id="comuniResidenzaList"></datalist>
                 <span asp-validation-for="ComuneResidenza" class="text-danger field-validation-error"></span>
             </div>
 
@@ -510,6 +511,8 @@
         const comuneNascitaHidden = document.getElementById('ComuneNascita');
         const codiceCatastaleHidden = document.getElementById('CodiceCatastaleNascita');
         const comuniNascitaList = document.getElementById('comuniNascitaList');
+        const comuneResidenzaInput = document.getElementById('ComuneResidenza');
+        const comuniResidenzaList = document.getElementById('comuniResidenzaList');
         const codiceFiscaleInput = document.getElementById('CodiceFiscale');
         const nomeInput = document.getElementById('Nome');
         const cognomeInput = document.getElementById('Cognome');
@@ -517,8 +520,10 @@
         const genereInput = document.getElementById('Genere');
         const statiList = document.getElementById('statiList');
         const comuniByLabel = new Map();
+        const comuniResidenzaByLabel = new Map();
         const statesByLabel = new Map();
         let comuniTimer = null;
+        let comuniResidenzaTimer = null;
         let statiTimer = null;
 
         signatureCanvas.width = 400;
@@ -608,10 +613,10 @@
             return setTimeout(callback, 250);
         }
 
-        async function loadComuni(term) {
+        async function loadComuni(term, listElement, comuniMap, afterLoad) {
             if (!term || term.trim().length < 2) {
-                comuniNascitaList.innerHTML = '';
-                comuniByLabel.clear();
+                listElement.innerHTML = '';
+                comuniMap.clear();
                 return;
             }
 
@@ -619,17 +624,19 @@
             if (!response.ok) return;
 
             const comuni = await response.json();
-            comuniNascitaList.innerHTML = '';
-            comuniByLabel.clear();
+            listElement.innerHTML = '';
+            comuniMap.clear();
 
             comuni.forEach(comune => {
                 const option = document.createElement('option');
                 option.value = comune.label;
-                comuniByLabel.set(comune.label, comune);
-                comuniNascitaList.appendChild(option);
+                comuniMap.set(comune.label, comune);
+                listElement.appendChild(option);
             });
 
-            syncSelectedComune();
+            if (typeof afterLoad === 'function') {
+                afterLoad();
+            }
         }
 
         async function loadStati(term) {
@@ -667,6 +674,13 @@
             calculateCodiceFiscale();
         }
 
+        function syncSelectedComuneResidenza() {
+            const selected = comuniResidenzaByLabel.get(comuneResidenzaInput.value);
+            if (selected) {
+                comuneResidenzaInput.value = selected.label;
+            }
+        }
+
         async function calculateCodiceFiscale() {
             if (isNatoEstero()) return;
 
@@ -697,10 +711,15 @@
         natoEsteroSelect.addEventListener('change', handleNatoEsteroChange);
         comuneNascitaLookup.addEventListener('input', function () {
             comuneNascitaHidden.value = this.value;
-            comuniTimer = debounce(comuniTimer, () => loadComuni(this.value));
+            comuniTimer = debounce(comuniTimer, () => loadComuni(this.value, comuniNascitaList, comuniByLabel, syncSelectedComune));
         });
         comuneNascitaLookup.addEventListener('change', syncSelectedComune);
         comuneNascitaLookup.addEventListener('blur', syncSelectedComune);
+        comuneResidenzaInput.addEventListener('input', function () {
+            comuniResidenzaTimer = debounce(comuniResidenzaTimer, () => loadComuni(this.value, comuniResidenzaList, comuniResidenzaByLabel, syncSelectedComuneResidenza));
+        });
+        comuneResidenzaInput.addEventListener('change', syncSelectedComuneResidenza);
+        comuneResidenzaInput.addEventListener('blur', syncSelectedComuneResidenza);
         [nomeInput, cognomeInput, dataNascitaInput, genereInput].forEach(input => {
             input.addEventListener('change', calculateCodiceFiscale);
             input.addEventListener('blur', calculateCodiceFiscale);

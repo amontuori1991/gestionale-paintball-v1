@@ -108,6 +108,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 }
 
                 model.NoTesseramento = await IsGiaTesseratoPerAnnoPartitaAsync(model);
+                model.ComuneResidenza = await NormalizeComuneResidenzaAsync(model.ComuneResidenza, model.NazioneResidenza);
 
                 string firmaFilePath = null;
 
@@ -631,6 +632,31 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             var tesseramento = model.ToEntity(string.Empty);
             return await IsGiaTesseratoPerAnnoPartitaAsync(tesseramento, partita);
+        }
+
+        private async Task<string?> NormalizeComuneResidenzaAsync(string? comuneResidenza, string? nazioneResidenza)
+        {
+            if (string.IsNullOrWhiteSpace(comuneResidenza))
+                return comuneResidenza;
+
+            var trimmed = comuneResidenza.Trim();
+            if (Regex.IsMatch(trimmed, @"\([A-Z]{2}\)\s*$", RegexOptions.IgnoreCase))
+                return Regex.Replace(trimmed, @"\(([a-z]{2})\)\s*$", match => $"({match.Groups[1].Value.ToUpperInvariant()})", RegexOptions.IgnoreCase);
+
+            var nazione = string.IsNullOrWhiteSpace(nazioneResidenza) ? "Italia" : nazioneResidenza.Trim();
+            if (!string.Equals(nazione, "Italia", StringComparison.OrdinalIgnoreCase))
+                return trimmed;
+
+            var comunePulito = Regex.Replace(trimmed, @"\s*\([A-Za-z]{2}\)\s*$", string.Empty).Trim();
+            var candidati = await _dbContext.ComuniCatastali
+                .AsNoTracking()
+                .Where(c => c.Attivo && c.Nome.ToLower() == comunePulito.ToLower())
+                .Select(c => new { c.Nome, c.Provincia })
+                .ToListAsync();
+
+            return candidati.Count == 1 && !string.IsNullOrWhiteSpace(candidati[0].Provincia)
+                ? $"{candidati[0].Nome} ({candidati[0].Provincia})"
+                : trimmed;
         }
 
         private async Task<bool> IsStessoTesseratoGiaNellaPartitaAsync(TesseramentoViewModel model)
