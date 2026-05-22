@@ -80,6 +80,39 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 ModelState.Remove(nameof(model.NumeroDocumentoEstero));
             }
 
+            if (!model.NatoEstero)
+            {
+                var comuneNascita = await ResolveComuneCatastaleAsync(model.ComuneNascita);
+                if (comuneNascita is not null)
+                {
+                    model.ComuneNascita = comuneNascita.Nome;
+                    model.CodiceCatastaleNascita = comuneNascita.CodiceCatastale;
+                    ModelState.Remove(nameof(model.ComuneNascita));
+                    ModelState.Remove(nameof(model.CodiceCatastaleNascita));
+                }
+                else if (!string.IsNullOrWhiteSpace(model.ComuneNascita))
+                {
+                    ModelState.Remove(nameof(model.CodiceCatastaleNascita));
+                    ModelState.AddModelError(nameof(model.ComuneNascita), "Seleziona il comune di nascita dall'elenco proposto.");
+                }
+            }
+
+            var residenzaItaliana = IsItalia(model.NazioneResidenza) || !model.NatoEstero;
+            if (residenzaItaliana)
+            {
+                var comuneResidenza = await ResolveComuneCatastaleAsync(model.ComuneResidenza);
+                if (comuneResidenza is not null)
+                {
+                    model.ComuneResidenza = $"{comuneResidenza.Nome} ({comuneResidenza.Provincia})";
+                    model.NazioneResidenza = "Italia";
+                    ModelState.Remove(nameof(model.ComuneResidenza));
+                }
+                else if (!string.IsNullOrWhiteSpace(model.ComuneResidenza))
+                {
+                    ModelState.AddModelError(nameof(model.ComuneResidenza), "Seleziona il comune di residenza dall'elenco proposto.");
+                }
+            }
+
             if (!model.NatoEstero && model.DataNascita.HasValue && !string.IsNullOrWhiteSpace(model.CodiceCatastaleNascita))
             {
                 model.CodiceFiscale = CodiceFiscaleService.Calcola(
@@ -175,7 +208,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             var comuni = await _dbContext.ComuniCatastali
                 .Where(c => c.Attivo && c.Nome.ToUpper().Contains(value))
-                .OrderBy(c => c.Nome)
+                .OrderByDescending(c => c.Nome.ToUpper().StartsWith(value))
+                .ThenBy(c => c.Nome)
                 .ThenBy(c => c.Provincia)
                 .Take(20)
                 .Select(c => new
@@ -657,6 +691,27 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return candidati.Count == 1 && !string.IsNullOrWhiteSpace(candidati[0].Provincia)
                 ? $"{candidati[0].Nome} ({candidati[0].Provincia})"
                 : trimmed;
+        }
+
+        private async Task<ComuneCatastale?> ResolveComuneCatastaleAsync(string? comune)
+        {
+            if (string.IsNullOrWhiteSpace(comune))
+                return null;
+
+            var comunePulito = Regex.Replace(comune.Trim(), @"\s*\([A-Za-z]{2}\)\s*$", string.Empty).Trim();
+            var candidati = await _dbContext.ComuniCatastali
+                .AsNoTracking()
+                .Where(c => c.Attivo && c.Nome.ToLower() == comunePulito.ToLower())
+                .ToListAsync();
+
+            return candidati.Count == 1 ? candidati[0] : null;
+        }
+
+        private static bool IsItalia(string? nazione)
+        {
+            return string.IsNullOrWhiteSpace(nazione)
+                || string.Equals(nazione.Trim(), "Italia", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(nazione.Trim(), "Italy", StringComparison.OrdinalIgnoreCase);
         }
 
         private async Task<bool> IsStessoTesseratoGiaNellaPartitaAsync(TesseramentoViewModel model)

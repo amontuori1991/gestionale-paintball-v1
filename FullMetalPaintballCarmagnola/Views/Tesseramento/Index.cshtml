@@ -20,6 +20,7 @@
             ["NatoEstero"] = ("Nato all'estero?", "Born abroad?"),
             ["ComuneNascita"] = ("Comune di nascita", "Birth town"),
             ["ComuneNascitaHelp"] = ("Inizia a scrivere e seleziona il comune dall'elenco.", "Start typing and select the town from the list."),
+            ["ComuneNascitaSelectError"] = ("Seleziona il comune di nascita dall'elenco proposto.", "Select the birth town from the suggested list."),
             ["NazioneNascita"] = ("Nazione di nascita", "Country of birth"),
             ["CittaNascita"] = ("Città di nascita", "City of birth"),
             ["NazioneCittadinanza"] = ("Nazione di cittadinanza", "Country of citizenship"),
@@ -30,6 +31,8 @@
             ["CartaIdentita"] = ("Carta di Identità", "Identity card"),
             ["PermessoSoggiorno"] = ("Permesso di soggiorno", "Residence permit"),
             ["ComuneResidenza"] = ("Comune o città di residenza", "Town or city of residence"),
+            ["ComuneResidenzaHelp"] = ("Per i residenti in Italia seleziona il comune dall'elenco, così viene salvata anche la provincia.", "For Italian residents, select the town from the list so the province is saved too."),
+            ["ComuneResidenzaSelectError"] = ("Seleziona il comune di residenza dall'elenco proposto.", "Select the residence town from the suggested list."),
             ["NatoEsteroHelp"] = ("Se sei nato all'estero ma vivi in Italia, seleziona \"Sì\" e indica comunque il tuo comune di residenza.", "If you were born abroad but live in Italy, select \"Yes\" and still enter your town of residence."),
             ["Email"] = ("Email", "Email"),
             ["NewsletterConsent"] = ("Vuoi ricevere comunicazioni e newsletter?", "Do you want to receive communications and newsletters?"),
@@ -372,6 +375,7 @@
                 <label asp-for="ComuneResidenza">@T("ComuneResidenza")</label>
                 <input asp-for="ComuneResidenza" class="form-control" list="comuniResidenzaList" autocomplete="off" />
                 <datalist id="comuniResidenzaList"></datalist>
+                <small class="field-help">@T("ComuneResidenzaHelp")</small>
                 <span asp-validation-for="ComuneResidenza" class="text-danger field-validation-error"></span>
             </div>
 
@@ -513,6 +517,7 @@
         const comuniNascitaList = document.getElementById('comuniNascitaList');
         const comuneResidenzaInput = document.getElementById('ComuneResidenza');
         const comuniResidenzaList = document.getElementById('comuniResidenzaList');
+        const nazioneResidenzaInput = document.getElementById('NazioneResidenza');
         const codiceFiscaleInput = document.getElementById('CodiceFiscale');
         const nomeInput = document.getElementById('Nome');
         const cognomeInput = document.getElementById('Cognome');
@@ -525,6 +530,8 @@
         let comuniTimer = null;
         let comuniResidenzaTimer = null;
         let statiTimer = null;
+        const comuneNascitaSelectError = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(T("ComuneNascitaSelectError")));
+        const comuneResidenzaSelectError = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(T("ComuneResidenzaSelectError")));
 
         signatureCanvas.width = 400;
         signatureCanvas.height = 100;
@@ -613,6 +620,56 @@
             return setTimeout(callback, 250);
         }
 
+        function normalizeLookupText(value) {
+            return (value || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s*\([A-Za-z]{2}\)\s*$/, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function findComuneMatch(inputValue, comuniMap) {
+            const normalizedInput = normalizeLookupText(inputValue);
+            if (!normalizedInput) return null;
+
+            for (const comune of comuniMap.values()) {
+                if (normalizeLookupText(comune.label) === normalizedInput || normalizeLookupText(comune.value) === normalizedInput) {
+                    return comune;
+                }
+            }
+
+            return null;
+        }
+
+        function setFieldError(inputElement, fieldName, message) {
+            inputElement.setCustomValidity(message);
+            const validationSpan = document.querySelector(`[data-valmsg-for="${fieldName}"]`);
+            if (validationSpan) {
+                validationSpan.textContent = message;
+                validationSpan.classList.remove('field-validation-valid');
+                validationSpan.classList.add('field-validation-error');
+            }
+        }
+
+        function clearFieldError(inputElement, fieldName) {
+            inputElement.setCustomValidity('');
+            const validationSpan = document.querySelector(`[data-valmsg-for="${fieldName}"]`);
+            if (validationSpan && validationSpan.textContent) {
+                validationSpan.textContent = '';
+                validationSpan.classList.remove('field-validation-error');
+                validationSpan.classList.add('field-validation-valid');
+            }
+        }
+
+        function isResidenzaItaliana() {
+            if (!isNatoEstero()) return true;
+
+            const nazione = normalizeLookupText(nazioneResidenzaInput?.value || 'Italia');
+            return !nazione || nazione === 'italia' || nazione === 'italy';
+        }
+
         async function loadComuni(term, listElement, comuniMap, afterLoad) {
             if (!term || term.trim().length < 2) {
                 listElement.innerHTML = '';
@@ -661,24 +718,59 @@
             });
         }
 
-        function syncSelectedComune() {
-            const selected = comuniByLabel.get(comuneNascitaLookup.value);
+        function syncSelectedComune(showError = false) {
+            const selected = comuniByLabel.get(comuneNascitaLookup.value) || findComuneMatch(comuneNascitaLookup.value, comuniByLabel);
 
             if (!selected) {
                 comuneNascitaHidden.value = comuneNascitaLookup.value;
-                return;
+                codiceCatastaleHidden.value = '';
+                if (!isNatoEstero() && showError && comuneNascitaLookup.value.trim()) {
+                    setFieldError(comuneNascitaLookup, 'ComuneNascita', comuneNascitaSelectError);
+                }
+                return false;
             }
 
+            comuneNascitaLookup.value = selected.label;
             comuneNascitaHidden.value = selected.value;
             codiceCatastaleHidden.value = selected.codiceCatastale;
+            clearFieldError(comuneNascitaLookup, 'ComuneNascita');
             calculateCodiceFiscale();
+            return true;
         }
 
-        function syncSelectedComuneResidenza() {
-            const selected = comuniResidenzaByLabel.get(comuneResidenzaInput.value);
+        function syncSelectedComuneResidenza(showError = false) {
+            const selected = comuniResidenzaByLabel.get(comuneResidenzaInput.value) || findComuneMatch(comuneResidenzaInput.value, comuniResidenzaByLabel);
             if (selected) {
                 comuneResidenzaInput.value = selected.label;
+                clearFieldError(comuneResidenzaInput, 'ComuneResidenza');
+                return true;
             }
+
+            if (isResidenzaItaliana() && showError && comuneResidenzaInput.value.trim()) {
+                setFieldError(comuneResidenzaInput, 'ComuneResidenza', comuneResidenzaSelectError);
+                return false;
+            }
+
+            clearFieldError(comuneResidenzaInput, 'ComuneResidenza');
+            return true;
+        }
+
+        function validateComuneFields() {
+            let isValid = true;
+
+            if (!isNatoEstero()) {
+                isValid = syncSelectedComune(true) && isValid;
+            } else {
+                clearFieldError(comuneNascitaLookup, 'ComuneNascita');
+            }
+
+            if (isResidenzaItaliana()) {
+                isValid = syncSelectedComuneResidenza(true) && isValid;
+            } else {
+                clearFieldError(comuneResidenzaInput, 'ComuneResidenza');
+            }
+
+            return isValid;
         }
 
         async function calculateCodiceFiscale() {
@@ -711,15 +803,19 @@
         natoEsteroSelect.addEventListener('change', handleNatoEsteroChange);
         comuneNascitaLookup.addEventListener('input', function () {
             comuneNascitaHidden.value = this.value;
+            codiceCatastaleHidden.value = '';
+            clearFieldError(comuneNascitaLookup, 'ComuneNascita');
             comuniTimer = debounce(comuniTimer, () => loadComuni(this.value, comuniNascitaList, comuniByLabel, syncSelectedComune));
         });
-        comuneNascitaLookup.addEventListener('change', syncSelectedComune);
-        comuneNascitaLookup.addEventListener('blur', syncSelectedComune);
+        comuneNascitaLookup.addEventListener('change', () => syncSelectedComune(true));
+        comuneNascitaLookup.addEventListener('blur', () => syncSelectedComune(true));
         comuneResidenzaInput.addEventListener('input', function () {
+            clearFieldError(comuneResidenzaInput, 'ComuneResidenza');
             comuniResidenzaTimer = debounce(comuniResidenzaTimer, () => loadComuni(this.value, comuniResidenzaList, comuniResidenzaByLabel, syncSelectedComuneResidenza));
         });
-        comuneResidenzaInput.addEventListener('change', syncSelectedComuneResidenza);
-        comuneResidenzaInput.addEventListener('blur', syncSelectedComuneResidenza);
+        comuneResidenzaInput.addEventListener('change', () => syncSelectedComuneResidenza(true));
+        comuneResidenzaInput.addEventListener('blur', () => syncSelectedComuneResidenza(true));
+        nazioneResidenzaInput?.addEventListener('change', () => syncSelectedComuneResidenza(false));
         [nomeInput, cognomeInput, dataNascitaInput, genereInput].forEach(input => {
             input.addEventListener('change', calculateCodiceFiscale);
             input.addEventListener('blur', calculateCodiceFiscale);
@@ -848,8 +944,16 @@
                 handleNatoEsteroChange();
             }
 
-            // ✅ Mostra overlay durante l'invio
-            document.getElementById('tesseramentoForm').addEventListener('submit', function () {
+            // Mostra overlay solo quando i controlli guidati sono validi.
+            document.getElementById('tesseramentoForm').addEventListener('submit', function (event) {
+                if (!validateComuneFields() || !this.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    this.reportValidity();
+                    return;
+                }
+
                 document.getElementById('loadingOverlay').style.display = 'flex';
             });
         });
