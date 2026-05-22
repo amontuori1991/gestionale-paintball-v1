@@ -696,6 +696,18 @@
             }
         }
 
+        async function ensureComuneOptions(inputElement, listElement, comuniMap) {
+            if (!inputElement.value || inputElement.value.trim().length < 2) {
+                return;
+            }
+
+            if (findComuneMatch(inputElement.value, comuniMap)) {
+                return;
+            }
+
+            await loadComuni(inputElement.value, listElement, comuniMap);
+        }
+
         async function loadStati(term) {
             if (!term || term.trim().length < 2) {
                 statiList.innerHTML = '';
@@ -755,16 +767,18 @@
             return true;
         }
 
-        function validateComuneFields() {
+        async function validateComuneFields() {
             let isValid = true;
 
             if (!isNatoEstero()) {
+                await ensureComuneOptions(comuneNascitaLookup, comuniNascitaList, comuniByLabel);
                 isValid = syncSelectedComune(true) && isValid;
             } else {
                 clearFieldError(comuneNascitaLookup, 'ComuneNascita');
             }
 
             if (isResidenzaItaliana()) {
+                await ensureComuneOptions(comuneResidenzaInput, comuniResidenzaList, comuniResidenzaByLabel);
                 isValid = syncSelectedComuneResidenza(true) && isValid;
             } else {
                 clearFieldError(comuneResidenzaInput, 'ComuneResidenza');
@@ -807,14 +821,14 @@
             clearFieldError(comuneNascitaLookup, 'ComuneNascita');
             comuniTimer = debounce(comuniTimer, () => loadComuni(this.value, comuniNascitaList, comuniByLabel, syncSelectedComune));
         });
-        comuneNascitaLookup.addEventListener('change', () => syncSelectedComune(true));
-        comuneNascitaLookup.addEventListener('blur', () => syncSelectedComune(true));
+        comuneNascitaLookup.addEventListener('change', () => syncSelectedComune(false));
+        comuneNascitaLookup.addEventListener('blur', () => syncSelectedComune(false));
         comuneResidenzaInput.addEventListener('input', function () {
             clearFieldError(comuneResidenzaInput, 'ComuneResidenza');
             comuniResidenzaTimer = debounce(comuniResidenzaTimer, () => loadComuni(this.value, comuniResidenzaList, comuniResidenzaByLabel, syncSelectedComuneResidenza));
         });
-        comuneResidenzaInput.addEventListener('change', () => syncSelectedComuneResidenza(true));
-        comuneResidenzaInput.addEventListener('blur', () => syncSelectedComuneResidenza(true));
+        comuneResidenzaInput.addEventListener('change', () => syncSelectedComuneResidenza(false));
+        comuneResidenzaInput.addEventListener('blur', () => syncSelectedComuneResidenza(false));
         nazioneResidenzaInput?.addEventListener('change', () => syncSelectedComuneResidenza(false));
         [nomeInput, cognomeInput, dataNascitaInput, genereInput].forEach(input => {
             input.addEventListener('change', calculateCodiceFiscale);
@@ -945,16 +959,19 @@
             }
 
             // Mostra overlay solo quando i controlli guidati sono validi.
-            document.getElementById('tesseramentoForm').addEventListener('submit', function (event) {
-                if (!validateComuneFields() || !this.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
+            document.getElementById('tesseramentoForm').addEventListener('submit', async function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const comuniValidi = await validateComuneFields();
+                if (!comuniValidi || !this.checkValidity()) {
                     document.getElementById('loadingOverlay').style.display = 'none';
                     this.reportValidity();
                     return;
                 }
 
                 document.getElementById('loadingOverlay').style.display = 'flex';
+                this.submit();
             });
         });
 
