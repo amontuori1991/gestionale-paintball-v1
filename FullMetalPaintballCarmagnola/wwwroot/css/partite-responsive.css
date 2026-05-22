@@ -276,14 +276,29 @@
 
     .saldo-strip--mobile {
         display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 8px !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+    }
+
+    .pm-price-summary {
+        padding: 0 !important;
     }
 
     .saldo-strip--mobile .saldo-box {
         min-width: 0 !important;
         text-align: center !important;
-        padding: 10px 12px !important;
+        padding: 8px 6px !important;
+        border-radius: 13px !important;
+    }
+
+    .saldo-strip--mobile .saldo-label {
+        font-size: .62rem !important;
+        letter-spacing: .03em !important;
+    }
+
+    .saldo-strip--mobile .saldo-box strong {
+        font-size: .92rem !important;
+        line-height: 1.05 !important;
     }
 
     .pm-kv {

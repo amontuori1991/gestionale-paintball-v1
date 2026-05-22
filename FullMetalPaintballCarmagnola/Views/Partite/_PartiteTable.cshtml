@@ -334,13 +334,12 @@
             <a class="pm-primary" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">👥 Tesserati</a>
         </div>
 
-        <details class="pm-details" open>
+        <div class="pm-details pm-price-summary">
 
-            <summary>Gestita da: </summary>
             <div class="pm-details-body">
                 <div class="saldo-strip saldo-strip--mobile">
                     <div class="saldo-box saldo-box--base">
-                        <span class="saldo-label">Prezzo base</span>
+                        <span class="saldo-label">Prezzo</span>
                         <strong>@(saldoStimato.PrezzoBase.HasValue ? Money(saldoStimato.PrezzoBase.Value) : "N/D")</strong>
                     </div>
                     <div class="saldo-box">
@@ -348,10 +347,17 @@
                         <strong>@Money(saldoStimato.Caparra)</strong>
                     </div>
                     <div class="saldo-box saldo-box--due">
-                        <span class="saldo-label">Saldo fine partita</span>
+                        <span class="saldo-label">Saldo</span>
                         <strong>@(saldoStimato.Saldo.HasValue ? Money(saldoStimato.Saldo.Value) : "N/D")</strong>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <details class="pm-details" open>
+
+            <summary>Gestita da: </summary>
+            <div class="pm-details-body">
  <div class="pm-staff-grid">
     @{
         var dataKey = partita.Data.Date;
