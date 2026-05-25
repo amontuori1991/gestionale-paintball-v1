@@ -310,6 +310,7 @@
                         <option value="">Tutti</option>
                         <option value="confermata">Confermata</option>
                         <option value="attesa">In Attesa</option>
+                        <option value="cancellata">Cancellata</option>
                     </select>
                 </div>
                 <!-- Data da -->
@@ -796,6 +797,7 @@
             if (stato) {
                 if (stato === 'confermata' && !statoTxt.includes('confermata')) show = false;
                 if (stato === 'attesa' && !statoTxt.includes('attesa')) show = false;
+                if (stato === 'cancellata' && !statoTxt.includes('cancellata')) show = false;
             }
             if (dataDa && rowDate && rowDate < new Date(dataDa)) show = false;
             if (dataA && rowDate && rowDate > new Date(dataA)) show = false;

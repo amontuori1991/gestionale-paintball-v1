@@ -340,6 +340,11 @@
         background: #fff3cd !important;
     }
 
+    .pm-status-deleted {
+        background: #f8d7da !important;
+        color: #842029 !important;
+    }
+
     .pm-chips {
         display: flex !important;
         flex-wrap: wrap !important;
