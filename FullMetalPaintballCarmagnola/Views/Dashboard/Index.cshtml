@@ -381,23 +381,37 @@
         backdrop-filter: blur(14px);
     }
 
-    .background-logo {
+    .dashboard-hero {
         position: relative;
-        inset: auto;
+        z-index: 1;
+        display: grid;
+        min-height: clamp(210px, 28vw, 300px);
+        place-items: center;
+        margin-bottom: 18px;
+        padding: 18px 10px;
+    }
+
+    .background-logo {
+        position: absolute;
+        inset: 50% auto auto 50%;
         z-index: 0;
-        width: min(190px, 46vw);
-        height: min(190px, 46vw);
-        margin: 18px auto 22px;
-        opacity: 0.28;
-        transform: rotate(-4deg);
-        filter: saturate(1.08) drop-shadow(0 16px 26px rgba(5, 5, 7, 0.12));
+        width: min(310px, 64vw);
+        height: min(310px, 64vw);
+        margin: 0;
+        opacity: 0.17;
+        transform: translate(-50%, -46%) rotate(-4deg);
+        filter: saturate(1.08);
     }
 
     .dashboard-title,
-    .dashboard-subtitle,
     .dashboard-toolbar,
     .dashboard-alert,
     .dashboard-btns {
+        position: relative;
+        z-index: 1;
+    }
+
+    .dashboard-hero-copy {
         position: relative;
         z-index: 1;
     }
@@ -556,10 +570,9 @@
         }
 
         .background-logo {
-            width: min(150px, 42vw);
-            height: min(150px, 42vw);
-            margin: 14px auto 16px;
-            opacity: 0.24;
+            width: min(250px, 76vw);
+            height: min(250px, 76vw);
+            opacity: 0.15;
         }
 
         .dashboard-btns {
@@ -584,9 +597,13 @@
 </style>
 
 <div class="dashboard-container">
-    <h1 class="dashboard-title">Benvenuto @ViewBag.FirstName!</h1>
-    <p class="dashboard-subtitle">Seleziona una sezione per iniziare a gestire l'associazione.</p>
-    <div class="background-logo"></div>
+    <div class="dashboard-hero">
+        <div class="background-logo"></div>
+        <div class="dashboard-hero-copy">
+            <h1 class="dashboard-title">Benvenuto @ViewBag.FirstName!</h1>
+            <p class="dashboard-subtitle">Seleziona una sezione per iniziare a gestire l'associazione.</p>
+        </div>
+    </div>
 
     @if (TempData["DashboardMessage"] != null)
     {
