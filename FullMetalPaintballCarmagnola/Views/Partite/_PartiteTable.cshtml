@@ -10,6 +10,8 @@
     var weatherByPartitaId = ViewBag.WeatherByPartitaId as IReadOnlyDictionary<int, Full_Metal_Paintball_Carmagnola.Models.PartitaWeatherViewModel>
         ?? new Dictionary<int, Full_Metal_Paintball_Carmagnola.Models.PartitaWeatherViewModel>();
     short currentListinoId = ViewBag.CurrentListinoId is short currentValue ? currentValue : (short)2;
+    const decimal MembershipFee = 5m;
+    const int MinimumBillablePlayers = 8;
 
     var it = CultureInfo.GetCultureInfo("it-IT");
 
@@ -80,6 +82,29 @@
             : $"{Money(prezzoUnitario)} x {partita.NumeroPartecipanti}";
         return (prezzoBase, partita.Caparra, prezzoBase - partita.Caparra, dettaglio);
     }
+
+    string CalcButtonData(Partita partita, int iscritti)
+    {
+        var entry = ResolvePriceEntry(partita);
+        var prezzoUnitario = entry?.GetPrice(partita.Listino) ?? 0m;
+        var prezzoCaccia = GetRabbitPrice(partita);
+        var tesseramentiDefault = iscritti > 0
+            ? Math.Min(iscritti, partita.NumeroPartecipanti)
+            : partita.NumeroPartecipanti;
+
+        return string.Join(" ",
+            $"data-id=\"{partita.Id}\"",
+            $"data-unit-price=\"{prezzoUnitario.ToString("0.00", CultureInfo.InvariantCulture)}\"",
+            $"data-caparra=\"{partita.Caparra.ToString("0.00", CultureInfo.InvariantCulture)}\"",
+            $"data-rabbit-price=\"{prezzoCaccia.ToString("0.00", CultureInfo.InvariantCulture)}\"",
+            $"data-participants=\"{partita.NumeroPartecipanti}\"",
+            $"data-registered=\"{iscritti}\"",
+            $"data-memberships=\"{Math.Max(0, tesseramentiDefault)}\"",
+            $"data-membership-fee=\"{MembershipFee.ToString("0.00", CultureInfo.InvariantCulture)}\"",
+            $"data-min-players=\"{MinimumBillablePlayers}\"",
+            $"data-price-valid=\"{(entry != null && prezzoUnitario > 0m).ToString().ToLowerInvariant()}\"",
+            $"data-detail=\"{System.Net.WebUtility.HtmlEncode(entry?.Label ?? "Listino non trovato")}\"");
+    }
 }
 
 <!-- =========================
@@ -97,12 +122,14 @@
                 <th>Durata</th>
                 <th>Nr. P.</th>
                 <th>Iscritti</th>
+                <th>Caparra</th>
                 <th>Listino</th>
                 <th>Torneo</th>
                 <th>Illimitati</th>
                 <th>Caccia</th>
                 <th>Link</th>
                 <th>Tesserati</th>
+                <th>Calcolo</th>
                 <th>Azioni</th>
             </tr>
         </thead>
@@ -149,6 +176,7 @@
                     <td data-label="Iscritti">
                         <span class="iscritti-count @iscrittiClass">@iscritti</span>
                     </td>
+                    <td data-label="Caparra">@Money(partita.Caparra)</td>
 
                     <td data-label="Listino">@GetListinoLabel(partita.Listino)</td>
 
@@ -168,6 +196,14 @@
                     <td data-label="Tesserati">
                         <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
                     </td>
+                    <td data-label="Calcolo">
+                        <button type="button"
+                                class="btn btn-sm btn-info btn-calcolo-saldo"
+                                title="Calcola saldo fine partita"
+                                @Html.Raw(CalcButtonData(partita, iscritti))>
+                            🧮
+                        </button>
+                    </td>
 
                     <td data-label="Azioni">
                         <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
@@ -178,25 +214,7 @@
                 </tr>
 
 <tr class="partita-staff-row" data-parent-partita-id="@partita.Id" style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
-    <td colspan="15" style="background-color: inherit;">
-        @{
-            var saldoStimato = EstimateSaldo(partita);
-        }
-        <div class="saldo-strip">
-            <div class="saldo-box saldo-box--base" title="@saldoStimato.Dettaglio">
-                <span class="saldo-label">Prezzo base</span>
-                <strong>@(saldoStimato.PrezzoBase.HasValue ? Money(saldoStimato.PrezzoBase.Value) : "N/D")</strong>
-            </div>
-            <div class="saldo-box">
-                <span class="saldo-label">Caparra</span>
-                <strong>@Money(saldoStimato.Caparra)</strong>
-            </div>
-            <div class="saldo-box saldo-box--due">
-                <span class="saldo-label">Saldo fine partita</span>
-                <strong>@(saldoStimato.Saldo.HasValue ? Money(saldoStimato.Saldo.Value) : "N/D")</strong>
-            </div>
-        </div>
-
+    <td colspan="17" style="background-color: inherit;">
         <span class="staff-weather-inline">
             @if (weather != null)
             {
@@ -326,32 +344,19 @@
             <div class="pm-kv"><div class="pm-k">Durata</div><div class="pm-v">@partita.Durata h</div></div>
             <div class="pm-kv"><div class="pm-k">Nr. P.</div><div class="pm-v">@partita.NumeroPartecipanti</div></div>
             <div class="pm-kv"><div class="pm-k">Iscritti</div><div class="pm-v"><span class="iscritti-count @iscrittiClass">@iscritti</span></div></div>
+            <div class="pm-kv"><div class="pm-k">Caparra</div><div class="pm-v">@Money(partita.Caparra)</div></div>
         </div>
 
         <div class="pm-row-actions">
             <button type="button" class="pm-iconbtn" onclick="showRiferimento('@partita.Riferimento')" title="Riferimento">📇</button>
             <a class="pm-iconbtn" href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" title="Link tesseramento">📎</a>
             <a class="pm-primary" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">👥 Tesserati</a>
-        </div>
-
-        <div class="pm-details pm-price-summary">
-
-            <div class="pm-details-body">
-                <div class="saldo-strip saldo-strip--mobile">
-                    <div class="saldo-box saldo-box--base">
-                        <span class="saldo-label">Prezzo</span>
-                        <strong>@(saldoStimato.PrezzoBase.HasValue ? Money(saldoStimato.PrezzoBase.Value) : "N/D")</strong>
-                    </div>
-                    <div class="saldo-box">
-                        <span class="saldo-label">Caparra</span>
-                        <strong>@Money(saldoStimato.Caparra)</strong>
-                    </div>
-                    <div class="saldo-box saldo-box--due">
-                        <span class="saldo-label">Saldo</span>
-                        <strong>@(saldoStimato.Saldo.HasValue ? Money(saldoStimato.Saldo.Value) : "N/D")</strong>
-                    </div>
-                </div>
-            </div>
+            <button type="button"
+                    class="pm-primary btn-calcolo-saldo"
+                    title="Calcola saldo fine partita"
+                    @Html.Raw(CalcButtonData(partita, iscritti))>
+                🧮 Calcolo
+            </button>
         </div>
 
         <details class="pm-details" open>

@@ -599,6 +599,148 @@
                 });
             });
 
+            $(document).on('click', '.btn-calcolo-saldo', function () {
+                const button = this;
+                const priceValid = String(button.dataset.priceValid || '').toLowerCase() === 'true';
+                if (!priceValid) {
+                    fmpNotify('Non riesco a calcolare il saldo: listino non trovato per questa partita.', 'error');
+                    return;
+                }
+
+                const parseMoney = (value) => {
+                    const normalized = String(value ?? '0').replace(',', '.');
+                    const parsed = Number.parseFloat(normalized);
+                    return Number.isFinite(parsed) ? parsed : 0;
+                };
+
+                const formatMoney = (value) => new Intl.NumberFormat('it-IT', {
+                    style: 'currency',
+                    currency: 'EUR'
+                }).format(Number.isFinite(value) ? value : 0);
+
+                const unitPrice = parseMoney(button.dataset.unitPrice);
+                const caparra = parseMoney(button.dataset.caparra);
+                const rabbitPrice = parseMoney(button.dataset.rabbitPrice);
+                const membershipFee = parseMoney(button.dataset.membershipFee || '5');
+                const participants = Math.max(0, Number.parseInt(button.dataset.participants || '0', 10));
+                const registered = Math.max(0, Number.parseInt(button.dataset.registered || '0', 10));
+                const minPlayers = Math.max(1, Number.parseInt(button.dataset.minPlayers || '8', 10));
+                const defaultMemberships = Math.max(0, Number.parseInt(button.dataset.memberships || participants, 10));
+                const billablePlayers = Math.max(participants, minPlayers);
+                const titleDetail = button.dataset.detail || 'Listino selezionato';
+
+                const html = `
+                    <div class="saldo-calc-modal">
+                        <div class="saldo-calc-note">
+                            <strong>${titleDetail}</strong><br>
+                            Partecipanti prenotati: <strong>${participants}</strong> · Iscritti attuali: <strong>${registered}</strong> · Minimo fatturabile: <strong>${minPlayers}</strong>
+                        </div>
+
+                        <div class="saldo-calc-grid">
+                            <div class="saldo-calc-box">
+                                <span>Prezzo</span>
+                                <strong id="SaldoCalcPrezzo">${formatMoney(0)}</strong>
+                            </div>
+                            <div class="saldo-calc-box">
+                                <span>Caparra</span>
+                                <strong>${formatMoney(caparra)}</strong>
+                            </div>
+                            <div class="saldo-calc-box saldo-calc-box--due">
+                                <span>Saldo</span>
+                                <strong id="SaldoCalcSaldo">${formatMoney(0)}</strong>
+                            </div>
+                        </div>
+
+                        <label class="saldo-calc-label">Tesseramenti da pagare</label>
+                        <div class="saldo-calc-counter">
+                            <button type="button" data-calc-step="-1">-</button>
+                            <input id="SaldoCalcTessere" type="number" min="0" step="1" value="${Math.min(defaultMemberships, billablePlayers)}">
+                            <button type="button" data-calc-step="1">+</button>
+                        </div>
+
+                        <div class="saldo-calc-form-grid">
+                            <label>
+                                Extra acquistati al campo
+                                <input id="SaldoCalcExtra" type="number" min="0" step="0.01" value="0">
+                            </label>
+                            <label>
+                                Dividi saldo per persone
+                                <input id="SaldoCalcDivisori" type="number" min="1" step="1" value="${Math.max(1, participants)}">
+                            </label>
+                        </div>
+
+                        <div class="saldo-calc-breakdown" id="SaldoCalcBreakdown"></div>
+                    </div>
+                `;
+
+                Swal.fire({
+                    title: '🧮 Calcolo saldo',
+                    html,
+                    width: '680px',
+                    confirmButtonText: 'Chiudi',
+                    customClass: {
+                        popup: 'saldo-calc-popup'
+                    },
+                    didOpen: () => {
+                        const root = Swal.getHtmlContainer();
+                        const membershipsInput = root.querySelector('#SaldoCalcTessere');
+                        const extraInput = root.querySelector('#SaldoCalcExtra');
+                        const divisorsInput = root.querySelector('#SaldoCalcDivisori');
+                        const priceEl = root.querySelector('#SaldoCalcPrezzo');
+                        const saldoEl = root.querySelector('#SaldoCalcSaldo');
+                        const breakdownEl = root.querySelector('#SaldoCalcBreakdown');
+
+                        const clampNumber = (input, min, max) => {
+                            const raw = Number.parseInt(input.value || '0', 10);
+                            const value = Number.isFinite(raw) ? raw : min;
+                            input.value = Math.min(max, Math.max(min, value));
+                            return Number.parseInt(input.value, 10);
+                        };
+
+                        const recalculate = () => {
+                            const memberships = clampNumber(membershipsInput, 0, billablePlayers);
+                            const divisors = clampNumber(divisorsInput, 1, Math.max(1, billablePlayers));
+                            const extra = Math.max(0, parseMoney(extraInput.value));
+                            extraInput.value = extra.toString().replace('.', ',');
+
+                            const noMembershipCount = Math.max(0, billablePlayers - memberships);
+                            const grossBase = unitPrice * billablePlayers;
+                            const membershipDiscount = membershipFee * noMembershipCount;
+                            const prezzo = grossBase - membershipDiscount + rabbitPrice + extra;
+                            const saldo = prezzo - caparra;
+                            const perPerson = divisors > 0 ? saldo / divisors : saldo;
+
+                            priceEl.textContent = formatMoney(prezzo);
+                            saldoEl.textContent = formatMoney(saldo);
+                            breakdownEl.innerHTML = `
+                                <div>Quote fatturate: <strong>${billablePlayers}</strong> x ${formatMoney(unitPrice)} = <strong>${formatMoney(grossBase)}</strong></div>
+                                <div>Sconto tesseramenti non dovuti: <strong>${noMembershipCount}</strong> x ${formatMoney(membershipFee)} = <strong>- ${formatMoney(membershipDiscount)}</strong></div>
+                                <div>Caccia al coniglio: <strong>${formatMoney(rabbitPrice)}</strong></div>
+                                <div>Extra campo: <strong>${formatMoney(extra)}</strong></div>
+                                <div>Caparra scalata: <strong>- ${formatMoney(caparra)}</strong></div>
+                                <hr>
+                                <div>Quota indicativa a testa su ${divisors} persone: <strong>${formatMoney(perPerson)}</strong></div>
+                            `;
+                        };
+
+                        root.querySelectorAll('[data-calc-step]').forEach(stepButton => {
+                            stepButton.addEventListener('click', () => {
+                                const step = Number.parseInt(stepButton.dataset.calcStep || '0', 10);
+                                membershipsInput.value = (Number.parseInt(membershipsInput.value || '0', 10) || 0) + step;
+                                recalculate();
+                            });
+                        });
+
+                        [membershipsInput, extraInput, divisorsInput].forEach(input => {
+                            input.addEventListener('input', recalculate);
+                            input.addEventListener('change', recalculate);
+                        });
+
+                        recalculate();
+                    }
+                });
+            });
+
         });
 
         $(document).on('click', '.btn-verifica-presenze', function () {
