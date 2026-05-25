@@ -393,7 +393,7 @@ public sealed class AcsiOdsExportService
         new(value.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture), value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), "date");
 
     private static OdsCellValue ForeignDate(DateTime value) =>
-        new(value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), "date");
+        Text(value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
     private static void AddArchiveEntry(ZipArchive archive, string fileName, byte[] content)
     {
