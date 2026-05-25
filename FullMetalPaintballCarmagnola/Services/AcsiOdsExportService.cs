@@ -326,7 +326,7 @@ public sealed class AcsiOdsExportService
             Text(t.Cognome),
             Text(t.Nome),
             Text(MapGender(t.Genere)),
-            Date(t.DataNascita),
+            ForeignDate(t.DataNascita),
             Text(ToIso2OrFallback(t.NazioneNascita)),
             Text(string.IsNullOrWhiteSpace(t.CittaNascita) ? t.ComuneNascita : t.CittaNascita),
             Text(ToIso2OrFallback(t.NazioneCittadinanza)),
@@ -391,6 +391,9 @@ public sealed class AcsiOdsExportService
 
     private static OdsCellValue Date(DateTime value) =>
         new(value.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture), value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), "date");
+
+    private static OdsCellValue ForeignDate(DateTime value) =>
+        new(value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), "date");
 
     private static void AddArchiveEntry(ZipArchive archive, string fileName, byte[] content)
     {
