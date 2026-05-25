@@ -24,7 +24,9 @@ public class DashboardController : Controller
         if (user == null)
             return Challenge();
 
-        ViewBag.FullName = user.FirstName + " " + user.LastName;
+        ViewBag.FirstName = string.IsNullOrWhiteSpace(user.FirstName)
+            ? User.Identity?.Name
+            : user.FirstName;
 
         // Recupera il ruolo dell'utente
         var ruoli = await _userManager.GetRolesAsync(user);
