@@ -355,6 +355,26 @@
             keyboard: false
         }) : null;
 
+        function hideExportModal() {
+            exportModal?.hide();
+
+            // Alcuni browser mantengono il backdrop dopo l'avvio del download: pulizia difensiva.
+            window.setTimeout(() => {
+                exportModalElement?.classList.remove('show');
+                if (exportModalElement) {
+                    exportModalElement.style.display = 'none';
+                    exportModalElement.setAttribute('aria-hidden', 'true');
+                    exportModalElement.removeAttribute('aria-modal');
+                    exportModalElement.removeAttribute('role');
+                }
+
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            }, 250);
+        }
+
         function dissociaTessera(id) {
             tesseraDaDissociare = id;
             confirmModal.show();
@@ -553,7 +573,7 @@
                 fmpNotify(error.message || 'Si è verificato un errore durante la generazione dell\'export.', 'error');
             } finally {
                 exportButton.disabled = false;
-                exportModal?.hide();
+                hideExportModal();
             }
         });
     </script>
