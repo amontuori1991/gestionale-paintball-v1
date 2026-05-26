@@ -51,6 +51,8 @@
             ["CancellaFirma"] = ("Cancella Firma", "Clear signature"),
             ["Invia"] = ("Invia", "Submit"),
             ["Attendere"] = ("Attendere...", "Please wait..."),
+            ["InvioInCorso"] = ("Invio tesseramento in corso...", "Submitting membership..."),
+            ["InvioDettaglio"] = ("Non chiudere la pagina: stiamo registrando i dati.", "Do not close this page: we are saving your data."),
             ["MostraIscritti"] = ("Mostra Elenco Iscritti", "Show registered players")
         };
 
@@ -256,6 +258,57 @@
 
     .foreign-section {
         display: none;
+    }
+
+    .tesseramento-loading-overlay {
+        align-items: center;
+        background: rgba(5, 5, 7, 0.68);
+        backdrop-filter: blur(4px);
+        display: none;
+        inset: 0;
+        justify-content: center;
+        padding: 24px;
+        position: fixed;
+        z-index: 9999;
+    }
+
+    .tesseramento-loading-box {
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 22px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+        color: #17180f;
+        max-width: 360px;
+        padding: 28px 24px;
+        text-align: center;
+        width: 100%;
+    }
+
+    .tesseramento-loading-spinner {
+        animation: tesseramento-spin 0.85s linear infinite;
+        border: 5px solid rgba(138, 197, 31, 0.28);
+        border-radius: 50%;
+        border-top-color: #e20a83;
+        height: 54px;
+        margin: 0 auto 16px;
+        width: 54px;
+    }
+
+    .tesseramento-loading-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .tesseramento-loading-text {
+        color: #5f6654;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    @@keyframes tesseramento-spin {
+        to {
+            transform: rotate(360deg);
+        }
     }
 </style>
 
@@ -466,11 +519,15 @@
             </div>
 
             @Html.HiddenFor(model => model.PartitaId)
-            <button type="submit" class="btn btn-primary">@T("Invia")</button>
+            <button type="submit" class="btn btn-primary" id="submitTesseramentoButton">@T("Invia")</button>
         </form>
 
-        <div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-            <div style="color:white; font-size:1.8rem; font-weight:bold; text-align:center; width:100%;">@T("Attendere")</div>
+        <div id="loadingOverlay" class="tesseramento-loading-overlay" aria-live="polite" aria-busy="true">
+            <div class="tesseramento-loading-box">
+                <div class="tesseramento-loading-spinner" aria-hidden="true"></div>
+                <div class="tesseramento-loading-title">@T("InvioInCorso")</div>
+                <p class="tesseramento-loading-text">@T("InvioDettaglio")</p>
+            </div>
         </div>
 
 
@@ -519,6 +576,7 @@
         const comuniResidenzaList = document.getElementById('comuniResidenzaList');
         const nazioneResidenzaInput = document.getElementById('NazioneResidenza');
         const codiceFiscaleInput = document.getElementById('CodiceFiscale');
+        const submitTesseramentoButton = document.getElementById('submitTesseramentoButton');
         const nomeInput = document.getElementById('Nome');
         const cognomeInput = document.getElementById('Cognome');
         const dataNascitaInput = document.getElementById('DataNascita');
@@ -979,10 +1037,18 @@
                 const comuniValidi = await validateComuneFields();
                 if (!comuniValidi || !this.checkValidity()) {
                     document.getElementById('loadingOverlay').style.display = 'none';
+                    if (submitTesseramentoButton) {
+                        submitTesseramentoButton.disabled = false;
+                        submitTesseramentoButton.textContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(T("Invia")));
+                    }
                     this.reportValidity();
                     return;
                 }
 
+                if (submitTesseramentoButton) {
+                    submitTesseramentoButton.disabled = true;
+                    submitTesseramentoButton.textContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(T("Attendere")));
+                }
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 this.submit();
             });
