@@ -630,6 +630,13 @@
                 .toLowerCase();
         }
 
+        function cleanComuneSearchTerm(value) {
+            return (value || '')
+                .replace(/\s*\([A-Za-z]{2}\)\s*$/, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
         function findComuneMatch(inputValue, comuniMap) {
             const normalizedInput = normalizeLookupText(inputValue);
             if (!normalizedInput) return null;
@@ -671,13 +678,14 @@
         }
 
         async function loadComuni(term, listElement, comuniMap, afterLoad) {
-            if (!term || term.trim().length < 2) {
+            const searchTerm = cleanComuneSearchTerm(term);
+            if (!searchTerm || searchTerm.length < 2) {
                 listElement.innerHTML = '';
                 comuniMap.clear();
                 return;
             }
 
-            const response = await fetch(`@Url.Action("CercaComuni", "Tesseramento")?term=${encodeURIComponent(term)}`);
+            const response = await fetch(`@Url.Action("CercaComuni", "Tesseramento")?term=${encodeURIComponent(searchTerm)}`);
             if (!response.ok) return;
 
             const comuni = await response.json();
@@ -734,6 +742,11 @@
             const selected = comuniByLabel.get(comuneNascitaLookup.value) || findComuneMatch(comuneNascitaLookup.value, comuniByLabel);
 
             if (!selected) {
+                if (codiceCatastaleHidden.value && normalizeLookupText(comuneNascitaHidden.value) === normalizeLookupText(comuneNascitaLookup.value)) {
+                    clearFieldError(comuneNascitaLookup, 'ComuneNascita');
+                    return true;
+                }
+
                 comuneNascitaHidden.value = comuneNascitaLookup.value;
                 codiceCatastaleHidden.value = '';
                 if (!isNatoEstero() && showError && comuneNascitaLookup.value.trim()) {
