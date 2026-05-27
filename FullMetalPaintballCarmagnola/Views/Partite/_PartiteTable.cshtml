@@ -91,6 +91,17 @@
         var tesseramentiDefault = iscritti > 0
             ? Math.Min(iscritti, partita.NumeroPartecipanti)
             : partita.NumeroPartecipanti;
+        var payerPayload = (partita.Tesseramenti ?? new List<Tesseramento>())
+            .OrderBy(t => t.Cognome)
+            .ThenBy(t => t.Nome)
+            .Select(t => new
+            {
+                id = t.Id,
+                nome = t.Nome,
+                cognome = t.Cognome
+            })
+            .ToList();
+        var payerJson = System.Text.Json.JsonSerializer.Serialize(payerPayload);
 
         return string.Join(" ",
             $"data-id=\"{partita.Id}\"",
@@ -103,7 +114,8 @@
             $"data-membership-fee=\"{MembershipFee.ToString("0.00", CultureInfo.InvariantCulture)}\"",
             $"data-min-players=\"{MinimumBillablePlayers}\"",
             $"data-price-valid=\"{(entry != null && prezzoUnitario > 0m).ToString().ToLowerInvariant()}\"",
-            $"data-detail=\"{System.Net.WebUtility.HtmlEncode(entry?.Label ?? "Listino non trovato")}\"");
+            $"data-detail=\"{System.Net.WebUtility.HtmlEncode(entry?.Label ?? "Listino non trovato")}\"",
+            $"data-payers=\"{System.Net.WebUtility.HtmlEncode(payerJson)}\"");
     }
 }
 

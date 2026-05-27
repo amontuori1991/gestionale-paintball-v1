@@ -618,17 +618,32 @@
                     style: 'currency',
                     currency: 'EUR'
                 }).format(Number.isFinite(value) ? value : 0);
+                const escapeHtml = (value) => String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
 
                 const unitPrice = parseMoney(button.dataset.unitPrice);
                 const caparra = parseMoney(button.dataset.caparra);
                 const rabbitPrice = parseMoney(button.dataset.rabbitPrice);
                 const membershipFee = parseMoney(button.dataset.membershipFee || '5');
+                const partitaId = button.dataset.id || '0';
                 const participants = Math.max(0, Number.parseInt(button.dataset.participants || '0', 10));
                 const registered = Math.max(0, Number.parseInt(button.dataset.registered || '0', 10));
                 const minPlayers = Math.max(1, Number.parseInt(button.dataset.minPlayers || '8', 10));
                 const defaultMemberships = Math.max(0, Number.parseInt(button.dataset.memberships || participants, 10));
                 const billablePlayers = Math.max(participants, minPlayers);
                 const titleDetail = button.dataset.detail || 'Listino selezionato';
+                let payers = [];
+                try {
+                    payers = JSON.parse(button.dataset.payers || '[]');
+                } catch {
+                    payers = [];
+                }
+                const paymentStorageKey = `fmp-payment-status-${partitaId}`;
+                const manualPayersStorageKey = `fmp-payment-manual-payers-${partitaId}`;
 
                 const html = `
                     <div class="saldo-calc-modal">
@@ -671,6 +686,9 @@
                         </div>
 
                         <div class="saldo-calc-breakdown" id="SaldoCalcBreakdown"></div>
+                        <button type="button" class="saldo-calc-payment-button" id="SaldoCalcPaymentButton">
+                            💳 Vai al pagamento
+                        </button>
                     </div>
                 `;
 
@@ -690,6 +708,14 @@
                         const priceEl = root.querySelector('#SaldoCalcPrezzo');
                         const saldoEl = root.querySelector('#SaldoCalcSaldo');
                         const breakdownEl = root.querySelector('#SaldoCalcBreakdown');
+                        const paymentButton = root.querySelector('#SaldoCalcPaymentButton');
+                        const calcState = {
+                            prezzo: 0,
+                            saldo: 0,
+                            divisors: Math.max(1, participants),
+                            memberships: Math.min(defaultMemberships, billablePlayers),
+                            extra: 0
+                        };
 
                         const clampNumber = (input, min, max) => {
                             const raw = Number.parseInt(input.value || '0', 10);
@@ -698,18 +724,99 @@
                             return Number.parseInt(input.value, 10);
                         };
 
+                        const loadPaymentStatuses = () => {
+                            try {
+                                return JSON.parse(localStorage.getItem(paymentStorageKey) || '{}') || {};
+                            } catch {
+                                return {};
+                            }
+                        };
+
+                        const savePaymentStatuses = (statuses) => {
+                            try {
+                                localStorage.setItem(paymentStorageKey, JSON.stringify(statuses));
+                            } catch {
+                                // Se il browser blocca localStorage, la schermata resta comunque usabile.
+                            }
+                        };
+
+                        const loadManualPayers = () => {
+                            try {
+                                const saved = JSON.parse(localStorage.getItem(manualPayersStorageKey) || '[]');
+                                return Array.isArray(saved) ? saved : [];
+                            } catch {
+                                return [];
+                            }
+                        };
+
+                        const saveManualPayers = (manualPayers) => {
+                            try {
+                                localStorage.setItem(manualPayersStorageKey, JSON.stringify(manualPayers));
+                            } catch {
+                                // Salvataggio opzionale: il calcolo resta disponibile anche senza cache.
+                            }
+                        };
+
+                        const getPaymentPayers = () => {
+                            const registeredPayers = payers.map(payer => ({
+                                key: `t-${payer.id}`,
+                                name: `${payer.cognome || ''} ${payer.nome || ''}`.trim(),
+                                source: 'Tesseramento'
+                            }));
+                            const manualPayers = loadManualPayers();
+                            const missingCount = Math.max(0, participants - registeredPayers.length - manualPayers.length);
+                            const generatedPayers = Array.from({ length: missingCount }, (_, index) => ({
+                                key: `m-auto-${index + 1}`,
+                                name: `Partecipante ${registeredPayers.length + manualPayers.length + index + 1}`,
+                                source: 'Manuale',
+                                generated: true
+                            }));
+
+                            return [...registeredPayers, ...manualPayers, ...generatedPayers];
+                        };
+
+                        const collectManualPayersFromSelection = () => {
+                            const manualPayers = [];
+                            root.querySelectorAll('.saldo-payment-person[data-manual="true"]').forEach((row, index) => {
+                                const input = row.querySelector('.saldo-payment-name-input');
+                                const existingKey = row.dataset.payerKey || '';
+                                const name = (input?.value || '').trim() || `Partecipante ${index + 1}`;
+                                manualPayers.push({
+                                    key: existingKey.startsWith('m-custom-') ? existingKey : `m-custom-${Date.now()}-${index}`,
+                                    name,
+                                    source: 'Manuale'
+                                });
+                            });
+                            saveManualPayers(manualPayers);
+                            return manualPayers;
+                        };
+
+                        const calculateMembershipDiscountCount = (memberships) => {
+                            if (memberships < minPlayers) {
+                                return Math.max(0, minPlayers - memberships);
+                            }
+
+                            return Math.max(0, billablePlayers - memberships);
+                        };
+
                         const recalculate = () => {
                             const memberships = clampNumber(membershipsInput, 0, billablePlayers);
                             const divisors = clampNumber(divisorsInput, 1, Math.max(1, billablePlayers));
                             const extra = Math.max(0, parseMoney(extraInput.value));
                             extraInput.value = extra.toString().replace('.', ',');
 
-                            const noMembershipCount = Math.max(0, billablePlayers - memberships);
+                            const noMembershipCount = calculateMembershipDiscountCount(memberships);
                             const grossBase = unitPrice * billablePlayers;
                             const membershipDiscount = membershipFee * noMembershipCount;
                             const prezzo = grossBase - membershipDiscount + rabbitPrice + extra;
                             const saldo = prezzo - caparra;
                             const perPerson = divisors > 0 ? saldo / divisors : saldo;
+
+                            calcState.prezzo = prezzo;
+                            calcState.saldo = saldo;
+                            calcState.divisors = divisors;
+                            calcState.memberships = memberships;
+                            calcState.extra = extra;
 
                             priceEl.textContent = formatMoney(prezzo);
                             saldoEl.textContent = formatMoney(saldo);
@@ -724,6 +831,133 @@
                             `;
                         };
 
+                        const renderPaymentSelection = () => {
+                            recalculate();
+                            const allPayers = getPaymentPayers();
+                            const listHtml = allPayers.map(payer => `
+                                <label class="saldo-payment-person" data-manual="${payer.source === 'Manuale'}" data-payer-key="${escapeHtml(payer.key)}">
+                                    <input type="checkbox" class="saldo-payment-select" value="${escapeHtml(payer.key)}" checked>
+                                    ${payer.source === 'Manuale'
+                                        ? `<input type="text" class="saldo-payment-name-input" value="${escapeHtml(payer.name)}" aria-label="Nome partecipante manuale">`
+                                        : `<span>${escapeHtml(payer.name)}</span>`}
+                                    <small>${escapeHtml(payer.source)}</small>
+                                </label>
+                            `).join('');
+
+                            root.innerHTML = `
+                                <div class="saldo-payment-view">
+                                    <div class="saldo-calc-note">
+                                        Seleziona chi deve partecipare al pagamento. I tesserati già presenti vengono mostrati automaticamente; chi ha già tessera valida può essere aggiunto o rinominato nelle righe manuali.
+                                    </div>
+                                    <div class="saldo-payment-toolbar">
+                                        <button type="button" id="SaldoPaymentAll">Seleziona tutti</button>
+                                        <button type="button" id="SaldoPaymentNone">Deseleziona tutti</button>
+                                    </div>
+                                    <div class="saldo-payment-list">${listHtml}</div>
+                                    <button type="button" class="saldo-payment-add" id="SaldoPaymentAdd">+ Aggiungi persona</button>
+                                    <div class="saldo-payment-summary">
+                                        <span>Persone selezionate</span>
+                                        <strong id="SaldoPaymentSelected">${allPayers.length}</strong>
+                                    </div>
+                                    <button type="button" class="saldo-calc-payment-button" id="SaldoPaymentNext" ${allPayers.length ? '' : 'disabled'}>
+                                        Continua
+                                    </button>
+                                    <button type="button" class="saldo-payment-back" id="SaldoPaymentBack">Chiudi</button>
+                                </div>
+                            `;
+
+                            const updateSelectedCount = () => {
+                                const selected = root.querySelectorAll('.saldo-payment-select:checked').length;
+                                root.querySelector('#SaldoPaymentSelected').textContent = selected;
+                                root.querySelector('#SaldoPaymentNext').disabled = selected === 0;
+                            };
+
+                            root.querySelectorAll('.saldo-payment-select').forEach(input => {
+                                input.addEventListener('change', updateSelectedCount);
+                            });
+                            root.querySelector('#SaldoPaymentAll')?.addEventListener('click', () => {
+                                root.querySelectorAll('.saldo-payment-select').forEach(input => input.checked = true);
+                                updateSelectedCount();
+                            });
+                            root.querySelector('#SaldoPaymentNone')?.addEventListener('click', () => {
+                                root.querySelectorAll('.saldo-payment-select').forEach(input => input.checked = false);
+                                updateSelectedCount();
+                            });
+                            root.querySelectorAll('.saldo-payment-name-input').forEach(input => {
+                                input.addEventListener('change', collectManualPayersFromSelection);
+                                input.addEventListener('blur', collectManualPayersFromSelection);
+                            });
+                            root.querySelector('#SaldoPaymentAdd')?.addEventListener('click', () => {
+                                const manualPayers = collectManualPayersFromSelection();
+                                manualPayers.push({
+                                    key: `m-custom-${Date.now()}`,
+                                    name: `Partecipante ${payers.length + manualPayers.length + 1}`,
+                                    source: 'Manuale'
+                                });
+                                saveManualPayers(manualPayers);
+                                renderPaymentSelection();
+                            });
+                            root.querySelector('#SaldoPaymentBack')?.addEventListener('click', () => Swal.close());
+                            root.querySelector('#SaldoPaymentNext')?.addEventListener('click', renderPaymentStatus);
+                            updateSelectedCount();
+                        };
+
+                        const renderPaymentStatus = () => {
+                            collectManualPayersFromSelection();
+                            const selectedPayers = Array.from(root.querySelectorAll('.saldo-payment-select:checked')).map(input => {
+                                const row = input.closest('.saldo-payment-person');
+                                const manualInput = row.querySelector('.saldo-payment-name-input');
+                                return {
+                                    key: String(input.value),
+                                    name: (manualInput?.value || row.querySelector('span')?.textContent || '').trim() || 'Partecipante'
+                                };
+                            });
+                            const perPerson = selectedPayers.length > 0 ? calcState.saldo / selectedPayers.length : calcState.saldo;
+                            const statuses = loadPaymentStatuses();
+                            const rowsHtml = selectedPayers.map(payer => {
+                                const payerKey = String(payer.key);
+                                const isPaid = statuses[payerKey] === true;
+                                return `
+                                    <div class="saldo-payment-row" data-payer-id="${payerKey}">
+                                        <div>
+                                            <strong>${escapeHtml(payer.name)}</strong>
+                                            <small>${formatMoney(perPerson)}</small>
+                                        </div>
+                                        <label class="saldo-payment-switch">
+                                            <input type="checkbox" class="saldo-payment-paid" ${isPaid ? 'checked' : ''}>
+                                            <span>${isPaid ? 'Pagato' : 'Da pagare'}</span>
+                                        </label>
+                                    </div>
+                                `;
+                            }).join('');
+
+                            root.innerHTML = `
+                                <div class="saldo-payment-view">
+                                    <div class="saldo-payment-total">
+                                        <span>Saldo da incassare</span>
+                                        <strong>${formatMoney(calcState.saldo)}</strong>
+                                        <small>${selectedPayers.length} persone selezionate · ${formatMoney(perPerson)} a testa</small>
+                                    </div>
+                                    <div class="saldo-payment-list">${rowsHtml}</div>
+                                    <button type="button" class="saldo-payment-back" id="SaldoPaymentBackToSelection">Torna alla selezione</button>
+                                </div>
+                            `;
+
+                            root.querySelectorAll('.saldo-payment-paid').forEach(input => {
+                                const row = input.closest('.saldo-payment-row');
+                                const label = row.querySelector('.saldo-payment-switch span');
+                                input.addEventListener('change', () => {
+                                    const currentStatuses = loadPaymentStatuses();
+                                    currentStatuses[row.dataset.payerId] = input.checked;
+                                    savePaymentStatuses(currentStatuses);
+                                    label.textContent = input.checked ? 'Pagato' : 'Da pagare';
+                                    row.classList.toggle('saldo-payment-row--paid', input.checked);
+                                });
+                                row.classList.toggle('saldo-payment-row--paid', input.checked);
+                            });
+                            root.querySelector('#SaldoPaymentBackToSelection')?.addEventListener('click', renderPaymentSelection);
+                        };
+
                         root.querySelectorAll('[data-calc-step]').forEach(stepButton => {
                             stepButton.addEventListener('click', () => {
                                 const step = Number.parseInt(stepButton.dataset.calcStep || '0', 10);
@@ -736,6 +970,8 @@
                             input.addEventListener('input', recalculate);
                             input.addEventListener('change', recalculate);
                         });
+
+                        paymentButton?.addEventListener('click', renderPaymentSelection);
 
                         recalculate();
                     }

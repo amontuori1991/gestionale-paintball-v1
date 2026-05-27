@@ -206,6 +206,193 @@
     border-color: rgba(15, 23, 42, .14);
 }
 
+.saldo-calc-payment-button,
+.saldo-payment-back {
+    border: none;
+    border-radius: 16px;
+    font-weight: 950;
+    padding: 12px 16px;
+    width: 100%;
+}
+
+.saldo-calc-payment-button {
+    background: linear-gradient(135deg, #e6007e, #ff7f1e);
+    box-shadow: 0 14px 32px rgba(230, 0, 126, .22);
+    color: white;
+}
+
+.saldo-calc-payment-button:disabled {
+    cursor: not-allowed;
+    filter: grayscale(.6);
+    opacity: .58;
+}
+
+.saldo-payment-back {
+    background: rgba(15, 23, 42, .08);
+    color: #1f2937;
+}
+
+.saldo-payment-view {
+    display: grid;
+    gap: 14px;
+    text-align: left;
+}
+
+.saldo-payment-toolbar {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.saldo-payment-toolbar button {
+    border: 1px solid rgba(15, 23, 42, .12);
+    border-radius: 14px;
+    background: rgba(255,255,255,.82);
+    color: #1f2937;
+    font-weight: 900;
+    padding: 10px 12px;
+}
+
+.saldo-payment-add {
+    border: 1px dashed rgba(230, 0, 126, .42);
+    border-radius: 14px;
+    background: rgba(230, 0, 126, .08);
+    color: #b90064;
+    font-weight: 950;
+    padding: 10px 12px;
+}
+
+.saldo-payment-list {
+    display: grid;
+    gap: 8px;
+    max-height: 340px;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.saldo-payment-person,
+.saldo-payment-row,
+.saldo-payment-summary,
+.saldo-payment-total {
+    border: 1px solid rgba(15, 23, 42, .10);
+    border-radius: 16px;
+    background: rgba(255,255,255,.86);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
+}
+
+.saldo-payment-person {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    font-weight: 900;
+    padding: 11px 12px;
+}
+
+.saldo-payment-person small {
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .07);
+    color: #64748b;
+    font-size: .68rem;
+    font-weight: 950;
+    margin-left: auto;
+    padding: 3px 8px;
+    text-transform: uppercase;
+}
+
+.saldo-payment-person input {
+    accent-color: #e6007e;
+    height: 18px;
+    width: 18px;
+}
+
+.saldo-payment-name-input {
+    border: 1px solid rgba(148, 163, 184, .42);
+    border-radius: 12px;
+    flex: 1;
+    font-weight: 900;
+    min-width: 0;
+    padding: 8px 10px;
+}
+
+.saldo-payment-summary,
+.saldo-payment-total {
+    padding: 12px 14px;
+    text-align: center;
+}
+
+.saldo-payment-summary span,
+.saldo-payment-total span {
+    color: #64748b;
+    display: block;
+    font-size: .72rem;
+    font-weight: 950;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.saldo-payment-summary strong,
+.saldo-payment-total strong {
+    color: #0f172a;
+    display: block;
+    font-size: 1.45rem;
+    font-weight: 950;
+}
+
+.saldo-payment-total small {
+    color: #475569;
+    display: block;
+    font-weight: 850;
+}
+
+.saldo-payment-row {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 12px;
+}
+
+.saldo-payment-row small {
+    color: #64748b;
+    display: block;
+    font-weight: 900;
+    margin-top: 2px;
+}
+
+.saldo-payment-row--paid {
+    background: rgba(212, 237, 218, .82);
+    border-color: rgba(20, 108, 46, .22);
+}
+
+.saldo-payment-switch {
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.saldo-payment-switch input {
+    accent-color: #78be20;
+    height: 20px;
+    width: 20px;
+}
+
+.saldo-payment-switch span {
+    color: #334155;
+    font-size: .82rem;
+    font-weight: 950;
+}
+
+.saldo-payment-empty {
+    border-radius: 16px;
+    background: rgba(255, 243, 205, .76);
+    color: #7c5a00;
+    font-weight: 850;
+    padding: 12px 14px;
+}
+
 @media (min-width: 769px) {
     #partite-page .partita-staff-row .saldo-strip {
         display: inline-flex;
