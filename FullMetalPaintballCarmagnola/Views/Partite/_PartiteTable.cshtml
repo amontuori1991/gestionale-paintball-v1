@@ -215,9 +215,9 @@
                     <td data-label="Calcolo">
                         <button type="button"
                                 class="btn btn-sm btn-info btn-calcolo-saldo"
-                                title="Calcola saldo fine partita"
-                                @Html.Raw(CalcButtonData(partita, iscritti))>
-                            🧮
+                            title="Calcola saldo fine partita"
+                            @Html.Raw(CalcButtonData(partita, iscritti))>
+                            🖩
                         </button>
                     </td>
 
@@ -372,10 +372,10 @@
             <a class="pm-iconbtn" href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" title="Link tesseramento">📎</a>
             <a class="pm-primary" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">👥 Tesserati</a>
             <button type="button"
-                    class="pm-primary btn-calcolo-saldo"
+                    class="pm-primary pm-primary--calcolo btn-calcolo-saldo"
                     title="Calcola saldo fine partita"
                     @Html.Raw(CalcButtonData(partita, iscritti))>
-                🧮 Calcolo
+                🖩 Calcolo
             </button>
         </div>
 
