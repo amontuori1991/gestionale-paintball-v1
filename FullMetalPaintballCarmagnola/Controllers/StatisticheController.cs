@@ -465,6 +465,50 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 ? 0
                 : (int)Math.Round(distanzeAnnoCorrente.Count(d => d > 50d) * 100d / distanzeAnnoCorrente.Count);
 
+            var socialRecapPartiteRaw = await _dbContext.Partite
+                .AsNoTracking()
+                .Where(p => p.CaparraConfermata && !p.IsDeleted)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Data,
+                    p.NumeroPartecipanti,
+                    p.Tipo
+                })
+                .ToListAsync();
+
+            var socialRecapPartite = socialRecapPartiteRaw
+                .Select(p => new StatisticheSocialRecapPartita
+                {
+                    Id = p.Id,
+                    Data = p.Data.ToString("yyyy-MM-dd"),
+                    Partecipanti = p.NumeroPartecipanti,
+                    Tipo = p.Tipo ?? "Adulti"
+                })
+                .ToList();
+
+            var socialRecapTesseramentiRaw = await _dbContext.Tesseramenti
+                .AsNoTracking()
+                .Where(t => t.Partita != null && t.Partita.CaparraConfermata && !t.Partita.IsDeleted)
+                .Select(t => new
+                {
+                    PartitaId = t.PartitaId ?? 0,
+                    DataPartita = t.Partita!.Data,
+                    t.ComuneResidenza,
+                    t.NazioneResidenza
+                })
+                .ToListAsync();
+
+            var socialRecapTesseramenti = socialRecapTesseramentiRaw
+                .Select(t => new StatisticheSocialRecapTesserato
+                {
+                    PartitaId = t.PartitaId,
+                    DataPartita = t.DataPartita.ToString("yyyy-MM-dd"),
+                    ComuneResidenza = t.ComuneResidenza,
+                    NazioneResidenza = t.NazioneResidenza
+                })
+                .ToList();
+
             ViewBag.MeseCorrente = meseCorrente;
             ViewBag.AnnoCorrente = annoCorrente;
             ViewBag.AnnoPrecedente = annoPrecedente;
@@ -521,6 +565,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             ViewBag.DistanceCurrentMedian = distanzaMedianaAnnoCorrente;
             ViewBag.DistanceCurrentWithin25Pct = distanzaEntro25AnnoCorrente;
             ViewBag.DistanceCurrentOver50Pct = distanzaOltre50AnnoCorrente;
+            ViewBag.SocialRecapPartite = socialRecapPartite;
+            ViewBag.SocialRecapTesseramenti = socialRecapTesseramenti;
 
             return View();
         }
@@ -957,6 +1003,22 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
     {
         public int Anno { get; set; }
         public double MediaKm { get; set; }
+    }
+
+    public sealed class StatisticheSocialRecapPartita
+    {
+        public int Id { get; set; }
+        public string Data { get; set; } = string.Empty;
+        public int Partecipanti { get; set; }
+        public string Tipo { get; set; } = string.Empty;
+    }
+
+    public sealed class StatisticheSocialRecapTesserato
+    {
+        public int PartitaId { get; set; }
+        public string DataPartita { get; set; } = string.Empty;
+        public string ComuneResidenza { get; set; } = string.Empty;
+        public string? NazioneResidenza { get; set; }
     }
 
     public sealed class ComuneGeoJsonEntry
