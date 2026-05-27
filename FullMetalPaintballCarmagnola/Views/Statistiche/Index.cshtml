@@ -64,6 +64,75 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
+    .social-recap-launcher {
+        align-items: center;
+        background: linear-gradient(135deg, rgba(230,0,126,.14), rgba(255,127,30,.16));
+        border: 1px solid rgba(226,0,126,.18);
+        border-radius: 28px;
+        box-shadow: 0 16px 45px rgba(15,23,42,.10);
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        margin: 0 0 22px;
+        overflow: hidden;
+        padding: 18px 20px;
+        position: relative;
+    }
+
+    .social-recap-launcher::before {
+        background: radial-gradient(circle, rgba(120,190,32,.32), transparent 58%);
+        content: "";
+        height: 160px;
+        position: absolute;
+        right: 18%;
+        top: -80px;
+        width: 160px;
+    }
+
+    .social-recap-launcher-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .social-recap-launcher-kicker {
+        color: #e6007e;
+        font-size: .76rem;
+        font-weight: 950;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .social-recap-launcher-title {
+        color: #12140f;
+        font-size: 1.35rem;
+        font-weight: 1000;
+        line-height: 1.05;
+    }
+
+    .social-recap-toggle {
+        align-items: center;
+        background: linear-gradient(135deg, #e6007e, #ff7f1e);
+        border: 0;
+        border-radius: 999px;
+        box-shadow: 0 14px 34px rgba(226,0,126,.28);
+        color: #fff;
+        display: inline-flex;
+        font-weight: 950;
+        gap: 9px;
+        padding: 13px 18px;
+        position: relative;
+        white-space: nowrap;
+        z-index: 1;
+    }
+
+    .social-recap-toggle .bi {
+        transition: transform .22s ease;
+    }
+
+    .social-recap-toggle[aria-expanded="true"] .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+
     .social-recap-lab {
         background: radial-gradient(circle at 12% 18%, rgba(226,0,126,.24), transparent 32%), radial-gradient(circle at 88% 12%, rgba(255,127,30,.26), transparent 30%), linear-gradient(135deg, rgba(15,23,42,.96), rgba(22,34,18,.94));
         border: 1px solid rgba(255,255,255,.14);
@@ -74,6 +143,10 @@
         overflow: hidden;
         padding: 22px;
         position: relative;
+    }
+
+    .social-recap-lab.is-collapsed {
+        display: none;
     }
 
     .social-recap-lab::before {
@@ -300,6 +373,16 @@
     }
 
     @@media (max-width: 900px) {
+        .social-recap-launcher {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .social-recap-toggle {
+            justify-content: center;
+            width: 100%;
+        }
+
         .social-recap-shell, .social-recap-presets, .social-recap-actions, .social-recap-fields {
             grid-template-columns: 1fr;
         }
@@ -335,7 +418,19 @@
         </div>
     </div>
 
-    <section class="social-recap-lab">
+    <div class="social-recap-launcher">
+        <div class="social-recap-launcher-text">
+            <div class="social-recap-launcher-kicker">Extra creativo</div>
+            <div class="social-recap-launcher-title">Genera una card social con il recap del weekend</div>
+        </div>
+        <button type="button" class="social-recap-toggle" id="toggleSocialRecap" aria-expanded="false" aria-controls="socialRecapLab">
+            <i class="bi bi-stars" aria-hidden="true"></i>
+            Recap Weekend
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <section class="social-recap-lab is-collapsed" id="socialRecapLab" aria-hidden="true">
         <div class="social-recap-head">
             <div>
                 <div class="social-recap-kicker">Paintball content lab</div>
@@ -1125,6 +1220,22 @@
         document.getElementById('randomizeRecapStyle')?.addEventListener('click', () => {
             moodIndex += 1;
             applyMood();
+        });
+
+        const recapToggle = document.getElementById('toggleSocialRecap');
+        const recapLab = document.getElementById('socialRecapLab');
+        recapToggle?.addEventListener('click', () => {
+            const isOpening = recapLab?.classList.contains('is-collapsed');
+            recapLab?.classList.toggle('is-collapsed', !isOpening);
+            recapLab?.setAttribute('aria-hidden', isOpening ? 'false' : 'true');
+            recapToggle.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
+
+            if (isOpening) {
+                updateRecap();
+                window.setTimeout(() => {
+                    recapLab?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
+            }
         });
 
         setPreset('weekend');
