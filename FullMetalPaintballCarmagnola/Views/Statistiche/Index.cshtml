@@ -659,7 +659,26 @@
                 const meta = chart.getDatasetMeta(datasetIndex);
                 if (!meta || meta.hidden) return;
 
-                if (datasetIndex === 0) {
+                if (dataset.valueLabels === true) {
+                    meta.data.forEach((bar, index) => {
+                        const val = dataset.data[index];
+                        if (val === null || val === undefined || val <= 0) return;
+
+                        const label = `${val}`;
+                        ctx.font = isMobile ? 'bold 10px sans-serif' : 'bold 12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+
+                        const x = bar.x;
+                        const y = bar.y - 8;
+
+                        ctx.lineWidth = 3;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                        ctx.strokeText(label, x, y);
+                        ctx.fillStyle = dataset.labelColor || 'rgba(20,20,20,0.95)';
+                        ctx.fillText(label, x, y);
+                    });
+                } else if (datasetIndex === 0) {
                     // Dataset confermate: etichetta testuale completa (customLabels)
                     meta.data.forEach((bar, index) => {
                         const val = dataset.data[index];
@@ -940,14 +959,18 @@
                     data: anniTipoPartite.map(a => partiteAdultiPerAnno[a] || 0),
                     backgroundColor: 'rgba(230,0,126,.74)',
                     borderColor: 'rgba(190,0,102,1)',
-                    borderWidth: 1
+                    borderWidth: 1,
+                    valueLabels: true,
+                    labelColor: 'rgba(120,0,70,1)'
                 },
                 {
                     label: 'Kids',
                     data: anniTipoPartite.map(a => partiteKidsPerAnno[a] || 0),
                     backgroundColor: 'rgba(120,190,32,.78)',
                     borderColor: 'rgba(80,140,18,1)',
-                    borderWidth: 1
+                    borderWidth: 1,
+                    valueLabels: true,
+                    labelColor: 'rgba(50,105,10,1)'
                 }
             ]
         },
