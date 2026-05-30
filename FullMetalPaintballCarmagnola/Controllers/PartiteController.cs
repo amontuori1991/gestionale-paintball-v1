@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 // using DocumentFormat.OpenXml.InkML; // non serve qui, puoi rimuoverlo
 using Full_Metal_Paintball_Carmagnola.Models;
@@ -28,6 +29,19 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private readonly PricingCatalogService _pricingCatalogService;
         private readonly StaffRegistryService _staffRegistryService;
         private readonly WeatherForecastService _weatherForecastService;
+
+        private static readonly Regex NonDigitRegex = new(@"[^\d]", RegexOptions.Compiled);
+        private static readonly string[] KnownPhonePrefixes =
+        {
+            "420", "421", "423", "386", "385", "387", "381", "380", "351", "352", "353", "354", "355", "356", "357", "358", "359",
+            "212", "213", "216", "218", "220", "221", "222", "223", "224", "225", "226", "227", "228", "229",
+            "230", "231", "232", "233", "234", "235", "236", "237", "238", "239",
+            "240", "241", "242", "243", "244", "245", "246", "247", "248", "249",
+            "250", "251", "252", "253", "254", "255", "256", "257", "258", "260", "261", "262", "263", "264", "265", "266", "267", "268", "269",
+            "297", "298", "299", "376", "377", "378", "379", "590", "591", "592", "593", "594", "595", "596", "597", "598", "599",
+            "39", "33", "34", "41", "44", "49", "31", "32", "43", "45", "46", "47", "48", "36", "40", "30", "37", "38",
+            "1", "7"
+        };
 
         public PartiteController(
             TesseramentoDbContext dbContext,
@@ -74,6 +88,74 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     }
                 }
             }
+        }
+
+        private static void NormalizzaContattoRiferimento(Partita partita)
+        {
+            partita.NomeRiferimento = string.IsNullOrWhiteSpace(partita.NomeRiferimento)
+                ? null
+                : partita.NomeRiferimento.Trim();
+
+            var prefisso = (partita.PrefissoTelefonoRiferimento ?? string.Empty).Trim();
+            var numeroOriginale = (partita.TelefonoRiferimento ?? string.Empty).Trim();
+            var numeroCompatto = numeroOriginale.Replace(" ", string.Empty).Replace("-", string.Empty).Replace(".", string.Empty).Replace("/", string.Empty);
+
+            if (numeroCompatto.StartsWith("00", StringComparison.Ordinal))
+            {
+                var digits = numeroCompatto[2..];
+                if (TrySplitInternationalPhone(digits, out var parsedPrefix, out var parsedNumber))
+                {
+                    prefisso = "+" + parsedPrefix;
+                    numeroCompatto = parsedNumber;
+                }
+            }
+            else if (numeroCompatto.StartsWith("+", StringComparison.Ordinal))
+            {
+                var digits = NonDigitRegex.Replace(numeroCompatto, string.Empty);
+                if (TrySplitInternationalPhone(digits, out var parsedPrefix, out var parsedNumber))
+                {
+                    prefisso = "+" + parsedPrefix;
+                    numeroCompatto = parsedNumber;
+                }
+            }
+
+            var prefissoDigits = NonDigitRegex.Replace(prefisso, string.Empty);
+            partita.PrefissoTelefonoRiferimento = string.IsNullOrWhiteSpace(prefissoDigits)
+                ? null
+                : "+" + prefissoDigits;
+
+            partita.TelefonoRiferimento = string.IsNullOrWhiteSpace(numeroCompatto)
+                ? null
+                : NonDigitRegex.Replace(numeroCompatto, string.Empty);
+        }
+
+        private static bool TrySplitInternationalPhone(string digits, out string prefix, out string number)
+        {
+            prefix = string.Empty;
+            number = string.Empty;
+            if (string.IsNullOrWhiteSpace(digits) || digits.Length < 7)
+                return false;
+
+            foreach (var knownPrefix in KnownPhonePrefixes.OrderByDescending(p => p.Length))
+            {
+                if (digits.StartsWith(knownPrefix, StringComparison.Ordinal) && digits.Length > knownPrefix.Length + 5)
+                {
+                    prefix = knownPrefix;
+                    number = digits[knownPrefix.Length..];
+                    return true;
+                }
+            }
+
+            prefix = digits[..Math.Min(3, digits.Length - 6)];
+            number = digits[prefix.Length..];
+            return !string.IsNullOrWhiteSpace(prefix) && number.Length >= 6;
+        }
+
+        private static string GetNomeReferente(Partita partita)
+        {
+            return !string.IsNullOrWhiteSpace(partita.NomeRiferimento)
+                ? partita.NomeRiferimento.Trim()
+                : partita.Riferimento?.Trim() ?? string.Empty;
         }
 
         // ----------- INDEX -----------
@@ -181,6 +263,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
 
             partita.Listino = await ResolveValidListinoIdAsync(partita.Listino);
+            NormalizzaContattoRiferimento(partita);
 
             // 👇 forza UTC anche se prendi solo la data
             partita.Data = DateTime.SpecifyKind(partita.Data.Date, DateTimeKind.Utc);
@@ -303,6 +386,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             existingPartita.Caccia = partita.Caccia;
             existingPartita.CacciaDoppia = partita.CacciaDoppia;
             existingPartita.Riferimento = partita.Riferimento;
+            NormalizzaContattoRiferimento(partita);
+            existingPartita.NomeRiferimento = partita.NomeRiferimento;
+            existingPartita.PrefissoTelefonoRiferimento = partita.PrefissoTelefonoRiferimento;
+            existingPartita.TelefonoRiferimento = partita.TelefonoRiferimento;
             existingPartita.Annotazioni = partita.Annotazioni;
             existingPartita.Tipo = partita.Tipo;
             existingPartita.Listino = partita.Listino;
@@ -389,7 +476,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             string messaggio = $@"
 <strong>Data:</strong> {partita.Data:dd/MM/yyyy}<br>
 <strong>Ora:</strong> {partita.OraInizio}<br>
-<strong>Riferimento:</strong> {partita.Riferimento}<br>
+<strong>Riferimento:</strong> {GetNomeReferente(partita)}<br>
 <strong>Durata:</strong> {partita.Durata} ore<br>
 <strong>Partecipanti:</strong> {partita.NumeroPartecipanti}<br>
 <strong>Caparra:</strong> {partita.Caparra:0.00}€<br>";
@@ -853,7 +940,7 @@ Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 🕒 Orario: {partita.OraInizio.ToString(@"hh\:mm")}<br>
 👶 Tipologia: {(partita.Torneo ? "Torneo + " : "")}{(partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) == true ? "KIDS" : "Adulti")}<br>
 ⏳ Durata: {partita.Durata} ore<br> 
-👤 Referente: {partita.Riferimento}<br>
+👤 Referente: {GetNomeReferente(partita)}<br>
 👥 Nr. Partecipanti: {partita.NumeroPartecipanti}<br>
 💶 Caparra: {partita.Caparra:0.00}€<br>
 💰 {prezzo} a testa<br>

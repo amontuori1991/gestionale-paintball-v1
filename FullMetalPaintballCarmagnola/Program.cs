@@ -156,7 +156,10 @@ using (var scope = app.Services.CreateScope())
             ""Value"" text NULL,
             CONSTRAINT ""PK_AppSettings"" PRIMARY KEY (""Key"")
         );
-        ALTER TABLE ""AppSettings"" ALTER COLUMN ""Value"" TYPE text;");
+        ALTER TABLE ""AppSettings"" ALTER COLUMN ""Value"" TYPE text;
+        ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""NomeRiferimento"" text NULL;
+        ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""PrefissoTelefonoRiferimento"" text NULL;
+        ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""TelefonoRiferimento"" text NULL;");
 
     string[] roles = { "Admin", "Staff" };
 

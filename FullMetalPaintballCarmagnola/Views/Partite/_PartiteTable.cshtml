@@ -20,6 +20,36 @@
 
     string Money(decimal amount) => $"{amount.ToString("0.00", it)}€";
 
+    string ReferenteLabel(Partita partita) =>
+        !string.IsNullOrWhiteSpace(partita.NomeRiferimento)
+            ? partita.NomeRiferimento.Trim()
+            : partita.Riferimento?.Trim() ?? string.Empty;
+
+    string RiferimentoDettaglio(Partita partita)
+    {
+        var parts = new List<string>();
+        var referente = ReferenteLabel(partita);
+        if (!string.IsNullOrWhiteSpace(referente))
+            parts.Add(referente);
+
+        if (!string.IsNullOrWhiteSpace(partita.PrefissoTelefonoRiferimento) || !string.IsNullOrWhiteSpace(partita.TelefonoRiferimento))
+            parts.Add($"{partita.PrefissoTelefonoRiferimento} {partita.TelefonoRiferimento}".Trim());
+
+        return parts.Count > 0 ? string.Join(" - ", parts) : "Nessun riferimento indicato";
+    }
+
+    string? WhatsappUrl(Partita partita)
+    {
+        var prefix = new string((partita.PrefissoTelefonoRiferimento ?? string.Empty).Where(char.IsDigit).ToArray());
+        var number = new string((partita.TelefonoRiferimento ?? string.Empty).Where(char.IsDigit).ToArray());
+        if (string.IsNullOrWhiteSpace(prefix) || string.IsNullOrWhiteSpace(number))
+            return null;
+
+        return $"https://wa.me/{prefix}{number}";
+    }
+
+    string JsString(string value) => System.Text.Json.JsonSerializer.Serialize(value);
+
     bool MatchesDuration(double actual, double expected) => Math.Abs(actual - expected) < 0.01;
 
     PricingEntry? ResolvePriceEntry(Partita partita)
@@ -140,6 +170,7 @@
                 <th>Illimitati</th>
                 <th>Caccia</th>
                 <th>Link</th>
+                <th>WhatsApp</th>
                 <th>Tesserati</th>
                 <th>Calcolo</th>
                 <th>Azioni</th>
@@ -184,7 +215,7 @@
                     <td data-label="Tipo">@partita.Tipo</td>
 
                     <td data-label="Riferimento">
-                        <span class="ref-icon" onclick="showRiferimento('@partita.Riferimento')">📇</span>
+                        <span class="ref-icon" onclick="showRiferimento(@JsString(RiferimentoDettaglio(partita)))">📇</span>
                     </td>
 
                     <td data-label="Durata">@partita.Durata</td>
@@ -207,6 +238,22 @@
 
                     <td data-label="Link">
                         <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
+                    </td>
+
+                    <td data-label="WhatsApp">
+                        @{
+                            var whatsappUrl = WhatsappUrl(partita);
+                        }
+                        @if (!string.IsNullOrWhiteSpace(whatsappUrl))
+                        {
+                            <a href="@whatsappUrl" target="_blank" rel="noopener" class="icon-link text-success" title="Apri WhatsApp con @ReferenteLabel(partita)">
+                                <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                            </a>
+                        }
+                        else
+                        {
+                            <span style="opacity:.35;">-</span>
+                        }
                     </td>
 
                     <td data-label="Tesserati">
@@ -368,8 +415,17 @@
         </div>
 
         <div class="pm-row-actions">
-            <button type="button" class="pm-iconbtn" onclick="showRiferimento('@partita.Riferimento')" title="Riferimento">📇</button>
+            <button type="button" class="pm-iconbtn" onclick="showRiferimento(@JsString(RiferimentoDettaglio(partita)))" title="Riferimento">📇</button>
             <a class="pm-iconbtn" href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" title="Link tesseramento">📎</a>
+            @{
+                var whatsappMobileUrl = WhatsappUrl(partita);
+            }
+            @if (!string.IsNullOrWhiteSpace(whatsappMobileUrl))
+            {
+                <a class="pm-iconbtn pm-iconbtn--whatsapp" href="@whatsappMobileUrl" target="_blank" rel="noopener" title="Apri WhatsApp con @ReferenteLabel(partita)">
+                    <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                </a>
+            }
             <a class="pm-primary" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">👥 Tesserati</a>
             <button type="button"
                     class="pm-primary pm-primary--calcolo btn-calcolo-saldo"

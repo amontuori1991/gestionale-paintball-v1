@@ -39,9 +39,27 @@
         <span asp-validation-for="OraInizio" class="text-danger"></span>
     </div>
 
+    <div class="row g-2 mb-3">
+        <div class="col-md-5">
+            <label asp-for="NomeRiferimento" class="form-label">Nome referente</label>
+            <input asp-for="NomeRiferimento" class="form-control" placeholder="Nome e cognome" />
+            <span asp-validation-for="NomeRiferimento" class="text-danger"></span>
+        </div>
+        <div class="col-4 col-md-2">
+            <label asp-for="PrefissoTelefonoRiferimento" class="form-label">Prefisso</label>
+            <input asp-for="PrefissoTelefonoRiferimento" class="form-control js-phone-prefix" placeholder="+39" />
+            <span asp-validation-for="PrefissoTelefonoRiferimento" class="text-danger"></span>
+        </div>
+        <div class="col-8 col-md-5">
+            <label asp-for="TelefonoRiferimento" class="form-label">Numero WhatsApp</label>
+            <input asp-for="TelefonoRiferimento" class="form-control js-phone-number" placeholder="3461234567 oppure +39 346 1234567" />
+            <span asp-validation-for="TelefonoRiferimento" class="text-danger"></span>
+        </div>
+    </div>
+
     <div class="form-group">
-        <label asp-for="Riferimento" class="form-label"></label>
-        <input asp-for="Riferimento" class="form-control" />
+        <label asp-for="Riferimento" class="form-label">Riferimento / note interne</label>
+        <input asp-for="Riferimento" class="form-control" placeholder="Campo storico opzionale" />
         <span asp-validation-for="Riferimento" class="text-danger"></span>
     </div>
 
@@ -122,6 +140,35 @@
                 }
             });
         }
+
+        function normalizePhoneFields() {
+            const prefixInput = form?.querySelector('.js-phone-prefix');
+            const numberInput = form?.querySelector('.js-phone-number');
+            if (!prefixInput || !numberInput) return;
+
+            let rawNumber = (numberInput.value || '').trim().replace(/[\s\-./]/g, '');
+            let rawPrefix = (prefixInput.value || '').trim();
+            const knownPrefixes = ['420','421','423','386','385','387','381','380','351','352','353','354','355','356','357','358','359','212','213','216','218','376','377','378','379','590','591','592','593','594','595','596','597','598','599','39','33','34','41','44','49','31','32','43','45','46','47','48','36','40','30','1','7'];
+            const digits = rawNumber.replace(/\D/g, '');
+            if (rawNumber.startsWith('+') || rawNumber.startsWith('00')) {
+                const internationalDigits = rawNumber.startsWith('00') ? digits.replace(/^00/, '') : digits;
+                const matchedPrefix = knownPrefixes
+                    .sort((a, b) => b.length - a.length)
+                    .find(prefix => internationalDigits.startsWith(prefix) && internationalDigits.length > prefix.length + 5);
+                if (matchedPrefix) {
+                    rawPrefix = `+${matchedPrefix}`;
+                    rawNumber = internationalDigits.slice(matchedPrefix.length);
+                }
+            }
+
+            const prefixDigits = rawPrefix.replace(/\D/g, '');
+            prefixInput.value = prefixDigits ? `+${prefixDigits}` : '';
+            numberInput.value = rawNumber.replace(/\D/g, '');
+        }
+
+        form?.querySelector('.js-phone-number')?.addEventListener('blur', normalizePhoneFields);
+        form?.querySelector('.js-phone-prefix')?.addEventListener('blur', normalizePhoneFields);
+        form?.addEventListener('submit', normalizePhoneFields);
 
         if (tipoSelect) {
             tipoSelect.addEventListener('change', syncListinoLabels);

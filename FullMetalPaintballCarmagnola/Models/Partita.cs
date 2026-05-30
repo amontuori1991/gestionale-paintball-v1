@@ -16,6 +16,15 @@ public class Partita
 
     public string? Riferimento { get; set; }
 
+    [Display(Name = "Nome referente")]
+    public string? NomeRiferimento { get; set; }
+
+    [Display(Name = "Prefisso")]
+    public string? PrefissoTelefonoRiferimento { get; set; }
+
+    [Display(Name = "Numero telefono")]
+    public string? TelefonoRiferimento { get; set; }
+
     [Required]
     [DataType(DataType.Time)]
     [DisplayFormat(DataFormatString = @"{0:hh\:mm}", ApplyFormatInEditMode = true)]

@@ -642,7 +642,7 @@
     .pm-row-actions {
         display: grid !important;
         align-items: center !important;
-        grid-template-columns: auto auto minmax(0, 1fr) !important;
+        grid-template-columns: auto auto auto minmax(0, 1fr) !important;
         gap: 10px !important;
         margin-top: 10px !important;
     }
@@ -655,6 +655,10 @@
         line-height: 1 !important;
         text-decoration: none !important;
         color: inherit !important;
+    }
+
+    .pm-iconbtn--whatsapp {
+        color: #128c7e !important;
     }
 
     .pm-primary {
