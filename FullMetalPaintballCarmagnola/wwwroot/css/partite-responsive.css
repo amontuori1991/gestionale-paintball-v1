@@ -160,6 +160,11 @@
     gap: 8px;
 }
 
+.saldo-calc-counter--compact {
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    margin-top: 6px;
+}
+
 .saldo-calc-counter button {
     border: none;
     border-radius: 14px;
@@ -168,6 +173,11 @@
     font-size: 1.4rem;
     font-weight: 950;
     min-height: 48px;
+}
+
+.saldo-calc-counter--compact button {
+    font-size: 1.12rem;
+    min-height: 42px;
 }
 
 .saldo-calc-counter input,

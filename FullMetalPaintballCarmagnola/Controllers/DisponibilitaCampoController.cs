@@ -382,7 +382,7 @@ Il tempo rimanente verrà utilizzato per fare dei round da 7 minuti l'uno dove u
 
             return $@"
 La prenotazione deve avvenire via SMS o WhatsApp al numero 3468741192 (reperibile telefonicamente dal lunedì al venerdì dalle 18:00 alle 21:00) almeno 24 ore prima (salvo disponibilità del campo) per turni del weekend. Per turni infrasettimanali almeno 7 giorni di preavviso (salvo disponibilità del campo e dello staff) specificando:
-- numero indicativo di partecipanti (Min 8 e max 16 - se si è meno del numero minimo richiesto, occorre pagare la differenza per le persone mancanti ad esclusione del tesseramento 5€) - se di più si dovrà organizzare un torneo a squadre (il torneo ha una durata di un'ora e mezza al prezzo di un'ora, quindi con 200 colpi a testa)
+- numero indicativo di partecipanti (Min 8 e max 16 - se si è meno del numero minimo richiesto, occorre pagare la differenza per le persone mancanti ad esclusione del tesseramento 5€) - se di più si dovrà organizzare un torneo a squadre (il torneo ha una durata fissa di un'ora e mezza al prezzo di un'ora)
 - orario di inizio partita
 - ore di gioco
 - nome e cognome di una persona di riferimento della prenotazione

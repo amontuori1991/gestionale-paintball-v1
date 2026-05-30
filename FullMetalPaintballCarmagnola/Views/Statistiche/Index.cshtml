@@ -26,6 +26,9 @@
     var cancellatePerYear = ViewBag.CancellatePerYear as Dictionary<int, int>;
     int topYearOverall = ViewBag.TopYearOverall;
     int topOverallValue = ViewBag.TopOverallValue;
+    var anniTipoPartite = ViewBag.AnniTipoPartite as List<int>;
+    var partiteAdultiPerAnno = ViewBag.PartiteAdultiPerAnno as Dictionary<int, int>;
+    var partiteKidsPerAnno = ViewBag.PartiteKidsPerAnno as Dictionary<int, int>;
 
     var ytdLabels = ViewBag.YtdLabels as List<string>;
     var ytdCorrenteValues = ViewBag.YtdCorrenteValues as List<int>;
@@ -400,10 +403,10 @@
     <h2>Statistiche Partite – @labelMese (@annoCorrente)</h2>
 
     <!-- Navigazione mese -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary">← Mese precedente</a>
-        <div style="font-weight:700; letter-spacing:.5px;">@labelMese.ToUpper()</div>
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary">Mese successivo →</a>
+    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary" aria-label="Mese precedente">←</a>
+        <div style="font-weight:900; letter-spacing:.5px; min-width:190px; text-align:center;">@labelMese.ToUpper()</div>
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary" aria-label="Mese successivo">→</a>
     </div>
 
     <!-- Legenda cancellate -->
@@ -535,6 +538,16 @@
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
             TOP assoluto: <strong>@topYearOverall</strong> – <strong>@topOverallValue</strong> partite.
             Le barre rosse indicano le partite cancellate per anno.
+        </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Partite Adulti vs Kids per anno</h4>
+        <div style="position:relative; height:340px;">
+            <canvas id="chartTypeYearTotals"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Il confronto considera le partite confermate presenti a database, suddivise per tipologia salvata sulla prenotazione.
         </div>
     </div>
 
@@ -885,6 +898,55 @@
                     data: chart3DataCanc,
                     backgroundColor: COLOR_CANC,
                     borderColor: COLOR_BORDER_CANC,
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 44 } },
+            plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} partite`
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: false },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
+    const anniTipoPartite = @Html.Raw(Json.Serialize(anniTipoPartite ?? new List<int>()));
+    const partiteAdultiPerAnno = @Html.Raw(Json.Serialize(partiteAdultiPerAnno ?? new Dictionary<int, int>()));
+    const partiteKidsPerAnno = @Html.Raw(Json.Serialize(partiteKidsPerAnno ?? new Dictionary<int, int>()));
+
+    new Chart(document.getElementById('chartTypeYearTotals').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: anniTipoPartite.map(a => a.toString()),
+            datasets: [
+                {
+                    label: 'Adulti',
+                    data: anniTipoPartite.map(a => partiteAdultiPerAnno[a] || 0),
+                    backgroundColor: 'rgba(230,0,126,.74)',
+                    borderColor: 'rgba(190,0,102,1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Kids',
+                    data: anniTipoPartite.map(a => partiteKidsPerAnno[a] || 0),
+                    backgroundColor: 'rgba(120,190,32,.78)',
+                    borderColor: 'rgba(80,140,18,1)',
                     borderWidth: 1
                 }
             ]

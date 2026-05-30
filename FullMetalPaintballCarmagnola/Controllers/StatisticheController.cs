@@ -68,6 +68,22 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 })
                 .ToListAsync();
 
+            var tipoPartiteAnnualiDbGrouped = await _dbContext.Partite
+                .AsNoTracking()
+                .Where(p => p.CaparraConfermata && !p.IsDeleted)
+                .GroupBy(p => new
+                {
+                    p.Data.Year,
+                    Tipo = (p.Tipo ?? "Adulti").ToLower()
+                })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Tipo = g.Key.Tipo,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
             var dataLimiteAnnoCorrente = oggi.AddDays(1).AddTicks(-1);
             var giornoConfrontoAnnoPrecedente = Math.Min(oggi.Day, DateTime.DaysInMonth(annoPrecedente, oggi.Month));
             var dataLimiteAnnoPrecedente = DateTime.SpecifyKind(
@@ -144,6 +160,21 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
 
             var anni = confermate.Keys.OrderBy(x => x).ToList();
+            var anniTipoPartite = tipoPartiteAnnualiDbGrouped
+                .Select(row => row.Year)
+                .Distinct()
+                .OrderBy(year => year)
+                .ToList();
+            var partiteAdultiPerAnno = anniTipoPartite.ToDictionary(
+                year => year,
+                year => tipoPartiteAnnualiDbGrouped
+                    .Where(row => row.Year == year && row.Tipo != "kids")
+                    .Sum(row => row.Count));
+            var partiteKidsPerAnno = anniTipoPartite.ToDictionary(
+                year => year,
+                year => tipoPartiteAnnualiDbGrouped
+                    .Where(row => row.Year == year && row.Tipo == "kids")
+                    .Sum(row => row.Count));
 
             int currentYearMonthValue = confermate.ContainsKey(annoCorrente) && confermate[annoCorrente].ContainsKey(meseCorrente)
                 ? confermate[annoCorrente][meseCorrente] : 0;
@@ -534,6 +565,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             ViewBag.CancellatePerYear = cancellatePerYear;
             ViewBag.TopYearOverall = topYearOverall;
             ViewBag.TopOverallValue = topOverallValue;
+            ViewBag.AnniTipoPartite = anniTipoPartite;
+            ViewBag.PartiteAdultiPerAnno = partiteAdultiPerAnno;
+            ViewBag.PartiteKidsPerAnno = partiteKidsPerAnno;
 
             ViewBag.YtdLabels = labelsYtd;
             ViewBag.YtdCorrenteValues = ytdCorrenteValues;

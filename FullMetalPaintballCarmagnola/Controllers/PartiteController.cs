@@ -766,11 +766,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var listinoId = catalog.Listini.Any(l => l.Id == partita.Listino) ? partita.Listino : catalog.CurrentListinoId;
 
             string prezzo, colpi, extraCaccia, infoTesseramento;
+            decimal? prezzoUnitario = null;
+            const decimal quotaTesseramento = 5m;
 
             if (tipo == "kids")
             {
                 var kidsEntry = ResolveKidsPricingEntry(catalog, partita);
-                prezzo = kidsEntry == null ? "-" : PricingCatalogService.FormatCurrency(kidsEntry.GetPrice(listinoId));
+                prezzoUnitario = kidsEntry?.GetPrice(listinoId);
+                prezzo = prezzoUnitario.HasValue ? PricingCatalogService.FormatCurrency(prezzoUnitario.Value) : "-";
                 colpi = string.IsNullOrWhiteSpace(kidsEntry?.IncludedShots) ? "Illimitati" : kidsEntry.IncludedShots;
                 extraCaccia = "";
                 infoTesseramento = "<strong>⚠️ Il prezzo include il tesseramento con validità fino al 31/12.</strong><br>";
@@ -783,7 +786,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                         ? PricingEntryCodes.AdultTournamentUnlimited
                         : PricingEntryCodes.AdultTournamentStandard);
 
-                    prezzo = tournamentEntry == null ? "-" : PricingCatalogService.FormatCurrency(tournamentEntry.GetPrice(listinoId));
+                    prezzoUnitario = tournamentEntry?.GetPrice(listinoId);
+                    prezzo = prezzoUnitario.HasValue ? PricingCatalogService.FormatCurrency(prezzoUnitario.Value) : "-";
                     colpi = tournamentEntry?.IncludedShots ?? "-";
                 }
                 else
@@ -791,13 +795,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     if (partita.ColpiIllimitati)
                     {
                         var unlimitedEntry = ResolveAdultUnlimitedPricingEntry(catalog, partita.Durata);
-                        prezzo = unlimitedEntry == null ? "-" : PricingCatalogService.FormatCurrency(unlimitedEntry.GetPrice(listinoId));
+                        prezzoUnitario = unlimitedEntry?.GetPrice(listinoId);
+                        prezzo = prezzoUnitario.HasValue ? PricingCatalogService.FormatCurrency(prezzoUnitario.Value) : "-";
                         colpi = unlimitedEntry?.IncludedShots ?? "-";
                     }
                     else
                     {
                         var standardEntry = ResolveAdultStandardPricingEntry(catalog, partita.Durata);
-                        prezzo = standardEntry == null ? "-" : PricingCatalogService.FormatCurrency(standardEntry.GetPrice(listinoId));
+                        prezzoUnitario = standardEntry?.GetPrice(listinoId);
+                        prezzo = prezzoUnitario.HasValue ? PricingCatalogService.FormatCurrency(prezzoUnitario.Value) : "-";
                         colpi = standardEntry?.IncludedShots ?? "-";
                     }
                 }
@@ -831,6 +837,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             string baseUrl = $"{Request.Scheme}://{Request.Host}";
             string linkTesseramento = $"{baseUrl}/Tesseramento?partitaId={partita.Id}";
             string linkTesseratiPubblico = $"{baseUrl}/Partite/VisualizzaTesseratiPubblico/{partita.Id}";
+            var supplementoMinimoPartecipanti = "";
+            if (prezzoUnitario.HasValue && partita.NumeroPartecipanti > 0 && partita.NumeroPartecipanti < 8)
+            {
+                var personeMancanti = 8 - partita.NumeroPartecipanti;
+                var quotaGiocoSenzaTessera = Math.Max(0, prezzoUnitario.Value - quotaTesseramento);
+                var totaleDifferenza = personeMancanti * quotaGiocoSenzaTessera;
+                var differenzaATesta = totaleDifferenza / partita.NumeroPartecipanti;
+                supplementoMinimoPartecipanti = $"⚠️ Il gruppo minimo richiesto è di 8 persone. Essendo in {partita.NumeroPartecipanti}, occorre coprire anche la quota gioco delle {personeMancanti} persone mancanti, escluso il tesseramento da 5€. Supplemento indicativo: {differenzaATesta:0.00}€ a testa.<br>";
+            }
 
             string messaggio = $@"
 Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
@@ -842,6 +857,7 @@ Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 👥 Nr. Partecipanti: {partita.NumeroPartecipanti}<br>
 💶 Caparra: {partita.Caparra:0.00}€<br>
 💰 {prezzo} a testa<br>
+{supplementoMinimoPartecipanti}
 🎯 Colpi a disposizione: {colpi}<br>
 {extraCaccia}
 📎 Link Tesseramento: <a href='{linkTesseramento}' target='_blank'>{linkTesseramento}</a><br><br>

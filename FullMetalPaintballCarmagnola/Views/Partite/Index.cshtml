@@ -677,11 +677,19 @@
                         <div class="saldo-calc-form-grid">
                             <label>
                                 Extra acquistati al campo
-                                <input id="SaldoCalcExtra" type="number" min="0" step="0.01" value="0">
+                                <div class="saldo-calc-counter saldo-calc-counter--compact">
+                                    <button type="button" data-extra-step="-1">-</button>
+                                    <input id="SaldoCalcExtra" type="number" min="0" step="0.01" value="0">
+                                    <button type="button" data-extra-step="1">+</button>
+                                </div>
                             </label>
                             <label>
                                 Dividi saldo per persone
-                                <input id="SaldoCalcDivisori" type="number" min="1" step="1" value="${Math.max(1, participants)}">
+                                <div class="saldo-calc-counter saldo-calc-counter--compact">
+                                    <button type="button" data-divisors-step="-1">-</button>
+                                    <input id="SaldoCalcDivisori" type="number" min="1" step="1" value="${Math.max(1, participants)}">
+                                    <button type="button" data-divisors-step="1">+</button>
+                                </div>
                             </label>
                         </div>
 
@@ -801,7 +809,7 @@
 
                         const recalculate = () => {
                             const memberships = clampNumber(membershipsInput, 0, billablePlayers);
-                            const divisors = clampNumber(divisorsInput, 1, Math.max(1, billablePlayers));
+                            const divisors = clampNumber(divisorsInput, 1, 999);
                             const extra = Math.max(0, parseMoney(extraInput.value));
                             extraInput.value = extra.toString().replace('.', ',');
 
@@ -962,6 +970,22 @@
                             stepButton.addEventListener('click', () => {
                                 const step = Number.parseInt(stepButton.dataset.calcStep || '0', 10);
                                 membershipsInput.value = (Number.parseInt(membershipsInput.value || '0', 10) || 0) + step;
+                                recalculate();
+                            });
+                        });
+
+                        root.querySelectorAll('[data-extra-step]').forEach(stepButton => {
+                            stepButton.addEventListener('click', () => {
+                                const step = Number.parseFloat(stepButton.dataset.extraStep || '0');
+                                extraInput.value = Math.max(0, parseMoney(extraInput.value) + step).toString().replace('.', ',');
+                                recalculate();
+                            });
+                        });
+
+                        root.querySelectorAll('[data-divisors-step]').forEach(stepButton => {
+                            stepButton.addEventListener('click', () => {
+                                const step = Number.parseInt(stepButton.dataset.divisorsStep || '0', 10);
+                                divisorsInput.value = Math.max(1, (Number.parseInt(divisorsInput.value || '1', 10) || 1) + step);
                                 recalculate();
                             });
                         });
