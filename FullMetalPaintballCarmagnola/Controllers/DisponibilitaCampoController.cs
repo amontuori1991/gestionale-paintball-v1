@@ -400,7 +400,7 @@ N.B. :
 - [x] È richiesto il pagamento di una caparra tramite Satispay o bonifico pari ad una quota di partecipazione della prenotazione. Questa è valida come impegno da parte del cliente a voler prenotare il campo e non verrà rimborsata nel caso di disdetta della prenotazione da parte del cliente stesso.
 - [x] È preferibile non eseguire conti separati
 - [x] Saldo in contanti o Satispay a fine partita
-- [x] Il campo è sprovvisto di spogliatoi e docce
+- [x] È disponibile uno spogliatoio, ma il campo è sprovvisto di docce
 - [x] È richiesto l'arrivo al campo 15/20 minuti prima della prenotazione. L'ora o le ore di gioco verranno conteggiate dall'orario della prenotazione a prescindere da eventuali ritardi
 - [x] Per chi usa occhiali da vista, si richiede l'utilizzo di lenti a contatto
 {string.Join(Environment.NewLine, ageLines)}

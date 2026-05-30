@@ -147,7 +147,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 new()
                 {
                     Domanda = "Ci sono spogliatoi o docce?",
-                    Risposta = "No. Il campo è sprovvisto di spogliatoi e docce."
+                    Risposta = "È disponibile uno spogliatoio, ma non sono presenti docce."
                 },
                 new()
                 {
