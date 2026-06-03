@@ -15,6 +15,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private const string PettorineCategoryKey = "pettorine";
         private const string CaschiPersonName = "Montuo";
         private const string PettorinePersonName = "Flavio";
+        private const string PaidPersonFla = "fla";
+        private const string PaidPersonBosax = "bosax";
         private const string UndoResolutionMerge = "merge";
         private const string UndoResolutionReplace = "replace";
         private readonly TesseramentoDbContext _dbContext;
@@ -167,9 +169,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePaidStatus([FromForm] Guid entryId, [FromForm] bool isPaid)
+        public async Task<IActionResult> UpdatePaidStatus([FromForm] Guid entryId, [FromForm] string? payer, [FromForm] bool isPaid)
         {
             if (entryId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
+            var normalizedPayer = NormalizePaidPerson(payer);
+            if (normalizedPayer == null)
             {
                 return BadRequest();
             }
@@ -181,14 +189,26 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return NotFound();
             }
 
-            entry.IsPaid = isPaid;
+            if (normalizedPayer == PaidPersonFla)
+            {
+                entry.IsPaidFla = isPaid;
+            }
+            else
+            {
+                entry.IsPaidBosax = isPaid;
+            }
+
+            entry.IsPaid = entry.IsPaidFla && entry.IsPaidBosax;
             await SaveHistoryAsync(history);
 
             return Json(new
             {
                 success = true,
                 entryId = entry.EntryId,
-                isPaid = entry.IsPaid,
+                payer = normalizedPayer,
+                isPaid,
+                isPaidFla = entry.IsPaidFla,
+                isPaidBosax = entry.IsPaidBosax,
                 history = history.Select(MapHistoryEntry).ToList()
             });
         }
@@ -231,7 +251,13 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             try
             {
-                return JsonSerializer.Deserialize<List<LavaggioHistoryEntry>>(rawValue) ?? new List<LavaggioHistoryEntry>();
+                var history = JsonSerializer.Deserialize<List<LavaggioHistoryEntry>>(rawValue) ?? new List<LavaggioHistoryEntry>();
+                foreach (var entry in history)
+                {
+                    NormalizeHistoryPaymentFlags(entry);
+                }
+
+                return history;
             }
             catch
             {
@@ -309,6 +335,27 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             };
         }
 
+        private static string? NormalizePaidPerson(string? payer)
+        {
+            return payer?.Trim().ToLowerInvariant() switch
+            {
+                PaidPersonFla => PaidPersonFla,
+                PaidPersonBosax => PaidPersonBosax,
+                _ => null
+            };
+        }
+
+        private static void NormalizeHistoryPaymentFlags(LavaggioHistoryEntry entry)
+        {
+            if (entry.IsPaid && !entry.IsPaidFla && !entry.IsPaidBosax)
+            {
+                entry.IsPaidFla = true;
+                entry.IsPaidBosax = true;
+            }
+
+            entry.IsPaid = entry.IsPaidFla && entry.IsPaidBosax;
+        }
+
         private static LavaggioHistoryEntry? BuildHistoryEntry(LavaggiTrackerState state, string category, DateTime nowUtc)
         {
             if (category == CaschiCategoryKey)
@@ -367,7 +414,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 periodStart = entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
                 periodEnd = entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
                 resetAt = entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                isPaid = entry.IsPaid
+                isPaid = entry.IsPaid,
+                isPaidFla = entry.IsPaidFla,
+                isPaidBosax = entry.IsPaidBosax
             };
         }
 

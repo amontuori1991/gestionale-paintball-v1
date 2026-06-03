@@ -185,6 +185,13 @@
         white-space: nowrap;
     }
 
+    .paid-switches {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+    }
+
     .paid-switch {
         display: inline-flex;
         align-items: center;
@@ -235,7 +242,7 @@
     }
 
     .paid-switch-text {
-        min-width: 72px;
+        min-width: 102px;
     }
 
     .grand-total {
@@ -609,7 +616,7 @@
                         <th>Importo</th>
                         <th>Periodo</th>
                         <th>Reset</th>
-                        <th>Pagato</th>
+                        <th>Pagamenti</th>
                         <th>Azioni</th>
                     </tr>
                 </thead>
@@ -625,11 +632,18 @@
                             <td>@entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                             <td>
-                                <label class="paid-switch">
-                                    <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" checked="@entry.IsPaid" />
-                                    <span class="paid-switch-track"></span>
-                                    <span class="paid-switch-text">@(entry.IsPaid ? "Pagato" : "Da pagare")</span>
-                                </label>
+                                <div class="paid-switches">
+                                    <label class="paid-switch">
+                                        <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" data-paid-person="fla" checked="@entry.IsPaidFla" />
+                                        <span class="paid-switch-track"></span>
+                                        <span class="paid-switch-text">@(entry.IsPaidFla ? "Pagato Fla" : "Da pagare Fla")</span>
+                                    </label>
+                                    <label class="paid-switch">
+                                        <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" data-paid-person="bosax" checked="@entry.IsPaidBosax" />
+                                        <span class="paid-switch-track"></span>
+                                        <span class="paid-switch-text">@(entry.IsPaidBosax ? "Pagato Bosax" : "Da pagare Bosax")</span>
+                                    </label>
+                                </div>
                             </td>
                             <td>
                                 <button type="button" class="undo-btn" data-undo-id="@entry.EntryId">Annulla</button>
@@ -655,11 +669,18 @@
                     <div class="history-mobile-meta">Valore unitario: @entry.UnitPrice.ToString("C", culture)</div>
                     <div class="history-mobile-meta">Periodo: @entry.PeriodStartUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @entry.PeriodEndUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
                     <div class="history-mobile-meta">Reset: @entry.ResetAtUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
-                    <label class="paid-switch">
-                        <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" checked="@entry.IsPaid" />
-                        <span class="paid-switch-track"></span>
-                        <span class="paid-switch-text">@(entry.IsPaid ? "Pagato" : "Da pagare")</span>
-                    </label>
+                    <div class="paid-switches">
+                        <label class="paid-switch">
+                            <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" data-paid-person="fla" checked="@entry.IsPaidFla" />
+                            <span class="paid-switch-track"></span>
+                            <span class="paid-switch-text">@(entry.IsPaidFla ? "Pagato Fla" : "Da pagare Fla")</span>
+                        </label>
+                        <label class="paid-switch">
+                            <input type="checkbox" class="paid-toggle" data-paid-id="@entry.EntryId" data-paid-person="bosax" checked="@entry.IsPaidBosax" />
+                            <span class="paid-switch-track"></span>
+                            <span class="paid-switch-text">@(entry.IsPaidBosax ? "Pagato Bosax" : "Da pagare Bosax")</span>
+                        </label>
+                    </div>
                     <div class="history-mobile-actions">
                         <button type="button" class="undo-btn" data-undo-id="@entry.EntryId">Annulla</button>
                     </div>
@@ -826,20 +847,34 @@
                 });
             };
 
-            const renderPaidSwitch = (entryId, isPaid) => `
+            const getPaidSwitchText = (person, isPaid) => {
+                const label = person === 'bosax' ? 'Bosax' : 'Fla';
+                return `${isPaid ? 'Pagato' : 'Da pagare'} ${label}`;
+            };
+
+            const renderPaidSwitch = (entryId, person, isPaid) => `
                 <label class="paid-switch">
-                    <input type="checkbox" class="paid-toggle" data-paid-id="${entryId}" ${isPaid ? 'checked' : ''} />
+                    <input type="checkbox" class="paid-toggle" data-paid-id="${entryId}" data-paid-person="${person}" ${isPaid ? 'checked' : ''} />
                     <span class="paid-switch-track"></span>
-                    <span class="paid-switch-text">${isPaid ? 'Pagato' : 'Da pagare'}</span>
+                    <span class="paid-switch-text">${getPaidSwitchText(person, isPaid)}</span>
                 </label>
+            `;
+
+            const renderPaidSwitches = (entryId, isPaidFla, isPaidBosax) => `
+                <div class="paid-switches">
+                    ${renderPaidSwitch(entryId, 'fla', isPaidFla)}
+                    ${renderPaidSwitch(entryId, 'bosax', isPaidBosax)}
+                </div>
             `;
 
             const bindPaidSwitches = () => {
                 document.querySelectorAll('[data-paid-id]').forEach(input => {
                     input.onchange = async () => {
+                        const paidPerson = input.dataset.paidPerson;
                         const payload = new URLSearchParams();
                         payload.set('__RequestVerificationToken', token);
                         payload.set('entryId', input.dataset.paidId);
+                        payload.set('payer', paidPerson);
                         payload.set('isPaid', input.checked ? 'true' : 'false');
                         saveStatus.textContent = 'Aggiornamento pagamento in corso...';
 
@@ -867,7 +902,7 @@
                             input.checked = !input.checked;
                             const text = input.closest('.paid-switch')?.querySelector('.paid-switch-text');
                             if (text) {
-                                text.textContent = input.checked ? 'Pagato' : 'Da pagare';
+                                text.textContent = getPaidSwitchText(input.dataset.paidPerson, input.checked);
                             }
                             saveStatus.textContent = 'Errore durante l\'aggiornamento del pagamento';
                         }
@@ -904,7 +939,7 @@
                         <td>${formatCurrency(item.totalAmount)}</td>
                         <td>${item.periodStart} - ${item.periodEnd}</td>
                         <td>${item.resetAt}</td>
-                        <td>${renderPaidSwitch(item.entryId, item.isPaid)}</td>
+                        <td>${renderPaidSwitches(item.entryId, item.isPaidFla, item.isPaidBosax)}</td>
                         <td><button type="button" class="undo-btn" data-undo-id="${item.entryId}">Annulla</button></td>
                     `;
                     historyTableBody.appendChild(row);
@@ -923,7 +958,7 @@
                         <div class="history-mobile-meta">Valore unitario: ${formatCurrency(item.unitPrice)}</div>
                         <div class="history-mobile-meta">Periodo: ${item.periodStart} - ${item.periodEnd}</div>
                         <div class="history-mobile-meta">Reset: ${item.resetAt}</div>
-                        ${renderPaidSwitch(item.entryId, item.isPaid)}
+                        ${renderPaidSwitches(item.entryId, item.isPaidFla, item.isPaidBosax)}
                         <div class="history-mobile-actions">
                             <button type="button" class="undo-btn" data-undo-id="${item.entryId}">Annulla</button>
                         </div>
