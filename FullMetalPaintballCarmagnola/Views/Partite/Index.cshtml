@@ -600,6 +600,149 @@
                 });
             });
 
+            const htmlToPlainText = (html) => {
+                const temp = document.createElement('div');
+                temp.innerHTML = html || '';
+                return (temp.innerText || temp.textContent || '')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+            };
+
+            const openWhatsapp = (number, text) => {
+                if (!number) {
+                    fmpNotify('Numero WhatsApp non disponibile per questa prenotazione.', 'error');
+                    return;
+                }
+
+                const baseUrl = `https://wa.me/${number}`;
+                const url = text ? `${baseUrl}?text=${encodeURIComponent(text)}` : baseUrl;
+                window.open(url, '_blank', 'noopener');
+            };
+
+            const buildReminderText = (button) => {
+                const referente = button.dataset.referente || 'ciao';
+                return [
+                    `Ciao ${referente}, ti ricordiamo la prenotazione paintball del ${button.dataset.date} alle ${button.dataset.time}.`,
+                    '',
+                    'È richiesto l’arrivo al campo almeno 15/20 minuti prima dell’orario prenotato.',
+                    `Partecipanti indicativi: ${button.dataset.participants}. Durata: ${button.dataset.duration} ore.`,
+                    '',
+                    'Il campo è all’aperto ed è disponibile uno spogliatoio, ma non sono presenti docce.',
+                    'Pagamento finale in contanti o Satispay.',
+                    '',
+                    'A presto! 🎯'
+                ].join('\n');
+            };
+
+            const buildTesseramentoText = (button) => {
+                return [
+                    `Ciao ${button.dataset.referente || ''},`,
+                    'ti inviamo il link per compilare il tesseramento della partita:',
+                    button.dataset.tesseramentoUrl || '',
+                    '',
+                    'Da far compilare ai partecipanti entro 3 ore dall’arrivo al campo.',
+                    'Grazie!'
+                ].join('\n').trim();
+            };
+
+            const buildShortSummaryText = (button) => {
+                return [
+                    `Ciao ${button.dataset.referente || ''}, riepilogo rapido della prenotazione:`,
+                    '',
+                    `📅 Data: ${button.dataset.date}`,
+                    `🕒 Ora: ${button.dataset.time}`,
+                    `⏳ Durata: ${button.dataset.duration} ore`,
+                    `👥 Partecipanti: ${button.dataset.participants}`,
+                    `🎯 Tipologia: ${button.dataset.type}`,
+                    `💶 Caparra: ${button.dataset.caparra}`,
+                    '',
+                    `📎 Link tesseramento: ${button.dataset.tesseramentoUrl || ''}`
+                ].join('\n').trim();
+            };
+
+            $(document).on('click', '.btn-whatsapp-actions', async function () {
+                const button = this;
+                const number = button.dataset.waNumber;
+                let selectedWhatsappAction = '';
+
+                await Swal.fire({
+                    title: 'Azioni WhatsApp',
+                    html: `
+                        <div class="text-start">
+                            <p class="mb-3">Scegli cosa preparare per <strong>${button.dataset.referente || 'il referente'}</strong>.</p>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-success js-wa-action" data-action="chat">💬 Apri chat libera</button>
+                                <button type="button" class="btn btn-outline-success js-wa-action" data-action="summary">📄 Messaggio riepilogativo completo</button>
+                                <button type="button" class="btn btn-outline-success js-wa-action" data-action="link">📎 Link tesseramento</button>
+                                <button type="button" class="btn btn-outline-success js-wa-action" data-action="reminder">⏰ Promemoria partita</button>
+                                <button type="button" class="btn btn-outline-success js-wa-action" data-action="short">🎯 Riepilogo rapido</button>
+                            </div>
+                        </div>
+                    `,
+                    showConfirmButton: false,
+                    showCloseButton: true,
+                    didOpen: () => {
+                        document.querySelectorAll('.js-wa-action').forEach(actionButton => {
+                            actionButton.addEventListener('click', () => {
+                                selectedWhatsappAction = actionButton.dataset.action || '';
+                                Swal.close();
+                            });
+                        });
+                    }
+                });
+
+                const action = selectedWhatsappAction;
+                if (!action) {
+                    return;
+                }
+
+                if (action === 'chat') {
+                    openWhatsapp(number, '');
+                    return;
+                }
+
+                if (action === 'link') {
+                    openWhatsapp(number, buildTesseramentoText(button));
+                    return;
+                }
+
+                if (action === 'reminder') {
+                    openWhatsapp(number, buildReminderText(button));
+                    return;
+                }
+
+                if (action === 'short') {
+                    openWhatsapp(number, buildShortSummaryText(button));
+                    return;
+                }
+
+                if (action === 'summary') {
+                    try {
+                        Swal.fire({
+                            title: 'Preparo il messaggio...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+
+                        const response = await $.ajax({
+                            url: '@Url.Action("GeneraMessaggioPrenotazione", "Partite")',
+                            method: 'GET',
+                            data: { id: button.dataset.id }
+                        });
+
+                        Swal.close();
+                        if (response.success) {
+                            openWhatsapp(number, htmlToPlainText(response.messaggio));
+                        } else {
+                            fmpNotify(response.messaggio || 'Impossibile generare il messaggio riepilogativo.', 'error');
+                        }
+                    } catch (error) {
+                        Swal.close();
+                        fmpNotify('Errore durante la generazione del messaggio riepilogativo.', 'error');
+                    }
+                }
+            });
+
             $(document).on('click', '.btn-calcolo-saldo', function () {
                 const button = this;
                 const priceValid = String(button.dataset.priceValid || '').toLowerCase() === 'true';

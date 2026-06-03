@@ -33,6 +33,14 @@
         margin-top: 5px;
     }
 
+    .responsive-table button.icon-link {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        line-height: 1;
+        cursor: pointer;
+    }
+
     .responsive-table .ref-icon {
         cursor: pointer;
         font-size: 1.2rem;
@@ -655,6 +663,10 @@
         line-height: 1 !important;
         text-decoration: none !important;
         color: inherit !important;
+    }
+
+    button.pm-iconbtn {
+        cursor: pointer !important;
     }
 
     .pm-iconbtn--whatsapp {
