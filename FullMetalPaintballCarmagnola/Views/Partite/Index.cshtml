@@ -744,7 +744,7 @@
 
                         Swal.close();
                         if (response.success) {
-                            openWhatsapp(number, htmlToPlainText(response.messaggio));
+                            openWhatsapp(number, response.messaggioWhatsapp || htmlToPlainText(response.messaggio));
                         } else {
                             fmpNotify(response.messaggio || 'Impossibile generare il messaggio riepilogativo.', 'error');
                         }

@@ -852,7 +852,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var catalog = await _pricingCatalogService.GetCatalogAsync();
             var listinoId = catalog.Listini.Any(l => l.Id == partita.Listino) ? partita.Listino : catalog.CurrentListinoId;
 
-            string prezzo, colpi, extraCaccia, infoTesseramento;
+            string prezzo, colpi, extraCaccia, extraCacciaWhatsapp, infoTesseramento, infoTesseramentoWhatsapp;
             decimal? prezzoUnitario = null;
             const decimal quotaTesseramento = 5m;
 
@@ -863,7 +863,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 prezzo = prezzoUnitario.HasValue ? PricingCatalogService.FormatCurrency(prezzoUnitario.Value) : "-";
                 colpi = string.IsNullOrWhiteSpace(kidsEntry?.IncludedShots) ? "Illimitati" : kidsEntry.IncludedShots;
                 extraCaccia = "";
+                extraCacciaWhatsapp = "";
                 infoTesseramento = "<strong>⚠️ Il prezzo include il tesseramento con validità fino al 31/12.</strong><br>";
+                infoTesseramentoWhatsapp = "Il prezzo include il tesseramento con validità fino al 31/12.";
             }
             else
             {
@@ -900,13 +902,16 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     var prezzoCaccia = PricingCatalogService.FormatCurrency(GetRabbitPrice(catalog, partita.CacciaDoppia, listinoId));
                     var labelX2 = partita.CacciaDoppia ? " x2" : "";
                     extraCaccia = $"💥 Extra: Caccia al Coniglio{labelX2} {prezzoCaccia}<br>";
+                    extraCacciaWhatsapp = $"Extra: Caccia al Coniglio{labelX2} {prezzoCaccia}";
                 }
                 else
                 {
                     extraCaccia = "";
+                    extraCacciaWhatsapp = "";
                 }
 
                 infoTesseramento = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.<br>";
+                infoTesseramentoWhatsapp = "Da far compilare a tutti i partecipanti entro 3 ore dall'arrivo al campo.";
             }
 
             // Blocco coerenza adulti 2h illimitati
@@ -925,6 +930,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             string linkTesseramento = $"{baseUrl}/Tesseramento?partitaId={partita.Id}";
             string linkTesseratiPubblico = $"{baseUrl}/Partite/VisualizzaTesseratiPubblico/{partita.Id}";
             var supplementoMinimoPartecipanti = "";
+            var supplementoMinimoPartecipantiWhatsapp = "";
             if (prezzoUnitario.HasValue && partita.NumeroPartecipanti > 0 && partita.NumeroPartecipanti < 8)
             {
                 var personeMancanti = 8 - partita.NumeroPartecipanti;
@@ -932,6 +938,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 var totaleDifferenza = personeMancanti * quotaGiocoSenzaTessera;
                 var differenzaATesta = totaleDifferenza / partita.NumeroPartecipanti;
                 supplementoMinimoPartecipanti = $"⚠️ Il gruppo minimo richiesto è di 8 persone. Essendo in {partita.NumeroPartecipanti}, occorre coprire anche la quota gioco delle {personeMancanti} persone mancanti, escluso il tesseramento da 5€. Supplemento indicativo: {differenzaATesta:0.00}€ a testa.<br>";
+                supplementoMinimoPartecipantiWhatsapp = $"Il gruppo minimo richiesto è di 8 persone. Essendo in {partita.NumeroPartecipanti}, occorre coprire anche la quota gioco delle {personeMancanti} persone mancanti, escluso il tesseramento da 5€. Supplemento indicativo: {differenzaATesta:0.00}€ a testa.";
             }
 
             string messaggio = $@"
@@ -970,7 +977,65 @@ In caso di maltempo si gioca salvo impraticabilità.<br>
 Pagamenti solo contanti o Satispay, no bancomat.<br><br>
 Ti aspettiamo! 🎯";
 
-            return Json(new { success = true, messaggio });
+            var messaggioWhatsappLines = new List<string>
+            {
+                "Ciao! Di seguito il riepilogo della tua prenotazione:",
+                "",
+                $"Data: {partita.Data:dd/MM/yyyy}",
+                $"Orario: {partita.OraInizio.ToString(@"hh\:mm")}",
+                $"Tipologia: {(partita.Torneo ? "Torneo + " : "")}{(partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) == true ? "KIDS" : "Adulti")}",
+                $"Durata: {partita.Durata} ore",
+                $"Referente: {GetNomeReferente(partita)}",
+                $"Nr. Partecipanti: {partita.NumeroPartecipanti}",
+                $"Caparra: {partita.Caparra:0.00}€",
+                $"{prezzo} a testa"
+            };
+
+            if (!string.IsNullOrWhiteSpace(supplementoMinimoPartecipantiWhatsapp))
+            {
+                messaggioWhatsappLines.Add("");
+                messaggioWhatsappLines.Add(supplementoMinimoPartecipantiWhatsapp);
+            }
+
+            messaggioWhatsappLines.Add("");
+            messaggioWhatsappLines.Add($"Colpi a disposizione: {colpi}");
+
+            if (!string.IsNullOrWhiteSpace(extraCacciaWhatsapp))
+            {
+                messaggioWhatsappLines.Add(extraCacciaWhatsapp);
+            }
+
+            messaggioWhatsappLines.Add("");
+            messaggioWhatsappLines.Add($"Link Tesseramento: {linkTesseramento}");
+            messaggioWhatsappLines.Add(infoTesseramentoWhatsapp);
+            messaggioWhatsappLines.Add("");
+            messaggioWhatsappLines.Add("Potrete visualizzare in tempo reale gli iscritti qui:");
+            messaggioWhatsappLines.Add(linkTesseratiPubblico);
+            messaggioWhatsappLines.Add("");
+
+            if (colpi != "Illimitati")
+            {
+                messaggioWhatsappLines.Add("Eventuali colpi extra potranno essere acquistati al campo.");
+                messaggioWhatsappLines.Add("");
+            }
+
+            messaggioWhatsappLines.Add("Ci trovi a: Via Ceis 80, Carmagnola");
+            messaggioWhatsappLines.Add("Disponiamo di un'area pic-nic dedicata per festeggiamenti, tagli torta e celebrazioni, senza costi aggiuntivi. Vi chiediamo solo di lasciare l'area pulita portando con voi i rifiuti a fine giornata.");
+            messaggioWhatsappLines.Add("");
+            messaggioWhatsappLines.Add("È richiesto l'arrivo almeno 15 minuti prima della prenotazione.");
+            messaggioWhatsappLines.Add($"Il tempo di gioco inizia alle {partita.OraInizio.ToString(@"hh\:mm")} anche in caso di ritardo.");
+            messaggioWhatsappLines.Add("Comunicare variazioni di partecipanti entro 3 ore dall'inizio.");
+            messaggioWhatsappLines.Add("Il campo è all'aperto ed è disponibile uno spogliatoio, ma non sono presenti docce: abbigliamento sportivo consigliato.");
+            messaggioWhatsappLines.Add("Lenti a contatto consigliate, occhiali sconsigliati sotto la maschera.");
+            messaggioWhatsappLines.Add("Minorenni solo se autorizzati dai genitori.");
+            messaggioWhatsappLines.Add("In caso di maltempo si gioca salvo impraticabilità.");
+            messaggioWhatsappLines.Add("Pagamenti solo contanti o Satispay, no bancomat.");
+            messaggioWhatsappLines.Add("");
+            messaggioWhatsappLines.Add("Ti aspettiamo!");
+
+            var messaggioWhatsapp = string.Join('\n', messaggioWhatsappLines);
+
+            return Json(new { success = true, messaggio, messaggioWhatsapp });
         }
 
         private async Task PopulateListinoOptionsAsync(short selectedListinoId)
