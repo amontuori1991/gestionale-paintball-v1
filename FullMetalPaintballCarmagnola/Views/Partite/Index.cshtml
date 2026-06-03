@@ -608,6 +608,17 @@
                     .trim();
             };
 
+            const normalizeWhatsappText = (text) => {
+                return String(text || '')
+                    .replace(/\uFFFD/g, '')
+                    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+                    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')
+                    .replace(/\uFE0F/g, '')
+                    .replace(/[ \t]{2,}/g, ' ')
+                    .replace(/^[ \t]+/gm, '')
+                    .trim();
+            };
+
             const openWhatsapp = (number, text) => {
                 if (!number) {
                     fmpNotify('Numero WhatsApp non disponibile per questa prenotazione.', 'error');
@@ -615,7 +626,8 @@
                 }
 
                 const baseUrl = `https://wa.me/${number}`;
-                const url = text ? `${baseUrl}?text=${encodeURIComponent(text)}` : baseUrl;
+                const safeText = normalizeWhatsappText(text);
+                const url = safeText ? `${baseUrl}?text=${encodeURIComponent(safeText)}` : baseUrl;
                 window.open(url, '_blank', 'noopener');
             };
 
@@ -630,7 +642,7 @@
                     'Il campo è all’aperto ed è disponibile uno spogliatoio, ma non sono presenti docce.',
                     'Pagamento finale in contanti o Satispay.',
                     '',
-                    'A presto! 🎯'
+                    'A presto!'
                 ].join('\n');
             };
 
@@ -649,14 +661,14 @@
                 return [
                     `Ciao ${button.dataset.referente || ''}, riepilogo rapido della prenotazione:`,
                     '',
-                    `📅 Data: ${button.dataset.date}`,
-                    `🕒 Ora: ${button.dataset.time}`,
-                    `⏳ Durata: ${button.dataset.duration} ore`,
-                    `👥 Partecipanti: ${button.dataset.participants}`,
-                    `🎯 Tipologia: ${button.dataset.type}`,
-                    `💶 Caparra: ${button.dataset.caparra}`,
+                    `Data: ${button.dataset.date}`,
+                    `Ora: ${button.dataset.time}`,
+                    `Durata: ${button.dataset.duration} ore`,
+                    `Partecipanti: ${button.dataset.participants}`,
+                    `Tipologia: ${button.dataset.type}`,
+                    `Caparra: ${button.dataset.caparra}`,
                     '',
-                    `📎 Link tesseramento: ${button.dataset.tesseramentoUrl || ''}`
+                    `Link tesseramento: ${button.dataset.tesseramentoUrl || ''}`
                 ].join('\n').trim();
             };
 
