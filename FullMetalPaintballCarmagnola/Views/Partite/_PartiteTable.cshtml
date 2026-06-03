@@ -30,6 +30,21 @@
             ? "KIDS"
             : (string.IsNullOrWhiteSpace(partita.Tipo) ? "ADULTI" : partita.Tipo.ToUpperInvariant());
 
+    string TesseratiNames(Partita partita)
+    {
+        var tesserati = partita.Tesseramenti ?? new List<Tesseramento>();
+        var names = tesserati
+            .OrderBy(t => t.Cognome)
+            .ThenBy(t => t.Nome)
+            .Select(t => $"{t.Nome} {t.Cognome}".Trim())
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToList();
+
+        return names.Any()
+            ? string.Join("\n", names)
+            : "Nessun tesseramento ricevuto al momento";
+    }
+
     string RiferimentoDettaglio(Partita partita)
     {
         var parts = new List<string>();
@@ -279,6 +294,8 @@
                                     data-time="@partita.OraInizio.ToString(@"hh\:mm")"
                                     data-duration="@partita.Durata"
                                     data-participants="@partita.NumeroPartecipanti"
+                                    data-registered="@iscritti"
+                                    data-members-names="@TesseratiNames(partita)"
                                     data-type="@TipoLabel(partita)"
                                     data-caparra="@Money(partita.Caparra)"
                                     data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">
@@ -467,6 +484,8 @@
                         data-time="@partita.OraInizio.ToString(@"hh\:mm")"
                         data-duration="@partita.Durata"
                         data-participants="@partita.NumeroPartecipanti"
+                        data-registered="@iscritti"
+                        data-members-names="@TesseratiNames(partita)"
                         data-type="@tipoLabel"
                         data-caparra="@Money(partita.Caparra)"
                         data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">

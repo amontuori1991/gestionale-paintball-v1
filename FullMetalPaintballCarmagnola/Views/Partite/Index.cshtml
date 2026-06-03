@@ -657,6 +657,32 @@
                 ].join('\n').trim();
             };
 
+            const buildTesseramentoReminderText = (button) => {
+                const registered = Number.parseInt(button.dataset.registered || '0', 10) || 0;
+                const participants = Number.parseInt(button.dataset.participants || '0', 10) || 0;
+                const rawNames = (button.dataset.membersNames || '').trim();
+                const names = rawNames
+                    ? rawNames.split(/\r?\n/).map(name => name.trim()).filter(Boolean)
+                    : [];
+                const namesBlock = names.length
+                    ? names.map(name => `- ${name}`).join('\n')
+                    : '- Nessun tesseramento ricevuto al momento';
+
+                return [
+                    'Ciao!',
+                    `ti informo che attualmente i tesseramenti ricevuti sono ${registered} su ${participants}.`,
+                    '',
+                    'I nominativi registrati risultano i seguenti:',
+                    namesBlock,
+                    '',
+                    'Ti chiedo gentilmente di far tesserare i mancanti.',
+                    `Link tesseramento: ${button.dataset.tesseramentoUrl || ''}`,
+                    '',
+                    'Grazie!',
+                    'Buona giornata'
+                ].join('\n').trim();
+            };
+
             const buildShortSummaryText = (button) => {
                 return [
                     `Ciao ${button.dataset.referente || ''}, riepilogo rapido della prenotazione:`,
@@ -686,6 +712,7 @@
                                 <button type="button" class="btn btn-success js-wa-action" data-action="chat">💬 Apri chat libera</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="summary">📄 Messaggio riepilogativo completo</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="link">📎 Link tesseramento</button>
+                                <button type="button" class="btn btn-outline-success js-wa-action" data-action="members-reminder">📝 Sollecito tesseramenti</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="reminder">⏰ Promemoria partita</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="short">🎯 Riepilogo rapido</button>
                             </div>
@@ -715,6 +742,11 @@
 
                 if (action === 'link') {
                     openWhatsapp(number, buildTesseramentoText(button));
+                    return;
+                }
+
+                if (action === 'members-reminder') {
+                    openWhatsapp(number, buildTesseramentoReminderText(button));
                     return;
                 }
 
