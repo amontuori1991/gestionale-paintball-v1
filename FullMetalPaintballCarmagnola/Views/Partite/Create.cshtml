@@ -5,9 +5,21 @@
     ViewData["Title"] = "Aggiungi Partita";
     var listinoAdultLabelsJson = JsonSerializer.Serialize(ViewBag.ListinoAdultLabels ?? new Dictionary<string, string>());
     var listinoKidsLabelsJson = JsonSerializer.Serialize(ViewBag.ListinoKidsLabels ?? new Dictionary<string, string>());
+    var createPriceMapJson = JsonSerializer.Serialize(ViewBag.CreatePriceMap ?? new Dictionary<string, Dictionary<string, decimal?>>());
+    var initialEmptyFields = ViewContext.ModelState.Count == 0;
 }
 
 <h2 class="mb-4">➕ Aggiungi Nuova Partita</h2>
+
+<style>
+    @@media (max-width: 768px) {
+        #form-create-partita input.form-control,
+        #form-create-partita select.form-control,
+        #form-create-partita textarea.form-control {
+            font-size: 16px;
+        }
+    }
+</style>
 
 <form asp-action="Create" method="post" id="form-create-partita" data-loading-message="Inserimento partita, attendere...">
     <div class="mb-3">
@@ -34,8 +46,8 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="OraInizio" class="form-label"></label>
-        <input asp-for="OraInizio" class="form-control" type="time" />
+        <label asp-for="OraInizio" class="form-label">Ora Inizio</label>
+        <input asp-for="OraInizio" class="form-control" type="time" value="@(initialEmptyFields ? "" : Model.OraInizio.ToString(@"hh\:mm"))" required />
         <span asp-validation-for="OraInizio" class="text-danger"></span>
     </div>
 
@@ -57,27 +69,26 @@
         </div>
     </div>
 
-    <div class="form-group">
-        <label asp-for="Riferimento" class="form-label">Riferimento / note interne</label>
-        <input asp-for="Riferimento" class="form-control" placeholder="Campo storico opzionale" />
-        <span asp-validation-for="Riferimento" class="text-danger"></span>
-    </div>
-
     <div class="mb-3">
         <label asp-for="Durata" class="form-label"></label>
-        <input asp-for="Durata" class="form-control" type="number" step="0.5" lang="en" />
+        <select asp-for="Durata" class="form-control js-duration" required>
+            <option value="">-- Seleziona --</option>
+            <option value="1">1 ora</option>
+            <option value="1,5">1.5 ore</option>
+            <option value="2">2 ore</option>
+        </select>
         <span asp-validation-for="Durata" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="NumeroPartecipanti" class="form-label"></label>
-        <input asp-for="NumeroPartecipanti" class="form-control" type="number" min="1" />
+        <input asp-for="NumeroPartecipanti" class="form-control" type="number" min="1" value="@(initialEmptyFields ? "" : Model.NumeroPartecipanti.ToString())" required />
         <span asp-validation-for="NumeroPartecipanti" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="Caparra" class="form-label"></label>
-        <input asp-for="Caparra" class="form-control" type="number" step="0.01" min="0" />
+        <input asp-for="Caparra" class="form-control js-deposit" type="number" step="0.01" min="0" value="@(initialEmptyFields ? "" : Model.Caparra.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))" required />
         <span asp-validation-for="Caparra" class="text-danger"></span>
     </div>
 
@@ -127,8 +138,12 @@
         const form = document.getElementById('form-create-partita');
         const tipoSelect = form ? form.querySelector('[name="Tipo"]') : null;
         const listinoSelect = form ? form.querySelector('[name="Listino"]') : null;
+        const durationSelect = form ? form.querySelector('[name="Durata"]') : null;
+        const unlimitedInput = form ? form.querySelector('[name="ColpiIllimitati"]') : null;
+        const depositInput = form ? form.querySelector('.js-deposit') : null;
         const adultLabels = @Html.Raw(listinoAdultLabelsJson);
         const kidsLabels = @Html.Raw(listinoKidsLabelsJson);
+        const priceMap = @Html.Raw(createPriceMapJson);
 
         function syncListinoLabels() {
             if (!tipoSelect || !listinoSelect) return;
@@ -139,6 +154,29 @@
                     option.textContent = labels[option.value];
                 }
             });
+        }
+
+        function syncDepositFromPrice() {
+            if (!tipoSelect || !listinoSelect || !durationSelect || !depositInput) return;
+
+            const tipo = tipoSelect.value === 'Kids' ? 'Kids' : 'Adulti';
+            const durata = durationSelect.value.replace(',', '.');
+            const shotsMode = unlimitedInput?.checked ? 'unlimited' : 'standard';
+            const pricesByListino = priceMap[listinoSelect.value] || {};
+            const price = pricesByListino[`${tipo}|${shotsMode}|${durata}`];
+
+            depositInput.value = price === null || price === undefined ? '' : Number(price).toFixed(2);
+        }
+
+        function syncUnlimitedAvailability() {
+            if (!durationSelect || !unlimitedInput) return;
+
+            const isAdultTwoHours = tipoSelect?.value !== 'Kids' && durationSelect.value.replace(',', '.') === '2';
+            if (isAdultTwoHours) {
+                unlimitedInput.checked = false;
+            }
+
+            unlimitedInput.disabled = isAdultTwoHours;
         }
 
         function normalizePhoneFields() {
@@ -185,6 +223,14 @@
             tipoSelect.addEventListener('change', syncListinoLabels);
             syncListinoLabels();
         }
+
+        [tipoSelect, listinoSelect, durationSelect, unlimitedInput].forEach(element => {
+            element?.addEventListener('change', () => {
+                syncUnlimitedAvailability();
+                syncDepositFromPrice();
+            });
+        });
+        syncUnlimitedAvailability();
 
         // ✅ toggle caccia x2
         const chkCaccia = document.getElementById('chkCaccia');

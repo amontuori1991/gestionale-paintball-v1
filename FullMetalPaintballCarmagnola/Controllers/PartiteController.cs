@@ -265,6 +265,16 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Partita partita)
         {
+            if (partita.NumeroPartecipanti <= 0)
+            {
+                ModelState.AddModelError(nameof(Partita.NumeroPartecipanti), "Inserisci il numero di partecipanti.");
+            }
+
+            if (!MatchesDuration(partita.Durata, 1.0) && !MatchesDuration(partita.Durata, 1.5) && !MatchesDuration(partita.Durata, 2.0))
+            {
+                ModelState.AddModelError(nameof(Partita.Durata), "Seleziona una durata valida.");
+            }
+
             if (!ModelState.IsValid)
             {
                 await PopulateListinoOptionsAsync(partita.Listino);
@@ -1061,6 +1071,22 @@ Ti aspettiamo! 🎯";
                 .ToList();
             ViewBag.ListinoAdultLabels = catalog.Listini.ToDictionary(l => l.Id.ToString(CultureInfo.InvariantCulture), l => catalog.BuildStandardSummary(l.Id));
             ViewBag.ListinoKidsLabels = catalog.Listini.ToDictionary(l => l.Id.ToString(CultureInfo.InvariantCulture), l => catalog.BuildKidsSummary(l.Id));
+            ViewBag.CreatePriceMap = catalog.Listini.ToDictionary(
+                l => l.Id.ToString(CultureInfo.InvariantCulture),
+                l => new Dictionary<string, decimal?>
+                {
+                    ["Adulti|standard|1"] = catalog.GetEntry(PricingEntryCodes.AdultStandard1Hour)?.GetPrice(l.Id),
+                    ["Adulti|standard|1.5"] = catalog.GetEntry(PricingEntryCodes.AdultStandard90Minutes)?.GetPrice(l.Id),
+                    ["Adulti|standard|2"] = catalog.GetEntry(PricingEntryCodes.AdultStandard2Hours)?.GetPrice(l.Id),
+                    ["Adulti|unlimited|1"] = catalog.GetEntry(PricingEntryCodes.AdultUnlimited1Hour)?.GetPrice(l.Id),
+                    ["Adulti|unlimited|1.5"] = catalog.GetEntry(PricingEntryCodes.AdultUnlimited90Minutes)?.GetPrice(l.Id),
+                    ["Kids|standard|1"] = catalog.GetEntry(PricingEntryCodes.Kids1Hour)?.GetPrice(l.Id),
+                    ["Kids|standard|1.5"] = catalog.GetEntry(PricingEntryCodes.Kids90Minutes)?.GetPrice(l.Id),
+                    ["Kids|standard|2"] = catalog.GetEntry(PricingEntryCodes.Kids2Hours)?.GetPrice(l.Id),
+                    ["Kids|unlimited|1"] = catalog.GetEntry(PricingEntryCodes.Kids1Hour)?.GetPrice(l.Id),
+                    ["Kids|unlimited|1.5"] = catalog.GetEntry(PricingEntryCodes.Kids90Minutes)?.GetPrice(l.Id),
+                    ["Kids|unlimited|2"] = catalog.GetEntry(PricingEntryCodes.Kids2Hours)?.GetPrice(l.Id)
+                });
         }
 
         private async Task PopulateListinoLabelsAsync()
