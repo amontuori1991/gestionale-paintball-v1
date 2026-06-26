@@ -156,7 +156,9 @@
                 let rawPrefix = (prefixInput.value || '').trim();
                 const knownPrefixes = ['420','421','423','386','385','387','381','380','351','352','353','354','355','356','357','358','359','212','213','216','218','376','377','378','379','590','591','592','593','594','595','596','597','598','599','39','33','34','41','44','49','31','32','43','45','46','47','48','36','40','30','1','7'];
                 const digits = rawNumber.replace(/\D/g, '');
-                if (rawNumber.startsWith('+') || rawNumber.startsWith('00')) {
+                const hasPrefix = rawPrefix.replace(/\D/g, '').length > 0;
+                const looksLikeInternational = rawNumber.startsWith('+') || rawNumber.startsWith('00') || (!hasPrefix && digits.length > 10);
+                if (looksLikeInternational) {
                     const internationalDigits = rawNumber.startsWith('00') ? digits.replace(/^00/, '') : digits;
                     const matchedPrefix = knownPrefixes
                         .sort((a, b) => b.length - a.length)
@@ -172,7 +174,16 @@
                 numberInput.value = rawNumber.replace(/\D/g, '');
             }
 
-            form?.querySelector('.js-phone-number')?.addEventListener('blur', normalizePhoneFields);
+            const phoneNumberInput = form?.querySelector('.js-phone-number');
+            phoneNumberInput?.addEventListener('paste', function (event) {
+                const pastedText = event.clipboardData?.getData('text');
+                if (!pastedText) return;
+
+                event.preventDefault();
+                phoneNumberInput.value = pastedText;
+                normalizePhoneFields();
+            });
+            phoneNumberInput?.addEventListener('blur', normalizePhoneFields);
             form?.querySelector('.js-phone-prefix')?.addEventListener('blur', normalizePhoneFields);
             form?.addEventListener('submit', normalizePhoneFields);
         })();

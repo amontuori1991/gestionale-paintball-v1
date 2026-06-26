@@ -118,6 +118,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     numeroCompatto = parsedNumber;
                 }
             }
+            else if (string.IsNullOrWhiteSpace(prefisso))
+            {
+                var digits = NonDigitRegex.Replace(numeroCompatto, string.Empty);
+                if (TrySplitInternationalPhone(digits, out var parsedPrefix, out var parsedNumber))
+                {
+                    prefisso = "+" + parsedPrefix;
+                    numeroCompatto = parsedNumber;
+                }
+            }
 
             var prefissoDigits = NonDigitRegex.Replace(prefisso, string.Empty);
             partita.PrefissoTelefonoRiferimento = string.IsNullOrWhiteSpace(prefissoDigits)
