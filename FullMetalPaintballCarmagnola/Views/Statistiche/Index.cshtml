@@ -1,4 +1,4 @@
-﻿@using System.Globalization
+@using System.Globalization
 @{
     ViewData["Title"] = "Statistiche";
 
@@ -29,6 +29,9 @@
     var anniTipoPartite = ViewBag.AnniTipoPartite as List<int>;
     var partiteAdultiPerAnno = ViewBag.PartiteAdultiPerAnno as Dictionary<int, int>;
     var partiteKidsPerAnno = ViewBag.PartiteKidsPerAnno as Dictionary<int, int>;
+    var anniColpiPartite = ViewBag.AnniColpiPartite as List<int>;
+    var partiteColpiStandardPerAnno = ViewBag.PartiteColpiStandardPerAnno as Dictionary<int, int>;
+    var partiteColpiIllimitatiPerAnno = ViewBag.PartiteColpiIllimitatiPerAnno as Dictionary<int, int>;
 
     var ytdLabels = ViewBag.YtdLabels as List<string>;
     var ytdCorrenteValues = ViewBag.YtdCorrenteValues as List<int>;
@@ -58,355 +61,22 @@
     double distanceCurrentMedian = ViewBag.DistanceCurrentMedian;
     int distanceCurrentWithin25Pct = ViewBag.DistanceCurrentWithin25Pct;
     int distanceCurrentOver50Pct = ViewBag.DistanceCurrentOver50Pct;
-    var socialRecapPartite = ViewBag.SocialRecapPartite as List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheSocialRecapPartita>;
-    var socialRecapTesseramenti = ViewBag.SocialRecapTesseramenti as List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheSocialRecapTesserato>;
 }
 
 <link href="~/css/statistiche-responsive.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-    .social-recap-launcher {
-        align-items: center;
-        background: linear-gradient(135deg, rgba(230,0,126,.14), rgba(255,127,30,.16));
-        border: 1px solid rgba(226,0,126,.18);
-        border-radius: 28px;
-        box-shadow: 0 16px 45px rgba(15,23,42,.10);
-        display: flex;
-        gap: 16px;
-        justify-content: space-between;
-        margin: 0 0 22px;
-        overflow: hidden;
-        padding: 18px 20px;
-        position: relative;
-    }
-
-    .social-recap-launcher::before {
-        background: radial-gradient(circle, rgba(120,190,32,.32), transparent 58%);
-        content: "";
-        height: 160px;
-        position: absolute;
-        right: 18%;
-        top: -80px;
-        width: 160px;
-    }
-
-    .social-recap-launcher-text {
-        position: relative;
-        z-index: 1;
-    }
-
-    .social-recap-launcher-kicker {
-        color: #e6007e;
-        font-size: .76rem;
-        font-weight: 950;
-        letter-spacing: .12em;
-        text-transform: uppercase;
-    }
-
-    .social-recap-launcher-title {
-        color: #12140f;
-        font-size: 1.35rem;
-        font-weight: 1000;
-        line-height: 1.05;
-    }
-
-    .social-recap-toggle {
-        align-items: center;
-        background: linear-gradient(135deg, #e6007e, #ff7f1e);
-        border: 0;
-        border-radius: 999px;
-        box-shadow: 0 14px 34px rgba(226,0,126,.28);
-        color: #fff;
-        display: inline-flex;
-        font-weight: 950;
-        gap: 9px;
-        padding: 13px 18px;
-        position: relative;
-        white-space: nowrap;
-        z-index: 1;
-    }
-
-    .social-recap-toggle .bi {
-        transition: transform .22s ease;
-    }
-
-    .social-recap-toggle[aria-expanded="true"] .bi-chevron-down {
-        transform: rotate(180deg);
-    }
-
-    .social-recap-lab {
-        background: radial-gradient(circle at 12% 18%, rgba(226,0,126,.24), transparent 32%), radial-gradient(circle at 88% 12%, rgba(255,127,30,.26), transparent 30%), linear-gradient(135deg, rgba(15,23,42,.96), rgba(22,34,18,.94));
-        border: 1px solid rgba(255,255,255,.14);
-        border-radius: 28px;
-        box-shadow: 0 24px 60px rgba(15,23,42,.24);
-        color: #fff;
-        margin-bottom: 26px;
-        overflow: hidden;
-        padding: 22px;
-        position: relative;
-    }
-
-    .social-recap-lab.is-collapsed {
-        display: none;
-    }
-
-    .social-recap-lab::before {
-        background: url('/img/logo.gif') center / contain no-repeat;
-        content: "";
-        height: 220px;
-        inset: 10% 4% auto auto;
-        opacity: .055;
-        position: absolute;
-        transform: rotate(-8deg);
-        width: 220px;
-    }
-
-    .social-recap-head, .social-recap-shell, .recap-card-content {
-        position: relative;
-        z-index: 1;
-    }
-
-    .social-recap-head {
-        align-items: center;
-        display: flex;
-        gap: 14px;
-        justify-content: space-between;
-        margin-bottom: 18px;
-    }
-
-    .social-recap-kicker {
-        color: #a3e635;
-        font-size: .78rem;
-        font-weight: 950;
-        letter-spacing: .16em;
-        text-transform: uppercase;
-    }
-
-    .social-recap-title {
-        font-size: clamp(1.45rem, 3vw, 2.35rem);
-        font-weight: 950;
-        line-height: .95;
-        margin: 4px 0 0;
-        text-transform: uppercase;
-    }
-
-    .social-recap-shell {
-        display: grid;
-        gap: 18px;
-        grid-template-columns: minmax(280px, .95fr) minmax(300px, 1.05fr);
-    }
-
-    .social-recap-controls {
-        background: rgba(255,255,255,.08);
-        border: 1px solid rgba(255,255,255,.12);
-        border-radius: 22px;
-        display: grid;
-        gap: 12px;
-        padding: 16px;
-    }
-
-    .social-recap-presets, .social-recap-actions, .social-recap-fields {
-        display: grid;
-        gap: 10px;
-    }
-
-    .social-recap-presets, .social-recap-actions {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .social-recap-fields {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .social-recap-controls button, .social-recap-controls input, .social-recap-controls textarea {
-        border: 1px solid rgba(255,255,255,.16);
-        border-radius: 14px;
-        font-weight: 850;
-    }
-
-    .social-recap-controls button {
-        background: rgba(255,255,255,.12);
-        color: #fff;
-        padding: 10px;
-    }
-
-    .social-recap-controls button.is-active, .social-recap-actions button:first-child {
-        background: linear-gradient(135deg, #e6007e, #ff7f1e);
-        border-color: transparent;
-        box-shadow: 0 12px 30px rgba(226,0,126,.25);
-    }
-
-    .social-recap-field label {
-        color: rgba(255,255,255,.72);
-        display: block;
-        font-size: .74rem;
-        font-weight: 950;
-        letter-spacing: .08em;
-        margin-bottom: 5px;
-        text-transform: uppercase;
-    }
-
-    .social-recap-field input, .social-recap-field textarea {
-        background: rgba(255,255,255,.92);
-        color: #111827;
-        padding: 10px 12px;
-        width: 100%;
-    }
-
-    .social-recap-field--full {
-        grid-column: 1 / -1;
-    }
-
-    .social-recap-preview-wrap {
-        align-items: center;
-        display: grid;
-        justify-items: center;
-    }
-
-    .social-recap-preview {
-        aspect-ratio: 9 / 16;
-        background: radial-gradient(circle at 28% 20%, rgba(226,0,126,.72), transparent 24%), radial-gradient(circle at 82% 26%, rgba(255,127,30,.72), transparent 22%), radial-gradient(circle at 14% 74%, rgba(120,190,32,.56), transparent 24%), linear-gradient(160deg, #11140e 0%, #1d2313 48%, #090a08 100%);
-        border: 1px solid rgba(255,255,255,.16);
-        border-radius: 34px;
-        box-shadow: 0 24px 70px rgba(0,0,0,.38);
-        color: white;
-        max-width: 360px;
-        overflow: hidden;
-        padding: 26px;
-        position: relative;
-        width: min(100%, 360px);
-    }
-
-    .social-recap-preview::before {
-        background: url('/img/logo.gif') center / contain no-repeat;
-        content: "";
-        height: 260px;
-        inset: 90px 34px auto;
-        opacity: .12;
-        position: absolute;
-    }
-
-    .social-recap-preview::after {
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent), repeating-linear-gradient(45deg, rgba(255,255,255,.025) 0 4px, transparent 4px 10px);
-        content: "";
-        inset: 0;
-        pointer-events: none;
-        position: absolute;
-    }
-
-    .recap-card-content {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    .recap-card-brand {
-        font-size: .72rem;
-        font-weight: 950;
-        letter-spacing: .18em;
-        text-transform: uppercase;
-    }
-
-    .recap-card-title {
-        font-size: 2.15rem;
-        font-weight: 1000;
-        line-height: .88;
-        margin-top: 18px;
-        text-transform: uppercase;
-    }
-
-    .recap-card-period {
-        background: rgba(255,255,255,.16);
-        border-radius: 999px;
-        display: inline-flex;
-        font-size: .8rem;
-        font-weight: 900;
-        margin-top: 12px;
-        padding: 7px 12px;
-        width: fit-content;
-    }
-
-    .recap-card-stats {
-        display: grid;
-        gap: 10px;
-        margin-top: auto;
-    }
-
-    .recap-card-stat {
-        align-items: end;
-        background: rgba(255,255,255,.12);
-        border: 1px solid rgba(255,255,255,.12);
-        border-radius: 18px;
-        display: flex;
-        justify-content: space-between;
-        padding: 12px 14px;
-    }
-
-    .recap-card-stat span {
-        color: rgba(255,255,255,.72);
-        font-size: .74rem;
-        font-weight: 950;
-        letter-spacing: .07em;
-        text-transform: uppercase;
-    }
-
-    .recap-card-stat strong {
-        color: #fff;
-        font-size: 1.65rem;
-        font-weight: 1000;
-        line-height: 1;
-    }
-
-    .recap-card-top {
-        border-left: 4px solid #a3e635;
-        color: rgba(255,255,255,.86);
-        font-size: .92rem;
-        font-weight: 850;
-        margin-top: 14px;
-        padding-left: 12px;
-    }
-
-    .recap-card-footer {
-        color: rgba(255,255,255,.68);
-        font-size: .78rem;
-        font-weight: 850;
-        margin-top: 18px;
-    }
-
-    @@media (max-width: 900px) {
-        .social-recap-launcher {
-            align-items: stretch;
-            flex-direction: column;
-        }
-
-        .social-recap-toggle {
-            justify-content: center;
-            width: 100%;
-        }
-
-        .social-recap-shell, .social-recap-presets, .social-recap-actions, .social-recap-fields {
-            grid-template-columns: 1fr;
-        }
-
-        .social-recap-head {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-    }
-</style>
-
 <div class="background-logo"></div>
 
 <div class="statistiche-container">
-    <h2>Statistiche Partite – @labelMese (@annoCorrente)</h2>
+    <h2>Statistiche Partite &ndash; @labelMese (@annoCorrente)</h2>
 
     <!-- Navigazione mese -->
     <div style="display:flex; justify-content:center; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary" aria-label="Mese precedente">←</a>
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary" aria-label="Mese precedente">&larr;</a>
         <div style="font-weight:900; letter-spacing:.5px; min-width:190px; text-align:center;">@labelMese.ToUpper()</div>
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary" aria-label="Mese successivo">→</a>
+        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary" aria-label="Mese successivo">&rarr;</a>
     </div>
 
     <!-- Legenda cancellate -->
@@ -420,91 +90,6 @@
             <span>Partite cancellate (sovrapposte)</span>
         </div>
     </div>
-
-    <div class="social-recap-launcher">
-        <div class="social-recap-launcher-text">
-            <div class="social-recap-launcher-kicker">Extra creativo</div>
-            <div class="social-recap-launcher-title">Genera una card social con il recap del weekend</div>
-        </div>
-        <button type="button" class="social-recap-toggle" id="toggleSocialRecap" aria-expanded="false" aria-controls="socialRecapLab">
-            <i class="bi bi-stars" aria-hidden="true"></i>
-            Recap Weekend
-            <i class="bi bi-chevron-down" aria-hidden="true"></i>
-        </button>
-    </div>
-
-    <section class="social-recap-lab is-collapsed" id="socialRecapLab" aria-hidden="true">
-        <div class="social-recap-head">
-            <div>
-                <div class="social-recap-kicker">Paintball content lab</div>
-                <h3 class="social-recap-title">Social recap</h3>
-            </div>
-            <div style="color:rgba(255,255,255,.72); font-weight:850;">
-                Genera una card pronta da pubblicare
-            </div>
-        </div>
-
-        <div class="social-recap-shell">
-            <div class="social-recap-controls">
-                <div class="social-recap-presets">
-                    <button type="button" class="is-active" data-recap-preset="weekend">Ultimo weekend</button>
-                    <button type="button" data-recap-preset="month">Questo mese</button>
-                    <button type="button" data-recap-preset="custom">Personalizzato</button>
-                </div>
-
-                <div class="social-recap-fields">
-                    <div class="social-recap-field">
-                        <label for="recapStartDate">Dal</label>
-                        <input type="date" id="recapStartDate">
-                    </div>
-                    <div class="social-recap-field">
-                        <label for="recapEndDate">Al</label>
-                        <input type="date" id="recapEndDate">
-                    </div>
-                    <div class="social-recap-field social-recap-field--full">
-                        <label for="recapTitleInput">Titolo card</label>
-                        <input type="text" id="recapTitleInput" value="Weekend recap" maxlength="36">
-                    </div>
-                    <div class="social-recap-field social-recap-field--full">
-                        <label for="recapCaption">Caption pronta</label>
-                        <textarea id="recapCaption" rows="5" readonly></textarea>
-                    </div>
-                </div>
-
-                <div class="social-recap-actions">
-                    <button type="button" id="downloadRecapImage">Scarica PNG</button>
-                    <button type="button" id="copyRecapCaption">Copia testo</button>
-                    <button type="button" id="randomizeRecapStyle">Cambia mood</button>
-                </div>
-            </div>
-
-            <div class="social-recap-preview-wrap">
-                <div class="social-recap-preview" id="socialRecapPreview">
-                    <div class="recap-card-content">
-                        <div class="recap-card-brand">Full Metal Paintball Carmagnola</div>
-                        <div class="recap-card-title" id="recapPreviewTitle">Weekend recap</div>
-                        <div class="recap-card-period" id="recapPreviewPeriod">-</div>
-                        <div class="recap-card-stats">
-                            <div class="recap-card-stat">
-                                <span>Partite</span>
-                                <strong id="recapPreviewGames">0</strong>
-                            </div>
-                            <div class="recap-card-stat">
-                                <span>Giocatori</span>
-                                <strong id="recapPreviewPlayers">0</strong>
-                            </div>
-                            <div class="recap-card-stat">
-                                <span>Provenienze</span>
-                                <strong id="recapPreviewPlaces">0</strong>
-                            </div>
-                        </div>
-                        <div class="recap-card-top" id="recapPreviewTopPlace">Top provenienza: N/D</div>
-                        <div class="recap-card-footer">Paintball, adrenalina e fango quanto basta.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- GRAFICO 1: TOP storico vs Anno Corrente -->
     <div class="chart-card" style="margin-bottom:22px;">
@@ -536,7 +121,7 @@
             <canvas id="chartYearTotals"></canvas>
         </div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
-            TOP assoluto: <strong>@topYearOverall</strong> – <strong>@topOverallValue</strong> partite.
+            TOP assoluto: <strong>@topYearOverall</strong> â€“ <strong>@topOverallValue</strong> partite.
             Le barre rosse indicano le partite cancellate per anno.
         </div>
     </div>
@@ -548,6 +133,16 @@
         </div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
             Il confronto considera le partite confermate presenti a database, suddivise per tipologia salvata sulla prenotazione.
+        </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Colpi standard vs illimitati per anno</h4>
+        <div style="position:relative; height:340px;">
+            <canvas id="chartShotsYearTotals"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Il confronto considera le partite confermate presenti a database, suddivise per scelta colpi salvata sulla prenotazione.
         </div>
     </div>
 
@@ -619,7 +214,7 @@
         <div id="comuniHeatmap" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
             Sono visualizzati solo i tesserati con comune di residenza italiano normalizzato nel formato <strong>Comune (PV)</strong>.
-            I cerchi più grandi e più rossi indicano una maggiore affluenza da quel comune.
+            I cerchi piÃ¹ grandi e piÃ¹ rossi indicano una maggiore affluenza da quel comune.
         </div>
     </div>
 
@@ -639,7 +234,7 @@
         <div id="europeChoropleth" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
             I paesi europei vengono colorati in base al numero di tesserati con residenza estera classificata.
-            Più il rosso è intenso, più alta è l'affluenza da quel paese.
+            PiÃ¹ il rosso Ã¨ intenso, piÃ¹ alta Ã¨ l'affluenza da quel paese.
         </div>
     </div>
 </div>
@@ -753,13 +348,13 @@
     const chart1Labels = ['TOP', currentYear.toString()];
 
     const topPrevLabel = (topPrevYear && topPrevYear > 0)
-        ? `TOP: ${topPrevYear} – ${topPrevVal} partite`
-        : `TOP: N/D – 0 partite`;
+        ? `TOP: ${topPrevYear} â€“ ${topPrevVal} partite`
+        : `TOP: N/D â€“ 0 partite`;
 
     const chart1CustomLabels = [
         topPrevLabel,
         currentIsTop
-            ? `TOP: ${currentYear} – ${currentVal} partite`
+            ? `TOP: ${currentYear} â€“ ${currentVal} partite`
             : `${currentYear}: ${currentVal} partite`
     ];
 
@@ -880,7 +475,7 @@
     const chart3DataConf = anni.map(a => totalsPerYear[a] || 0);
     const chart3DataCanc = anni.map(a => cancellatePerY[a] || 0);
 
-    // Colore barra per anno: oro per TOP, blu più vivace per anno corrente, blu standard per altri
+    // Colore barra per anno: oro per TOP, blu piÃ¹ vivace per anno corrente, blu standard per altri
     const chart3Colors = anni.map(a => {
         if (a === topYearOverall) return 'rgba(234,179,8,0.85)';   // oro = TOP
         if (a === currentYear)    return COLOR_CONF_CURR;
@@ -894,7 +489,7 @@
 
     const chart3CustomLabels = anni.map(a => {
         const val = totalsPerYear[a] || 0;
-        if (a === topYearOverall) return `TOP: ${a} – ${val}`;
+        if (a === topYearOverall) return `TOP: ${a} â€“ ${val}`;
         if (a === currentYear)    return `${a} (in corso): ${val}`;
         return `${a}: ${val}`;
     });
@@ -998,6 +593,59 @@
         plugins: [barLabelPlugin]
     });
 
+    const anniColpiPartite = @Html.Raw(Json.Serialize(anniColpiPartite ?? new List<int>()));
+    const partiteColpiStandardPerAnno = @Html.Raw(Json.Serialize(partiteColpiStandardPerAnno ?? new Dictionary<int, int>()));
+    const partiteColpiIllimitatiPerAnno = @Html.Raw(Json.Serialize(partiteColpiIllimitatiPerAnno ?? new Dictionary<int, int>()));
+
+    new Chart(document.getElementById('chartShotsYearTotals').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: anniColpiPartite.map(a => a.toString()),
+            datasets: [
+                {
+                    label: 'Colpi standard',
+                    data: anniColpiPartite.map(a => partiteColpiStandardPerAnno[a] || 0),
+                    backgroundColor: 'rgba(59,130,246,.78)',
+                    borderColor: 'rgba(37,99,235,1)',
+                    borderWidth: 1,
+                    valueLabels: true,
+                    labelColor: 'rgba(30,64,175,1)'
+                },
+                {
+                    label: 'Colpi illimitati',
+                    data: anniColpiPartite.map(a => partiteColpiIllimitatiPerAnno[a] || 0),
+                    backgroundColor: 'rgba(234,179,8,.78)',
+                    borderColor: 'rgba(180,83,9,1)',
+                    borderWidth: 1,
+                    valueLabels: true,
+                    labelColor: 'rgba(146,64,14,1)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 44 } },
+            plugins: {
+                legend: { display: true, position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} partite`
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: false },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
     // =============================================================================
     // CHART 4: Progressivo YTD (line chart)
     // =============================================================================
@@ -1012,322 +660,7 @@
     const distanceYearlyAverages = @Html.Raw(Json.Serialize(distanceYearlyAverages));
     const comuneMapPoints = @Html.Raw(Json.Serialize(comuneMapPoints ?? new List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheComuneMappaPunto>()));
     const europeMapCountries = @Html.Raw(Json.Serialize(europeMapCountries ?? new List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheNazioneMappaDato>()));
-    const socialRecapPartite = @Html.Raw(Json.Serialize(socialRecapPartite ?? new List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheSocialRecapPartita>()));
-    const socialRecapTesseramenti = @Html.Raw(Json.Serialize(socialRecapTesseramenti ?? new List<Full_Metal_Paintball_Carmagnola.Controllers.StatisticheSocialRecapTesserato>()));
-
-    // =============================================================================
-    // SOCIAL RECAP: generatore card scaricabile
-    // =============================================================================
-    (function initSocialRecap() {
-        const startInput = document.getElementById('recapStartDate');
-        const endInput = document.getElementById('recapEndDate');
-        const titleInput = document.getElementById('recapTitleInput');
-        const captionInput = document.getElementById('recapCaption');
-        const preview = document.getElementById('socialRecapPreview');
-        if (!startInput || !endInput || !titleInput || !captionInput || !preview) return;
-
-        const moods = [
-            ['#11140e', '#1d2313', '#e6007e', '#ff7f1e', '#78be20'],
-            ['#090a08', '#202612', '#78be20', '#ff7f1e', '#e6007e'],
-            ['#111827', '#182016', '#ff7f1e', '#e6007e', '#a3e635'],
-            ['#150812', '#20160d', '#e6007e', '#78be20', '#ff7f1e']
-        ];
-        let moodIndex = 0;
-
-        const toDateOnly = (value) => {
-            const date = new Date(`${value}T00:00:00`);
-            return Number.isNaN(date.getTime()) ? null : date;
-        };
-
-        const toIsoDate = (date) => {
-            const copy = new Date(date);
-            copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
-            return copy.toISOString().slice(0, 10);
-        };
-
-        const formatDate = (value) => new Intl.DateTimeFormat('it-IT', {
-            day: 'numeric',
-            month: 'long'
-        }).format(value);
-
-        const formatPeriod = (start, end) => {
-            if (!start || !end) return 'Periodo non valido';
-            if (toIsoDate(start) === toIsoDate(end)) return formatDate(start);
-            return `${formatDate(start)} - ${formatDate(end)}`;
-        };
-
-        const getLastWeekendRange = () => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const day = today.getDay();
-            const daysSinceSaturday = (day + 1) % 7;
-            const saturday = new Date(today);
-            saturday.setDate(today.getDate() - daysSinceSaturday);
-            const sunday = new Date(saturday);
-            sunday.setDate(saturday.getDate() + 1);
-            return { start: saturday, end: sunday };
-        };
-
-        const setPreset = (preset) => {
-            document.querySelectorAll('[data-recap-preset]').forEach(button => {
-                button.classList.toggle('is-active', button.dataset.recapPreset === preset);
-            });
-
-            if (preset === 'weekend') {
-                const range = getLastWeekendRange();
-                startInput.value = toIsoDate(range.start);
-                endInput.value = toIsoDate(range.end);
-                titleInput.value = 'Weekend recap';
-            } else if (preset === 'month') {
-                const today = new Date();
-                const first = new Date(today.getFullYear(), today.getMonth(), 1);
-                const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                startInput.value = toIsoDate(first);
-                endInput.value = toIsoDate(last);
-                titleInput.value = 'Monthly recap';
-            }
-
-            updateRecap();
-        };
-
-        const normalizePlace = (row) => {
-            const nation = (row.nazioneResidenza ?? row.NazioneResidenza ?? '').trim();
-            const comune = (row.comuneResidenza ?? row.ComuneResidenza ?? '').trim();
-            if (nation && nation.toLowerCase() !== 'italia') return nation;
-            const match = comune.match(/^(.+?)\s*\(([A-Z]{2})\)$/i);
-            return match ? match[1].trim() : comune;
-        };
-
-        const collectRecap = () => {
-            const start = toDateOnly(startInput.value);
-            const end = toDateOnly(endInput.value);
-            const endInclusive = end ? new Date(end.getTime() + 86400000 - 1) : null;
-
-            const games = socialRecapPartite.filter(game => {
-                const date = toDateOnly(game.data ?? game.Data);
-                return date && start && endInclusive && date >= start && date <= endInclusive;
-            });
-
-            const gameIds = new Set(games.map(game => game.id ?? game.Id));
-            const memberships = socialRecapTesseramenti.filter(row => gameIds.has(row.partitaId ?? row.PartitaId));
-            const players = games.reduce((sum, game) => sum + (game.partecipanti ?? game.Partecipanti ?? 0), 0);
-            const placeCounts = new Map();
-
-            memberships.forEach(row => {
-                const place = normalizePlace(row);
-                if (!place) return;
-                placeCounts.set(place, (placeCounts.get(place) || 0) + 1);
-            });
-
-            const topPlace = [...placeCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
-
-            return {
-                start,
-                end,
-                games: games.length,
-                players,
-                places: placeCounts.size,
-                topPlaceLabel: topPlace ? `${topPlace[0]} (${topPlace[1]})` : 'N/D',
-                period: formatPeriod(start, end)
-            };
-        };
-
-        const applyMood = () => {
-            const mood = moods[moodIndex % moods.length];
-            preview.style.background = `radial-gradient(circle at 28% 20%, ${mood[2]}b8, transparent 24%), radial-gradient(circle at 82% 26%, ${mood[3]}b8, transparent 22%), radial-gradient(circle at 14% 74%, ${mood[4]}8f, transparent 24%), linear-gradient(160deg, ${mood[0]} 0%, ${mood[1]} 48%, #090a08 100%)`;
-        };
-
-        const updateRecap = () => {
-            const recap = collectRecap();
-            const title = titleInput.value.trim() || 'Weekend recap';
-            document.getElementById('recapPreviewTitle').textContent = title;
-            document.getElementById('recapPreviewPeriod').textContent = recap.period;
-            document.getElementById('recapPreviewGames').textContent = recap.games;
-            document.getElementById('recapPreviewPlayers').textContent = recap.players;
-            document.getElementById('recapPreviewPlaces').textContent = recap.places;
-            document.getElementById('recapPreviewTopPlace').textContent = `Top provenienza: ${recap.topPlaceLabel}`;
-            captionInput.value = [
-                `Full Metal Paintball Carmagnola - ${title}`,
-                `${recap.period}`,
-                '',
-                `${recap.games} partite giocate`,
-                `${recap.players} giocatori in campo`,
-                `${recap.places} provenienze diverse`,
-                `Top provenienza: ${recap.topPlaceLabel}`,
-                '',
-                'Paintball, adrenalina e fango quanto basta.'
-            ].join('\n');
-        };
-
-        const roundRect = (ctx, x, y, width, height, radius) => {
-            const r = Math.min(radius, width / 2, height / 2);
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.arcTo(x + width, y, x + width, y + height, r);
-            ctx.arcTo(x + width, y + height, x, y + height, r);
-            ctx.arcTo(x, y + height, x, y, r);
-            ctx.arcTo(x, y, x + width, y, r);
-            ctx.closePath();
-        };
-
-        const drawDownloadCard = async () => {
-            const recap = collectRecap();
-            const title = titleInput.value.trim() || 'Weekend recap';
-            const mood = moods[moodIndex % moods.length];
-            const canvas = document.createElement('canvas');
-            canvas.width = 1080;
-            canvas.height = 1920;
-            const ctx = canvas.getContext('2d');
-
-            const gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
-            gradient.addColorStop(0, mood[0]);
-            gradient.addColorStop(.5, mood[1]);
-            gradient.addColorStop(1, '#090a08');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 1080, 1920);
-
-            const paint = (x, y, radius, color) => {
-                const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
-                g.addColorStop(0, color);
-                g.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = g;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fill();
-            };
-            paint(250, 330, 430, `${mood[2]}bb`);
-            paint(880, 430, 360, `${mood[3]}bb`);
-            paint(160, 1380, 360, `${mood[4]}99`);
-
-            try {
-                const logo = new Image();
-                logo.src = '/img/logo.gif';
-                await logo.decode();
-                ctx.save();
-                ctx.globalAlpha = .13;
-                ctx.translate(540, 690);
-                ctx.rotate(-0.12);
-                ctx.drawImage(logo, -300, -300, 600, 600);
-                ctx.restore();
-            } catch {
-                // Il download funziona anche se il logo non viene caricato nel canvas.
-            }
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '900 34px Arial';
-            ctx.letterSpacing = '4px';
-            ctx.fillText('FULL METAL PAINTBALL CARMAGNOLA', 72, 126);
-
-            ctx.font = '1000 112px Arial';
-            const words = title.toUpperCase().split(' ');
-            let y = 315;
-            let line = '';
-            words.forEach((word, index) => {
-                const next = line ? `${line} ${word}` : word;
-                if (ctx.measureText(next).width > 880 && line) {
-                    ctx.fillText(line, 72, y);
-                    y += 104;
-                    line = word;
-                } else {
-                    line = next;
-                }
-                if (index === words.length - 1) ctx.fillText(line, 72, y);
-            });
-
-            ctx.font = '900 34px Arial';
-            ctx.fillStyle = 'rgba(255,255,255,.88)';
-            roundRect(ctx, 72, y + 42, 520, 68, 34);
-            ctx.fillStyle = 'rgba(255,255,255,.16)';
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(recap.period.toUpperCase(), 98, y + 88);
-
-            const stats = [
-                ['PARTITE', recap.games],
-                ['GIOCATORI', recap.players],
-                ['PROVENIENZE', recap.places]
-            ];
-            let statY = 1120;
-            stats.forEach(([label, value]) => {
-                roundRect(ctx, 72, statY, 936, 150, 34);
-                ctx.fillStyle = 'rgba(255,255,255,.13)';
-                ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,.72)';
-                ctx.font = '900 31px Arial';
-                ctx.fillText(label, 112, statY + 62);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '1000 78px Arial';
-                ctx.textAlign = 'right';
-                ctx.fillText(String(value), 948, statY + 96);
-                ctx.textAlign = 'left';
-                statY += 176;
-            });
-
-            ctx.fillStyle = '#a3e635';
-            ctx.fillRect(72, 1660, 10, 104);
-            ctx.fillStyle = 'rgba(255,255,255,.9)';
-            ctx.font = '900 36px Arial';
-            ctx.fillText('TOP PROVENIENZA', 106, 1706);
-            ctx.font = '800 34px Arial';
-            ctx.fillText(recap.topPlaceLabel, 106, 1754);
-
-            ctx.fillStyle = 'rgba(255,255,255,.72)';
-            ctx.font = '800 29px Arial';
-            ctx.fillText('Paintball, adrenalina e fango quanto basta.', 72, 1848);
-
-            const link = document.createElement('a');
-            link.download = `full-metal-recap-${startInput.value}-${endInput.value}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        };
-
-        document.querySelectorAll('[data-recap-preset]').forEach(button => {
-            button.addEventListener('click', () => setPreset(button.dataset.recapPreset));
-        });
-        [startInput, endInput, titleInput].forEach(input => {
-            input.addEventListener('input', () => {
-                document.querySelectorAll('[data-recap-preset]').forEach(button => button.classList.remove('is-active'));
-                updateRecap();
-            });
-        });
-        document.getElementById('downloadRecapImage')?.addEventListener('click', () => {
-            drawDownloadCard().catch(() => alert('Non riesco a generare il PNG in questo browser.'));
-        });
-        document.getElementById('copyRecapCaption')?.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(captionInput.value);
-                if (window.fmpNotify) fmpNotify('Testo recap copiato.', 'success');
-            } catch {
-                captionInput.select();
-                document.execCommand('copy');
-            }
-        });
-        document.getElementById('randomizeRecapStyle')?.addEventListener('click', () => {
-            moodIndex += 1;
-            applyMood();
-        });
-
-        const recapToggle = document.getElementById('toggleSocialRecap');
-        const recapLab = document.getElementById('socialRecapLab');
-        recapToggle?.addEventListener('click', () => {
-            const isOpening = recapLab?.classList.contains('is-collapsed');
-            recapLab?.classList.toggle('is-collapsed', !isOpening);
-            recapLab?.setAttribute('aria-hidden', isOpening ? 'false' : 'true');
-            recapToggle.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
-
-            if (isOpening) {
-                updateRecap();
-                window.setTimeout(() => {
-                    recapLab?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 80);
-            }
-        });
-
-        setPreset('weekend');
-        applyMood();
-    })();
-
-    new Chart(document.getElementById('chartYtd').getContext('2d'), {
+new Chart(document.getElementById('chartYtd').getContext('2d'), {
         type: 'line',
         data: {
             labels: ytdLabels,
@@ -1656,3 +989,4 @@
             });
     }
 </script>
+

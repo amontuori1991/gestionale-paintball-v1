@@ -24,11 +24,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         {
             var catalog = await _pricingCatalogService.GetCatalogAsync();
             var previousListinoId = catalog.GetLegacyListino().Id;
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var showPreviousListino = previousListinoId != catalog.CurrentListinoId
                 && await _dbContext.Partite.AnyAsync(p =>
                     !p.IsDeleted
-                    && p.Data.Date >= today
+                    && p.Data >= today
                     && p.Listino == previousListinoId);
 
             ViewBag.CanManagePricing = User.IsInRole("Admin");
