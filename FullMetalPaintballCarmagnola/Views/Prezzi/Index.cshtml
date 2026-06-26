@@ -7,15 +7,25 @@
     var previousListino = Model.GetLegacyListino();
     var currentListino = Model.GetCurrentListino();
     var canManagePricing = ViewBag.CanManagePricing as bool? == true;
+    var showPreviousListino = ViewBag.ShowPreviousListino as bool? == true;
 
     PricingEntry? GetEntry(string code) => Model.GetEntry(code);
     string Money(decimal amount) => PricingCatalogService.FormatCurrency(amount);
+    string ListinoClass(short listinoId) => listinoId == currentListino.Id ? "pricing-listino-current" : "pricing-listino-legacy";
 }
 
 <style>
     .pricing-table td,
     .pricing-table th {
         vertical-align: middle;
+    }
+
+    .pricing-listino-current {
+        background-color: #dcfce7 !important;
+    }
+
+    .pricing-listino-legacy {
+        background-color: #fef3c7 !important;
     }
 
     .pricing-mobile-cards {
@@ -99,10 +109,16 @@
                     <tr>
                         <th>Durata</th>
                         <th>Colpi</th>
-                        <th>@previousListino.Name</th>
-                        <th>@currentListino.Name</th>
-                        <th>Colpi illimitati - @previousListino.Name</th>
-                        <th>Colpi illimitati - @currentListino.Name</th>
+                        @if (showPreviousListino)
+                        {
+                            <th class="@ListinoClass(previousListino.Id)">@previousListino.Name</th>
+                        }
+                        <th class="@ListinoClass(currentListino.Id)">@currentListino.Name</th>
+                        @if (showPreviousListino)
+                        {
+                            <th class="@ListinoClass(previousListino.Id)">Colpi illimitati - @previousListino.Name</th>
+                        }
+                        <th class="@ListinoClass(currentListino.Id)">Colpi illimitati - @currentListino.Name</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,10 +147,16 @@
                         <tr>
                             <td>@row.Duration</td>
                             <td>@(row.Standard?.IncludedShots ?? "-")</td>
-                            <td>@Money(row.Standard?.GetPrice(previousListino.Id) ?? 0m)</td>
-                            <td>@Money(row.Standard?.GetPrice(currentListino.Id) ?? 0m)</td>
-                            <td>@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(previousListino.Id)))</td>
-                            <td>@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(currentListino.Id)))</td>
+                            @if (showPreviousListino)
+                            {
+                                <td class="@ListinoClass(previousListino.Id)">@Money(row.Standard?.GetPrice(previousListino.Id) ?? 0m)</td>
+                            }
+                            <td class="@ListinoClass(currentListino.Id)">@Money(row.Standard?.GetPrice(currentListino.Id) ?? 0m)</td>
+                            @if (showPreviousListino)
+                            {
+                                <td class="@ListinoClass(previousListino.Id)">@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(previousListino.Id)))</td>
+                            }
+                            <td class="@ListinoClass(currentListino.Id)">@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(currentListino.Id)))</td>
                         </tr>
                     }
                 </tbody>
@@ -169,19 +191,25 @@
                         <span class="pricing-mobile-label">Colpi standard</span>
                         <span class="pricing-mobile-value">@(row.Standard?.IncludedShots ?? "-")</span>
                     </div>
-                    <div class="pricing-mobile-row">
-                        <span class="pricing-mobile-label">@previousListino.Name</span>
-                        <span class="pricing-mobile-value">@Money(row.Standard?.GetPrice(previousListino.Id) ?? 0m)</span>
-                    </div>
-                    <div class="pricing-mobile-row">
+                    @if (showPreviousListino)
+                    {
+                        <div class="pricing-mobile-row @ListinoClass(previousListino.Id)">
+                            <span class="pricing-mobile-label">@previousListino.Name</span>
+                            <span class="pricing-mobile-value">@Money(row.Standard?.GetPrice(previousListino.Id) ?? 0m)</span>
+                        </div>
+                    }
+                    <div class="pricing-mobile-row @ListinoClass(currentListino.Id)">
                         <span class="pricing-mobile-label">@currentListino.Name</span>
                         <span class="pricing-mobile-value">@Money(row.Standard?.GetPrice(currentListino.Id) ?? 0m)</span>
                     </div>
-                    <div class="pricing-mobile-row">
-                        <span class="pricing-mobile-label">Illimitati - @previousListino.Name</span>
-                        <span class="pricing-mobile-value">@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(previousListino.Id)))</span>
-                    </div>
-                    <div class="pricing-mobile-row">
+                    @if (showPreviousListino)
+                    {
+                        <div class="pricing-mobile-row @ListinoClass(previousListino.Id)">
+                            <span class="pricing-mobile-label">Illimitati - @previousListino.Name</span>
+                            <span class="pricing-mobile-value">@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(previousListino.Id)))</span>
+                        </div>
+                    }
+                    <div class="pricing-mobile-row @ListinoClass(currentListino.Id)">
                         <span class="pricing-mobile-label">Illimitati - @currentListino.Name</span>
                         <span class="pricing-mobile-value">@(row.Unlimited == null ? "NO" : Money(row.Unlimited.GetPrice(currentListino.Id)))</span>
                     </div>
@@ -198,8 +226,11 @@
                     <tr>
                         <th>Formula</th>
                         <th>Colpi</th>
-                        <th>@previousListino.Name</th>
-                        <th>@currentListino.Name</th>
+                        @if (showPreviousListino)
+                        {
+                            <th class="@ListinoClass(previousListino.Id)">@previousListino.Name</th>
+                        }
+                        <th class="@ListinoClass(currentListino.Id)">@currentListino.Name</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -208,8 +239,11 @@
                         <tr>
                             <td>@entry.Label</td>
                             <td>@entry.IncludedShots</td>
-                            <td>@Money(entry.GetPrice(previousListino.Id))</td>
-                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                            @if (showPreviousListino)
+                            {
+                                <td class="@ListinoClass(previousListino.Id)">@Money(entry.GetPrice(previousListino.Id))</td>
+                            }
+                            <td class="@ListinoClass(currentListino.Id)">@Money(entry.GetPrice(currentListino.Id))</td>
                         </tr>
                     }
                 </tbody>
@@ -224,11 +258,14 @@
                         <span class="pricing-mobile-label">Colpi</span>
                         <span class="pricing-mobile-value">@entry.IncludedShots</span>
                     </div>
-                    <div class="pricing-mobile-row">
-                        <span class="pricing-mobile-label">@previousListino.Name</span>
-                        <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
-                    </div>
-                    <div class="pricing-mobile-row">
+                    @if (showPreviousListino)
+                    {
+                        <div class="pricing-mobile-row @ListinoClass(previousListino.Id)">
+                            <span class="pricing-mobile-label">@previousListino.Name</span>
+                            <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
+                        </div>
+                    }
+                    <div class="pricing-mobile-row @ListinoClass(currentListino.Id)">
                         <span class="pricing-mobile-label">@currentListino.Name</span>
                         <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
                     </div>
@@ -246,8 +283,11 @@
                     <tr>
                         <th>Formula</th>
                         <th>Colpi</th>
-                        <th>@previousListino.Name</th>
-                        <th>@currentListino.Name</th>
+                        @if (showPreviousListino)
+                        {
+                            <th class="@ListinoClass(previousListino.Id)">@previousListino.Name</th>
+                        }
+                        <th class="@ListinoClass(currentListino.Id)">@currentListino.Name</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -256,8 +296,11 @@
                         <tr>
                             <td>@entry.Label</td>
                             <td>@entry.IncludedShots</td>
-                            <td>@Money(entry.GetPrice(previousListino.Id))</td>
-                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                            @if (showPreviousListino)
+                            {
+                                <td class="@ListinoClass(previousListino.Id)">@Money(entry.GetPrice(previousListino.Id))</td>
+                            }
+                            <td class="@ListinoClass(currentListino.Id)">@Money(entry.GetPrice(currentListino.Id))</td>
                         </tr>
                     }
                 </tbody>
@@ -272,11 +315,14 @@
                         <span class="pricing-mobile-label">Colpi</span>
                         <span class="pricing-mobile-value">@entry.IncludedShots</span>
                     </div>
-                    <div class="pricing-mobile-row">
-                        <span class="pricing-mobile-label">@previousListino.Name</span>
-                        <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
-                    </div>
-                    <div class="pricing-mobile-row">
+                    @if (showPreviousListino)
+                    {
+                        <div class="pricing-mobile-row @ListinoClass(previousListino.Id)">
+                            <span class="pricing-mobile-label">@previousListino.Name</span>
+                            <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
+                        </div>
+                    }
+                    <div class="pricing-mobile-row @ListinoClass(currentListino.Id)">
                         <span class="pricing-mobile-label">@currentListino.Name</span>
                         <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
                     </div>
@@ -292,7 +338,7 @@
                 <thead>
                     <tr>
                         <th>Quantita</th>
-                        <th>Prezzo</th>
+                        <th class="@ListinoClass(currentListino.Id)">Prezzo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -300,7 +346,7 @@
                     {
                         <tr>
                             <td>@entry.IncludedShots</td>
-                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                            <td class="@ListinoClass(currentListino.Id)">@Money(entry.GetPrice(currentListino.Id))</td>
                         </tr>
                     }
                 </tbody>
@@ -311,7 +357,7 @@
             {
                 <div class="pricing-mobile-card">
                     <div class="pricing-mobile-title">Ricarica @entry.IncludedShots colpi</div>
-                    <div class="pricing-mobile-row">
+                    <div class="pricing-mobile-row @ListinoClass(currentListino.Id)">
                         <span class="pricing-mobile-label">Prezzo</span>
                         <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
                     </div>
@@ -327,8 +373,11 @@
                 <thead>
                     <tr>
                         <th>Opzione</th>
-                        <th>@previousListino.Name</th>
-                        <th>@currentListino.Name</th>
+                        @if (showPreviousListino)
+                        {
+                            <th class="@ListinoClass(previousListino.Id)">@previousListino.Name</th>
+                        }
+                        <th class="@ListinoClass(currentListino.Id)">@currentListino.Name</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -336,8 +385,11 @@
                     {
                         <tr>
                             <td>@entry.Label</td>
-                            <td>@Money(entry.GetPrice(previousListino.Id))</td>
-                            <td>@Money(entry.GetPrice(currentListino.Id))</td>
+                            @if (showPreviousListino)
+                            {
+                                <td class="@ListinoClass(previousListino.Id)">@Money(entry.GetPrice(previousListino.Id))</td>
+                            }
+                            <td class="@ListinoClass(currentListino.Id)">@Money(entry.GetPrice(currentListino.Id))</td>
                         </tr>
                     }
                 </tbody>
@@ -348,11 +400,14 @@
             {
                 <div class="pricing-mobile-card">
                     <div class="pricing-mobile-title">@entry.Label</div>
-                    <div class="pricing-mobile-row">
-                        <span class="pricing-mobile-label">@previousListino.Name</span>
-                        <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
-                    </div>
-                    <div class="pricing-mobile-row">
+                    @if (showPreviousListino)
+                    {
+                        <div class="pricing-mobile-row @ListinoClass(previousListino.Id)">
+                            <span class="pricing-mobile-label">@previousListino.Name</span>
+                            <span class="pricing-mobile-value">@Money(entry.GetPrice(previousListino.Id))</span>
+                        </div>
+                    }
+                    <div class="pricing-mobile-row @ListinoClass(currentListino.Id)">
                         <span class="pricing-mobile-label">@currentListino.Name</span>
                         <span class="pricing-mobile-value">@Money(entry.GetPrice(currentListino.Id))</span>
                     </div>
