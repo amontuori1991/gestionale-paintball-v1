@@ -619,6 +619,8 @@
                     .trim();
             };
 
+            const partiteIndexUrl = '@Url.Action("Index", "Partite")';
+
             const openWhatsapp = (number, text) => {
                 if (!number) {
                     fmpNotify('Numero WhatsApp non disponibile per questa prenotazione.', 'error');
@@ -628,7 +630,25 @@
                 const baseUrl = `https://wa.me/${number}`;
                 const safeText = normalizeWhatsappText(text);
                 const url = safeText ? `${baseUrl}?text=${encodeURIComponent(safeText)}` : baseUrl;
-                window.open(url, '_blank', 'noopener');
+                const whatsappWindow = window.open(url, '_blank');
+
+                if (whatsappWindow) {
+                    window.setTimeout(() => {
+                        try {
+                            whatsappWindow.close();
+                        } catch (error) {
+                            // Alcuni browser non consentono la chiusura dopo il passaggio a WhatsApp.
+                        }
+                    }, 1200);
+                }
+
+                window.setTimeout(() => {
+                    if (partiteIndexUrl && window.location.pathname.toLowerCase() !== new URL(partiteIndexUrl, window.location.origin).pathname.toLowerCase()) {
+                        window.location.href = partiteIndexUrl;
+                    } else {
+                        window.focus();
+                    }
+                }, 300);
             };
 
             const buildReminderText = (button) => {
@@ -660,6 +680,8 @@
             const buildTesseramentoReminderText = (button) => {
                 const registered = Number.parseInt(button.dataset.registered || '0', 10) || 0;
                 const participants = Number.parseInt(button.dataset.participants || '0', 10) || 0;
+                const referente = button.dataset.referente || '';
+                const saluto = referente ? `Ciao ${referente},` : 'Ciao!';
                 const rawNames = (button.dataset.membersNames || '').trim();
                 const names = rawNames
                     ? rawNames.split(/\r?\n/).map(name => name.trim()).filter(Boolean)
@@ -668,8 +690,22 @@
                     ? names.map(name => `- ${name}`).join('\n')
                     : '- Nessun tesseramento ricevuto al momento';
 
+                if (registered <= 0) {
+                    return [
+                        saluto,
+                        `al momento non risulta compilato alcun tesseramento per la partita del ${button.dataset.date} alle ${button.dataset.time}.`,
+                        '',
+                        'Nessun partecipante risulta iscritto, quindi ti chiediamo di procedere con la compilazione dei tesseramenti.',
+                        `Partecipanti previsti: ${participants}.`,
+                        `Link tesseramento: ${button.dataset.tesseramentoUrl || ''}`,
+                        '',
+                        'Grazie!',
+                        'Buona giornata'
+                    ].join('\n').trim();
+                }
+
                 return [
-                    'Ciao!',
+                    saluto,
                     `ti informo che attualmente i tesseramenti ricevuti sono ${registered} su ${participants}.`,
                     '',
                     'I nominativi registrati risultano i seguenti:',
