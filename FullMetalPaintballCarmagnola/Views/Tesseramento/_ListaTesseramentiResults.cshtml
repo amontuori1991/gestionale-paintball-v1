@@ -11,7 +11,7 @@
     <div class="tess-mobile-list">
         @foreach (var t in sortedModel)
         {
-            var scadenza = new DateTime(t.DataCreazione.Year, 12, 31);
+            var scadenza = new DateTime((t.DataPartita ?? t.DataCreazione).Year, 12, 31);
             var hasTessera = !string.IsNullOrEmpty(t.Tessera);
             var hasPartita = t.PartitaId.HasValue;
             var noTesseramento = t.NoTesseramento;
@@ -152,7 +152,7 @@
             <tbody>
                 @foreach (var t in sortedModel)
                 {
-                    var scadenza = new DateTime(t.DataCreazione.Year, 12, 31);
+                    var scadenza = new DateTime((t.DataPartita ?? t.DataCreazione).Year, 12, 31);
                     var hasTessera = !string.IsNullOrEmpty(t.Tessera);
                     var hasPartita = t.PartitaId.HasValue;
                     var noTesseramento = t.NoTesseramento;
