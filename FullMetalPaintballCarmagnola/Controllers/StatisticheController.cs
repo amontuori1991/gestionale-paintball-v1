@@ -27,13 +27,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _environment = environment;
         }
 
-        public async Task<IActionResult> Index(int? mese)
+        public async Task<IActionResult> Index(int? mese, int? annoStaff)
         {
             var it = new CultureInfo("it-IT");
 
             int meseCorrente = mese ?? DateTime.Now.Month;
             int annoCorrente = DateTime.Now.Year;
             int annoPrecedente = annoCorrente - 1;
+            int annoStaffSelezionato = annoStaff ?? annoCorrente;
             var oggi = DateTime.UtcNow.Date;
 
             var datiStoriciManuali = new Dictionary<int, Dictionary<int, int>>
@@ -99,6 +100,33 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     Count = g.Count()
                 })
                 .ToListAsync();
+
+            var partiteStaffAnno = await _dbContext.Partite
+                .AsNoTracking()
+                .Where(p => p.CaparraConfermata && !p.IsDeleted && p.Data.Year == annoStaffSelezionato)
+                .Select(p => new
+                {
+                    p.Staff1,
+                    p.Staff2,
+                    p.Staff3,
+                    p.Staff4
+                })
+                .ToListAsync();
+
+            var staffPartiteAnno = partiteStaffAnno
+                .SelectMany(p => new[] { p.Staff1, p.Staff2, p.Staff3, p.Staff4 }
+                    .Where(staff => !string.IsNullOrWhiteSpace(staff))
+                    .Select(staff => staff!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase))
+                .GroupBy(staff => staff, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new
+                {
+                    Staff = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(row => row.Count)
+                .ThenBy(row => row.Staff)
+                .ToList();
 
             var dataLimiteAnnoCorrente = oggi.AddDays(1).AddTicks(-1);
             var giornoConfrontoAnnoPrecedente = Math.Min(oggi.Day, DateTime.DaysInMonth(annoPrecedente, oggi.Month));
@@ -558,6 +586,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             ViewBag.AnniColpiPartite = anniColpiPartite;
             ViewBag.PartiteColpiStandardPerAnno = partiteColpiStandardPerAnno;
             ViewBag.PartiteColpiIllimitatiPerAnno = partiteColpiIllimitatiPerAnno;
+            ViewBag.AnnoStaffSelezionato = annoStaffSelezionato;
+            ViewBag.AnnoStaffPrecedente = annoStaffSelezionato - 1;
+            ViewBag.AnnoStaffSuccessivo = annoStaffSelezionato < annoCorrente ? annoStaffSelezionato + 1 : (int?)null;
+            ViewBag.StaffPartiteLabels = staffPartiteAnno.Select(row => row.Staff).ToList();
+            ViewBag.StaffPartiteValues = staffPartiteAnno.Select(row => row.Count).ToList();
+            ViewBag.StaffPartiteTotale = staffPartiteAnno.Sum(row => row.Count);
 
             ViewBag.YtdLabels = labelsYtd;
             ViewBag.YtdCorrenteValues = ytdCorrenteValues;

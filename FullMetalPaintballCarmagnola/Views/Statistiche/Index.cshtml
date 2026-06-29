@@ -32,6 +32,12 @@
     var anniColpiPartite = ViewBag.AnniColpiPartite as List<int>;
     var partiteColpiStandardPerAnno = ViewBag.PartiteColpiStandardPerAnno as Dictionary<int, int>;
     var partiteColpiIllimitatiPerAnno = ViewBag.PartiteColpiIllimitatiPerAnno as Dictionary<int, int>;
+    int annoStaffSelezionato = ViewBag.AnnoStaffSelezionato;
+    int annoStaffPrecedente = ViewBag.AnnoStaffPrecedente;
+    int? annoStaffSuccessivo = ViewBag.AnnoStaffSuccessivo is int nextStaffYear ? nextStaffYear : null;
+    var staffPartiteLabels = ViewBag.StaffPartiteLabels as List<string>;
+    var staffPartiteValues = ViewBag.StaffPartiteValues as List<int>;
+    int staffPartiteTotale = ViewBag.StaffPartiteTotale;
 
     var ytdLabels = ViewBag.YtdLabels as List<string>;
     var ytdCorrenteValues = ViewBag.YtdCorrenteValues as List<int>;
@@ -143,6 +149,37 @@
         </div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
             Il confronto considera le partite confermate presenti a database, suddivise per scelta colpi salvata sulla prenotazione.
+        </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:22px;">
+        <h4 style="margin:0 0 10px 0; text-align:center;">Partite gestite per staff - @annoStaffSelezionato</h4>
+        <div style="display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+            <a asp-action="Index"
+               asp-route-mese="@meseCorrente"
+               asp-route-annoStaff="@annoStaffPrecedente"
+               class="btn btn-outline-primary"
+               aria-label="Anno staff precedente">&larr;</a>
+            <div style="font-weight:900; min-width:90px; text-align:center;">@annoStaffSelezionato</div>
+            @if (annoStaffSuccessivo.HasValue)
+            {
+                <a asp-action="Index"
+                   asp-route-mese="@meseCorrente"
+                   asp-route-annoStaff="@annoStaffSuccessivo.Value"
+                   class="btn btn-outline-primary"
+                   aria-label="Anno staff successivo">&rarr;</a>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-secondary" disabled aria-label="Anno staff successivo">&rarr;</button>
+            }
+        </div>
+        <div style="position:relative; height:340px;">
+            <canvas id="chartStaffYearTotals"></canvas>
+        </div>
+        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+            Totale assegnazioni staff nell'anno: <strong>@staffPartiteTotale</strong>.
+            Sono considerate le partite confermate e non cancellate; una partita con pi&ugrave; membri staff conta una volta per ciascun nominativo assegnato.
         </div>
     </div>
 
@@ -636,6 +673,66 @@
             },
             scales: {
                 x: { stacked: false },
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: { display: true, text: 'Numero partite' }
+                }
+            }
+        },
+        plugins: [barLabelPlugin]
+    });
+
+    const staffPartiteLabels = @Html.Raw(Json.Serialize(staffPartiteLabels ?? new List<string>()));
+    const staffPartiteValues = @Html.Raw(Json.Serialize(staffPartiteValues ?? new List<int>()));
+    const staffChartLabels = staffPartiteLabels.length ? staffPartiteLabels : ['Nessun dato'];
+    const staffChartValues = staffPartiteValues.length ? staffPartiteValues : [0];
+
+    new Chart(document.getElementById('chartStaffYearTotals').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: staffChartLabels,
+            datasets: [
+                {
+                    label: 'Partite gestite',
+                    data: staffChartValues,
+                    backgroundColor: staffChartValues.map((_, index) => {
+                        const palette = [
+                            'rgba(59,130,246,.78)',
+                            'rgba(16,185,129,.78)',
+                            'rgba(234,179,8,.78)',
+                            'rgba(230,0,126,.70)',
+                            'rgba(99,102,241,.72)',
+                            'rgba(20,184,166,.72)'
+                        ];
+                        return palette[index % palette.length];
+                    }),
+                    borderColor: 'rgba(15,23,42,.65)',
+                    borderWidth: 1,
+                    valueLabels: staffPartiteLabels.length > 0,
+                    labelColor: 'rgba(15,23,42,1)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 44 } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.parsed.y} partite gestite`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        maxRotation: 35,
+                        minRotation: 0
+                    }
+                },
                 y: {
                     beginAtZero: true,
                     ticks: { precision: 0 },
