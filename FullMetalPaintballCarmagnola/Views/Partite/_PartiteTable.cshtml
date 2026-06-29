@@ -78,6 +78,13 @@
         return $"{prefix}{number}";
     }
 
+    string PhoneSearchValue(Partita partita)
+    {
+        var prefix = new string((partita.PrefissoTelefonoRiferimento ?? string.Empty).Where(char.IsDigit).ToArray());
+        var number = new string((partita.TelefonoRiferimento ?? string.Empty).Where(char.IsDigit).ToArray());
+        return $"{prefix}{number} {number}".Trim();
+    }
+
     string AbsoluteUrl(string relativeUrl)
     {
         var request = Context.Request;
@@ -225,7 +232,11 @@
                         : "iscritti-count--over";
                 weatherByPartitaId.TryGetValue(partita.Id, out var weather);
 
-                <tr id="partita-row-@partita.Id" class="partita-row @(isInfrasett ? "bg-infrasett" : "")" data-partita-id="@partita.Id">
+                <tr id="partita-row-@partita.Id"
+                    class="partita-row @(isInfrasett ? "bg-infrasett" : "")"
+                    data-partita-id="@partita.Id"
+                    data-filter-reference="@ReferenteLabel(partita)"
+                    data-filter-phone="@PhoneSearchValue(partita)">
 
 
                     <td data-label="Stato">
@@ -425,7 +436,12 @@
 
     var tipoLabel = TipoLabel(partita);
 
-        <div id="partita-card-@partita.Id" class="pm-card @(isInfrasett ? "pm-infrasett" : "")" data-date="@partita.Data.ToString("yyyy-MM-dd")" data-partita-id="@partita.Id">
+        <div id="partita-card-@partita.Id"
+             class="pm-card @(isInfrasett ? "pm-infrasett" : "")"
+             data-date="@partita.Data.ToString("yyyy-MM-dd")"
+             data-partita-id="@partita.Id"
+             data-filter-reference="@ReferenteLabel(partita)"
+             data-filter-phone="@PhoneSearchValue(partita)">
 
         <div class="pm-weather-top">
             <div class="pm-weather weather-js @(weather == null ? "weather-pill--empty" : "")"

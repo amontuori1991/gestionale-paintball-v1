@@ -323,6 +323,16 @@
                     <label class="form-label mb-1 small fw-semibold">Al</label>
                     <input type="date" id="filtro-data-a" class="form-control form-control-sm" style="min-width:140px;" />
                 </div>
+                <!-- Riferimento -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Riferimento</label>
+                    <input type="search" id="filtro-riferimento" class="form-control form-control-sm" style="min-width:180px;" placeholder="Nome referente" />
+                </div>
+                <!-- Telefono -->
+                <div>
+                    <label class="form-label mb-1 small fw-semibold">Telefono</label>
+                    <input type="search" id="filtro-telefono" class="form-control form-control-sm" style="min-width:170px;" placeholder="+39 346... o 346..." />
+                </div>
                 <!-- Reset -->
                 <div>
                     <button id="btn-reset-filtri" class="pbtn pbtn-gray mt-auto">
@@ -1245,7 +1255,13 @@
 
         // =================== FILTRI ===================
         function hasActiveFilters() {
-            return Boolean($('#filtro-stato').val() || $('#filtro-data-da').val() || $('#filtro-data-a').val());
+            return Boolean(
+                $('#filtro-stato').val() ||
+                $('#filtro-data-da').val() ||
+                $('#filtro-data-a').val() ||
+                $('#filtro-riferimento').val() ||
+                $('#filtro-telefono').val()
+            );
         }
 
         function toggleAccordionGroup(item, shouldOpen) {
@@ -1274,7 +1290,15 @@
             });
         }
 
-        function matchPartita(statoTxt, rowDate, stato, dataDa, dataA) {
+        function normalizeText(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function normalizePhone(value) {
+            return String(value || '').replace(/\D/g, '');
+        }
+
+        function matchPartita(statoTxt, rowDate, stato, dataDa, dataA, riferimentoTxt, telefonoTxt, riferimentoFiltro, telefonoFiltro) {
             let show = true;
 
             if (stato) {
@@ -1284,6 +1308,8 @@
             }
             if (dataDa && rowDate && rowDate < new Date(dataDa)) show = false;
             if (dataA && rowDate && rowDate > new Date(dataA)) show = false;
+            if (riferimentoFiltro && !normalizeText(riferimentoTxt).includes(riferimentoFiltro)) show = false;
+            if (telefonoFiltro && !normalizePhone(telefonoTxt).includes(telefonoFiltro)) show = false;
 
             return show;
         }
@@ -1292,6 +1318,8 @@
             const stato = $('#filtro-stato').val().toLowerCase();
             const dataDa = $('#filtro-data-da').val(); // "yyyy-MM-dd"
             const dataA  = $('#filtro-data-a').val();
+            const riferimentoFiltro = normalizeText($('#filtro-riferimento').val());
+            const telefonoFiltro = normalizePhone($('#filtro-telefono').val());
             const filtriAttivi = hasActiveFilters();
 
             $('.partite-week-accordion .accordion-item').each(function () {
@@ -1312,7 +1340,9 @@
                         const dataTxt  = mainRow.find('td[data-label="Data"]').text().trim();
                         const dateParts = dataTxt.match(/(\d{2})\/(\d{2})\/(\d{4})/);
                         const rowDate = dateParts ? new Date(`${dateParts[3]}-${dateParts[2]}-${dateParts[1]}`) : null;
-                        const show = matchPartita(statoTxt, rowDate, stato, dataDa, dataA);
+                        const riferimentoTxt = mainRow.data('filter-reference') || '';
+                        const telefonoTxt = mainRow.data('filter-phone') || '';
+                        const show = matchPartita(statoTxt, rowDate, stato, dataDa, dataA, riferimentoTxt, telefonoTxt, riferimentoFiltro, telefonoFiltro);
 
                         mainRow.toggle(show);
                         if (staffRow.length) staffRow.toggle(show);
@@ -1326,7 +1356,9 @@
                     const statoTxt = card.find('.pm-status').text().trim().toLowerCase();
                     const dataAttr = card.data('date'); // "2025-06-23"
                     const rowDate = dataAttr ? new Date(dataAttr) : null;
-                    const show = matchPartita(statoTxt, rowDate, stato, dataDa, dataA);
+                    const riferimentoTxt = card.data('filter-reference') || '';
+                    const telefonoTxt = card.data('filter-phone') || '';
+                    const show = matchPartita(statoTxt, rowDate, stato, dataDa, dataA, riferimentoTxt, telefonoTxt, riferimentoFiltro, telefonoFiltro);
 
                     card.toggle(show);
                 });
@@ -1338,12 +1370,14 @@
             updateSectionHeadings();
         }
 
-        $('#filtro-stato, #filtro-data-da, #filtro-data-a').on('change input', applyFiltri);
+        $('#filtro-stato, #filtro-data-da, #filtro-data-a, #filtro-riferimento, #filtro-telefono').on('change input', applyFiltri);
 
         $('#btn-reset-filtri').on('click', function () {
             $('#filtro-stato').val('');
             $('#filtro-data-da').val('');
             $('#filtro-data-a').val('');
+            $('#filtro-riferimento').val('');
+            $('#filtro-telefono').val('');
             applyFiltri();
         });
 
