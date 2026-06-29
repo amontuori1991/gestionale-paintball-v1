@@ -302,9 +302,9 @@
                 </a>
             </div>
             <!-- FILTRI -->
-            <div class="d-flex flex-wrap gap-2 mt-2 align-items-end justify-content-center">
+            <div class="partite-filters mt-2">
                 <!-- Stato -->
-                <div>
+                <div class="partite-filter-field partite-filter-field--status">
                     <label class="form-label mb-1 small fw-semibold">Stato</label>
                     <select id="filtro-stato" class="form-select form-select-sm" style="min-width:140px;">
                         <option value="">Tutti</option>
@@ -314,27 +314,27 @@
                     </select>
                 </div>
                 <!-- Data da -->
-                <div>
+                <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Dal</label>
                     <input type="date" id="filtro-data-da" class="form-control form-control-sm" style="min-width:140px;" />
                 </div>
                 <!-- Data a -->
-                <div>
+                <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Al</label>
                     <input type="date" id="filtro-data-a" class="form-control form-control-sm" style="min-width:140px;" />
                 </div>
                 <!-- Riferimento -->
-                <div>
+                <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Riferimento</label>
                     <input type="search" id="filtro-riferimento" class="form-control form-control-sm" style="min-width:180px;" placeholder="Nome referente" />
                 </div>
                 <!-- Telefono -->
-                <div>
+                <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Telefono</label>
                     <input type="search" id="filtro-telefono" class="form-control form-control-sm" style="min-width:170px;" placeholder="+39 346... o 346..." />
                 </div>
                 <!-- Reset -->
-                <div>
+                <div class="partite-filter-field partite-filter-field--reset">
                     <button id="btn-reset-filtri" class="pbtn pbtn-gray mt-auto">
                         <i class="bi bi-x-circle me-1"></i> Reset
                     </button>

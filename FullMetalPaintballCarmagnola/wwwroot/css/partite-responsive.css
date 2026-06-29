@@ -785,6 +785,23 @@
     padding: 6px 0 2px 0;
 }
 
+#partite-page .partite-filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: end;
+    gap: 10px;
+}
+
+#partite-page .partite-filter-field {
+    min-width: 140px;
+}
+
+#partite-page .partite-filter-field .form-control,
+#partite-page .partite-filter-field .form-select {
+    width: 100%;
+}
+
 /* pill button */
 #partite-page .pbtn {
     display: inline-flex;
@@ -832,5 +849,34 @@
         width: 100%;
         justify-content: center;
         padding: 12px 14px;
+    }
+
+    #partite-page .partite-filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 10px;
+        justify-content: stretch;
+        align-items: end;
+        width: 100%;
+    }
+
+    #partite-page .partite-filter-field {
+        min-width: 0;
+        width: 100%;
+    }
+
+    #partite-page .partite-filter-field--status,
+    #partite-page .partite-filter-field--reset {
+        grid-column: 1 / -1;
+    }
+
+    #partite-page .partite-filter-field .form-control,
+    #partite-page .partite-filter-field .form-select {
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    #partite-page .partite-filter-field--reset .pbtn {
+        margin-top: 2px;
     }
 }
