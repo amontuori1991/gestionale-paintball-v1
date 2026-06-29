@@ -121,7 +121,7 @@
             <canvas id="chartYearTotals"></canvas>
         </div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
-            TOP assoluto: <strong>@topYearOverall</strong> â€“ <strong>@topOverallValue</strong> partite.
+            TOP assoluto: <strong>@topYearOverall</strong> &ndash; <strong>@topOverallValue</strong> partite.
             Le barre rosse indicano le partite cancellate per anno.
         </div>
     </div>
@@ -214,7 +214,7 @@
         <div id="comuniHeatmap" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
             Sono visualizzati solo i tesserati con comune di residenza italiano normalizzato nel formato <strong>Comune (PV)</strong>.
-            I cerchi piÃ¹ grandi e piÃ¹ rossi indicano una maggiore affluenza da quel comune.
+            I cerchi pi&ugrave; grandi e pi&ugrave; rossi indicano una maggiore affluenza da quel comune.
         </div>
     </div>
 
@@ -234,7 +234,7 @@
         <div id="europeChoropleth" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
         <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
             I paesi europei vengono colorati in base al numero di tesserati con residenza estera classificata.
-            PiÃ¹ il rosso Ã¨ intenso, piÃ¹ alta Ã¨ l'affluenza da quel paese.
+            Pi&ugrave; il rosso &egrave; intenso, pi&ugrave; alta &egrave; l'affluenza da quel paese.
         </div>
     </div>
 </div>
@@ -348,13 +348,13 @@
     const chart1Labels = ['TOP', currentYear.toString()];
 
     const topPrevLabel = (topPrevYear && topPrevYear > 0)
-        ? `TOP: ${topPrevYear} â€“ ${topPrevVal} partite`
-        : `TOP: N/D â€“ 0 partite`;
+        ? `TOP: ${topPrevYear} - ${topPrevVal} partite`
+        : `TOP: N/D - 0 partite`;
 
     const chart1CustomLabels = [
         topPrevLabel,
         currentIsTop
-            ? `TOP: ${currentYear} â€“ ${currentVal} partite`
+            ? `TOP: ${currentYear} - ${currentVal} partite`
             : `${currentYear}: ${currentVal} partite`
     ];
 
@@ -475,7 +475,7 @@
     const chart3DataConf = anni.map(a => totalsPerYear[a] || 0);
     const chart3DataCanc = anni.map(a => cancellatePerY[a] || 0);
 
-    // Colore barra per anno: oro per TOP, blu piÃ¹ vivace per anno corrente, blu standard per altri
+    // Colore barra per anno: oro per TOP, blu piu vivace per anno corrente, blu standard per altri
     const chart3Colors = anni.map(a => {
         if (a === topYearOverall) return 'rgba(234,179,8,0.85)';   // oro = TOP
         if (a === currentYear)    return COLOR_CONF_CURR;
@@ -489,7 +489,7 @@
 
     const chart3CustomLabels = anni.map(a => {
         const val = totalsPerYear[a] || 0;
-        if (a === topYearOverall) return `TOP: ${a} â€“ ${val}`;
+        if (a === topYearOverall) return `TOP: ${a} - ${val}`;
         if (a === currentYear)    return `${a} (in corso): ${val}`;
         return `${a}: ${val}`;
     });
