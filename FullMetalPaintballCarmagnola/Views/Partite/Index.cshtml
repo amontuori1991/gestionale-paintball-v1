@@ -352,24 +352,26 @@
                 <!-- Riferimento -->
                 <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Riferimento</label>
-                    <input type="search" id="filtro-riferimento" class="form-control form-control-sm" style="min-width:180px;" placeholder="Nome referente" list="filtro-riferimento-options" />
-                    <datalist id="filtro-riferimento-options">
+                    <input type="search" id="filtro-riferimento" class="form-control form-control-sm" style="min-width:180px;" placeholder="Nome referente" />
+                    <select id="filtro-riferimento-select" class="form-select form-select-sm mt-1" style="min-width:180px;">
+                        <option value="">Scegli riferimento</option>
                         @foreach (var riferimento in filtroRiferimenti)
                         {
-                            <option value="@riferimento"></option>
+                            <option value="@riferimento">@riferimento</option>
                         }
-                    </datalist>
+                    </select>
                 </div>
                 <!-- Telefono -->
                 <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Telefono</label>
-                    <input type="search" id="filtro-telefono" class="form-control form-control-sm" style="min-width:170px;" placeholder="+39 346... o 346..." list="filtro-telefono-options" />
-                    <datalist id="filtro-telefono-options">
+                    <input type="search" id="filtro-telefono" class="form-control form-control-sm" style="min-width:170px;" placeholder="+39 346... o 346..." />
+                    <select id="filtro-telefono-select" class="form-select form-select-sm mt-1" style="min-width:170px;">
+                        <option value="">Scegli telefono</option>
                         @foreach (var telefono in filtroTelefoni)
                         {
-                            <option value="@telefono"></option>
+                            <option value="@telefono">@telefono</option>
                         }
-                    </datalist>
+                    </select>
                 </div>
                 <!-- Reset -->
                 <div class="partite-filter-field partite-filter-field--reset">
@@ -1410,12 +1412,24 @@
 
         $('#filtro-stato, #filtro-data-da, #filtro-data-a, #filtro-riferimento, #filtro-telefono').on('change input', applyFiltri);
 
+        $('#filtro-riferimento-select').on('change', function () {
+            $('#filtro-riferimento').val($(this).val());
+            applyFiltri();
+        });
+
+        $('#filtro-telefono-select').on('change', function () {
+            $('#filtro-telefono').val($(this).val());
+            applyFiltri();
+        });
+
         $('#btn-reset-filtri').on('click', function () {
             $('#filtro-stato').val('');
             $('#filtro-data-da').val('');
             $('#filtro-data-a').val('');
             $('#filtro-riferimento').val('');
             $('#filtro-telefono').val('');
+            $('#filtro-riferimento-select').val('');
+            $('#filtro-telefono-select').val('');
             applyFiltri();
         });
 
