@@ -7,6 +7,18 @@
     var partiteFuture = ViewBag.PartiteFuture as List<Partita>;
     var partitePassate = ViewBag.PartitePassate as List<Partita>;
     var partiteCancellate = ViewBag.PartiteCancellate as List<Partita>;
+    var filtroRiferimenti = (partiteFuture ?? new List<Partita>())
+        .Select(FilterReferenteLabel)
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(value => value)
+        .ToList();
+    var filtroTelefoni = (partiteFuture ?? new List<Partita>())
+        .Select(FilterPhoneLabel)
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(value => value)
+        .ToList();
     var oggiIndex = DateTime.UtcNow.Date;
     var settimanaCorrente = WeekStart(oggiIndex);
     var segnalazioniIscritti = (partiteFuture ?? new List<Partita>())
@@ -38,6 +50,20 @@
         return weekStart.Month == weekEnd.Month
             ? $"dal {weekStart.Day} al {weekEnd.Day} {endMonth}"
             : $"dal {weekStart.Day} {startMonth} al {weekEnd.Day} {endMonth}";
+    }
+
+    private static string FilterReferenteLabel(Partita partita)
+    {
+        return !string.IsNullOrWhiteSpace(partita.NomeRiferimento)
+            ? partita.NomeRiferimento.Trim()
+            : partita.Riferimento?.Trim() ?? string.Empty;
+    }
+
+    private static string FilterPhoneLabel(Partita partita)
+    {
+        var prefix = partita.PrefissoTelefonoRiferimento?.Trim() ?? string.Empty;
+        var number = partita.TelefonoRiferimento?.Trim() ?? string.Empty;
+        return $"{prefix} {number}".Trim();
     }
 }
 
@@ -326,12 +352,24 @@
                 <!-- Riferimento -->
                 <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Riferimento</label>
-                    <input type="search" id="filtro-riferimento" class="form-control form-control-sm" style="min-width:180px;" placeholder="Nome referente" />
+                    <input type="search" id="filtro-riferimento" class="form-control form-control-sm" style="min-width:180px;" placeholder="Nome referente" list="filtro-riferimento-options" />
+                    <datalist id="filtro-riferimento-options">
+                        @foreach (var riferimento in filtroRiferimenti)
+                        {
+                            <option value="@riferimento"></option>
+                        }
+                    </datalist>
                 </div>
                 <!-- Telefono -->
                 <div class="partite-filter-field">
                     <label class="form-label mb-1 small fw-semibold">Telefono</label>
-                    <input type="search" id="filtro-telefono" class="form-control form-control-sm" style="min-width:170px;" placeholder="+39 346... o 346..." />
+                    <input type="search" id="filtro-telefono" class="form-control form-control-sm" style="min-width:170px;" placeholder="+39 346... o 346..." list="filtro-telefono-options" />
+                    <datalist id="filtro-telefono-options">
+                        @foreach (var telefono in filtroTelefoni)
+                        {
+                            <option value="@telefono"></option>
+                        }
+                    </datalist>
                 </div>
                 <!-- Reset -->
                 <div class="partite-filter-field partite-filter-field--reset">
