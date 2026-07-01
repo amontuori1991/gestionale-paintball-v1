@@ -265,6 +265,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Partita partita)
         {
+            NormalizeDurationModelState(partita);
+
             if (partita.NumeroPartecipanti <= 0)
             {
                 ModelState.AddModelError(nameof(Partita.NumeroPartecipanti), "Inserisci il numero di partecipanti.");
@@ -380,6 +382,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         public async Task<IActionResult> Edit(int id, Partita partita)
         {
             if (id != partita.Id) return NotFound();
+            NormalizeDurationModelState(partita);
+            if (!MatchesDuration(partita.Durata, 1.0) && !MatchesDuration(partita.Durata, 1.5) && !MatchesDuration(partita.Durata, 2.0))
+            {
+                ModelState.AddModelError(nameof(Partita.Durata), "Seleziona una durata valida.");
+            }
+
             if (!ModelState.IsValid)
             {
                 await PopulateListinoOptionsAsync(partita.Listino);
@@ -1175,5 +1183,22 @@ Ti aspettiamo! 🎯";
 
         private static bool MatchesDuration(double actual, double expected) =>
             Math.Abs(actual - expected) < 0.01;
+
+        private void NormalizeDurationModelState(Partita partita)
+        {
+            if (!Request.HasFormContentType)
+                return;
+
+            var rawDuration = Request.Form[nameof(Partita.Durata)].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(rawDuration))
+                return;
+
+            var normalizedDuration = rawDuration.Trim().Replace(',', '.');
+            if (double.TryParse(normalizedDuration, NumberStyles.Float, CultureInfo.InvariantCulture, out var duration))
+            {
+                partita.Durata = duration;
+                ModelState.Remove(nameof(Partita.Durata));
+            }
+        }
     }
 }

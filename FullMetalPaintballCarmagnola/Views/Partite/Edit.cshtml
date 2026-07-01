@@ -62,7 +62,11 @@
 
     <div class="form-group">
         <label asp-for="Durata"></label>
-        <input asp-for="Durata" class="form-control" type="number" step="0.5" lang="en" />
+        <select asp-for="Durata" class="form-control" required>
+            <option value="1">1</option>
+            <option value="1,5">1,5</option>
+            <option value="2">2</option>
+        </select>
         <span asp-validation-for="Durata" class="text-danger"></span>
     </div>
 
