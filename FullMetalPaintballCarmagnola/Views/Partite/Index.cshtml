@@ -670,6 +670,7 @@
             };
 
             const partiteIndexUrl = '@Url.Action("Index", "Partite")';
+            const isEnglishBooking = (button) => (button.dataset.language || 'ITA').toUpperCase() === 'ENG';
 
             const openWhatsapp = (number, text) => {
                 if (!number) {
@@ -703,6 +704,20 @@
 
             const buildReminderText = (button) => {
                 const referente = button.dataset.referente || 'ciao';
+                if (isEnglishBooking(button)) {
+                    return [
+                        `Hi ${referente}, this is a reminder for your paintball booking on ${button.dataset.date} at ${button.dataset.time}.`,
+                        '',
+                        'Please arrive at the field at least 15/20 minutes before the booked time.',
+                        `Expected participants: ${button.dataset.participants}. Duration: ${button.dataset.duration} hours.`,
+                        '',
+                        'The field is outdoors and a changing room is available, but there are no showers.',
+                        'Final payment can be made in cash or with Satispay.',
+                        '',
+                        'See you soon!'
+                    ].join('\n');
+                }
+
                 return [
                     `Ciao ${referente}, ti ricordiamo la prenotazione paintball del ${button.dataset.date} alle ${button.dataset.time}.`,
                     '',
@@ -717,6 +732,17 @@
             };
 
             const buildTesseramentoText = (button) => {
+                if (isEnglishBooking(button)) {
+                    return [
+                        `Hi ${button.dataset.referente || ''},`,
+                        'we are sending you the membership form link for the match:',
+                        button.dataset.tesseramentoUrl || '',
+                        '',
+                        'All participants must complete it within 3 hours before arriving at the field.',
+                        'Thank you!'
+                    ].join('\n').trim();
+                }
+
                 return [
                     `Ciao ${button.dataset.referente || ''},`,
                     'ti inviamo il link per compilare il tesseramento della partita:',
@@ -739,6 +765,41 @@
                 const namesBlock = names.length
                     ? names.map(name => `- ${name}`).join('\n')
                     : '- Nessun tesseramento ricevuto al momento';
+
+                if (isEnglishBooking(button)) {
+                    const greeting = referente ? `Hi ${referente},` : 'Hi!';
+                    const englishNamesBlock = names.length
+                        ? names.map(name => `- ${name}`).join('\n')
+                        : '- No membership forms received yet';
+
+                    if (registered <= 0) {
+                        return [
+                            greeting,
+                            `at the moment no membership form has been completed for the match on ${button.dataset.date} at ${button.dataset.time}.`,
+                            '',
+                            'No participant is currently registered, so please proceed with completing the membership forms.',
+                            `Expected participants: ${participants}.`,
+                            `Membership link: ${button.dataset.tesseramentoUrl || ''}`,
+                            '',
+                            'Thank you!',
+                            'Have a good day'
+                        ].join('\n').trim();
+                    }
+
+                    return [
+                        greeting,
+                        `currently the received membership forms are ${registered} out of ${participants}.`,
+                        '',
+                        'The registered names are:',
+                        englishNamesBlock,
+                        '',
+                        'Please ask the missing participants to complete the form.',
+                        `Membership link: ${button.dataset.tesseramentoUrl || ''}`,
+                        '',
+                        'Thank you!',
+                        'Have a good day'
+                    ].join('\n').trim();
+                }
 
                 if (registered <= 0) {
                     return [
@@ -770,6 +831,21 @@
             };
 
             const buildShortSummaryText = (button) => {
+                if (isEnglishBooking(button)) {
+                    return [
+                        `Hi ${button.dataset.referente || ''}, quick summary of your booking:`,
+                        '',
+                        `Date: ${button.dataset.date}`,
+                        `Time: ${button.dataset.time}`,
+                        `Duration: ${button.dataset.duration} hours`,
+                        `Participants: ${button.dataset.participants}`,
+                        `Type: ${button.dataset.type}`,
+                        `Deposit: ${button.dataset.caparra}`,
+                        '',
+                        `Membership link: ${button.dataset.tesseramentoUrl || ''}`
+                    ].join('\n').trim();
+                }
+
                 return [
                     `Ciao ${button.dataset.referente || ''}, riepilogo rapido della prenotazione:`,
                     '',

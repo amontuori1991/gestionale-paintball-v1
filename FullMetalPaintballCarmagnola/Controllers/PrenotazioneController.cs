@@ -52,12 +52,21 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var partitePerGiorno = partiteWeekend
                 .GroupBy(p => p.Data.Date)
                 .ToDictionary(g => g.Key, g => g.ToList());
+            var chiusure = await _dbContext.CampoChiusure
+                .Where(c => c.DataFine >= oggi && c.DataInizio <= fine)
+                .ToListAsync();
+            var dateChiusure = chiusure
+                .SelectMany(c => Enumerable.Range(0, (c.DataFine.Date - c.DataInizio.Date).Days + 1)
+                    .Select(offset => c.DataInizio.Date.AddDays(offset).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)))
+                .Distinct()
+                .ToList();
             var catalog = await _pricingCatalogService.GetCatalogAsync();
             var currentListinoId = catalog.GetCurrentListino().Id;
 
             var model = new PrenotazionePubblicaViewModel
             {
                 Giorni = weekendDates
+                    .Where(data => !IsChiuso(chiusure, data))
                     .Select(data => BuildGiornoPubblico(
                         data,
                         partitePerGiorno.TryGetValue(data.Date, out var partite) ? partite : new List<Partita>(),
@@ -66,10 +75,16 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     .Where(giorno => giorno.Slot.Count > 0)
                     .ToList(),
                 Faq = BuildFaq(catalog, currentListinoId),
-                PrimaDataInfrasettimanale = now.Date.AddDays(7)
+                PrimaDataInfrasettimanale = now.Date.AddDays(7),
+                DateChiusure = dateChiusure
             };
 
             return View(model);
+        }
+
+        private static bool IsChiuso(List<CampoChiusura> chiusure, DateTime data)
+        {
+            return chiusure.Any(c => c.DataInizio.Date <= data.Date && c.DataFine.Date >= data.Date);
         }
 
         private static List<PrenotazionePubblicaFaqViewModel> BuildFaq(PricingCatalog catalog, short listinoId)

@@ -7,6 +7,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public List<PrenotazionePubblicaFaqViewModel> Faq { get; set; } = new();
 
         public DateTime PrimaDataInfrasettimanale { get; set; }
+
+        public List<string> DateChiusure { get; set; } = new();
     }
 
     public class PrenotazionePubblicaGiornoViewModel

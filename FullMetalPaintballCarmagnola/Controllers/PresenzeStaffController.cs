@@ -110,6 +110,11 @@ public class PresenzeStaffController : Controller
                 row.Presente = presente;
             }
 
+            if (presente == false)
+            {
+                await DissociaStaffDaPartiteAsync(giorno, nomeStaff);
+            }
+
             await _context.SaveChangesAsync();
             return Ok();
         }
@@ -227,6 +232,22 @@ public class PresenzeStaffController : Controller
                     Presente = null
                 });
             }
+        }
+    }
+
+    private async Task DissociaStaffDaPartiteAsync(DateTime giorno, string nomeStaff)
+    {
+        var partite = await _context.Partite
+            .Where(p => !p.IsDeleted && p.Data.Date == giorno.Date &&
+                (p.Staff1 == nomeStaff || p.Staff2 == nomeStaff || p.Staff3 == nomeStaff || p.Staff4 == nomeStaff))
+            .ToListAsync();
+
+        foreach (var partita in partite)
+        {
+            if (partita.Staff1 == nomeStaff) partita.Staff1 = null;
+            if (partita.Staff2 == nomeStaff) partita.Staff2 = null;
+            if (partita.Staff3 == nomeStaff) partita.Staff3 = null;
+            if (partita.Staff4 == nomeStaff) partita.Staff4 = null;
         }
     }
 }

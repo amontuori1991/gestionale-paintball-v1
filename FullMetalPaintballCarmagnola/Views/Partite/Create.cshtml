@@ -45,6 +45,15 @@
         <span asp-validation-for="Listino" class="text-danger"></span>
     </div>
 
+    <div class="form-group mb-3">
+        <label asp-for="Nazionalita" class="form-label">Nazionalita prenotazione</label>
+        <select asp-for="Nazionalita" class="form-control" required>
+            <option value="ITA">ITA</option>
+            <option value="ENG">ENG</option>
+        </select>
+        <span asp-validation-for="Nazionalita" class="text-danger"></span>
+    </div>
+
     <div class="mb-3">
         <label asp-for="OraInizio" class="form-label">Ora Inizio</label>
         <input asp-for="OraInizio" class="form-control" type="time" value="@(initialEmptyFields ? "" : Model.OraInizio.ToString(@"hh\:mm"))" required />

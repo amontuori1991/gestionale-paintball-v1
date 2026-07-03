@@ -51,14 +51,67 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .GroupBy(p => p.Data.Date)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
+            var chiusure = await _dbContext.CampoChiusure
+                .Where(c => c.DataFine >= oggi && c.DataInizio <= fine)
+                .OrderBy(c => c.DataInizio)
+                .ToListAsync();
+
             var model = new CampoDisponibilitaViewModel
             {
                 Giorni = weekendDates
-                    .Select(data => BuildGiorno(data, partitePerGiorno.TryGetValue(data.Date, out var partite) ? partite : new List<Partita>()))
-                    .ToList()
+                    .Select(data => BuildGiorno(
+                        data,
+                        partitePerGiorno.TryGetValue(data.Date, out var partite) ? partite : new List<Partita>(),
+                        FindChiusura(chiusure, data)))
+                    .ToList(),
+                Chiusure = chiusure
             };
 
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AggiungiChiusura([FromForm] CampoChiusuraRequest request)
+        {
+            if (!DateTime.TryParseExact(request.DataInizio, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataInizio) ||
+                !DateTime.TryParseExact(request.DataFine, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataFine))
+            {
+                TempData["CampoChiusuraMessage"] = "Date chiusura non valide.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (dataFine.Date < dataInizio.Date)
+            {
+                TempData["CampoChiusuraMessage"] = "La data fine non puo essere precedente alla data inizio.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            _dbContext.CampoChiusure.Add(new CampoChiusura
+            {
+                DataInizio = DateTime.SpecifyKind(dataInizio.Date, DateTimeKind.Utc),
+                DataFine = DateTime.SpecifyKind(dataFine.Date, DateTimeKind.Utc),
+                Motivo = string.IsNullOrWhiteSpace(request.Motivo) ? null : request.Motivo.Trim()
+            });
+
+            await _dbContext.SaveChangesAsync();
+            TempData["CampoChiusuraMessage"] = "Chiusura campo salvata.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminaChiusura(int id)
+        {
+            var chiusura = await _dbContext.CampoChiusure.FindAsync(id);
+            if (chiusura != null)
+            {
+                _dbContext.CampoChiusure.Remove(chiusura);
+                await _dbContext.SaveChangesAsync();
+                TempData["CampoChiusuraMessage"] = "Chiusura campo rimossa.";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -83,12 +136,17 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
 
             var data = DateTime.SpecifyKind(parsedDate.Date, DateTimeKind.Utc);
+            var chiusura = await _dbContext.CampoChiusure
+                .Where(c => c.DataInizio <= data && c.DataFine >= data)
+                .OrderBy(c => c.DataInizio)
+                .FirstOrDefaultAsync();
+
             var partite = await _dbContext.Partite
                 .Where(p => !p.IsDeleted && p.Data >= data && p.Data < data.AddDays(1))
                 .OrderBy(p => p.OraInizio)
                 .ToListAsync();
 
-            var giorno = BuildGiorno(data, partite);
+            var giorno = BuildGiorno(data, partite, chiusura);
             var slotLiberi = giorno.Fasce
                 .Where(f => f.Prenotabile)
                 .Select(BuildSlotDisponibileLabel)
@@ -99,7 +157,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             if (!hasSpecificTime)
             {
-                var messageForDay = BuildCustomerMessageForDay(data, slotLiberi, catalog, currentListinoId, request.TipoGruppo);
+                var messageForDay = BuildCustomerMessageForDay(data, slotLiberi, catalog, currentListinoId, request.TipoGruppo, chiusura);
                 return Json(new
                 {
                     success = true,
@@ -119,6 +177,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 inizioOccupazioneRichiesta = AperturaCampo;
 
             var motivi = new List<string>();
+            if (giorno.CampoChiuso)
+                motivi.Add($"campo chiuso{(string.IsNullOrWhiteSpace(giorno.ChiusuraMotivo) ? "" : " per " + giorno.ChiusuraMotivo)}");
             if (oraInizio < AperturaCampo)
                 motivi.Add($"l'orario richiesto è prima dell'apertura campo delle {AperturaCampo:hh\\:mm}");
             if (finePartita > giorno.UltimaFinePartita)
@@ -145,12 +205,37 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             });
         }
 
-        private static CampoDisponibilitaGiornoViewModel BuildGiorno(DateTime data, List<Partita> partite)
+        private static CampoDisponibilitaGiornoViewModel BuildGiorno(DateTime data, List<Partita> partite, CampoChiusura? chiusura)
         {
             var tramonto = GetSunsetTime(data);
             var ultimaFinePartita = RoundDownToHalfHour(tramonto - MargineCampo);
             if (ultimaFinePartita < AperturaCampo)
                 ultimaFinePartita = AperturaCampo;
+
+            if (chiusura != null)
+            {
+                return new CampoDisponibilitaGiornoViewModel
+                {
+                    Data = data,
+                    GiornoLabel = CultureInfo.GetCultureInfo("it-IT").TextInfo.ToTitleCase(data.ToString("dddd", CultureInfo.GetCultureInfo("it-IT"))),
+                    Apertura = AperturaCampo,
+                    Tramonto = tramonto,
+                    UltimaFinePartita = ultimaFinePartita,
+                    CampoChiuso = true,
+                    ChiusuraMotivo = chiusura.Motivo,
+                    Fasce = new List<CampoFasciaViewModel>
+                    {
+                        new()
+                        {
+                            Inizio = AperturaCampo,
+                            Fine = ultimaFinePartita,
+                            Stato = "Chiuso",
+                            Dettaglio = string.IsNullOrWhiteSpace(chiusura.Motivo) ? "Campo chiuso" : $"Campo chiuso: {chiusura.Motivo}",
+                            Prenotabile = false
+                        }
+                    }
+                };
+            }
 
             var fasceOccupate = partite
                 .Select(partita => BuildFasciaOccupata(partita, ultimaFinePartita))
@@ -186,6 +271,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 UltimaFinePartita = ultimaFinePartita,
                 Fasce = fasce
             };
+        }
+
+        private static CampoChiusura? FindChiusura(List<CampoChiusura> chiusure, DateTime data)
+        {
+            return chiusure.FirstOrDefault(c => c.DataInizio.Date <= data.Date && c.DataFine.Date >= data.Date);
         }
 
         private static CampoFasciaViewModel BuildFasciaOccupata(Partita partita, TimeSpan ultimaFinePartita)
@@ -297,13 +387,19 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             List<string> slotLiberi,
             PricingCatalog catalog,
             short listinoId,
-            string tipoGruppo)
+            string tipoGruppo,
+            CampoChiusura? chiusura)
         {
             var it = CultureInfo.GetCultureInfo("it-IT");
             var dataLabel = data.ToString("d MMMM", it);
             var availabilityLines = new List<string> { "Salve," };
 
-            if (slotLiberi.Count > 0)
+            if (chiusura != null)
+            {
+                availabilityLines.Add($"Per il {dataLabel} il campo e chiuso{(string.IsNullOrWhiteSpace(chiusura.Motivo) ? "" : " per " + chiusura.Motivo)}.");
+                availabilityLines.Add("Al momento non risultano fasce disponibili per quella data.");
+            }
+            else if (slotLiberi.Count > 0)
             {
                 availabilityLines.Add($"Per il {dataLabel} ho posto:");
                 availabilityLines.AddRange(slotLiberi);

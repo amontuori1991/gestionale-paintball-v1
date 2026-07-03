@@ -167,6 +167,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 : partita.Riferimento?.Trim() ?? string.Empty;
         }
 
+        private static string NormalizeNazionalita(string? nazionalita)
+        {
+            return string.Equals(nazionalita?.Trim(), "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA";
+        }
+
         // ----------- INDEX -----------
         public async Task<IActionResult> Index()
         {
@@ -257,7 +262,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return View(new Partita
             {
                 Data = DateTime.Today,
-                Listino = catalog.CurrentListinoId
+                Listino = catalog.CurrentListinoId,
+                Nazionalita = "ITA"
             });
         }
 
@@ -284,6 +290,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
 
             partita.Listino = await ResolveValidListinoIdAsync(partita.Listino);
+            partita.Nazionalita = NormalizeNazionalita(partita.Nazionalita);
             NormalizzaContattoRiferimento(partita);
 
             // 👇 forza UTC anche se prendi solo la data
@@ -412,6 +419,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             existingPartita.ColpiIllimitati = partita.ColpiIllimitati;
             existingPartita.Caccia = partita.Caccia;
             existingPartita.CacciaDoppia = partita.CacciaDoppia;
+            existingPartita.Nazionalita = NormalizeNazionalita(partita.Nazionalita);
             existingPartita.Riferimento = partita.Riferimento;
             NormalizzaContattoRiferimento(partita);
             existingPartita.NomeRiferimento = partita.NomeRiferimento;
@@ -739,8 +747,23 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             try
             {
-                var subject = "FMP Carmagnola - La tua opinione è importante!";
-                var bodyHtml = $@"<div style='font-family: Arial, sans-serif; text-align: center; background-color: #f7f7f7; padding: 30px;'>
+                var isEnglish = NormalizeNazionalita(partita.Nazionalita) == "ENG";
+                var subject = isEnglish
+                    ? "FMP Carmagnola - Your opinion matters!"
+                    : "FMP Carmagnola - La tua opinione è importante!";
+                var bodyHtml = isEnglish
+                    ? $@"<div style='font-family: Arial, sans-serif; text-align: center; background-color: #f7f7f7; padding: 30px;'>
+                            <div style='max-width: 600px; margin: auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+                                <img src='https://i.imgur.com/K9Ugseg.gif' alt='FMP Carmagnola Logo' style='max-width: 150px; margin-bottom: 20px;' />
+                                <h2 style='color: #28a745;'>Hi,</h2>
+                                <p>Thank you for choosing A.S.D. Full Metal Paintball Carmagnola. We hope you had a positive experience with us.</p>
+                                <p>We would be happy to receive your review:</p>
+                                <a href='https://g.page/r/CSY7ElrZDaxMEBM/review' style='display: inline-block; background-color: #28a745; color: white; padding: 12px 24px; border-radius: 6px; font-weight: bold; text-decoration: none; margin: 20px 0;'>Leave a Review</a>
+                                <p>Thank you very much for your time!</p>
+                                <p>The A.S.D. Full Metal Paintball Carmagnola Team</p>
+                            </div>
+                        </div>"
+                    : $@"<div style='font-family: Arial, sans-serif; text-align: center; background-color: #f7f7f7; padding: 30px;'>
                             <div style='max-width: 600px; margin: auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
                                 <img src='https://i.imgur.com/K9Ugseg.gif' alt='FMP Carmagnola Logo' style='max-width: 150px; margin-bottom: 20px;' />
                                 <h2 style='color: #28a745;'>Ciao,</h2>
@@ -966,6 +989,121 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 var differenzaATesta = totaleDifferenza / partita.NumeroPartecipanti;
                 supplementoMinimoPartecipanti = $"⚠️ Il gruppo minimo richiesto è di 8 persone. Essendo in {partita.NumeroPartecipanti}, occorre coprire anche la quota gioco delle {personeMancanti} persone mancanti, escluso il tesseramento da 5€. Supplemento indicativo: {differenzaATesta:0.00}€ a testa.<br>";
                 supplementoMinimoPartecipantiWhatsapp = $"Il gruppo minimo richiesto è di 8 persone. Essendo in {partita.NumeroPartecipanti}, occorre coprire anche la quota gioco delle {personeMancanti} persone mancanti, escluso il tesseramento da 5€. Supplemento indicativo: {differenzaATesta:0.00}€ a testa.";
+            }
+
+            if (NormalizeNazionalita(partita.Nazionalita) == "ENG")
+            {
+                var typeLabelEn = $"{(partita.Torneo ? "Tournament + " : "")}{(partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) == true ? "KIDS" : "Adults")}";
+                var shotsEn = string.Equals(colpi, "Illimitati", StringComparison.OrdinalIgnoreCase) ? "Unlimited" : colpi;
+                var membershipInfoEn = tipo == "kids"
+                    ? "The price includes membership valid until 31/12."
+                    : "All participants must complete it within 3 hours before arriving at the field.";
+                var extraRabbitEn = partita.Caccia
+                    ? $"Extra: Rabbit Hunt{(partita.CacciaDoppia ? " x2" : "")} {PricingCatalogService.FormatCurrency(GetRabbitPrice(catalog, partita.CacciaDoppia, listinoId))}"
+                    : "";
+
+                var missingPlayersHtml = "";
+                var missingPlayersWhatsapp = "";
+                if (prezzoUnitario.HasValue && partita.NumeroPartecipanti > 0 && partita.NumeroPartecipanti < 8)
+                {
+                    var missingPeople = 8 - partita.NumeroPartecipanti;
+                    var gameFeeWithoutMembership = Math.Max(0, prezzoUnitario.Value - quotaTesseramento);
+                    var totalDifference = missingPeople * gameFeeWithoutMembership;
+                    var differencePerPerson = totalDifference / partita.NumeroPartecipanti;
+                    missingPlayersHtml = $"⚠️ The minimum required group is 8 people. Since you are {partita.NumeroPartecipanti}, the game fee for the {missingPeople} missing people must also be covered, excluding the 5€ membership. Indicative surcharge: {differencePerPerson:0.00}€ per person.<br>";
+                    missingPlayersWhatsapp = $"The minimum required group is 8 people. Since you are {partita.NumeroPartecipanti}, the game fee for the {missingPeople} missing people must also be covered, excluding the 5€ membership. Indicative surcharge: {differencePerPerson:0.00}€ per person.";
+                }
+
+                string messaggioEn = $@"
+Hi! Here is the summary of your booking:<br><br>
+📅 Date: {partita.Data:dd/MM/yyyy}<br>
+🕒 Time: {partita.OraInizio.ToString(@"hh\:mm")}<br>
+👶 Type: {typeLabelEn}<br>
+⏳ Duration: {partita.Durata} hours<br>
+👤 Contact person: {GetNomeReferente(partita)}<br>
+👥 Participants: {partita.NumeroPartecipanti}<br>
+💶 Deposit: {partita.Caparra:0.00}€<br>
+💰 {prezzo} per person<br>
+{missingPlayersHtml}
+🎯 Available paintballs: {shotsEn}<br>
+{(string.IsNullOrWhiteSpace(extraRabbitEn) ? "" : $"💥 {extraRabbitEn}<br>")}
+📎 Membership link: <a href='{linkTesseramento}' target='_blank'>{linkTesseramento}</a><br><br>
+{membershipInfoEn}<br>
+You can view the registered participants in real time here:<br>
+🔎 <a href='{linkTesseratiPubblico}' target='_blank'>{linkTesseratiPubblico}</a><br><br>";
+
+                if (!string.Equals(shotsEn, "Unlimited", StringComparison.OrdinalIgnoreCase))
+                    messaggioEn += "Extra paintballs can be purchased at the field.<br><br>";
+                else
+                    messaggioEn += "<br>";
+
+                messaggioEn += @"📍 Address: Via Ceis 80, Carmagnola<br>
+🧺 We have a dedicated picnic area for celebrations, cake cutting and parties, at no extra cost. We only ask you to leave the area clean and take your waste away at the end of the day.<br><br>";
+
+                messaggioEn += @"Please arrive at least 15 minutes before your booking time.<br>
+Playing time starts at " + partita.OraInizio.ToString(@"hh\:mm") + @" even in case of delay.<br>
+Please communicate participant changes within 3 hours before the start.<br>
+The field is outdoors and a changing room is available, but there are no showers: sportswear is recommended.<br>
+Contact lenses are recommended; glasses are not recommended under the mask.<br>
+Minors can play only with parental authorization.<br>
+In case of bad weather we play unless the field is unusable.<br>
+Payments only in cash or Satispay, no card payments.<br><br>
+We look forward to seeing you! 🎯";
+
+                var messaggioWhatsappEnLines = new List<string>
+                {
+                    "Hi! Here is the summary of your booking:",
+                    "",
+                    $"Date: {partita.Data:dd/MM/yyyy}",
+                    $"Time: {partita.OraInizio.ToString(@"hh\:mm")}",
+                    $"Type: {typeLabelEn}",
+                    $"Duration: {partita.Durata} hours",
+                    $"Contact person: {GetNomeReferente(partita)}",
+                    $"Participants: {partita.NumeroPartecipanti}",
+                    $"Deposit: {partita.Caparra:0.00}€",
+                    $"{prezzo} per person"
+                };
+
+                if (!string.IsNullOrWhiteSpace(missingPlayersWhatsapp))
+                {
+                    messaggioWhatsappEnLines.Add("");
+                    messaggioWhatsappEnLines.Add(missingPlayersWhatsapp);
+                }
+
+                messaggioWhatsappEnLines.Add("");
+                messaggioWhatsappEnLines.Add($"Available paintballs: {shotsEn}");
+                if (!string.IsNullOrWhiteSpace(extraRabbitEn))
+                    messaggioWhatsappEnLines.Add(extraRabbitEn);
+
+                messaggioWhatsappEnLines.Add("");
+                messaggioWhatsappEnLines.Add($"Membership link: {linkTesseramento}");
+                messaggioWhatsappEnLines.Add(membershipInfoEn);
+                messaggioWhatsappEnLines.Add("");
+                messaggioWhatsappEnLines.Add("You can view the registered participants in real time here:");
+                messaggioWhatsappEnLines.Add(linkTesseratiPubblico);
+                messaggioWhatsappEnLines.Add("");
+
+                if (!string.Equals(shotsEn, "Unlimited", StringComparison.OrdinalIgnoreCase))
+                {
+                    messaggioWhatsappEnLines.Add("Extra paintballs can be purchased at the field.");
+                    messaggioWhatsappEnLines.Add("");
+                }
+
+                messaggioWhatsappEnLines.Add("Address: Via Ceis 80, Carmagnola");
+                messaggioWhatsappEnLines.Add("We have a dedicated picnic area for celebrations, cake cutting and parties, at no extra cost. We only ask you to leave the area clean and take your waste away at the end of the day.");
+                messaggioWhatsappEnLines.Add("");
+                messaggioWhatsappEnLines.Add("Please arrive at least 15 minutes before your booking time.");
+                messaggioWhatsappEnLines.Add($"Playing time starts at {partita.OraInizio.ToString(@"hh\:mm")} even in case of delay.");
+                messaggioWhatsappEnLines.Add("Please communicate participant changes within 3 hours before the start.");
+                messaggioWhatsappEnLines.Add("The field is outdoors and a changing room is available, but there are no showers: sportswear is recommended.");
+                messaggioWhatsappEnLines.Add("Contact lenses are recommended; glasses are not recommended under the mask.");
+                messaggioWhatsappEnLines.Add("Minors can play only with parental authorization.");
+                messaggioWhatsappEnLines.Add("In case of bad weather we play unless the field is unusable.");
+                messaggioWhatsappEnLines.Add("Payments only in cash or Satispay, no card payments.");
+                messaggioWhatsappEnLines.Add("");
+                messaggioWhatsappEnLines.Add("We look forward to seeing you!");
+
+                return Json(new { success = true, messaggio = messaggioEn, messaggioWhatsapp = string.Join('\n', messaggioWhatsappEnLines) });
             }
 
             string messaggio = $@"

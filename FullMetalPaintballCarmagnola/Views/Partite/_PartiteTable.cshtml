@@ -203,6 +203,7 @@
                 <th>Data</th>
                 <th>Ora</th>
                 <th>Tipo</th>
+                <th>Lingua</th>
                 <th>Rif.</th>
                 <th>Durata</th>
                 <th>Nr. P.</th>
@@ -260,6 +261,7 @@
 
                     <td data-label="Ora Inizio">@partita.OraInizio.ToString(@"hh\:mm")</td>
                     <td data-label="Tipo">@partita.Tipo</td>
+                    <td data-label="Lingua">@(string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA")</td>
 
                     <td data-label="Riferimento">
                         <span class="ref-icon" onclick="showRiferimento(@JsString(RiferimentoDettaglio(partita)))">📇</span>
@@ -308,6 +310,7 @@
                                     data-registered="@iscritti"
                                     data-members-names="@TesseratiNames(partita)"
                                     data-type="@TipoLabel(partita)"
+                                    data-language="@(string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA")"
                                     data-caparra="@Money(partita.Caparra)"
                                     data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">
                                 <i class="bi bi-whatsapp" aria-hidden="true"></i>
@@ -340,7 +343,7 @@
                 </tr>
 
 <tr class="partita-staff-row" data-parent-partita-id="@partita.Id" style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
-    <td colspan="17" style="background-color: inherit;">
+    <td colspan="18" style="background-color: inherit;">
         <span class="staff-weather-inline">
             @if (weather != null)
             {
@@ -463,6 +466,7 @@
 
         <div class="pm-chips">
             <span class="pm-chip pm-chip-muted">@tipoLabel</span>
+            <span class="pm-chip pm-chip-muted">@(string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA")</span>
             <span class="pm-chip pm-chip-muted">@(partita.Listino == currentListinoId ? $"Listino attivo: {GetListinoLabel(partita.Listino)}" : GetListinoLabel(partita.Listino))</span>
             @if (partita.Torneo) { <span class="pm-chip pm-chip-gold">🏆 Torneo</span> }
             @if (partita.ColpiIllimitati) { <span class="pm-chip pm-chip-blue">♾️ Illimitati</span> }
@@ -503,6 +507,7 @@
                         data-registered="@iscritti"
                         data-members-names="@TesseratiNames(partita)"
                         data-type="@tipoLabel"
+                        data-language="@(string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA")"
                         data-caparra="@Money(partita.Caparra)"
                         data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">
                     <i class="bi bi-whatsapp" aria-hidden="true"></i>

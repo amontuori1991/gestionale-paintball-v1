@@ -32,6 +32,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         public DbSet<Spesa> Spese { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
+        public DbSet<CampoChiusura> CampoChiusure { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

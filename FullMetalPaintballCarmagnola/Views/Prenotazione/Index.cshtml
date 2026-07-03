@@ -5,6 +5,7 @@
     Layout = null;
     ViewData["Title"] = "Richiesta prenotazione";
     var slotsJson = JsonSerializer.Serialize(Model.Giorni.SelectMany(g => g.Slot));
+    var closedDatesJson = JsonSerializer.Serialize(Model.DateChiusure);
 }
 
 <!doctype html>
@@ -482,6 +483,13 @@
                         <input type="number" id="Participants" required min="1" max="40" placeholder="Es. 10" />
                     </label>
                     <label>
+                        Lingua richiesta
+                        <select id="BookingLanguage" required>
+                            <option value="ITA">ITA</option>
+                            <option value="ENG">ENG</option>
+                        </select>
+                    </label>
+                    <label>
                         Durata partita
                         <select id="Duration" required>
                             <option value="1">1 ora</option>
@@ -553,6 +561,7 @@
     <script>
         (() => {
             const slots = @Html.Raw(slotsJson);
+            const closedDates = new Set(@Html.Raw(closedDatesJson));
             const whatsappNumber = '393468741192';
             const modeButtons = Array.from(document.querySelectorAll('[data-mode-button]'));
             const bookingCard = document.getElementById('BookingCard');
@@ -567,6 +576,7 @@
             const weekdayDateInput = document.getElementById('WeekdayDate');
             const weekdayStartTimeInput = document.getElementById('WeekdayStartTime');
             const durationInput = document.getElementById('Duration');
+            const bookingLanguageInput = document.getElementById('BookingLanguage');
             const groupTypeInput = document.getElementById('GroupType');
             const shotsTypeInput = document.getElementById('ShotsType');
             const rabbitInput = document.getElementById('RabbitHunt');
@@ -734,17 +744,31 @@
                 const name = document.getElementById('CustomerName').value.trim();
                 const participants = document.getElementById('Participants').value.trim();
                 const notes = document.getElementById('Notes').value.trim();
+                const isEnglish = bookingLanguageInput.value === 'ENG';
                 const commonLines = [
-                    `Referente: ${name}`,
-                    `Durata: ${durationInput.options[durationInput.selectedIndex].text}`,
-                    `Partecipanti indicativi: ${participants}`,
-                    `Tipo gruppo: ${groupTypeInput.value}`,
-                    `Colpi: ${shotsTypeInput.value}`,
-                    `Caccia al coniglio: ${rabbitInput.value}`,
-                    notes ? `Note: ${notes}` : null
+                    `${isEnglish ? 'Contact person' : 'Referente'}: ${name}`,
+                    `${isEnglish ? 'Duration' : 'Durata'}: ${durationInput.options[durationInput.selectedIndex].text}`,
+                    `${isEnglish ? 'Expected participants' : 'Partecipanti indicativi'}: ${participants}`,
+                    `${isEnglish ? 'Group type' : 'Tipo gruppo'}: ${groupTypeInput.value}`,
+                    `${isEnglish ? 'Paintballs' : 'Colpi'}: ${shotsTypeInput.value}`,
+                    `${isEnglish ? 'Rabbit hunt' : 'Caccia al coniglio'}: ${rabbitInput.value}`,
+                    notes ? `${isEnglish ? 'Notes' : 'Note'}: ${notes}` : null
                 ].filter(Boolean);
 
                 if (bookingMode === 'weekday') {
+                    if (isEnglish) {
+                        return [
+                            'Hi, I would like to request availability for a weekday paintball match.',
+                            '',
+                            commonLines[0],
+                            `Preferred date: ${formatItalianDate(weekdayDateInput.value)}`,
+                            `Preferred start time: ${weekdayStartTimeInput.value}`,
+                            ...commonLines.slice(1),
+                            '',
+                            'I look forward to confirmation of field and staff availability.'
+                        ].filter(Boolean).join('\n');
+                    }
+
                     return [
                         'Salve, vorrei richiedere disponibilità per una partita di paintball infrasettimanale.',
                         '',
@@ -754,6 +778,19 @@
                         ...commonLines.slice(1),
                         '',
                         'Resto in attesa di conferma disponibilità del campo e dello staff.'
+                    ].filter(Boolean).join('\n');
+                }
+
+                if (isEnglish) {
+                    return [
+                        'Hi, I would like to request availability for a paintball match.',
+                        '',
+                        commonLines[0],
+                        `Date: ${selectedSlot.giorno}`,
+                        `Requested time: ${selectedSlot.inizio} - ${selectedSlot.fine}`,
+                        ...commonLines.slice(1),
+                        '',
+                        'I look forward to confirmation from the staff.'
                     ].filter(Boolean).join('\n');
                 }
 
@@ -792,6 +829,11 @@
 
                 if (bookingMode === 'weekday' && weekdayDateInput.value && isWeekendDate(weekdayDateInput.value)) {
                     showError('Per i turni infrasettimanali seleziona una data dal lunedì al venerdì.');
+                    return;
+                }
+
+                if (bookingMode === 'weekday' && weekdayDateInput.value && closedDates.has(weekdayDateInput.value)) {
+                    showError('Il campo risulta chiuso nella data selezionata.');
                     return;
                 }
 

@@ -106,6 +106,69 @@
         padding: 22px;
     }
 
+    .closure-card {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(93, 110, 74, 0.18);
+        border-radius: 24px;
+        box-shadow: 0 18px 40px rgba(30, 41, 59, 0.12);
+        margin-bottom: 22px;
+        padding: 22px;
+    }
+
+    .closure-form {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .closure-form label {
+        color: #334155;
+        display: grid;
+        font-size: .9rem;
+        font-weight: 800;
+        gap: 6px;
+    }
+
+    .closure-form input {
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 12px;
+        width: 100%;
+    }
+
+    .closure-form button,
+    .closure-delete {
+        background: #386641;
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-weight: 900;
+        padding: 10px 14px;
+    }
+
+    .closure-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .closure-row {
+        align-items: center;
+        background: #f8fafc;
+        border: 1px solid #dbe4ee;
+        border-radius: 14px;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr auto;
+        padding: 10px 12px;
+    }
+
+    .closure-message {
+        color: #166534;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
     .customer-check-card h2 {
         color: #22311f;
         font-size: 1.45rem;
@@ -290,6 +353,11 @@
         border: 1px solid rgba(245, 158, 11, 0.2);
     }
 
+    .slot-row.closed {
+        background: rgba(100, 116, 139, 0.14);
+        border: 1px solid rgba(100, 116, 139, 0.22);
+    }
+
     .slot-time {
         color: #0f172a;
         font-size: 1.05rem;
@@ -319,6 +387,11 @@
         color: #3b2600;
     }
 
+    .closed .slot-badge {
+        background: #475569;
+        color: #fff;
+    }
+
     .slot-detail {
         color: #334155;
         font-weight: 700;
@@ -335,6 +408,11 @@
         }
 
         .customer-check-form {
+            grid-template-columns: 1fr;
+        }
+
+        .closure-form,
+        .closure-row {
             grid-template-columns: 1fr;
         }
 
@@ -433,6 +511,53 @@
         </div>
     </section>
 
+    <section class="closure-card">
+        <h2>Chiusure campo</h2>
+        @if (TempData["CampoChiusuraMessage"] is string closureMessage)
+        {
+            <div class="closure-message">@closureMessage</div>
+        }
+        <form asp-action="AggiungiChiusura" method="post" class="closure-form">
+            @Html.AntiForgeryToken()
+            <label>
+                Dal giorno
+                <input type="date" name="DataInizio" required />
+            </label>
+            <label>
+                Al giorno
+                <input type="date" name="DataFine" required />
+            </label>
+            <label>
+                Motivo
+                <input type="text" name="Motivo" maxlength="160" placeholder="Es. festivita" />
+            </label>
+            <button type="submit">Chiudi campo</button>
+        </form>
+        <div class="closure-list">
+            @if (!Model.Chiusure.Any())
+            {
+                <div class="day-meta">Nessuna chiusura programmata nei prossimi 6 mesi.</div>
+            }
+            @foreach (var chiusura in Model.Chiusure)
+            {
+                <div class="closure-row">
+                    <div>
+                        <strong>@chiusura.DataInizio.ToString("dd/MM/yyyy", it) - @chiusura.DataFine.ToString("dd/MM/yyyy", it)</strong>
+                        @if (!string.IsNullOrWhiteSpace(chiusura.Motivo))
+                        {
+                            <span> · @chiusura.Motivo</span>
+                        }
+                    </div>
+                    <form asp-action="EliminaChiusura" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@chiusura.Id" />
+                        <button type="submit" class="closure-delete">Rimuovi</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </section>
+
     <div class="day-grid">
         @foreach (var giorno in Model.Giorni)
         {
@@ -448,7 +573,7 @@
                 <div class="slot-list">
                     @foreach (var fascia in giorno.Fasce)
                     {
-                        var rowClass = fascia.Stato == "Occupato" ? "busy" : fascia.Prenotabile ? "free" : "short";
+                        var rowClass = fascia.Stato == "Chiuso" ? "closed" : fascia.Stato == "Occupato" ? "busy" : fascia.Prenotabile ? "free" : "short";
                         <div class="slot-row @rowClass">
                             <div class="slot-time">@fascia.Inizio.ToString(@"hh\:mm") - @fascia.Fine.ToString(@"hh\:mm")</div>
                             <div class="slot-badge">@fascia.Stato</div>

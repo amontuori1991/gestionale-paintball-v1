@@ -54,6 +54,10 @@ public class Partita
     [Required(ErrorMessage = "Seleziona se la partita e' adulti o kids.")]
     public string? Tipo { get; set; }
 
+    [Required]
+    [StringLength(3)]
+    public string Nazionalita { get; set; } = "ITA";
+
     // Riferimento al listino configurato nel gestionale.
     public short Listino { get; set; } = 1;
 
