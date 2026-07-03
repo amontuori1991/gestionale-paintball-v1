@@ -341,7 +341,7 @@ public sealed class AcsiOdsExportService
             Text(DisciplinaAcsi1Default),
             Text(string.Empty),
             Text(string.Empty),
-            Text(t.TipoDocumentoEstero),
+            Text(MapForeignDocumentType(t.TipoDocumentoEstero)),
             Text(t.NumeroDocumentoEstero),
             Text("NO"),
             Text("NO"),
@@ -363,9 +363,34 @@ public sealed class AcsiOdsExportService
         }
 
         var normalized = NormalizeKey(trimmed);
-        return _countryIso2Map.Value.TryGetValue(normalized, out var iso2)
-            ? iso2
-            : trimmed;
+        if (_countryIso2Map.Value.TryGetValue(normalized, out var iso2))
+        {
+            return iso2;
+        }
+
+        var knownIso2 = _countryIso2Map.Value.Values.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var isoToken = normalized
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault(token => token.Length == 2 && token.All(char.IsLetter) && knownIso2.Contains(token));
+
+        return isoToken?.ToUpperInvariant() ?? string.Empty;
+    }
+
+    private static string MapForeignDocumentType(string? documentType)
+    {
+        if (string.IsNullOrWhiteSpace(documentType))
+        {
+            return string.Empty;
+        }
+
+        var normalized = NormalizeKey(documentType);
+        return normalized switch
+        {
+            "ci" or "carta identita" or "carta d identita" or "identity card" => "CI",
+            "ps" or "passaporto" or "passport" => "PS",
+            "pg" or "permesso soggiorno" or "permesso di soggiorno" or "residence permit" => "PG",
+            _ => documentType.Trim().ToUpperInvariant()
+        };
     }
 
     private static string MapGender(string? genere)
@@ -444,7 +469,27 @@ public sealed class AcsiOdsExportService
             ["costa d avorio"] = "CI",
             ["emirati arabi uniti"] = "AE",
             ["bosnia ed erzegovina"] = "BA",
-            ["macedonia del nord"] = "MK"
+            ["macedonia del nord"] = "MK",
+            ["germania"] = "DE",
+            ["francia"] = "FR",
+            ["spagna"] = "ES",
+            ["portogallo"] = "PT",
+            ["svizzera"] = "CH",
+            ["austria"] = "AT",
+            ["belgio"] = "BE",
+            ["polonia"] = "PL",
+            ["romania"] = "RO",
+            ["bulgaria"] = "BG",
+            ["croazia"] = "HR",
+            ["slovenia"] = "SI",
+            ["albania"] = "AL",
+            ["marocco"] = "MA",
+            ["tunisia"] = "TN",
+            ["egitto"] = "EG",
+            ["brasile"] = "BR",
+            ["argentina"] = "AR",
+            ["cina"] = "CN",
+            ["giappone"] = "JP"
         };
 
         foreach (var alias in manualAliases)
