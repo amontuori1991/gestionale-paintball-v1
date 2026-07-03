@@ -437,6 +437,7 @@ public sealed class AcsiOdsExportService
             {
                 var region = new RegionInfo(culture.Name);
                 AddCountryAlias(map, region.TwoLetterISORegionName, region.TwoLetterISORegionName);
+                AddCountryAlias(map, region.ThreeLetterISORegionName, region.TwoLetterISORegionName);
                 AddCountryAlias(map, region.EnglishName, region.TwoLetterISORegionName);
                 AddCountryAlias(map, region.NativeName, region.TwoLetterISORegionName);
                 AddCountryAlias(map, region.DisplayName, region.TwoLetterISORegionName);
@@ -504,7 +505,104 @@ public sealed class AcsiOdsExportService
             AddCountryAlias(map, alias.Key, alias.Value);
         }
 
+        AddCommonMultilingualCountryAliases(map);
+
         return map;
+    }
+
+    private static void AddCommonMultilingualCountryAliases(IDictionary<string, string> map)
+    {
+        AddCountryAliases(map, "AF", "afghanistan", "afghan", "afghanisch", "afgano", "afghana", "afgana");
+        AddCountryAliases(map, "AL", "albania", "albanien", "albanie", "albanian", "albanisch", "albanese");
+        AddCountryAliases(map, "DZ", "algeria", "algerien", "algerie", "argelia", "algerien", "algerian", "algerisch", "algerino", "algerina");
+        AddCountryAliases(map, "AR", "argentina", "argentinien", "argentine", "argentinisch", "argentino", "argentina");
+        AddCountryAliases(map, "AM", "armenia", "armenien", "armenie", "armenian", "armenisch", "armeno", "armena");
+        AddCountryAliases(map, "AU", "australia", "australien", "australie", "australian", "australisch", "australiano", "australiana");
+        AddCountryAliases(map, "AT", "austria", "osterreich", "autriche", "austria", "austrian", "osterreichisch", "austriaco", "austriaca");
+        AddCountryAliases(map, "BD", "bangladesh", "bangladesch", "bangladeshi", "bengalese");
+        AddCountryAliases(map, "BE", "belgium", "belgien", "belgique", "belgica", "belgio", "belgian", "belgisch", "belga");
+        AddCountryAliases(map, "BA", "bosnia", "bosnien", "bosnia herzegovina", "bosnia and herzegovina", "bosnien und herzegowina", "bosnie herzégovine", "bosniaco", "bosniaca");
+        AddCountryAliases(map, "BR", "brazil", "brasilien", "bresil", "bresil", "brasile", "brasil", "brazilian", "brasilianisch", "brasiliano", "brasiliana");
+        AddCountryAliases(map, "BG", "bulgaria", "bulgarien", "bulgarie", "bulgarian", "bulgarisch", "bulgaro", "bulgara");
+        AddCountryAliases(map, "CM", "cameroon", "kamerun", "cameroun", "camerun", "camerunense");
+        AddCountryAliases(map, "CA", "canada", "kanada", "canadian", "kanadisch", "canadese");
+        AddCountryAliases(map, "CL", "chile", "chilean", "chilenisch", "cileno", "cilena");
+        AddCountryAliases(map, "CN", "china", "chine", "cina", "chinese", "chinesisch", "cinese");
+        AddCountryAliases(map, "CO", "colombia", "kolumbien", "colombie", "colombian", "kolumbianisch", "colombiano", "colombiana");
+        AddCountryAliases(map, "HR", "croatia", "kroatien", "croatie", "croazia", "croatian", "kroatisch", "croato", "croata");
+        AddCountryAliases(map, "CU", "cuba", "kubanisch", "cubano", "cubana");
+        AddCountryAliases(map, "CZ", "czech republic", "czechia", "tschechien", "tschechische republik", "republique tcheque", "repubblica ceca", "cechia", "czech", "tschechisch", "ceco", "ceca");
+        AddCountryAliases(map, "DK", "denmark", "danemark", "danemark", "danmark", "danimarca", "danish", "danisch", "danese");
+        AddCountryAliases(map, "DO", "dominican republic", "dominikanische republik", "republique dominicaine", "repubblica dominicana", "dominicano", "dominicana");
+        AddCountryAliases(map, "EC", "ecuador", "equateur", "ecuadorian", "ecuadoriano", "ecuadoriana");
+        AddCountryAliases(map, "EG", "egypt", "agypten", "egypte", "egitto", "egipto", "egyptian", "agyptisch", "egiziano", "egiziana");
+        AddCountryAliases(map, "SV", "el salvador", "salvador", "salvadoregno", "salvadoregna");
+        AddCountryAliases(map, "EE", "estonia", "estland", "estonie", "estonian", "estnisch", "estone");
+        AddCountryAliases(map, "ET", "ethiopia", "athiopien", "ethiopie", "etiopia", "ethiopian", "athiopisch", "etiope");
+        AddCountryAliases(map, "FI", "finland", "finnland", "finlande", "finlandia", "finnish", "finnisch", "finlandese");
+        AddCountryAliases(map, "FR", "france", "frankreich", "francia", "frankrijk", "francja", "frances", "francais", "franzosisch", "french", "francese");
+        AddCountryAliases(map, "GE", "georgia", "georgien", "georgie", "georgian", "georgisch", "georgiano", "georgiana");
+        AddCountryAliases(map, "DE", "germany", "germania", "deutschland", "allemagne", "alemania", "duitsland", "niemcy", "deutsch", "deutsche", "german", "germanisch", "tedesco", "tedesca", "alemao", "alemana");
+        AddCountryAliases(map, "GH", "ghana", "ghanaian", "ghanese");
+        AddCountryAliases(map, "GR", "greece", "griechenland", "grece", "grecia", "greek", "griechisch", "greco", "greca");
+        AddCountryAliases(map, "HU", "hungary", "ungarn", "hongrie", "ungheria", "hungria", "hungarian", "ungarisch", "ungherese");
+        AddCountryAliases(map, "IN", "india", "indien", "inde", "indian", "indisch", "indiano", "indiana");
+        AddCountryAliases(map, "ID", "indonesia", "indonesien", "indonesie", "indonesian", "indonesisch", "indonesiano", "indonesiana");
+        AddCountryAliases(map, "IR", "iran", "iranian", "iranisch", "iraniano", "iraniana");
+        AddCountryAliases(map, "IQ", "iraq", "irak", "iraqi", "irakisch", "iracheno", "irachena");
+        AddCountryAliases(map, "IE", "ireland", "irland", "irlande", "irlanda", "irish", "irisch", "irlandese");
+        AddCountryAliases(map, "IL", "israel", "israele", "israeli", "israelisch", "israeliano", "israeliana");
+        AddCountryAliases(map, "IT", "italy", "italien", "italie", "italia", "italian", "italienisch", "italiano", "italiana");
+        AddCountryAliases(map, "CI", "ivory coast", "cote d ivoire", "costa d avorio", "elfenbeinkuste", "ivoirien", "ivoriano", "ivoriana");
+        AddCountryAliases(map, "JP", "japan", "japon", "giappone", "japanese", "japanisch", "giapponese");
+        AddCountryAliases(map, "KZ", "kazakhstan", "kasachstan", "kazakistan", "kazachstan", "kazakh", "kasachisch", "kazako", "kazaka");
+        AddCountryAliases(map, "KE", "kenya", "kenian", "kenianisch", "keniota");
+        AddCountryAliases(map, "XK", "kosovo", "kosovar", "kosovaro", "kosovara");
+        AddCountryAliases(map, "LV", "latvia", "lettland", "lettonie", "lettonia", "latvian", "lettisch", "lettone");
+        AddCountryAliases(map, "LB", "lebanon", "libanon", "liban", "libano", "lebanese", "libanesisch", "libanese");
+        AddCountryAliases(map, "LT", "lithuania", "litauen", "lituanie", "lituania", "lithuanian", "litauisch", "lituano", "lituana");
+        AddCountryAliases(map, "LU", "luxembourg", "luxemburg", "lussemburgo", "luxembourger", "lussemburghese");
+        AddCountryAliases(map, "MK", "north macedonia", "mazedonien", "nordmazedonien", "macedoine du nord", "macedonia del nord", "macedonian", "mazedonisch", "macedone");
+        AddCountryAliases(map, "ML", "mali", "malian", "maliano", "maliana");
+        AddCountryAliases(map, "MA", "morocco", "marokko", "maroc", "marocco", "marruecos", "moroccan", "marokkanisch", "marocchino", "marocchina");
+        AddCountryAliases(map, "MD", "moldova", "moldawien", "moldavie", "moldavia", "moldovan", "moldauisch", "moldavo", "moldava");
+        AddCountryAliases(map, "ME", "montenegro", "montenegrin", "montenegrino", "montenegrina");
+        AddCountryAliases(map, "NL", "netherlands", "niederlande", "pays bas", "paesi bassi", "olanda", "nederland", "dutch", "niederlandisch", "olandese");
+        AddCountryAliases(map, "NG", "nigeria", "nigerian", "nigeriano", "nigeriana");
+        AddCountryAliases(map, "NO", "norway", "norwegen", "norvege", "norvegia", "norwegian", "norwegisch", "norvegese");
+        AddCountryAliases(map, "PK", "pakistan", "pakistani", "pakistanisch", "pakistano", "pakistana");
+        AddCountryAliases(map, "PE", "peru", "perou", "peruvian", "peruanisch", "peruviano", "peruviana");
+        AddCountryAliases(map, "PH", "philippines", "philippinen", "filippine", "philippine", "filipino", "filipina");
+        AddCountryAliases(map, "PL", "poland", "polen", "pologne", "polonia", "polska", "polish", "polnisch", "polacco", "polacca");
+        AddCountryAliases(map, "PT", "portugal", "portogallo", "portuguese", "portugiesisch", "portoghese");
+        AddCountryAliases(map, "RO", "romania", "rumania", "rumanien", "roumanie", "romanian", "rumanisch", "romeno", "romena");
+        AddCountryAliases(map, "RU", "russia", "russland", "russie", "rusia", "rossiya", "russian", "russisch", "russo", "russa");
+        AddCountryAliases(map, "SN", "senegal", "senegalese", "senegalesisch");
+        AddCountryAliases(map, "RS", "serbia", "serbien", "serbie", "serbian", "serbisch", "serbo", "serba");
+        AddCountryAliases(map, "SK", "slovakia", "slowakei", "slovaquie", "slovacchia", "slovak", "slowakisch", "slovacco", "slovacca");
+        AddCountryAliases(map, "SI", "slovenia", "slowenien", "slovenie", "slovenian", "slowenisch", "sloveno", "slovena");
+        AddCountryAliases(map, "SO", "somalia", "somali", "somalo", "somala");
+        AddCountryAliases(map, "ES", "spain", "spanien", "espagne", "espana", "spagna", "spanish", "spanisch", "spagnolo", "spagnola");
+        AddCountryAliases(map, "LK", "sri lanka", "srilanka", "sri lankan", "singalese");
+        AddCountryAliases(map, "SE", "sweden", "schweden", "suede", "svezia", "swedish", "schwedisch", "svedese");
+        AddCountryAliases(map, "CH", "switzerland", "schweiz", "suisse", "suiza", "svizzera", "svizzero", "svizzera", "swiss", "schweizerisch");
+        AddCountryAliases(map, "SY", "syria", "syrien", "syrie", "siria", "syrian", "syrisch", "siriano", "siriana");
+        AddCountryAliases(map, "TN", "tunisia", "tunesien", "tunisie", "tunisian", "tunesisch", "tunisino", "tunisina");
+        AddCountryAliases(map, "TR", "turkey", "turkiye", "turkei", "turquie", "turchia", "turkish", "turkisch", "turco", "turca");
+        AddCountryAliases(map, "UA", "ukraine", "ucraina", "ukrainian", "ukrainisch", "ucraino", "ucraina");
+        AddCountryAliases(map, "GB", "united kingdom", "great britain", "uk", "england", "regno unito", "gran bretagna", "royaume uni", "vereinigtes konigreich", "british", "britannico", "britannica", "inglese");
+        AddCountryAliases(map, "US", "united states", "united states of america", "usa", "u s a", "stati uniti", "stati uniti d america", "etats unis", "vereinigte staaten", "american", "americano", "americana");
+        AddCountryAliases(map, "UY", "uruguay", "uruguayan", "uruguayano", "uruguayana");
+        AddCountryAliases(map, "VE", "venezuela", "venezuelan", "venezuelano", "venezuelana");
+        AddCountryAliases(map, "VN", "vietnam", "viet nam", "vietnamese", "vietnamesisch");
+    }
+
+    private static void AddCountryAliases(IDictionary<string, string> map, string iso2, params string[] aliases)
+    {
+        foreach (var alias in aliases)
+        {
+            AddCountryAlias(map, alias, iso2);
+        }
     }
 
     private static void AddCountryAlias(IDictionary<string, string> map, string? alias, string iso2)
