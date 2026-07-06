@@ -15,6 +15,40 @@
 }
 
 <style>
+    .pricing-page {
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+    }
+
+    .pricing-page .list-container {
+        margin: 0;
+        overflow: hidden;
+        padding: 24px;
+    }
+
+    .pricing-page .list-container h2 {
+        margin-bottom: 22px;
+    }
+
+    .pricing-page .pricing-toolbar h2 {
+        margin-bottom: 4px;
+    }
+
+    .pricing-table-wrap {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        max-width: 100%;
+        overflow-x: auto;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .pricing-table {
+        margin-bottom: 0;
+        width: 100%;
+    }
+
     .pricing-table td,
     .pricing-table th {
         vertical-align: middle;
@@ -52,10 +86,6 @@
         box-shadow: 0 8px 18px rgba(40, 30, 10, 0.06);
     }
 
-    .pricing-mobile-card + .pricing-mobile-card {
-        margin-top: 12px;
-    }
-
     .pricing-mobile-title {
         font-weight: 700;
         font-size: 1rem;
@@ -89,20 +119,35 @@
     }
 
     @@media (max-width: 768px) {
+        .pricing-page {
+            gap: 18px;
+        }
+
+        .pricing-page .list-container {
+            padding: 18px;
+        }
+
+        .pricing-page .list-container h2 {
+            font-size: 1.65rem;
+            margin-bottom: 16px;
+        }
+
         .pricing-table-wrap {
             display: none;
         }
 
         .pricing-mobile-cards {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
         }
     }
 </style>
 
-<div class="content-container">
+<div class="content-container pricing-page">
     @if (canManagePricing)
     {
-        <div class="list-container mb-3">
+        <div class="list-container pricing-toolbar">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <div>
                     <h2 class="mb-1">Listini</h2>
