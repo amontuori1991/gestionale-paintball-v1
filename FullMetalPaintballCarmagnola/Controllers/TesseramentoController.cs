@@ -22,6 +22,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private readonly AcsiOdsExportService _acsiOdsExportService;
         private readonly ILogger<TesseramentoController> _logger;
         private const string TesseramentoLiberoEnabledSettingKey = "TesseramentoLiberoEnabled";
+        private static readonly Regex TesseraFittiziaRegex = new(@"^\d{10}$", RegexOptions.Compiled);
         private static readonly DateTime DataAvvioFabbisognoTessereUtc =
             DateTime.SpecifyKind(new DateTime(2026, 5, 1), DateTimeKind.Utc);
 
@@ -416,7 +417,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssociaTesseratoAPartita(int tesseratoId, int partitaId)
         {
-            var tesserato = await _dbContext.Tesseramenti.FirstOrDefaultAsync(t => t.Id == tesseratoId);
+            var tesserato = await _dbContext.Tesseramenti
+                .Include(t => t.Partita)
+                .FirstOrDefaultAsync(t => t.Id == tesseratoId);
             if (tesserato == null)
             {
                 return Json(new { success = false, message = "Tesserato non trovato." });
@@ -478,7 +481,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             var tessereAssegnateDb = tessereAssegnateDbRaw
                 .Where(t => long.TryParse(t, out _))
-                .Select(long.Parse)
+                .Select(t => long.Parse(t!, CultureInfo.InvariantCulture))
                 .ToHashSet();
 
             var tessereDisponibili = await _dbContext.RangeTessereAcsi
@@ -514,6 +517,68 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssegnaTessereFittizie(List<int> tesseratiIds)
+        {
+            if (tesseratiIds == null || !tesseratiIds.Any())
+            {
+                TempData["Messaggio"] = "Nessun tesserato selezionato.";
+                return RedirectToAction("ListaTesseramenti");
+            }
+
+            var tesseratiDaAggiornare = await _dbContext.Tesseramenti
+                .Include(t => t.Partita)
+                .Where(t =>
+                    tesseratiIds.Contains(t.Id) &&
+                    string.IsNullOrEmpty(t.Tessera) &&
+                    !t.NoTesseramento &&
+                    t.Partita != null &&
+                    !t.Partita.IsDeleted &&
+                    t.Partita.Data >= DataAvvioFabbisognoTessereUtc)
+                .OrderBy(t => t.Partita!.Data)
+                .ThenBy(t => t.DataCreazione)
+                .ToListAsync();
+
+            if (!tesseratiDaAggiornare.Any())
+            {
+                TempData["Messaggio"] = "I tesserati selezionati hanno gia' una tessera, sono No Tesseramento, non hanno partita valida o non sono stati trovati.";
+                return RedirectToAction("ListaTesseramenti");
+            }
+
+            var prefissiPartita = tesseratiDaAggiornare
+                .Select(t => GetTesseraFittiziaPrefix(t.Partita!.Data))
+                .Distinct()
+                .ToList();
+
+            var progressiviPerPrefisso = new Dictionary<string, int>();
+            foreach (var prefisso in prefissiPartita)
+            {
+                progressiviPerPrefisso[prefisso] = await GetUltimoProgressivoTesseraFittiziaAsync(prefisso);
+            }
+
+            foreach (var gruppo in tesseratiDaAggiornare.GroupBy(t => GetTesseraFittiziaPrefix(t.Partita!.Data)))
+            {
+                if (progressiviPerPrefisso[gruppo.Key] + gruppo.Count() > 99)
+                {
+                    TempData["Messaggio"] = $"Progressivo tessere fittizie esaurito per la data partita {gruppo.Key}.";
+                    return RedirectToAction("ListaTesseramenti");
+                }
+            }
+
+            foreach (var tesserato in tesseratiDaAggiornare)
+            {
+                var prefisso = GetTesseraFittiziaPrefix(tesserato.Partita!.Data);
+                var progressivo = ++progressiviPerPrefisso[prefisso];
+                tesserato.Tessera = $"{prefisso}{progressivo:00}";
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            TempData["Messaggio"] = $"{tesseratiDaAggiornare.Count} tessere fittizie assegnate con successo.";
+            return RedirectToAction("ListaTesseramenti");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DissociaTessera(int tesseratoId)
         {
             var tesserato = await _dbContext.Tesseramenti.FirstOrDefaultAsync(t => t.Id == tesseratoId);
@@ -527,14 +592,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var tesseraDaDissociare = tesserato.Tessera;
             tesserato.Tessera = null;
 
-            if (long.TryParse(tesseraDaDissociare, out var numeroTessera))
-            {
-                var rangeTessera = await _dbContext.RangeTessereAcsi
-                    .FirstOrDefaultAsync(r => r.NumeroDa == numeroTessera && r.NumeroA == numeroTessera);
-
-                if (rangeTessera != null)
-                    rangeTessera.Assegnata = false;
-            }
+            await LiberaTesseraAcsiSeRealeAsync(tesseraDaDissociare, tesserato);
 
             await _dbContext.SaveChangesAsync();
 
@@ -553,6 +611,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
 
             var tesseratiDaDissociare = await _dbContext.Tesseramenti
+                .Include(t => t.Partita)
                 .Where(t => tesseratiIds.Contains(t.Id) && !string.IsNullOrEmpty(t.Tessera))
                 .ToListAsync();
 
@@ -562,14 +621,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return RedirectToAction("ListaTesseramenti");
             }
 
-            var numeriTessereDaDissociare = tesseratiDaDissociare
+            var numeriTessereAcsiDaDissociare = tesseratiDaDissociare
+                .Where(t => !IsTesseraFittizia(t))
                 .Select(t => t.Tessera)
                 .Where(t => long.TryParse(t, out _))
-                .Select(long.Parse)
+                .Select(t => long.Parse(t!, CultureInfo.InvariantCulture))
                 .ToList();
 
             var rangeTessereDaLiberare = await _dbContext.RangeTessereAcsi
-                .Where(r => numeriTessereDaDissociare.Contains(r.NumeroDa) && r.NumeroDa == r.NumeroA)
+                .Where(r => numeriTessereAcsiDaDissociare.Contains(r.NumeroDa) && r.NumeroDa == r.NumeroA)
                 .ToListAsync();
 
             foreach (var rangeTessera in rangeTessereDaLiberare)
@@ -600,8 +660,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     .ThenByDescending(t => t.Id)
                     .ToListAsync();
 
-                var italiani = tesseramenti.Where(t => !t.NoTesseramento && !t.NatoEstero).ToList();
-                var esteri = tesseramenti.Where(t => !t.NoTesseramento && t.NatoEstero).ToList();
+                var esportabili = tesseramenti
+                    .Where(t => !t.NoTesseramento && !IsTesseraFittizia(t))
+                    .ToList();
+
+                var italiani = esportabili.Where(t => !t.NatoEstero).ToList();
+                var esteri = esportabili.Where(t => t.NatoEstero).ToList();
                 var archiveBytes = _acsiOdsExportService.CreateArchive(italiani, esteri);
 
                 var fileName = $"Tesseramenti_ACSI_{DateTime.UtcNow:yyyyMMdd_HHmmss}.zip";
@@ -661,6 +725,61 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 t.Partita != null &&
                 !t.Partita.IsDeleted &&
                 t.Partita.Data >= DataAvvioFabbisognoTessereUtc);
+        }
+
+        private static string GetTesseraFittiziaPrefix(DateTime dataPartita)
+        {
+            return dataPartita.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+        }
+
+        private async Task<int> GetUltimoProgressivoTesseraFittiziaAsync(string prefisso)
+        {
+            var tessereEsistenti = await _dbContext.Tesseramenti
+                .Where(t => t.Tessera != null && t.Tessera.StartsWith(prefisso))
+                .Select(t => t.Tessera!)
+                .ToListAsync();
+
+            return tessereEsistenti
+                .Where(t => t.Length == 10 && int.TryParse(t[8..], out _))
+                .Select(t => int.Parse(t[8..], CultureInfo.InvariantCulture))
+                .DefaultIfEmpty(0)
+                .Max();
+        }
+
+        private async Task LiberaTesseraAcsiSeRealeAsync(string? tessera, Tesseramento tesseramento)
+        {
+            if (string.IsNullOrWhiteSpace(tessera) || IsTesseraFittizia(tessera, tesseramento.Partita?.Data))
+            {
+                return;
+            }
+
+            if (!long.TryParse(tessera, out var numeroTessera))
+            {
+                return;
+            }
+
+            var rangeTessera = await _dbContext.RangeTessereAcsi
+                .FirstOrDefaultAsync(r => r.NumeroDa == numeroTessera && r.NumeroA == numeroTessera);
+
+            if (rangeTessera != null)
+            {
+                rangeTessera.Assegnata = false;
+            }
+        }
+
+        private static bool IsTesseraFittizia(Tesseramento tesseramento)
+        {
+            return IsTesseraFittizia(tesseramento.Tessera, tesseramento.Partita?.Data);
+        }
+
+        private static bool IsTesseraFittizia(string? tessera, DateTime? dataPartita)
+        {
+            if (string.IsNullOrWhiteSpace(tessera) || !dataPartita.HasValue || !TesseraFittiziaRegex.IsMatch(tessera))
+            {
+                return false;
+            }
+
+            return tessera.StartsWith(GetTesseraFittiziaPrefix(dataPartita.Value), StringComparison.Ordinal);
         }
 
         private async Task<bool> IsGiaTesseratoPerAnnoPartitaAsync(TesseramentoViewModel model)

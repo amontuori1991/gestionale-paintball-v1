@@ -7,12 +7,30 @@
         .OrderByDescending(t => t.DataPartita)
         .ThenByDescending(t => t.PartitaId);
     var dataAvvioFabbisognoTessere = new DateTime(2026, 5, 1);
+    bool IsTesseraFittizia(Full_Metal_Paintball_Carmagnola.Models.TesseramentoViewModel t)
+    {
+        if (string.IsNullOrWhiteSpace(t.Tessera) || !t.DataPartita.HasValue || t.Tessera.Length != 10 || !t.Tessera.All(char.IsDigit))
+        {
+            return false;
+        }
+
+        return t.Tessera.StartsWith(t.DataPartita.Value.ToString("yyyyMMdd"), StringComparison.Ordinal);
+    }
 
     <div class="tess-mobile-list">
+        <label class="tess-mobile-select-all">
+            <span>
+                <i class="bi bi-check2-square"></i>
+                Seleziona tutti i record filtrati
+            </span>
+            <input type="checkbox" id="selectAllMobile" class="tess-check select-all-items" />
+        </label>
+
         @foreach (var t in sortedModel)
         {
             var scadenza = new DateTime((t.DataPartita ?? t.DataCreazione).Year, 12, 31);
             var hasTessera = !string.IsNullOrEmpty(t.Tessera);
+            var tesseraFittizia = IsTesseraFittizia(t);
             var hasPartita = t.PartitaId.HasValue;
             var noTesseramento = t.NoTesseramento;
             var tesseraDaAssociare = !hasTessera && !noTesseramento && t.DataPartita.HasValue && t.DataPartita.Value.Date >= dataAvvioFabbisognoTessere;
@@ -49,8 +67,12 @@
                     <span>Tessera</span>
                     @if (hasTessera)
                     {
-                        <strong class="badge-tessera badge-tessera--active">
-                            <i class="bi bi-check-circle-fill"></i> @t.Tessera
+                        <strong class="badge-tessera @(tesseraFittizia ? "badge-tessera--fake" : "badge-tessera--active")">
+                            <i class="bi @(tesseraFittizia ? "bi-calendar2-check" : "bi-check-circle-fill")"></i> @t.Tessera
+                            @if (tesseraFittizia)
+                            {
+                                <span>Fittizia</span>
+                            }
                         </strong>
                     }
                     else if (noTesseramento)
@@ -126,7 +148,7 @@
             <thead>
                 <tr>
                     <th style="width:36px;">
-                        <input type="checkbox" id="selectAll" class="tess-check" />
+                        <input type="checkbox" id="selectAll" class="tess-check select-all-items" />
                     </th>
                     <th>Partita ID</th>
                     <th>Data Partita</th>
@@ -154,6 +176,7 @@
                 {
                     var scadenza = new DateTime((t.DataPartita ?? t.DataCreazione).Year, 12, 31);
                     var hasTessera = !string.IsNullOrEmpty(t.Tessera);
+                    var tesseraFittizia = IsTesseraFittizia(t);
                     var hasPartita = t.PartitaId.HasValue;
                     var noTesseramento = t.NoTesseramento;
                     var tesseraDaAssociare = !hasTessera && !noTesseramento && t.DataPartita.HasValue && t.DataPartita.Value.Date >= dataAvvioFabbisognoTessere;
@@ -212,8 +235,12 @@
                         <td data-label="Tessera">
                             @if (hasTessera)
                             {
-                                <span class="badge-tessera badge-tessera--active">
-                                    <i class="bi bi-check-circle-fill"></i> @t.Tessera
+                                <span class="badge-tessera @(tesseraFittizia ? "badge-tessera--fake" : "badge-tessera--active")">
+                                    <i class="bi @(tesseraFittizia ? "bi-calendar2-check" : "bi-check-circle-fill")"></i> @t.Tessera
+                                    @if (tesseraFittizia)
+                                    {
+                                        <span>Fittizia</span>
+                                    }
                                 </span>
                             }
                             else if (noTesseramento)

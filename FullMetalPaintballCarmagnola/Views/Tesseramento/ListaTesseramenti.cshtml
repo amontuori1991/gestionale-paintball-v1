@@ -139,6 +139,11 @@
                     <i class="bi bi-card-checklist"></i> Assegna Tessere
                 </button>
 
+                <button type="submit" class="btn-tess btn-tess--secondary"
+                        formaction="@Url.Action("AssegnaTessereFittizie")">
+                    <i class="bi bi-calendar2-check"></i> Assegna Tessere Fittizie
+                </button>
+
                 <button type="submit" class="btn-tess btn-tess--danger"
                         formaction="@Url.Action("DissociaTessereSelezionate")">
                     <i class="bi bi-scissors"></i> Dissocia Tessere
@@ -329,16 +334,23 @@
         const counterEl     = document.getElementById('selectedCounter');
         const countSpan     = document.getElementById('selectedCount');
         const items         = () => Array.from(document.querySelectorAll('.select-item')).filter(cb => cb.offsetParent !== null);
+        const selectAllControls = () => Array.from(document.querySelectorAll('.select-all-items'));
 
         function updateCounter() {
-            const n = items().filter(cb => cb.checked).length;
+            const visibleItems = items();
+            const n = visibleItems.filter(cb => cb.checked).length;
             countSpan.textContent = n;
             if (n > 0) { counterEl.classList.add('visible'); }
             else        { counterEl.classList.remove('visible'); }
+
+            selectAllControls().forEach(control => {
+                control.checked = visibleItems.length > 0 && n === visibleItems.length;
+                control.indeterminate = n > 0 && n < visibleItems.length;
+            });
         }
 
         document.addEventListener('change', e => {
-            if (e.target.id === 'selectAll') {
+            if (e.target.classList.contains('select-all-items')) {
                 items().forEach(cb => cb.checked = e.target.checked);
                 updateCounter();
             }
