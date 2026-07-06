@@ -4,7 +4,24 @@
 
 @{
     ViewData["Title"] = "Calendario Assenze";
+    var chiusureCampo = ViewBag.ChiusureCampo as Dictionary<DateTime, CampoChiusura> ?? new Dictionary<DateTime, CampoChiusura>();
 }
+
+<style>
+    .calendario-campo-chiuso {
+        background-color: #6c757d !important;
+        color: #ffffff;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .calendario-campo-chiuso-motivo {
+        display: block;
+        font-size: .78rem;
+        font-weight: 600;
+        opacity: .9;
+    }
+</style>
 
 <div class="container-custom">
     <h2 class="text-center">Calendario Assenze</h2>
@@ -29,25 +46,49 @@
                 @foreach (var giorno in Model)
                 {
                     var giornoSet = giorno.Data.ToString("dddd", new CultureInfo("it-IT"));
+                    var campoChiuso = chiusureCampo.TryGetValue(giorno.Data.Date, out var chiusuraCampo);
                     var repClass = giorno.Reperibile == "In attesa" ? "calendario-bg-warning"
                     : giorno.Reperibile == "Nessuno" ? "calendario-bg-danger" : "calendario-bg-success";
+                    if (campoChiuso)
+                    {
+                        repClass = "calendario-campo-chiuso";
+                    }
 
                     <tr>
                         <td data-label="Giorno">@giornoSet</td>
                         <td data-label="Data">@giorno.Data.ToString("dd/MM/yyyy")</td>
 
                         <td data-label="Reperibile" class="@repClass">
-                            <select class="reperibile-select" data-id="@giorno.Id">
-                                <option value="In attesa" selected="@(giorno.Reperibile == "In attesa" ? "selected" : null)">In attesa</option>
-                                <option value="Montuo" selected="@(giorno.Reperibile == "Montuo" ? "selected" : null)">Montuo</option>
-                                <option value="Flavio" selected="@(giorno.Reperibile == "Flavio" ? "selected" : null)">Flavio</option>
-                                <option value="Bosax" selected="@(giorno.Reperibile == "Bosax" ? "selected" : null)">Bosax</option>
-                                <option value="Nessuno" selected="@(giorno.Reperibile == "Nessuno" ? "selected" : null)">Nessuno</option>
-                            </select>
+                            @if (campoChiuso)
+                            {
+                                <span>Campo chiuso</span>
+                                @if (!string.IsNullOrWhiteSpace(chiusuraCampo?.Motivo))
+                                {
+                                    <span class="calendario-campo-chiuso-motivo">@chiusuraCampo.Motivo</span>
+                                }
+                            }
+                            else
+                            {
+                                <select class="reperibile-select" data-id="@giorno.Id">
+                                    <option value="In attesa" selected="@(giorno.Reperibile == "In attesa" ? "selected" : null)">In attesa</option>
+                                    <option value="Montuo" selected="@(giorno.Reperibile == "Montuo" ? "selected" : null)">Montuo</option>
+                                    <option value="Flavio" selected="@(giorno.Reperibile == "Flavio" ? "selected" : null)">Flavio</option>
+                                    <option value="Bosax" selected="@(giorno.Reperibile == "Bosax" ? "selected" : null)">Bosax</option>
+                                    <option value="Nessuno" selected="@(giorno.Reperibile == "Nessuno" ? "selected" : null)">Nessuno</option>
+                                </select>
+                            }
                         </td>
 
                         @foreach (var membro in new[] { "Montuo", "Flavio", "Bosax" })
                         {
+                            if (campoChiuso)
+                            {
+                                <td data-label="@membro" class="calendario-campo-chiuso">
+                                    Campo chiuso
+                                </td>
+                                continue;
+                            }
+
                             var assenza = membro switch
                             {
                                 "Montuo" => giorno.Montuo,

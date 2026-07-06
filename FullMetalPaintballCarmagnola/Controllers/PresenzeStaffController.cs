@@ -22,6 +22,8 @@ public class PresenzeStaffController : Controller
         var oggi = DateTime.UtcNow.Date;
         var fine = oggi.AddMonths(3);
         var staffList = await _staffRegistryService.GetStaffAsync();
+        var chiusure = await LoadChiusureCampoAsync(oggi, fine);
+        var chiusurePerData = BuildChiusurePerData(chiusure, oggi, fine);
 
         var weekendDates = Enumerable.Range(0, (fine - oggi).Days + 1)
             .Select(offset => oggi.AddDays(offset))
@@ -30,6 +32,11 @@ public class PresenzeStaffController : Controller
 
         foreach (var data in weekendDates)
         {
+            if (chiusurePerData.ContainsKey(data.Date))
+            {
+                continue;
+            }
+
             var esisteAssenza = await _context.AssenzeCalendario.AnyAsync(r => r.Data == data);
             if (!esisteAssenza)
             {
@@ -50,11 +57,21 @@ public class PresenzeStaffController : Controller
             .Where(r => r.Data >= oggi && r.Data <= fine)
             .Select(r => r.Data)
             .Distinct()
-            .OrderBy(d => d)
             .ToListAsync();
+
+        tutteDate = tutteDate
+            .Concat(chiusurePerData.Keys)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToList();
 
         foreach (var data in tutteDate)
         {
+            if (chiusurePerData.ContainsKey(data.Date))
+            {
+                continue;
+            }
+
             await EnsurePresenzeStaffAsync(data, staffList);
         }
 
@@ -72,6 +89,7 @@ public class PresenzeStaffController : Controller
         ViewBag.PresenzaList = presenze;
         ViewBag.ReperibilitaList = reperibilita;
         ViewBag.StaffList = staffList;
+        ViewBag.ChiusureCampo = chiusurePerData;
 
         return View();
     }
@@ -90,6 +108,11 @@ public class PresenzeStaffController : Controller
             }
 
             var giorno = parsed.Date;
+            if (await IsCampoChiusoAsync(giorno))
+            {
+                return BadRequest("Campo chiuso in questa data.");
+            }
+
             var giornoStr = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(giorno.ToString("dddd"));
 
             var row = await _context.PresenzaStaff
@@ -130,6 +153,11 @@ public class PresenzeStaffController : Controller
         var record = await _context.AssenzeCalendario.FindAsync(id);
         if (record != null)
         {
+            if (await IsCampoChiusoAsync(record.Data.Date))
+            {
+                return BadRequest("Campo chiuso in questa data.");
+            }
+
             record.Reperibile = string.IsNullOrWhiteSpace(reperibile) ? "In attesa" : reperibile;
             await _context.SaveChangesAsync();
         }
@@ -144,6 +172,11 @@ public class PresenzeStaffController : Controller
         {
             var giorno = dataParsed.Date;
             var giornoStr = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(giorno.ToString("dddd"));
+
+            if (await IsCampoChiusoAsync(giorno))
+            {
+                return BadRequest("Campo chiuso in questa data.");
+            }
 
             if (!await _context.AssenzeCalendario.AnyAsync(r => r.Data == giorno))
             {
@@ -233,6 +266,42 @@ public class PresenzeStaffController : Controller
                 });
             }
         }
+    }
+
+    private async Task<List<CampoChiusura>> LoadChiusureCampoAsync(DateTime inizio, DateTime fine)
+    {
+        return await _context.CampoChiusure
+            .Where(c => c.DataInizio <= fine && c.DataFine >= inizio)
+            .ToListAsync();
+    }
+
+    private static Dictionary<DateTime, CampoChiusura> BuildChiusurePerData(
+        IEnumerable<CampoChiusura> chiusure,
+        DateTime inizio,
+        DateTime fine)
+    {
+        var result = new Dictionary<DateTime, CampoChiusura>();
+
+        foreach (var chiusura in chiusure)
+        {
+            var start = chiusura.DataInizio.Date < inizio.Date ? inizio.Date : chiusura.DataInizio.Date;
+            var end = chiusura.DataFine.Date > fine.Date ? fine.Date : chiusura.DataFine.Date;
+
+            for (var data = start; data <= end; data = data.AddDays(1))
+            {
+                result[data] = chiusura;
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<bool> IsCampoChiusoAsync(DateTime data)
+    {
+        data = data.Date;
+
+        return await _context.CampoChiusure
+            .AnyAsync(c => c.DataInizio <= data && c.DataFine >= data);
     }
 
     private async Task DissociaStaffDaPartiteAsync(DateTime giorno, string nomeStaff)

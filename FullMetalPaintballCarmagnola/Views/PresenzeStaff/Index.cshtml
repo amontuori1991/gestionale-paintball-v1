@@ -1,10 +1,12 @@
 ﻿@using System.Globalization
+@using Full_Metal_Paintball_Carmagnola.Models
 @{
     ViewData["Title"] = "Presenze Staff";
-    var dateList = ViewBag.DateList as List<DateTime>;
-    var reperibilitaList = ViewBag.ReperibilitaList as List<Full_Metal_Paintball_Carmagnola.Models.AssenzaCalendario>;
-    var presenzaList = ViewBag.PresenzaList as List<Full_Metal_Paintball_Carmagnola.Models.PresenzaStaff>;
+    var dateList = ViewBag.DateList as List<DateTime> ?? new List<DateTime>();
+    var reperibilitaList = ViewBag.ReperibilitaList as List<AssenzaCalendario> ?? new List<AssenzaCalendario>();
+    var presenzaList = ViewBag.PresenzaList as List<PresenzaStaff> ?? new List<PresenzaStaff>();
     var staff = ViewBag.StaffList as List<string> ?? new List<string>();
+    var chiusureCampo = ViewBag.ChiusureCampo as Dictionary<DateTime, CampoChiusura> ?? new Dictionary<DateTime, CampoChiusura>();
 }
 
 <link href="~/css/presenze-responsive.css" rel="stylesheet" />
@@ -12,6 +14,22 @@
 <style>
     .riga-infrasettimanale {
         background-color: #fff3cd !important; /* Stile giallo chiaro su tutta la riga */
+    }
+
+    .riga-campo-chiuso {
+        background-color: #f1f5f9 !important;
+    }
+
+    .campo-chiuso-cell {
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .campo-chiuso-motivo {
+        display: block;
+        font-size: .78rem;
+        font-weight: 600;
+        opacity: .85;
     }
 
     .staff-registry-card {
@@ -191,18 +209,38 @@
                 {
                     var giornoSet = giorno.ToString("dddd", new CultureInfo("it-IT"));
                     var isWeekend = giorno.DayOfWeek == DayOfWeek.Saturday || giorno.DayOfWeek == DayOfWeek.Sunday;
+                    var campoChiuso = chiusureCampo.TryGetValue(giorno.Date, out var chiusuraCampo);
                     var rep = reperibilitaList.FirstOrDefault(r => r.Data.Date == giorno.Date);
                     var sceltaRep = string.IsNullOrWhiteSpace(rep?.Reperibile) ? "In attesa" : rep.Reperibile.Trim();
                     var repClass = sceltaRep == "Nessuno" ? "bg-danger" :
                     sceltaRep == "In attesa" ? "bg-warning" : "bg-success";
+                    if (campoChiuso)
+                    {
+                        sceltaRep = "Campo chiuso";
+                        repClass = "bg-secondary text-white";
+                    }
 
-                    <tr data-data="@giorno.ToString("yyyy-MM-dd")" class="@(isWeekend ? "" : "riga-infrasettimanale")">
+                    <tr data-data="@giorno.ToString("yyyy-MM-dd")" class="@($"{(isWeekend ? "" : "riga-infrasettimanale")} {(campoChiuso ? "riga-campo-chiuso" : "")}")">
                         <td data-label="Giorno">@giornoSet</td>
                         <td data-label="Data">@giorno.ToString("dd/MM/yyyy")</td>
-                        <td data-label="Reperibile" class="@repClass">@sceltaRep</td>
+                        <td data-label="Reperibile" class="@repClass">
+                            @sceltaRep
+                            @if (campoChiuso && !string.IsNullOrWhiteSpace(chiusuraCampo?.Motivo))
+                            {
+                                <span class="campo-chiuso-motivo">@chiusuraCampo.Motivo</span>
+                            }
+                        </td>
 
                         @foreach (var membro in staff)
                         {
+                            if (campoChiuso)
+                            {
+                                <td data-label="@membro" class="presenza-staff-cell bg-secondary text-white campo-chiuso-cell">
+                                    Campo chiuso
+                                </td>
+                                continue;
+                            }
+
                             var prs = presenzaList.FirstOrDefault(p => p.Data.Date == giorno.Date && p.NomeStaff == membro);
                             var currentSelection = prs?.Presente == true ? "SI" :
                             prs?.Presente == false ? "NO" : "In attesa";
@@ -219,8 +257,8 @@
                             </td>
                         }
 
-                        <td data-label="Azioni" class="presenze-actions-cell @(isWeekend ? "presenze-actions-cell--empty" : "")">
-                            @if (!isWeekend)
+                        <td data-label="Azioni" class="presenze-actions-cell @((isWeekend || campoChiuso) ? "presenze-actions-cell--empty" : "")">
+                            @if (!isWeekend && !campoChiuso)
                             {
                                 <button class="btn btn-danger btn-sm btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>
                             }
