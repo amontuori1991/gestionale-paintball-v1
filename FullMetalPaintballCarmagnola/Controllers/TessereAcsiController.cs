@@ -10,6 +10,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
     {
         private readonly TesseramentoDbContext _dbContext;
 
+        private const int DefaultSogliaAlertTessere = 10;
+        private const string SogliaAlertTessereSettingKey = "AcsiAlertThreshold";
+
         private static DateTime OggiUtc => DateTime.UtcNow.Date;
         private static readonly DateTime DataAvvioFabbisognoTessereUtc =
             DateTime.SpecifyKind(new DateTime(2026, 5, 1), DateTimeKind.Utc);
@@ -43,6 +46,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             ViewBag.TessereAssegnate = tessereAssegnate;
             ViewBag.FabbisognoTessere = await ContaFabbisognoTessereAsync();
+            ViewBag.SogliaAlertTessere = await GetSogliaAlertTessereAsync();
 
             return View(allRanges);
         }
@@ -127,6 +131,32 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SalvaSogliaAlert(int sogliaAlertTessere)
+        {
+            if (sogliaAlertTessere < 0)
+            {
+                TempData["SogliaAlertError"] = "La soglia alert non puo essere negativa.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var setting = await _dbContext.AppSettings
+                .FirstOrDefaultAsync(s => s.Key == SogliaAlertTessereSettingKey);
+
+            if (setting == null)
+            {
+                setting = new AppSetting { Key = SogliaAlertTessereSettingKey };
+                _dbContext.AppSettings.Add(setting);
+            }
+
+            setting.Value = sogliaAlertTessere.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            await _dbContext.SaveChangesAsync();
+
+            TempData["SogliaAlertMessage"] = "Soglia alert tessere aggiornata.";
+            return RedirectToAction(nameof(Index));
+        }
+
         private async Task<List<RangeTessereAcsi>> GetTessereValideAsync()
         {
             var oggi = OggiUtc;
@@ -144,6 +174,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .Select(t => t.Tessera)
                 .ToListAsync();
             ViewBag.FabbisognoTessere = await ContaFabbisognoTessereAsync();
+            ViewBag.SogliaAlertTessere = await GetSogliaAlertTessereAsync();
         }
 
         private static DateTime GetInizioFabbisognoAnnoCorrente()
@@ -176,6 +207,17 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return Math.Max(0, partecipantiPrevisti - tessereGiaAssegnateNelPeriodo);
         }
 
+        private async Task<int> GetSogliaAlertTessereAsync()
+        {
+            var rawValue = await _dbContext.AppSettings
+                .Where(s => s.Key == SogliaAlertTessereSettingKey)
+                .Select(s => s.Value)
+                .FirstOrDefaultAsync();
+
+            return int.TryParse(rawValue, out var soglia) && soglia >= 0
+                ? soglia
+                : DefaultSogliaAlertTessere;
+        }
 
     }
 }

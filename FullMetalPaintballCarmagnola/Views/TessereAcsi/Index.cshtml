@@ -9,11 +9,12 @@
     var disponibili = Model.Where(t => !t.Assegnata && !tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
     var assegnate = Model.Where(t => t.Assegnata || tessereAssegnate.Contains(t.NumeroDa.ToString())).ToList();
     var fabbisognoTessere = ViewBag.FabbisognoTessere is int fabbisogno ? fabbisogno : 0;
+    var sogliaAlertTessere = ViewBag.SogliaAlertTessere is int sogliaAlert ? sogliaAlert : 10;
     var margineTessere = disponibili.Count - fabbisognoTessere;
-    var fabbisognoStatusClass = margineTessere < 0 ? "is-critical" : margineTessere <= 10 ? "is-warning" : "is-ok";
+    var fabbisognoStatusClass = margineTessere < 0 ? "is-critical" : margineTessere <= sogliaAlertTessere ? "is-warning" : "is-ok";
     var fabbisognoStatusText = margineTessere < 0
         ? "Ordine necessario"
-        : margineTessere <= 10
+        : margineTessere <= sogliaAlertTessere
             ? "Scorta bassa"
             : "Scorta ok";
 }
@@ -56,6 +57,26 @@
         margin-top: 8px;
     }
 
+    .acsi-threshold-form {
+        align-items: end;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin-top: 14px;
+    }
+
+    .acsi-threshold-form label {
+        color: #4f4a3d;
+        font-size: .78rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+    }
+
+    .acsi-threshold-form input {
+        min-width: 0;
+    }
+
     .acsi-stock-card--status.is-ok {
         border-color: rgba(124, 195, 35, .38);
         background: linear-gradient(135deg, rgba(237, 255, 205, .95), rgba(255, 255, 255, .9));
@@ -79,6 +100,10 @@
 
     @@media (max-width: 540px) {
         .acsi-stock-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .acsi-threshold-form {
             grid-template-columns: 1fr;
         }
     }
@@ -106,9 +131,26 @@
         <div class="acsi-stock-card acsi-stock-card--status @fabbisognoStatusClass">
             <div class="acsi-stock-card__label">Stato ordine</div>
             <div class="acsi-stock-card__value">@fabbisognoStatusText</div>
-            <div class="acsi-stock-card__hint">Avviso sotto le 10 tessere di margine.</div>
+            <div class="acsi-stock-card__hint">Avviso con margine minore o uguale a @sogliaAlertTessere tessere.</div>
+            <form asp-action="SalvaSogliaAlert" method="post" class="acsi-threshold-form">
+                @Html.AntiForgeryToken()
+                <div>
+                    <label for="sogliaAlertTessere">Soglia alert</label>
+                    <input type="number" class="form-control" id="sogliaAlertTessere" name="sogliaAlertTessere" min="0" value="@sogliaAlertTessere" required />
+                </div>
+                <button type="submit" class="btn btn-outline-secondary">Salva</button>
+            </form>
         </div>
     </section>
+
+    @if (TempData["SogliaAlertMessage"] is string sogliaMessage)
+    {
+        <div class="alert alert-success" role="alert">@sogliaMessage</div>
+    }
+    @if (TempData["SogliaAlertError"] is string sogliaError)
+    {
+        <div class="alert alert-danger" role="alert">@sogliaError</div>
+    }
 
     <form asp-action="AddRange" method="post" class="mb-4">
         <div class="row g-3 align-items-center justify-content-center">
