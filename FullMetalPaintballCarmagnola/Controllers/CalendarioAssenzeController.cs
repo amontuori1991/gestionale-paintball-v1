@@ -112,6 +112,9 @@ public class CalendarioAssenzeController : Controller
 
     private async Task<List<CampoChiusura>> LoadChiusureCampoAsync(DateTime inizio, DateTime fine)
     {
+        inizio = ToUtcDate(inizio);
+        fine = ToUtcDate(fine);
+
         return await _context.CampoChiusure
             .Where(c => c.DataInizio <= fine && c.DataFine >= inizio)
             .ToListAsync();
@@ -140,9 +143,14 @@ public class CalendarioAssenzeController : Controller
 
     private async Task<bool> IsCampoChiusoAsync(DateTime data)
     {
-        data = data.Date;
+        data = ToUtcDate(data);
 
         return await _context.CampoChiusure
             .AnyAsync(c => c.DataInizio <= data && c.DataFine >= data);
+    }
+
+    private static DateTime ToUtcDate(DateTime data)
+    {
+        return DateTime.SpecifyKind(data.Date, DateTimeKind.Utc);
     }
 }
