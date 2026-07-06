@@ -386,7 +386,7 @@ public sealed class AcsiOdsExportService
         var normalized = NormalizeKey(documentType);
         return normalized switch
         {
-            "ci" or "carta identita" or "carta d identita" or "identity card" => "CI",
+            "ci" or "carta identita" or "carta di identita" or "carta d identita" or "identity card" => "CI",
             "ps" or "passaporto" or "passport" => "PS",
             "pg" or "permesso soggiorno" or "permesso di soggiorno" or "residence permit" => "PG",
             _ => documentType.Trim().ToUpperInvariant()
