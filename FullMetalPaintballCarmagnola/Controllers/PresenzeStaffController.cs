@@ -107,7 +107,7 @@ public class PresenzeStaffController : Controller
                 return Problem(detail: $"Formato data non valido: {data}", statusCode: 400);
             }
 
-            var giorno = parsed.Date;
+            var giorno = ToUtcDate(parsed);
             if (await IsCampoChiusoAsync(giorno))
             {
                 return BadRequest("Campo chiuso in questa data.");
@@ -170,7 +170,7 @@ public class PresenzeStaffController : Controller
     {
         if (DateTime.TryParseExact(data, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataParsed))
         {
-            var giorno = dataParsed.Date;
+            var giorno = ToUtcDate(dataParsed);
             var giornoStr = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(giorno.ToString("dddd"));
 
             if (await IsCampoChiusoAsync(giorno))
@@ -251,6 +251,7 @@ public class PresenzeStaffController : Controller
 
     private async Task EnsurePresenzeStaffAsync(DateTime data, IEnumerable<string> staffList)
     {
+        data = ToUtcDate(data);
         var giorno = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(data.ToString("dddd"));
 
         foreach (var nome in staffList)
@@ -314,8 +315,13 @@ public class PresenzeStaffController : Controller
 
     private async Task DissociaStaffDaPartiteAsync(DateTime giorno, string nomeStaff)
     {
+        var inizioGiorno = ToUtcDate(giorno);
+        var fineGiorno = inizioGiorno.AddDays(1);
+
         var partite = await _context.Partite
-            .Where(p => !p.IsDeleted && p.Data.Date == giorno.Date &&
+            .Where(p => !p.IsDeleted &&
+                p.Data >= inizioGiorno &&
+                p.Data < fineGiorno &&
                 (p.Staff1 == nomeStaff || p.Staff2 == nomeStaff || p.Staff3 == nomeStaff || p.Staff4 == nomeStaff))
             .ToListAsync();
 
