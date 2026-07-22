@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Modifica Partita";
+    bool IsDurationSelected(double expected) => Math.Abs(Model.Durata - expected) < 0.01;
 }
 <h2>Modifica Partita</h2>
 
@@ -71,10 +72,31 @@
 
     <div class="form-group">
         <label asp-for="Durata"></label>
-        <select asp-for="Durata" class="form-control" required>
-            <option value="1">1</option>
-            <option value="1.5">1.5</option>
-            <option value="2">2</option>
+        <select id="Durata" name="Durata" class="form-control" required>
+            @if (IsDurationSelected(1.0))
+            {
+                <option value="1" selected>1</option>
+            }
+            else
+            {
+                <option value="1">1</option>
+            }
+            @if (IsDurationSelected(1.5))
+            {
+                <option value="1.5" selected>1.5</option>
+            }
+            else
+            {
+                <option value="1.5">1.5</option>
+            }
+            @if (IsDurationSelected(2.0))
+            {
+                <option value="2" selected>2</option>
+            }
+            else
+            {
+                <option value="2">2</option>
+            }
         </select>
         <span asp-validation-for="Durata" class="text-danger"></span>
     </div>
