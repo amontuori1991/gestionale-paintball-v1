@@ -171,6 +171,19 @@ using (var scope = app.Services.CreateScope())
             ""IpAddress"" text NULL,
             ""UserAgent"" text NULL
         );
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""Email"" character varying(255) NOT NULL DEFAULT '';
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""NomeCognome"" character varying(120) NOT NULL DEFAULT '';
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""PrivacyAccepted"" boolean NOT NULL DEFAULT FALSE;
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""LiabilityAccepted"" boolean NOT NULL DEFAULT FALSE;
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""EventCode"" character varying(80) NOT NULL DEFAULT 'FieraSportCarmagnola2026';
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""CreatedAtUtc"" timestamp without time zone NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC');
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""IpAddress"" text NULL;
+        ALTER TABLE ""FieraSportLeads"" ADD COLUMN IF NOT EXISTS ""UserAgent"" text NULL;
+        ALTER TABLE ""FieraSportLeads"" ALTER COLUMN ""Email"" DROP DEFAULT;
+        ALTER TABLE ""FieraSportLeads"" ALTER COLUMN ""NomeCognome"" DROP DEFAULT;
+        ALTER TABLE ""FieraSportLeads"" ALTER COLUMN ""PrivacyAccepted"" DROP DEFAULT;
+        ALTER TABLE ""FieraSportLeads"" ALTER COLUMN ""LiabilityAccepted"" DROP DEFAULT;
+        ALTER TABLE ""FieraSportLeads"" ALTER COLUMN ""CreatedAtUtc"" DROP DEFAULT;
         CREATE INDEX IF NOT EXISTS ""IX_FieraSportLeads_EventCode_Email""
             ON ""FieraSportLeads"" (""EventCode"", ""Email"");");
 

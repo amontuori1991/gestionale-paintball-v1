@@ -1,6 +1,7 @@
 using Full_Metal_Paintball_Carmagnola.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Full_Metal_Paintball_Carmagnola.Controllers
 {
@@ -40,20 +41,16 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return View(model);
             }
 
-            var lead = new FieraSportLead
-            {
-                NomeCognome = model.NomeCognome.Trim(),
-                Email = model.Email.Trim().ToLowerInvariant(),
-                PrivacyAccepted = true,
-                LiabilityAccepted = true,
-                EventCode = EventCode,
-                CreatedAtUtc = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified),
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                UserAgent = Request.Headers.UserAgent.ToString()
-            };
+            var nomeCognome = model.NomeCognome.Trim();
+            var email = model.Email.Trim().ToLowerInvariant();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers.UserAgent.ToString();
 
-            _dbContext.FieraSportLeads.Add(lead);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Database.ExecuteSqlInterpolatedAsync($@"
+                INSERT INTO ""FieraSportLeads""
+                    (""Email"", ""NomeCognome"", ""PrivacyAccepted"", ""LiabilityAccepted"", ""EventCode"", ""CreatedAtUtc"", ""IpAddress"", ""UserAgent"")
+                VALUES
+                    ({email}, {nomeCognome}, TRUE, TRUE, {EventCode}, (NOW() AT TIME ZONE 'UTC'), {ipAddress}, {userAgent});");
 
             TempData["FieraSportSuccess"] = "Registrazione ricevuta correttamente. Grazie!";
             return RedirectToAction(nameof(Index));
