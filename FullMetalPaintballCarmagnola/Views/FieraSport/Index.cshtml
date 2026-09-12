@@ -1,0 +1,304 @@
+@model FieraSportLead
+@{
+    Layout = null;
+    var successMessage = TempData["FieraSportSuccess"] as string;
+}
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fiera dello Sport Carmagnola - Full Metal Paintball</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <style>
+        :root {
+            --fm-green: #86c71b;
+            --fm-pink: #e91686;
+            --fm-orange: #ff7816;
+            --fm-ink: #11120f;
+            --fm-paper: #fffdf7;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            color: var(--fm-ink);
+            background:
+                radial-gradient(circle at 16% 12%, rgba(233, 22, 134, .22), transparent 28rem),
+                radial-gradient(circle at 86% 6%, rgba(255, 120, 22, .20), transparent 25rem),
+                radial-gradient(circle at 50% 95%, rgba(134, 199, 27, .28), transparent 30rem),
+                #f9f6ec;
+        }
+
+        .page-shell {
+            width: min(940px, 100%);
+            margin: 0 auto;
+            padding: 28px 16px 42px;
+        }
+
+        .hero-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(17, 18, 15, .08);
+            border-radius: 34px;
+            background: rgba(255, 253, 247, .88);
+            box-shadow: 0 24px 80px rgba(17, 18, 15, .16);
+        }
+
+        .hero-card::before {
+            content: "";
+            position: absolute;
+            inset: -40% -8% auto auto;
+            width: 420px;
+            height: 420px;
+            border-radius: 999px;
+            background: conic-gradient(from 120deg, var(--fm-pink), var(--fm-orange), var(--fm-green), var(--fm-pink));
+            opacity: .18;
+            filter: blur(2px);
+        }
+
+        .hero-inner {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 26px;
+            padding: clamp(24px, 5vw, 46px);
+        }
+
+        .brand-logo {
+            width: 84px;
+            height: 84px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 14px 35px rgba(17, 18, 15, .14);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(134, 199, 27, .18);
+            font-size: .82rem;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            max-width: 760px;
+            margin: 0;
+            font-size: clamp(2.2rem, 9vw, 5.4rem);
+            font-weight: 950;
+            line-height: .92;
+            text-transform: uppercase;
+        }
+
+        .lead-copy {
+            max-width: 720px;
+            margin: 0;
+            color: rgba(17, 18, 15, .72);
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            font-weight: 700;
+        }
+
+        .form-panel {
+            border: 1px solid rgba(17, 18, 15, .08);
+            border-radius: 28px;
+            padding: clamp(18px, 4vw, 28px);
+            background: rgba(255, 255, 255, .82);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9);
+        }
+
+        .form-label {
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: .8rem;
+            letter-spacing: .07em;
+        }
+
+        .form-control {
+            min-height: 54px;
+            border-radius: 18px;
+            border: 1px solid rgba(17, 18, 15, .16);
+            font-weight: 800;
+        }
+
+        .consent-box {
+            display: flex;
+            gap: 12px;
+            padding: 16px;
+            border: 1px solid rgba(17, 18, 15, .10);
+            border-radius: 18px;
+            background: #fff;
+        }
+
+        .consent-box input {
+            flex: 0 0 auto;
+            width: 22px;
+            height: 22px;
+            margin-top: 2px;
+            accent-color: var(--fm-pink);
+        }
+
+        .consent-title {
+            margin-bottom: 4px;
+            font-weight: 950;
+        }
+
+        .consent-text {
+            margin: 0;
+            color: rgba(17, 18, 15, .72);
+            font-size: .95rem;
+            line-height: 1.45;
+        }
+
+        .btn-submit {
+            width: 100%;
+            min-height: 58px;
+            border: 0;
+            border-radius: 999px;
+            color: #fff;
+            background: linear-gradient(90deg, var(--fm-pink), var(--fm-orange));
+            box-shadow: 0 16px 34px rgba(233, 22, 134, .24);
+            font-weight: 950;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .legal-note {
+            color: rgba(17, 18, 15, .60);
+            font-size: .86rem;
+        }
+
+        .alert-success {
+            border: 0;
+            border-radius: 22px;
+            background: rgba(134, 199, 27, .20);
+            color: #22350c;
+            font-weight: 900;
+        }
+
+        .text-danger {
+            font-weight: 800;
+        }
+
+        @@media (max-width: 576px) {
+            .page-shell {
+                padding-top: 14px;
+            }
+
+            .hero-card {
+                border-radius: 24px;
+            }
+
+            .brand-logo {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <section class="hero-card">
+            <div class="hero-inner">
+                <div class="d-flex align-items-center gap-3">
+                    <img class="brand-logo" src="/img/logo.gif" alt="Full Metal Paintball Carmagnola" />
+                    <div>
+                        <div class="eyebrow">Fiera dello Sport Carmagnola</div>
+                        <div class="mt-2 fw-bold text-muted">26/27 - raccolta adesioni e scarico responsabilit&agrave;</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h1>Full Metal Paintball</h1>
+                    <p class="lead-copy mt-3">
+                        Lascia la tua email e conferma le condizioni per partecipare alle attivit&agrave; dimostrative organizzate durante la Fiera dello Sport.
+                    </p>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div class="alert alert-success mb-0">@successMessage</div>
+                }
+
+                <form class="form-panel" method="post" id="fieraSportForm" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="NomeCognome" class="form-label">Nome e cognome</label>
+                            <input asp-for="NomeCognome" class="form-control" autocomplete="name" placeholder="Mario Rossi" required />
+                            <span asp-validation-for="NomeCognome" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" autocomplete="email" placeholder="nome@email.it" required />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="consent-box mt-4">
+                        <input asp-for="PrivacyAccepted" required />
+                        <div>
+                            <div class="consent-title">Consenso privacy</div>
+                            <p class="consent-text">
+                                Autorizzo Full Metal Paintball Carmagnola ASD al trattamento dei dati inseriti per finalit&agrave; organizzative, informative e di sicurezza legate alla Fiera dello Sport. I dati non saranno ceduti a terzi e potranno essere cancellati su richiesta.
+                            </p>
+                            <span asp-validation-for="PrivacyAccepted" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="consent-box mt-3">
+                        <input asp-for="LiabilityAccepted" required />
+                        <div>
+                            <div class="consent-title">Scarico di responsabilit&agrave;</div>
+                            <p class="consent-text">
+                                Dichiaro di partecipare volontariamente alle attivit&agrave; dimostrative, di essere in condizioni fisiche idonee e di impegnarmi a seguire le indicazioni dello staff, usando correttamente l'attrezzatura fornita. Sollevo l'organizzazione, nei limiti consentiti dalla legge, da responsabilit&agrave; per danni derivanti da comportamenti imprudenti, mancato rispetto delle regole o dichiarazioni non veritiere.
+                            </p>
+                            <span asp-validation-for="LiabilityAccepted" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <button class="btn-submit mt-4" type="submit" id="submitButton">
+                        Conferma partecipazione
+                    </button>
+
+                    <p class="legal-note mt-3 mb-0">
+                        In caso di partecipante minorenne, la conferma deve essere effettuata da un genitore o da chi esercita la responsabilit&agrave; genitoriale.
+                    </p>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        document.getElementById('fieraSportForm')?.addEventListener('submit', function () {
+            if (window.jQuery && !window.jQuery(this).valid()) {
+                return;
+            }
+
+            if (!this.checkValidity()) {
+                return;
+            }
+
+            const button = document.getElementById('submitButton');
+            if (!button) {
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = 'Invio in corso...';
+        });
+    </script>
+</body>
+</html>

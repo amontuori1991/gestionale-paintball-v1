@@ -33,6 +33,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public DbSet<Spesa> Spese { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
         public DbSet<CampoChiusura> CampoChiusure { get; set; }
+        public DbSet<FieraSportLead> FieraSportLeads { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -101,6 +102,9 @@ namespace Full_Metal_Paintball_Carmagnola.Models
             modelBuilder.Entity<StatoEsteroCatastale>()
                 .HasIndex(s => s.CodiceCatastale)
                 .IsUnique();
+
+            modelBuilder.Entity<FieraSportLead>()
+                .HasIndex(l => new { l.EventCode, l.Email });
         }
 
         public DbSet<CodicePromozionale> codicipromozionali { get; set; }

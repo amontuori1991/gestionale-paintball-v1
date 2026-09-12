@@ -159,7 +159,20 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE ""AppSettings"" ALTER COLUMN ""Value"" TYPE text;
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""NomeRiferimento"" text NULL;
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""PrefissoTelefonoRiferimento"" text NULL;
-        ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""TelefonoRiferimento"" text NULL;");
+        ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""TelefonoRiferimento"" text NULL;
+        CREATE TABLE IF NOT EXISTS ""FieraSportLeads"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Email"" character varying(255) NOT NULL,
+            ""NomeCognome"" character varying(120) NOT NULL,
+            ""PrivacyAccepted"" boolean NOT NULL,
+            ""LiabilityAccepted"" boolean NOT NULL,
+            ""EventCode"" character varying(80) NOT NULL DEFAULT 'FieraSportCarmagnola2026',
+            ""CreatedAtUtc"" timestamp without time zone NOT NULL,
+            ""IpAddress"" text NULL,
+            ""UserAgent"" text NULL
+        );
+        CREATE INDEX IF NOT EXISTS ""IX_FieraSportLeads_EventCode_Email""
+            ON ""FieraSportLeads"" (""EventCode"", ""Email"");");
 
     string[] roles = { "Admin", "Staff" };
 
