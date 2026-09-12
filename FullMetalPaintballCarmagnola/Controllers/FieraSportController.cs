@@ -47,7 +47,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 PrivacyAccepted = true,
                 LiabilityAccepted = true,
                 EventCode = EventCode,
-                CreatedAtUtc = DateTime.UtcNow,
+                CreatedAtUtc = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified),
                 IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = Request.Headers.UserAgent.ToString()
             };
