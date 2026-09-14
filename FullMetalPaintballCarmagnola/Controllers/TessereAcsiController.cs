@@ -189,22 +189,34 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         {
             var inizio = GetInizioFabbisognoAnnoCorrente();
             var fine = DateTime.SpecifyKind(new DateTime(inizio.Year + 1, 1, 1), DateTimeKind.Utc);
+            var oggi = OggiUtc;
 
-            var partecipantiPrevisti = await _dbContext.Partite
-                .Where(p => !p.IsDeleted && p.Data >= inizio && p.Data < fine)
-                .SumAsync(p => p.NumeroPartecipanti);
-
-            var tessereGiaAssegnateNelPeriodo = await _dbContext.Tesseramenti
+            var tessereDaAssociareFinoAOggi = await _dbContext.Tesseramenti
                 .Where(t =>
                     t.PartitaId != null &&
-                    !string.IsNullOrWhiteSpace(t.Tessera) &&
+                    string.IsNullOrWhiteSpace(t.Tessera) &&
+                    !t.NoTesseramento &&
                     t.Partita != null &&
                     !t.Partita.IsDeleted &&
                     t.Partita.Data >= inizio &&
-                    t.Partita.Data < fine)
+                    t.Partita.Data <= oggi)
                 .CountAsync();
 
-            return Math.Max(0, partecipantiPrevisti - tessereGiaAssegnateNelPeriodo);
+            var partiteFuture = await _dbContext.Partite
+                .Where(p => !p.IsDeleted && p.Data > oggi && p.Data < fine)
+                .Select(p => new
+                {
+                    p.NumeroPartecipanti,
+                    Coperti = p.Tesseramenti == null
+                        ? 0
+                        : p.Tesseramenti.Count(t => !string.IsNullOrWhiteSpace(t.Tessera) || t.NoTesseramento)
+                })
+                .ToListAsync();
+
+            var fabbisognoFuturo = partiteFuture
+                .Sum(p => Math.Max(p.NumeroPartecipanti - p.Coperti, 0));
+
+            return tessereDaAssociareFinoAOggi + fabbisognoFuturo;
         }
 
         private async Task<int> GetSogliaAlertTessereAsync()
