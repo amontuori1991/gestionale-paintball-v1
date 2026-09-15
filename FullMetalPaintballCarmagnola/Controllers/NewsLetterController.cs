@@ -14,6 +14,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private const string TemplatesSettingKey = "NewsLetterTemplates";
         private const string HistorySettingKey = "NewsLetterHistory";
         private const string ScheduledSettingKey = "NewsLetterScheduled";
+        private const string FieraSportSegment = "fieraSportCarmagnola2026";
         private const string LegacyWebsiteUrl = "https://www.fullmetalpaintballcarmagnola.it/";
         private const string CurrentWebsiteUrl = "https://www.paintballcarmagnola.com/";
 
@@ -334,6 +335,19 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private async Task<List<NewsletterRecipient>> GetNewsletterRecipientsAsync(string segment)
         {
             segment = NormalizeSegment(segment);
+            if (segment == FieraSportSegment)
+            {
+                var fieraRecipients = await _dbContext.FieraSportLeads
+                    .AsNoTracking()
+                    .Where(l => l.PrivacyAccepted && l.LiabilityAccepted && l.Email != null && l.Email != "")
+                    .OrderByDescending(l => l.CreatedAtUtc)
+                    .ThenByDescending(l => l.Id)
+                    .Select(l => new NewsletterRecipient(l.Email, string.Empty))
+                    .ToListAsync();
+
+                return DeduplicateRecipients(fieraRecipients);
+            }
+
             var query = _dbContext.Tesseramenti
                 .AsNoTracking()
                 .Include(t => t.Partita)
@@ -360,11 +374,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .Select(t => new NewsletterRecipient(t.Email, t.NewsletterUnsubscribeToken))
                 .ToListAsync();
 
-            return recipients
-                .Where(r => !string.IsNullOrWhiteSpace(r.Email))
-                .GroupBy(r => r.Email.Trim().ToLowerInvariant())
-                .Select(g => g.First())
-                .ToList();
+            return DeduplicateRecipients(recipients);
         }
 
         private async Task<NewsLetterSendHistoryItem> SendNewsletterToSegmentAsync(NewsLetterTemplate template, string segment, bool programmato)
@@ -378,12 +388,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             {
                 try
                 {
-                    var unsubscribeUrl = Url.Action(
-                        nameof(Disiscriviti),
-                        "NewsLetter",
-                        new { token = recipient.UnsubscribeToken },
-                        Request.Scheme,
-                        Request.Host.ToString());
+                    var unsubscribeUrl = string.IsNullOrWhiteSpace(recipient.UnsubscribeToken)
+                        ? null
+                        : Url.Action(
+                            nameof(Disiscriviti),
+                            "NewsLetter",
+                            new { token = recipient.UnsubscribeToken },
+                            Request.Scheme,
+                            Request.Host.ToString());
 
                     await _emailService.SendEmailAsync(
                         recipient.Email,
@@ -492,7 +504,16 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         private static string NormalizeSegment(string? segment)
         {
-            return segment is "currentYear" or "last12Months" ? segment : "all";
+            return segment is "currentYear" or "last12Months" or FieraSportSegment ? segment : "all";
+        }
+
+        private static List<NewsletterRecipient> DeduplicateRecipients(IEnumerable<NewsletterRecipient> recipients)
+        {
+            return recipients
+                .Where(r => !string.IsNullOrWhiteSpace(r.Email))
+                .GroupBy(r => r.Email.Trim().ToLowerInvariant())
+                .Select(g => g.First())
+                .ToList();
         }
 
         private sealed record NewsletterRecipient(string Email, string UnsubscribeToken);
