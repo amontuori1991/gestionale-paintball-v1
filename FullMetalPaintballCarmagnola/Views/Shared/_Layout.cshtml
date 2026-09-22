@@ -135,7 +135,8 @@
 				["Sondaggi"] = ("bi-ui-checks-grid", Url.Action("Index", "Sondaggi") ?? "#", new[] { "Sondaggi" }, Array.Empty<string>()),
 				["Lavaggi"] = ("bi-bucket", Url.Action("Index", "Lavaggi") ?? "#", new[] { "Lavaggi" }, Array.Empty<string>()),
 				["Disponibilita Campo"] = ("bi-brightness-alt-high", Url.Action("Index", "DisponibilitaCampo") ?? "#", new[] { "DisponibilitaCampo" }, Array.Empty<string>()),
-				["NewsLetter"] = ("bi-envelope-paper-heart", Url.Action("Index", "NewsLetter") ?? "#", new[] { "NewsLetter" }, Array.Empty<string>())
+				["NewsLetter"] = ("bi-envelope-paper-heart", Url.Action("Index", "NewsLetter") ?? "#", new[] { "NewsLetter" }, Array.Empty<string>()),
+                ["Bonus Pool"] = ("bi-trophy", Url.Action("Index", "BonusPool") ?? "#", new[] { "BonusPool" }, Array.Empty<string>())
 			};
 
 			switch (currentController)
@@ -235,6 +236,7 @@
 				case "Lavaggi":
 				case "DisponibilitaCampo":
 				case "NewsLetter":
+                case "BonusPool":
 					if (currentAction == "Index")
 					{
 						backController = "Dashboard";

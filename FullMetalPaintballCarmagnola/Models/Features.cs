@@ -22,7 +22,8 @@
             "Sondaggi",
             "Lavaggi",
             "Disponibilita Campo",
-            "NewsLetter"
+            "NewsLetter",
+            "Bonus Pool"
         };
     }
 }

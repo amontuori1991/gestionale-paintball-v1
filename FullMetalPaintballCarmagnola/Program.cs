@@ -95,6 +95,8 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new FeatureRequirement("Disponibilita Campo")));
     options.AddPolicy("NewsLetter", policy =>
         policy.Requirements.Add(new FeatureRequirement("NewsLetter")));
+    options.AddPolicy("Bonus Pool", policy =>
+        policy.Requirements.Add(new FeatureRequirement("Bonus Pool")));
 
 });
 

@@ -33,6 +33,12 @@ namespace Full_Metal_Paintball_Carmagnola.Authorization
                 return;
             }
 
+            if (requirement.FeatureName == "Bonus Pool" && user.IsInRole("Admin"))
+            {
+                context.Succeed(requirement);
+                return;
+            }
+
             var roleClaim = user.FindFirst(ClaimTypes.Role);
             if (roleClaim == null)
             {

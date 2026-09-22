@@ -1,0 +1,148 @@
+@model Full_Metal_Paintball_Carmagnola.Models.BonusPoolViewModel
+@using Full_Metal_Paintball_Carmagnola.Models
+@using System.Globalization
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Bonus Pool";
+    var admin = User.IsInRole("Admin");
+    var closed = Model.Week.ClosedAtUtc.HasValue;
+    var monday = Model.Week.Monday;
+    var dateValue = monday.ToString("yyyy-MM-dd");
+    var it = CultureInfo.GetCultureInfo("it-IT");
+    string Money(decimal amount) => amount.ToString("C", it);
+    string Answer(BonusAnswer answer) => answer switch { BonusAnswer.Yes => "Sì", BonusAnswer.No => "No", _ => "In attesa" };
+    string Outcome(BonusGameOutcome outcome) => outcome switch { BonusGameOutcome.Played => "Disputata", BonusGameOutcome.Cancelled => "Annullata", _ => "Da disputare / verificare" };
+    var status = closed ? "Settimana chiusa" : Model.Calculation.Blocked ? "Bonus bloccato" : Model.Calculation.Pending > 0 ? "Esiti da completare" : "In preparazione";
+}
+<link rel="stylesheet" href="~/css/bonus-pool.css" asp-append-version="true" />
+<div class="bonus-page">
+    <header class="bonus-hero">
+        <div><span class="bonus-eyebrow">Disponibilità che fa squadra</span><h1><i class="bi bi-trophy" aria-hidden="true"></i> Bonus Pool</h1>
+        <p>Richieste infrasettimanali e bonus settimanale, dal lunedì al venerdì.</p></div>
+        <span class="badge rounded-pill @(closed ? "bg-dark" : Model.Calculation.Blocked ? "bg-danger" : "bg-success")">@status</span>
+    </header>
+    @if (TempData["BonusError"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+    @if (TempData["BonusSuccess"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+    <section class="bonus-panel">
+        <div class="bonus-navigation">
+            <a class="btn btn-outline-dark" asp-action="Index" asp-route-week="@monday.AddDays(-7).ToString("yyyy-MM-dd")" aria-label="Settimana precedente"><i class="bi bi-chevron-left"></i></a>
+            <h2>Dal @monday.ToString("d MMMM", it) al @monday.AddDays(4).ToString("d MMMM yyyy", it)</h2>
+            <a class="btn btn-outline-dark" asp-action="Index" asp-route-week="@monday.AddDays(7).ToString("yyyy-MM-dd")" aria-label="Settimana successiva"><i class="bi bi-chevron-right"></i></a>
+        </div>
+        <form method="get" class="d-flex gap-2 align-items-end flex-wrap">
+            <div><label for="week" class="form-label">Cerca una settimana per data</label><input id="week" name="week" type="date" value="@dateValue" class="form-control" required /></div>
+            <button class="btn btn-dark" type="submit">Visualizza</button>
+            <a asp-action="Index" class="btn btn-outline-dark">Questa settimana</a>
+        </form>
+    </section>
+    <div class="bonus-metrics">
+        <div><span>Richieste</span><strong>@Model.Week.Requests.Count</strong></div>
+        <div><span>Fondo maturato</span><strong>@Money(Model.Calculation.Pool)</strong></div>
+        <div><span>@(closed ? "Bonus riconosciuto" : "Bonus potenziale")</span><strong>@Money(Model.Calculation.Payable)</strong></div>
+        <div><span>Presenze effettive</span><strong>@Model.Calculation.Shares.Sum(s => s.Attendances)</strong></div>
+    </div>
+    <p class="small text-muted">Tariffe della settimana: 1 ora @Money(Model.Week.Rates.Hour) · 1 ora e mezza @Money(Model.Week.Rates.NinetyMinutes) · 2 ore @Money(Model.Week.Rates.TwoHours). Una quota per ogni presenza, indipendentemente dalla durata.</p>
+    @if (Model.Calculation.Blocked)
+    { <div class="alert alert-warning">Almeno una richiesta non ha ricevuto disponibilità dallo staff: il bonus dell'intera settimana è zero.</div> }
+    @if (!admin) { <p class="alert alert-info">Consultazione in sola lettura. Modifiche e chiusura sono riservate agli Admin.</p> }
+
+    @if (admin && !closed)
+    {
+        <details class="bonus-panel" open="@(Model.Form.Id != Guid.Empty || !ViewData.ModelState.IsValid)">
+            <summary>@(Model.Form.Id == Guid.Empty ? "Inserisci richiesta cliente" : "Modifica richiesta cliente")</summary>
+            <form asp-action="Save" method="post" class="mt-3" data-loading-message="Salvataggio richiesta in corso...">
+                <input type="hidden" name="version" value="@Model.State.Version" />
+                <input asp-for="Form.Id" type="hidden" />
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6"><label asp-for="Form.Contact" class="form-label">Nome referente</label><input asp-for="Form.Contact" class="form-control" required maxlength="120" /></div>
+                    <div class="col-4 col-md-2"><label asp-for="Form.Prefix" class="form-label">Prefisso</label><input asp-for="Form.Prefix" class="form-control" type="tel" required maxlength="5" /></div>
+                    <div class="col-8 col-md-4"><label asp-for="Form.Phone" class="form-label">Telefono</label><input asp-for="Form.Phone" class="form-control" type="tel" required maxlength="30" /><small>Numero senza prefisso; spazi rimossi al salvataggio.</small></div>
+                    <div class="col-6 col-md-4"><label asp-for="Form.Date" class="form-label">Data desiderata</label><input asp-for="Form.Date" type="date" asp-format="{0:yyyy-MM-dd}" min="@dateValue" max="@monday.AddDays(4).ToString("yyyy-MM-dd")" class="form-control" required /></div>
+                    <div class="col-6 col-md-4"><label asp-for="Form.Time" class="form-label">Orario</label><input asp-for="Form.Time" type="time" asp-format="{0:HH:mm}" class="form-control" required /></div>
+                    <div class="col-12 col-md-4"><label asp-for="Form.Minutes" class="form-label">Durata</label><select asp-for="Form.Minutes" class="form-select"><option value="60">1 ora</option><option value="90">1 ora e mezza</option><option value="120">2 ore</option></select></div>
+                    <div class="col-12 col-md-4"><label asp-for="Form.Staff" class="form-label">Disponibilità staff</label><select asp-for="Form.Staff" class="form-select"><option value="Pending">In attesa</option><option value="Yes">Sì</option><option value="No">No: bonus settimanale bloccato</option></select></div>
+                    <div class="col-12 col-md-4"><label asp-for="Form.Customer" class="form-label">Conferma cliente</label><select asp-for="Form.Customer" class="form-select"><option value="Pending">In attesa</option><option value="Yes">Sì</option><option value="No">No</option></select></div>
+                    <div class="col-12 col-md-4"><label asp-for="Form.Outcome" class="form-label">Esito partita</label><select asp-for="Form.Outcome" class="form-select"><option value="Pending">Da disputare / verificare</option><option value="Played">Disputata</option><option value="Cancelled">Annullata</option></select></div>
+                    <div class="col-12"><label for="bonus-game" class="form-label">Collega una prenotazione della settimana</label>
+                        <select asp-for="Form.PartitaId" class="form-select" id="bonus-game">
+                            <option value="">Nessuna partita collegata</option>
+                            @foreach (var game in Model.Games)
+                            {
+                                var names = new[] { game.Staff1, game.Staff2, game.Staff3, game.Staff4 }.Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+                                <option value="@game.Id" data-date="@game.Data.ToString("yyyy-MM-dd")" data-time="@game.OraInizio.ToString(@"hh\:mm")" data-minutes="@((int)Math.Round(game.Durata * 60))" data-staff="@JsonSerializer.Serialize(names)">#@game.Id · @game.Data.ToString("dd/MM") @game.OraInizio.ToString(@"hh\:mm") · @(game.NomeRiferimento ?? game.Riferimento)</option>
+                            }
+                        </select><small>Obbligatoria per una partita disputata. La selezione propone data, durata e staff: verifica le presenze effettive.</small>
+                    </div>
+                    <fieldset class="col-12"><legend class="fs-6 fw-bold">Collaboratori effettivamente presenti</legend><div class="bonus-staff">
+                        @foreach (var name in Model.Staff)
+                        { <label><input type="checkbox" name="Form.Attendees" value="@name" checked="@Model.Form.Attendees.Contains(name, StringComparer.OrdinalIgnoreCase)" /> @name</label> }
+                    </div><small>Contano soltanto per le partite disputate; ogni collaboratore vale una presenza per partita.</small></fieldset>
+                    <div class="col-12"><label asp-for="Form.Notes" class="form-label">Note / motivo dell'esito</label><textarea asp-for="Form.Notes" class="form-control" rows="2" maxlength="1000"></textarea></div>
+                </div>
+                <div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-dark">Salva richiesta</button><a asp-action="Index" asp-route-week="@dateValue" class="btn btn-outline-dark">Annulla modifica</a></div>
+            </form>
+        </details>
+    }
+
+    <section class="bonus-panel">
+        <h2>Richieste della settimana</h2>
+        @if (Model.Week.Requests.Count == 0) { <p>Nessuna richiesta inserita. Registra anche quelle che lo staff non riesce a coprire.</p> }
+        <div class="bonus-requests">
+        @foreach (var request in Model.Week.Requests.OrderBy(r => r.Date).ThenBy(r => r.Time))
+        {
+            <article class="bonus-request @(request.Staff == BonusAnswer.No ? "bonus-denied" : "")">
+                <div class="d-flex justify-content-between gap-2"><h3>@request.Contact</h3><a class="btn btn-outline-success" href="https://wa.me/@(request.Prefix.TrimStart('+') + request.Phone)" target="_blank" rel="noopener noreferrer" aria-label="Apri WhatsApp con @request.Contact"><i class="bi bi-whatsapp"></i></a></div>
+                <p class="fw-bold">@request.Date.ToString("ddd dd/MM", it) · @request.Time.ToString("HH:mm") · @request.Minutes min</p>
+                <dl><dt>Staff disponibile</dt><dd>@Answer(request.Staff)</dd><dt>Cliente confermato</dt><dd>@Answer(request.Customer)</dd><dt>Partita</dt><dd>@Outcome(request.Outcome)</dd></dl>
+                @if (request.PartitaId.HasValue) { <p class="small">Prenotazione #@request.PartitaId</p> }
+                @if (request.Attendees.Count > 0) { <p>Presenze: @string.Join(", ", request.Attendees)</p> }
+                @if (!string.IsNullOrWhiteSpace(request.Notes)) { <p class="bonus-notes">@request.Notes</p> }
+                @if (admin && !closed) { <a class="btn btn-outline-dark" asp-action="Index" asp-route-week="@dateValue" asp-route-edit="@request.Id">Modifica</a> }
+            </article>
+        }
+        </div>
+    </section>
+
+    <section class="bonus-panel">
+        <h2>@(closed ? "Ripartizione definitiva" : "Ripartizione prevista")</h2>
+        @if (!closed) { <p>Importi provvisori: diventano definitivi dopo la verifica e la chiusura Admin.</p> }
+        @foreach (var share in Model.Calculation.Shares)
+        { <div class="bonus-share"><strong>@share.Name</strong><span>@share.Attendances presenze</span><strong>@Money(share.Amount)</strong></div> }
+        @if (Model.Calculation.Shares.Count == 0) { <p>Nessuna presenza effettiva registrata.</p> }
+        @if (closed)
+        { <p class="small mt-3">Chiusura: @Model.Week.ClosedAtUtc?.ToString("dd/MM/yyyy HH:mm") UTC · @Model.Week.ClosedBy. Tariffe, richieste e ripartizione conservate nello storico.</p> }
+        else if (admin)
+        {
+            <p class="small mt-3">Chiusura disponibile dal sabato, dopo aver completato gli esiti. Verifica di aver inserito tutte le richieste ricevute, anche quelle rifiutate per mancanza di staff.</p>
+            <form asp-action="Close" method="post" data-confirm-message="Confermi di aver registrato tutte le richieste della settimana e verificato le presenze effettive? La chiusura salva definitivamente la ripartizione, senza ulteriori modifiche." data-loading-message="Chiusura settimana in corso...">
+                <input type="hidden" name="version" value="@Model.State.Version" /><input type="hidden" name="week" value="@dateValue" />
+                <button type="submit" class="btn btn-dark" disabled="@(!Model.CanClose)">@(Model.Calculation.Blocked ? "Chiudi settimana senza bonus" : "Conferma ripartizione")</button>
+            </form>
+        }
+    </section>
+
+    @if (admin)
+    {
+        <details class="bonus-panel"><summary>Personalizza gli importi</summary>
+            <p class="mt-3">Nuovi importi applicati alle settimane non ancora inizializzate. Le settimane con richieste già registrate conservano le proprie tariffe.</p>
+            <form asp-action="SaveRates" method="post" data-loading-message="Salvataggio tariffe...">
+                <input type="hidden" name="version" value="@Model.State.Version" /><input type="hidden" name="week" value="@dateValue" />
+                <div class="row g-3">
+                    <div class="col-12 col-sm-4"><label for="hour" class="form-label">1 ora (€)</label><input id="hour" name="hour" value="@Model.State.Rates.Hour.ToString("0.00", it)" inputmode="decimal" class="form-control" required /></div>
+                    <div class="col-12 col-sm-4"><label for="ninety" class="form-label">1 ora e mezza (€)</label><input id="ninety" name="ninety" value="@Model.State.Rates.NinetyMinutes.ToString("0.00", it)" inputmode="decimal" class="form-control" required /></div>
+                    <div class="col-12 col-sm-4"><label for="twoHours" class="form-label">2 ore (€)</label><input id="twoHours" name="twoHours" value="@Model.State.Rates.TwoHours.ToString("0.00", it)" inputmode="decimal" class="form-control" required /></div>
+                </div><button class="btn btn-outline-dark mt-3" type="submit">Salva tariffe</button>
+            </form>
+        </details>
+    }
+    <details class="bonus-panel"><summary>Settimane registrate e storico</summary>
+        <div class="bonus-history mt-3">
+        @foreach (var item in Model.State.Weeks.OrderByDescending(w => w.Monday))
+        { <a asp-action="Index" asp-route-week="@item.Monday.ToString("yyyy-MM-dd")">@item.Monday.ToString("dd/MM/yyyy") – @item.Monday.AddDays(4).ToString("dd/MM/yyyy") <span>@(item.ClosedAtUtc.HasValue ? "Chiusa" : "Aperta") · @item.Requests.Count richieste</span></a> }
+        </div>
+    </details>
+</div>
+@section Scripts {
+    <script src="~/js/bonus-pool.js" asp-append-version="true"></script>
+}
