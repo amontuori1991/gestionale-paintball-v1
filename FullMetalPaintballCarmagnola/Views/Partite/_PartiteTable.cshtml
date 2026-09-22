@@ -314,6 +314,8 @@
                                     data-caparra="@Money(partita.Caparra)"
                                     data-payment-method="@partita.MetodoPagamentoCaparra"
                                     data-deposit-date="@partita.Data.ToString("dd MMMM", it)"
+                                    data-deposit-date-en="@partita.Data.ToString("dd MMMM", CultureInfo.GetCultureInfo("en-GB"))"
+                                    data-caparra-en="@(partita.Caparra.ToString("0.00", CultureInfo.InvariantCulture)) EUR"
                                     data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">
                                 <i class="bi bi-whatsapp" aria-hidden="true"></i>
                             </button>
@@ -513,6 +515,8 @@
                         data-caparra="@Money(partita.Caparra)"
                         data-payment-method="@partita.MetodoPagamentoCaparra"
                         data-deposit-date="@partita.Data.ToString("dd MMMM", it)"
+                        data-deposit-date-en="@partita.Data.ToString("dd MMMM", CultureInfo.GetCultureInfo("en-GB"))"
+                        data-caparra-en="@(partita.Caparra.ToString("0.00", CultureInfo.InvariantCulture)) EUR"
                         data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">
                     <i class="bi bi-whatsapp" aria-hidden="true"></i>
                 </button>

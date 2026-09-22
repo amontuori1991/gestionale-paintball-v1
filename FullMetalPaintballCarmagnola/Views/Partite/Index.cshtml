@@ -705,7 +705,27 @@
             const isBankTransfer = (button) =>
                 (button.dataset.paymentMethod || '').trim().toLowerCase() === 'bonifico bancario';
 
-            const buildBankTransferText = (button) => [
+            const buildBankTransferText = (button) => {
+                if (isEnglishBooking(button)) {
+                    return [
+                        'Paintball IBAN',
+                        'IT82Q0883330262000160100706',
+                        '',
+                        'BIC/SWIFT',
+                        'CCRT IT 2T CSS',
+                        '',
+                        'Account holder: ASSOCIAZIONE FULL METAL PAINTBALL CARMAGNOLA',
+                        '',
+                        `Amount: ${button.dataset.caparraEn}`,
+                        '',
+                        `Payment reference: caparra ${button.dataset.depositDateEn}`,
+                        '',
+                        'Please attach the payment receipt here once you have made the transfer. Your booking will be confirmed upon receipt of payment.',
+                        'Thank you'
+                    ].join('\n');
+                }
+
+                return [
                 'Iban paintball',
                 'IT82Q0883330262000160100706',
                 '',
@@ -720,7 +740,8 @@
                 '',
                 'Mi alleghi qui la ricevuta del pagamento appena eseguita. La prenotazione verrà confermata alla ricezione del pagamento.',
                 'Grazie'
-            ].join('\n');
+                ].join('\n');
+            };
 
             const buildReminderText = (button) => {
                 const referente = button.dataset.referente || 'ciao';
