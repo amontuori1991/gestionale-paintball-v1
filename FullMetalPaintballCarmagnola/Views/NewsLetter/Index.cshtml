@@ -457,9 +457,13 @@
                                 <option value="all">Tutti i consenzienti</option>
                                 <option value="currentYear">Tesserati con partita nell'anno corrente</option>
                                 <option value="last12Months">Tesserati / iscritti negli ultimi 12 mesi</option>
+                                <option value="kids">Kids fino a 13 anni (età attuale)</option>
+                                <option value="adults">Adulti dai 14 anni (età attuale)</option>
+                                <option value="cardsExpiringCurrentYear">Tessere in scadenza nell'anno corrente</option>
                                 <option value="fieraSportCarmagnola2026">Fiera dello Sport Carmagnola 2026</option>
                             </select>
-                            <small class="text-muted">Stima attuale sul segmento selezionato: @Model.DestinatariStimati destinatari unici.</small>
+                            <small id="recipient-count" class="text-muted" aria-live="polite">Stima attuale sul segmento selezionato: @Model.DestinatariStimati destinatari unici.</small>
+                            <small class="text-muted d-block">Liste aggiornate automaticamente al momento dell'invio, anche programmato. Kids: meno di 14 anni oggi. Scadenze: validità della tessera ACSI associata nell'anno corrente; tessere senza scadenza escluse.</small>
                         </div>
 
                         <div class="col-12 col-lg-6">
@@ -756,6 +760,23 @@
             });
 
             updateNewsletterPreview();
+            const recipientSegment = document.getElementById('SegmentoDestinatari');
+            const recipientCount = document.getElementById('recipient-count');
+            let countRequest;
+            recipientSegment.addEventListener('change', async () => {
+                countRequest?.abort();
+                const request = new AbortController();
+                countRequest = request;
+                recipientCount.textContent = 'Calcolo destinatari in corso...';
+                try {
+                    const response = await fetch('@Url.Action("RecipientCount", "NewsLetter")?segment=' + encodeURIComponent(recipientSegment.value), { signal: request.signal });
+                    if (!response.ok) throw new Error('Conteggio non disponibile');
+                    const result = await response.json();
+                    if (!request.signal.aborted) recipientCount.textContent = 'Stima attuale sul segmento selezionato: ' + result.count + ' destinatari unici.';
+                } catch (error) {
+                    if (error.name !== 'AbortError') recipientCount.textContent = 'Conteggio non disponibile. Riprova selezionando il segmento.';
+                }
+            });
             window.addEventListener('load', updateNewsletterPreview);
         })();
     </script>

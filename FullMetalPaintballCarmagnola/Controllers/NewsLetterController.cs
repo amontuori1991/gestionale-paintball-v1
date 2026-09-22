@@ -15,6 +15,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private const string HistorySettingKey = "NewsLetterHistory";
         private const string ScheduledSettingKey = "NewsLetterScheduled";
         private const string FieraSportSegment = "fieraSportCarmagnola2026";
+        private const string KidsSegment = "kids";
+        private const string AdultsSegment = "adults";
+        private const string ExpiringCardsSegment = "cardsExpiringCurrentYear";
         private const string LegacyWebsiteUrl = "https://www.fullmetalpaintballcarmagnola.it/";
         private const string CurrentWebsiteUrl = "https://www.paintballcarmagnola.com/";
 
@@ -54,6 +57,13 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 EmailTotaliUniche = await CountUniqueNewsletterEmailsAsync(onlyConsenting: false),
                 TesseramentiDisiscritti = await _dbContext.Tesseramenti.CountAsync(t => !t.NewsletterConsent)
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RecipientCount(string segment)
+        {
+            Response.Headers.CacheControl = "no-store";
+            return Json(new { count = await CountNewsletterRecipientsAsync(segment) });
         }
 
         [HttpPost]
@@ -353,7 +363,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .Include(t => t.Partita)
                 .Where(t => t.NewsletterConsent && t.Email != null && t.Email != "");
 
-            var today = DateTime.UtcNow.Date;
+            var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Europe/Rome").Date;
+            today = DateTime.SpecifyKind(today, DateTimeKind.Utc);
             if (segment == "currentYear")
             {
                 var start = new DateTime(today.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -368,13 +379,34 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     (t.Partita == null && t.DataCreazione >= start));
             }
 
-            var recipients = await query
+            var candidates = await query
                 .OrderByDescending(t => t.Partita != null ? t.Partita.Data : t.DataCreazione)
                 .ThenByDescending(t => t.Id)
-                .Select(t => new NewsletterRecipient(t.Email, t.NewsletterUnsubscribeToken))
+                .Select(t => new { t.Email, t.NewsletterUnsubscribeToken, t.DataNascita, t.Tessera })
                 .ToListAsync();
 
-            return DeduplicateRecipients(recipients);
+            var selected = candidates.AsEnumerable();
+            if (segment == KidsSegment || segment == AdultsSegment)
+            {
+                selected = selected.Where(t => t.DataNascita.Date > DateTime.MinValue.Date
+                    && t.DataNascita.Date <= today
+                    && (t.DataNascita.Date.AddYears(14) > today) == (segment == KidsSegment));
+            }
+            else if (segment == ExpiringCardsSegment)
+            {
+                var start = new DateTime(today.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                var end = start.AddYears(1);
+                var ranges = await _dbContext.RangeTessereAcsi.AsNoTracking()
+                    .Where(r => r.DataValidita.HasValue && r.DataValidita >= start && r.DataValidita < end)
+                    .Select(r => new { r.NumeroDa, r.NumeroA })
+                    .ToListAsync();
+
+                // Tessera is stored as text; parse after materialization to tolerate legacy values.
+                selected = selected.Where(t => long.TryParse(t.Tessera, out var number)
+                    && ranges.Any(r => number >= r.NumeroDa && number <= r.NumeroA));
+            }
+
+            return DeduplicateRecipients(selected.Select(t => new NewsletterRecipient(t.Email, t.NewsletterUnsubscribeToken)));
         }
 
         private async Task<NewsLetterSendHistoryItem> SendNewsletterToSegmentAsync(NewsLetterTemplate template, string segment, bool programmato)
@@ -504,7 +536,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         private static string NormalizeSegment(string? segment)
         {
-            return segment is "currentYear" or "last12Months" or FieraSportSegment ? segment : "all";
+            return segment is "currentYear" or "last12Months" or FieraSportSegment
+                or KidsSegment or AdultsSegment or ExpiringCardsSegment ? segment : "all";
         }
 
         private static List<NewsletterRecipient> DeduplicateRecipients(IEnumerable<NewsletterRecipient> recipients)
