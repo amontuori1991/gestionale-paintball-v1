@@ -312,6 +312,8 @@
                                     data-type="@TipoLabel(partita)"
                                     data-language="@(string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA")"
                                     data-caparra="@Money(partita.Caparra)"
+                                    data-payment-method="@partita.MetodoPagamentoCaparra"
+                                    data-deposit-date="@partita.Data.ToString("dd MMMM", it)"
                                     data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">
                                 <i class="bi bi-whatsapp" aria-hidden="true"></i>
                             </button>
@@ -509,6 +511,8 @@
                         data-type="@tipoLabel"
                         data-language="@(string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA")"
                         data-caparra="@Money(partita.Caparra)"
+                        data-payment-method="@partita.MetodoPagamentoCaparra"
+                        data-deposit-date="@partita.Data.ToString("dd MMMM", it)"
                         data-tesseramento-url="@AbsoluteUrl(Url.Action("Index", "Tesseramento", new { partitaId = partita.Id }) ?? string.Empty)">
                     <i class="bi bi-whatsapp" aria-hidden="true"></i>
                 </button>

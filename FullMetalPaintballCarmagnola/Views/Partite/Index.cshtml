@@ -702,6 +702,26 @@
                 }, 300);
             };
 
+            const isBankTransfer = (button) =>
+                (button.dataset.paymentMethod || '').trim().toLowerCase() === 'bonifico bancario';
+
+            const buildBankTransferText = (button) => [
+                'Iban paintball',
+                'IT82Q0883330262000160100706',
+                '',
+                'BIC/SWIFT',
+                'CCRT IT 2T CSS',
+                '',
+                'Intestato a: ASSOCIAZIONE FULL METAL PAINTBALL CARMAGNOLA',
+                '',
+                `Importo: ${button.dataset.caparra}`,
+                '',
+                `Causale: caparra ${button.dataset.depositDate}`,
+                '',
+                'Mi alleghi qui la ricevuta del pagamento appena eseguita. La prenotazione verrà confermata alla ricezione del pagamento.',
+                'Grazie'
+            ].join('\n');
+
             const buildReminderText = (button) => {
                 const referente = button.dataset.referente || 'ciao';
                 if (isEnglishBooking(button)) {
@@ -872,6 +892,7 @@
                             <p class="mb-3">Scegli cosa preparare per <strong>${button.dataset.referente || 'il referente'}</strong>.</p>
                             <div class="d-grid gap-2">
                                 <button type="button" class="btn btn-success js-wa-action" data-action="chat">💬 Apri chat libera</button>
+                                ${isBankTransfer(button) ? '<button type="button" class="btn btn-outline-success js-wa-action" data-action="bank-transfer"><i class="bi bi-bank" aria-hidden="true"></i> Dati bonifico caparra</button>' : ''}
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="summary">📄 Messaggio riepilogativo completo</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="link">📎 Link tesseramento</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="members-reminder">📝 Sollecito tesseramenti</button>
@@ -899,6 +920,11 @@
 
                 if (action === 'chat') {
                     openWhatsapp(number, '');
+                    return;
+                }
+
+                if (action === 'bank-transfer' && isBankTransfer(button)) {
+                    openWhatsapp(number, buildBankTransferText(button));
                     return;
                 }
 
