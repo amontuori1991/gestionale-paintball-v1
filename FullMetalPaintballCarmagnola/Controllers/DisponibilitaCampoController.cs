@@ -170,11 +170,6 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
 
             var finePartita = oraInizio.Add(TimeSpan.FromHours(durata));
-            var inizioOccupazioneRichiesta = oraInizio.Subtract(MargineCampo);
-            var fineOccupazioneRichiesta = finePartita.Add(MargineCampo);
-
-            if (inizioOccupazioneRichiesta - AperturaCampo < DurataMinimaPartita)
-                inizioOccupazioneRichiesta = AperturaCampo;
 
             var motivi = new List<string>();
             if (giorno.CampoChiuso)
@@ -184,11 +179,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             if (finePartita > giorno.UltimaFinePartita)
                 motivi.Add($"la partita terminerebbe dopo il limite massimo delle {giorno.UltimaFinePartita:hh\\:mm}");
 
-            var occupate = giorno.Fasce
-                .Where(f => f.Stato == "Occupato")
-                .ToList();
-
-            if (occupate.Any(f => inizioOccupazioneRichiesta < f.Fine && fineOccupazioneRichiesta > f.Inizio))
+            if (motivi.Count == 0 && !giorno.IsAvailable(oraInizio, finePartita))
                 motivi.Add("il campo risulta già occupato in quella fascia oraria");
 
             var richiestaDisponibile = motivi.Count == 0;

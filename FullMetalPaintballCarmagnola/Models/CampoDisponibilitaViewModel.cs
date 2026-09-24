@@ -37,6 +37,12 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public bool CampoChiuso { get; set; }
         public string? ChiusuraMotivo { get; set; }
         public List<CampoFasciaViewModel> Fasce { get; set; } = new();
+
+        // Displayed free slots already account for the existing bookings' buffers.
+        public bool IsAvailable(TimeSpan inizio, TimeSpan fine) =>
+            !CampoChiuso && inizio >= Apertura && fine <= UltimaFinePartita
+            && fine - inizio >= TimeSpan.FromHours(1)
+            && Fasce.Any(f => f.Prenotabile && inizio >= f.Inizio && fine <= f.Fine);
     }
 
     public class CampoFasciaViewModel
