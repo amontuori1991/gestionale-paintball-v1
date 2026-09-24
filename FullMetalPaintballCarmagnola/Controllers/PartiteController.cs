@@ -240,16 +240,19 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .Where(p => dateMostrate.Contains(p.Data))
                 .ToListAsync();
 
-            var staffDisponibiliPerData = presenzeStaff
-                .Where(p => (p.Presente == true || p.Presente == null) &&
-                            activeStaff.Contains(p.NomeStaff))
+            var staffStatiPerData = presenzeStaff
+                .Where(p => activeStaff.Contains(p.NomeStaff))
                 .GroupBy(p => p.Data.Date)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.Select(x => x.NomeStaff).Distinct().OrderBy(x => x).ToList()
+                    g => g.GroupBy(p => p.NomeStaff, StringComparer.OrdinalIgnoreCase)
+                        .ToDictionary(n => n.Key, n => n.OrderByDescending(p => p.Id).First().Presente,
+                            StringComparer.OrdinalIgnoreCase)
                 );
 
-            ViewBag.StaffDisponibiliPerData = staffDisponibiliPerData;
+            ViewBag.StaffStatiPerData = staffStatiPerData;
+            ViewBag.StaffDisponibiliPerData = staffStatiPerData.ToDictionary(
+                g => g.Key, g => g.Value.Where(p => p.Value != false).Select(p => p.Key).OrderBy(n => n).ToList());
 
             return View();
         }
@@ -870,12 +873,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             if (!DateTime.TryParse(data, out var dataParsed))
                 return Content("<p>Data non valida.</p>");
 
-            var giorno = dataParsed.Date;
+            var giorno = DateTime.SpecifyKind(dataParsed.Date, DateTimeKind.Utc);
             var staffAttivi = await _staffRegistryService.GetStaffAsync();
             var staffAttiviSet = staffAttivi.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var presenze = await _dbContext.PresenzaStaff
-                .Where(p => p.Data == giorno && (p.Presente == true || p.Presente == null))
+                .Where(p => p.Data == giorno)
                 .ToListAsync();
 
             presenze = presenze
@@ -884,13 +887,13 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .ToList();
 
             if (!presenze.Any())
-                return Content("<p>Nessun membro dello staff risulta disponibile o in attesa.</p>");
+                return Content("<p>Nessuna disponibilità dello staff registrata per questa data.</p>");
 
             string html = "<ul style='text-align:left; padding-left:20px;'>";
             foreach (var p in presenze)
             {
-                string stato = p.Presente == true ? "✅ Disponibile" : "⏳ In attesa";
-                html += $"<li><strong>{p.NomeStaff}:</strong> {stato}</li>";
+                string stato = p.Presente switch { true => "✅ Disponibile", false => "❌ Non disponibile", _ => "⏳ In attesa" };
+                html += $"<li><strong>{System.Net.WebUtility.HtmlEncode(p.NomeStaff)}:</strong> {stato}</li>";
             }
             html += "</ul>";
 

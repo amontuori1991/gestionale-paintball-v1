@@ -5,6 +5,13 @@
 @{
     var staffDefault = ViewBag.StaffList as List<string> ?? new List<string>();
     var staffDisponibiliPerData = ViewBag.StaffDisponibiliPerData as Dictionary<DateTime, List<string>>;
+    var staffStatiPerData = ViewBag.StaffStatiPerData as Dictionary<DateTime, Dictionary<string, bool?>>;
+    string StaffOptionLabel(DateTime data, string nome)
+    {
+        var disponibile = staffStatiPerData != null && staffStatiPerData.TryGetValue(data.Date, out var stati)
+            && stati.TryGetValue(nome, out var stato) && stato == true;
+        return $"{(disponibile ? "✅" : "⏳")} {nome}";
+    }
     var listinoLabels = ViewBag.ListinoLabels as IDictionary<short, string> ?? new Dictionary<short, string>();
     var pricingCatalog = ViewBag.PricingCatalog as PricingCatalog ?? new PricingCatalog();
     var weatherByPartitaId = ViewBag.WeatherByPartitaId as IReadOnlyDictionary<int, Full_Metal_Paintball_Carmagnola.Models.PartitaWeatherViewModel>
@@ -402,7 +409,7 @@
         <option value="" selected="@(currentIsInactive ? "selected" : null)">--</option>
         @foreach (var s in staffList)
         {
-            <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+            <option value="@s" selected="@(s == currentVal ? "selected" : null)">@StaffOptionLabel(partita.Data, s)</option>
         }
     </select>
     }
@@ -570,7 +577,7 @@
             <option value="" selected="@(currentIsInactive ? "selected" : null)">--</option>
             @foreach (var s in staffList)
             {
-                <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
+                <option value="@s" selected="@(s == currentVal ? "selected" : null)">@StaffOptionLabel(partita.Data, s)</option>
             }
         </select>
         }
