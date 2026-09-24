@@ -1,104 +1,69 @@
 ﻿@model List<Full_Metal_Paintball_Carmagnola.Models.Partita>
 @using System.Globalization
-
-<link href="~/css/partite-semplificate-responsive.css?v=@DateTime.Now.Ticks" rel="stylesheet" />
-
 @{
     ViewData["Title"] = "Visualizzazione Semplificata";
+    var it = CultureInfo.GetCultureInfo("it-IT");
     var listinoLabels = ViewBag.ListinoLabels as IDictionary<short, string> ?? new Dictionary<short, string>();
     short currentListinoId = ViewBag.CurrentListinoId is short currentValue ? currentValue : (short)2;
-
-    string GetListinoLabel(short id) =>
-        listinoLabels.TryGetValue(id, out var label) ? label : $"Listino {id}";
+    var partite = Model.Where(p => !p.IsDeleted).ToList();
+    var showListino = partite.Any(p => p.Listino != currentListinoId);
+    string[] StaffNames(Full_Metal_Paintball_Carmagnola.Models.Partita p) =>
+        new[] { p.Staff1, p.Staff2, p.Staff3, p.Staff4 }.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!.Trim()).ToArray();
+    var staffColumns = partite.Select(p => StaffNames(p).Length).DefaultIfEmpty(0).Max();
 }
-
-<div class="content-container">
+<link href="~/css/partite-semplificate-responsive.css" rel="stylesheet" asp-append-version="true" />
+<div class="simple-page">
     <h2 class="text-center">Partite Future</h2>
-
-    <div class="d-flex justify-content-center mb-3">
-        <a class="btn btn-secondary" href="@Url.Action("Index", "Partite")">⬅ Torna alle Prenotazioni</a>
+    <div class="text-center mb-3">
+        <a class="btn btn-secondary" href="@Url.Action("Index", "Partite")">Torna alle Prenotazioni</a>
     </div>
-
-    <div class="table-responsive">
-        <table class="tabella-semplificata table table-bordered">
-            <thead>
-                <tr>
-                    <th>Rep.</th>
-                    <th>Giorno</th>
-                    <th>Data</th>
-                    <th>Stato</th>
-                    <th>Tipo</th>
-                    <th>Lingua</th>
-                    <th>Staff1</th>
-                    <th>Staff2</th>
-                    <th>Staff3</th>
-                    <th>Staff4</th>
-                    <th>Inizio</th>
-                    <th>Durata</th>
-                    <th style="white-space: nowrap;">Nr. P.</th>
-                    <th>Caparra</th>
-                    <th>Listino</th>
-                    <th>Torneo</th>
-                    <th>Illimit.</th>
-                    <th>Caccia</th>
-                </tr>
-            </thead>
+    <p class="simple-hint">Scorri orizzontalmente per consultare tutte le informazioni.</p>
+    <div class="simple-scroll" role="region" aria-label="Partite future, tabella a scorrimento orizzontale" tabindex="0">
+        <table class="tabella-semplificata">
+            <thead><tr>
+                <th scope="col">Data</th><th scope="col">Rep.</th><th scope="col">Info</th><th scope="col">Opzioni</th>
+                @if (showListino) { <th scope="col">Listino</th> }
+                @for (var i = 1; i <= staffColumns; i++) { <th scope="col">Staff @i</th> }
+            </tr></thead>
             <tbody>
-                @foreach (var partita in Model)
+                @foreach (var partita in partite)
                 {
-                    if (partita.IsDeleted)
-                    {
-                        continue; // ignora partite cancellate
-                    }
-
-                    var giornoNome = partita.Data.ToString("ddd", new CultureInfo("it-IT"));
-                    var dataSolo = partita.Data.ToString("dd/MM/yyyy");
-                    var giornoClass = (partita.Data.DayOfWeek != DayOfWeek.Saturday && partita.Data.DayOfWeek != DayOfWeek.Sunday) ? "calendario-bg-warning" : "";
-                    var repClass = (partita.Reperibile == "Nessuno") ? "calendario-bg-danger" : "calendario-bg-success";
-
+                    var names = StaffNames(partita);
+                    var english = string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase);
                     var stato = partita.CaparraConfermata ? "Confermata" : "In attesa";
-                    var statoClass = partita.CaparraConfermata ? "calendario-bg-success" : "calendario-bg-warning";
-
                     <tr>
-                        <td data-label="Rep." class="@repClass">@partita.Reperibile</td>
-                        <td data-label="Giorno" class="@giornoClass">@giornoNome</td>
-                        <td data-label="Data">@dataSolo</td>
-                        <td data-label="Stato" class="@statoClass">@stato</td>
-                        <td data-label="Tipo" class="@(partita.Tipo == "Kids" ? "calendario-bg-info" : "")">@partita.Tipo</td>
-                        <td data-label="Lingua">@(string.Equals(partita.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase) ? "ENG" : "ITA")</td>
-
-                        <td data-label="Staff1">@partita.Staff1</td>
-                        <td data-label="Staff2">@partita.Staff2</td>
-                        <td data-label="Staff3">@partita.Staff3</td>
-                        <td data-label="Staff4">@partita.Staff4</td>
-                        <td data-label="Inizio">@partita.OraInizio.ToString(@"hh\:mm")</td>
-                        <td data-label="Durata">@partita.Durata</td>
-                        <td data-label="Nr. P.">@partita.NumeroPartecipanti</td>
-                        <td data-label="Caparra">@partita.Caparra.ToString("0.00") €</td>
-                        @{
-                            var listinoText = GetListinoLabel(partita.Listino);
-                            var listinoClass = partita.Listino == currentListinoId ? "calendario-bg-info" : "calendario-bg-warning";
+                        <td data-label="Data">
+                            <strong>@partita.Data.ToString("ddd dd/MM/yyyy", it)</strong>
+                            <div class="simple-date-meta">
+                                <time>@partita.OraInizio.ToString(@"hh\:mm")</time>
+                                <span role="img" aria-label="@stato" title="@stato">@(partita.CaparraConfermata ? "✅" : "⏳")</span>
+                                <img class="simple-flag" src="@(english ? Url.Content("~/img/flag-gb.svg") : Url.Content("~/img/flag-it.svg"))" alt="@(english ? "Inglese" : "Italiano")" title="@(english ? "Inglese" : "Italiano")" width="22" height="15" />
+                            </div>
+                        </td>
+                        <td data-label="Reperibile">@(string.IsNullOrWhiteSpace(partita.Reperibile) ? "In attesa" : partita.Reperibile)</td>
+                        <td data-label="Info">
+                            <div><strong>@partita.Tipo</strong> · @partita.Durata.ToString("0.##", it) h</div>
+                            <div>@partita.NumeroPartecipanti partecipanti</div>
+                            <div>Caparra <strong>@partita.Caparra.ToString("0.00", it) €</strong></div>
+                        </td>
+                        <td data-label="Opzioni">
+                            @foreach (var option in new[] { ("Torneo", partita.Torneo), ("Illimitati", partita.ColpiIllimitati), (partita.CacciaDoppia && partita.Caccia ? "Caccia x2" : "Caccia", partita.Caccia) })
+                            {
+                                <div class="simple-option"><span class="@(option.Item2 ? "simple-yes" : "simple-no")" role="img" aria-label="@(option.Item2 ? "Sì" : "No")">@(option.Item2 ? "✓" : "✕")</span>@option.Item1</div>
+                            }
+                        </td>
+                        @if (showListino)
+                        {
+                            <td data-label="Listino" class="@(partita.Listino != currentListinoId ? "simple-old-price" : "")">@(listinoLabels.TryGetValue(partita.Listino, out var label) ? label : $"Listino {partita.Listino}")</td>
                         }
-
-                        <td data-label="Listino" class="@listinoClass">@listinoText</td>
-
-                        <td data-label="Torneo" class="@(partita.Torneo ? "calendario-bg-success" : "calendario-bg-danger")">
-                            @(partita.Torneo ? "SI" : "NO")
-                        </td>
-                        <td data-label="Illimit." class="@(partita.ColpiIllimitati ? "calendario-bg-success" : "calendario-bg-danger")">
-                            @(partita.ColpiIllimitati ? "SI" : "NO")
-                        </td>
-                    <td data-label="Caccia" class="@(partita.Caccia ? "calendario-bg-success" : "calendario-bg-danger")">
-                        @(partita.Caccia
-                                                ? (partita.CacciaDoppia ? "SI x2" : "SI")
-                                                : "NO")
-                    </td>
-
+                        @for (var i = 0; i < staffColumns; i++)
+                        {
+                            <td data-label="Staff @(i + 1)">@(i < names.Length ? names[i] : "—")</td>
+                        }
                     </tr>
                 }
-
-
             </tbody>
         </table>
     </div>
+    @if (!partite.Any()) { <p class="text-center p-3">Nessuna partita futura.</p> }
 </div>

@@ -4,7 +4,7 @@
     ViewData["Title"] = "Gestione Caparre";
 }
 
-<link href="~/css/caparre-responsive.css" rel="stylesheet" />
+<link href="~/css/caparre-responsive.css" rel="stylesheet" asp-append-version="true" />
 
 <div class="cap-page">
 
@@ -19,6 +19,19 @@
         </div>
     </div>
 
+    <form method="get" asp-action="Caparre" class="cap-filters">
+        <label>Stato partita
+            <select name="stato" class="form-select">
+                <option value="">Tutte</option>
+                <option value="attiva" selected="@(ViewData["FiltroStato"] as string == "attiva")">Attiva</option>
+                <option value="cancellata" selected="@(ViewData["FiltroStato"] as string == "cancellata")">Cancellata</option>
+            </select>
+        </label>
+        <label>Data partita dal <input type="date" class="form-control" name="dataDa" value="@ViewData["FiltroDataDa"]" /></label>
+        <label>Al <input type="date" class="form-control" name="dataA" value="@ViewData["FiltroDataA"]" /></label>
+        <button class="btn btn-primary" type="submit">Filtra</button>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Caparre")">Azzera</a>
+    </form>
     @* Tabella *@
     <div class="cap-card">
         <div class="cap-table-wrap">
@@ -49,7 +62,7 @@
                     <tbody>
                         @foreach (var partita in caparre)
                         {
-                            <tr class="@(partita.IsDeleted ? "row-cancellata" : "")">
+                            <tr data-partita-id="@partita.Id" class="@(partita.IsDeleted ? "row-cancellata" : "")">
 
                                 <td data-label="Stato">
                                     @if (partita.IsDeleted)
@@ -103,13 +116,15 @@
                                 <td data-label="Annotazioni">
                                     <input type="text"
                                            name="annotazioni"
+                                           maxlength="4000"
+                                           aria-label="Annotazioni partita @partita.Id"
                                            value="@partita.Annotazioni"
                                            data-partita-id="@partita.Id"
                                            placeholder="Nessuna nota…" />
                                 </td>
 
                                 <td data-label="Rimborso">
-                                    <select name="rimborso" data-partita-id="@partita.Id">
+                                    <select name="rimborso" data-partita-id="@partita.Id" aria-label="Rimborso partita @partita.Id">
                                         <option value="">—</option>
                                         <option value="SI" selected="@(partita.Rimborso == "SI" ? "selected" : null)">Sì</option>
                                         <option value="NO" selected="@(partita.Rimborso == "NO" ? "selected" : null)">No</option>
@@ -117,6 +132,8 @@
                                 </td>
 
                                 <td data-label="Azioni">
+                                    <button type="button" class="btn btn-sm btn-primary cap-save">Salva</button>
+                                    <span class="cap-save-status" role="status" aria-live="polite"></span>
                                     <button class="btn-cancella btn-cancella-caparra"
                                             data-id="@partita.Id">
                                         <i class="bi bi-trash3"></i> Cancella
@@ -132,9 +149,9 @@
             {
                 <div class="cap-empty">
                     <div class="cap-empty__icon"><i class="bi bi-cash-stack"></i></div>
-                    <p class="cap-empty__text">Nessuna caparra presente</p>
+                    <p class="cap-empty__text">Nessuna caparra trovata</p>
                     <p style="font-size:.85rem;color:var(--fmp-muted);margin-top:6px;">
-                        Le caparre inserite nelle partite appariranno qui.
+                        Se hai impostato dei filtri, prova a modificarli o azzerarli.
                     </p>
                 </div>
             }
@@ -152,8 +169,41 @@
 </div>
 
 @section Scripts {
+    @Html.AntiForgeryToken()
     <script>
         $(document).ready(function () {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            function salvaDettagli(row) {
+                if (row.data('saving')) return;
+                row.data('saving', true);
+                const controls = row.find('input, select, button');
+                const status = row.find('.cap-save-status');
+                const data = {
+                    id: row.data('partita-id'),
+                    annotazioni: row.find('[name="annotazioni"]').val(),
+                    rimborso: row.find('[name="rimborso"]').val(),
+                    __RequestVerificationToken: token
+                };
+                controls.prop('disabled', true);
+                status.removeClass('text-success text-danger').text('Salvataggio...');
+                $.post('@Url.Action("AggiornaDettagliCaparra", "Partite")', data)
+                    .done(() => status.addClass('text-success').text('Salvato'))
+                    .fail(xhr => {
+                        status.addClass('text-danger').text('Non salvato: riprova con Salva');
+                        fmpNotify(xhr.responseJSON?.message || 'Errore durante il salvataggio. Le modifiche non sono state salvate.', 'error');
+                    })
+                    .always(() => {
+                        controls.prop('disabled', false);
+                        row.data('saving', false);
+                    });
+            }
+            $('.cap-save').on('click', function () { salvaDettagli($(this).closest('tr')); });
+            $('.cap-table [name="annotazioni"], .cap-table [name="rimborso"]').on('change', function () {
+                salvaDettagli($(this).closest('tr'));
+            });
+            $('.cap-table [name="annotazioni"]').on('input', function () {
+                $(this).closest('tr').find('.cap-save-status').removeClass('text-success').text('Modifiche da salvare');
+            });
             $('.btn-cancella-caparra').on('click', function () {
                 var partitaId = $(this).data('id');
 
@@ -166,7 +216,7 @@
                         $.ajax({
                             url: '@Url.Action("CancellaCaparra", "Partite")',
                             type: 'POST',
-                            data: { id: partitaId },
+                            data: { id: partitaId, __RequestVerificationToken: token },
                             success: function (response) {
                                 if (response.success) {
                                     fmpNotify('La caparra è stata eliminata.', 'success', 'Cancellata!').then(() => { location.reload(); });

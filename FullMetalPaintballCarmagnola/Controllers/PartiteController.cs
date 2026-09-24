@@ -706,10 +706,25 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         // ----------- CAPARRE / AZIONI VARIE -----------
-        public async Task<IActionResult> Caparre()
+        public async Task<IActionResult> Caparre(string? stato, DateTime? dataDa, DateTime? dataA)
         {
-            var partite = await _dbContext.Partite
-                .Where(p => p.Caparra > 0)
+            ViewData["FiltroStato"] = stato;
+            ViewData["FiltroDataDa"] = dataDa?.ToString("yyyy-MM-dd");
+            ViewData["FiltroDataA"] = dataA?.ToString("yyyy-MM-dd");
+            var query = _dbContext.Partite.Where(p => p.Caparra > 0);
+            if (stato == "attiva") query = query.Where(p => !p.IsDeleted);
+            if (stato == "cancellata") query = query.Where(p => p.IsDeleted);
+            if (dataDa.HasValue)
+            {
+                var from = DateTime.SpecifyKind(dataDa.Value.Date, DateTimeKind.Utc);
+                query = query.Where(p => p.Data >= from);
+            }
+            if (dataA.HasValue)
+            {
+                var to = DateTime.SpecifyKind(dataA.Value.Date, DateTimeKind.Utc);
+                query = query.Where(p => p.Data <= to);
+            }
+            var partite = await query
                 .OrderBy(p => p.Data)
                 .ThenBy(p => p.OraInizio)
                 .ToListAsync();
@@ -718,6 +733,23 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AggiornaDettagliCaparra(int id, string? annotazioni, string? rimborso)
+        {
+            if ((rimborso != null && rimborso != "" && rimborso != "SI" && rimborso != "NO") ||
+                (annotazioni?.Length ?? 0) > 4000)
+                return BadRequest(new { message = "Note o rimborso non validi." });
+            // Cancelled bookings retain editable deposit history.
+            var partita = await _dbContext.Partite.SingleOrDefaultAsync(p => p.Id == id && p.Caparra > 0);
+            if (partita == null) return NotFound(new { message = "Caparra non trovata." });
+            partita.Annotazioni = annotazioni;
+            partita.Rimborso = string.IsNullOrEmpty(rimborso) ? null : rimborso;
+            await _dbContext.SaveChangesAsync();
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<JsonResult> CancellaCaparra(int id)
         {
             var partita = await _dbContext.Partite.FindAsync(id);

@@ -589,3 +589,6 @@
             align-self: flex-start;
         }
 }
+.cap-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-bottom: 20px; padding: 16px; border-radius: 18px; background: #fffefa; }
+.cap-filters label { display: grid; gap: 5px; flex: 1 1 160px; font-weight: 700; font-size: .85rem; min-width: 0; }
+.cap-save-status { display: block; font-size: .75rem; margin: 5px 0; }
