@@ -1,0 +1,70 @@
+.roster-page {
+    --roster-ink: #23271d;
+    --roster-muted: #626759;
+    max-width: 1320px;
+    margin: 28px auto;
+    padding: 0 16px 32px;
+    color: var(--roster-ink);
+}
+.roster-heading { text-align: center; margin-bottom: 24px; }
+.roster-eyebrow { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .15em; }
+.roster-heading h2 { font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 850; margin: 8px 0; }
+.roster-heading p { color: var(--roster-muted); margin-bottom: 16px; }
+.roster-search { max-width: 540px; min-height: 48px; }
+.roster-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; font-size: .8rem; }
+.roster-legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #328354; margin-right: 6px; }
+.roster-legend span:nth-child(2)::before { background: #af7a16; }
+.roster-legend span:nth-child(3)::before { background: #ba3c57; }
+.roster-days { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; }
+.roster-page .roster-day {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr));
+    gap: 10px;
+    padding: 22px;
+    border: 1px solid rgba(61, 70, 38, .12);
+    border-top: 4px solid #90ba35;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #fffefa, #fff) !important;
+    box-shadow: 0 8px 24px rgba(41, 47, 27, .06);
+    min-width: 0;
+}
+.roster-page .riga-infrasettimanale { border-top-color: #f58220; }
+.roster-page .riga-campo-chiuso { border-top-color: #8a8f95; }
+.roster-field { min-width: 0; padding: 12px; border-radius: 14px; background: #f5f5ef; font-weight: 650; overflow-wrap: anywhere; }
+.roster-field::before { content: attr(data-label); display: block; margin-bottom: 7px; font-size: .78rem; font-weight: 800; color: #545a4d; }
+.roster-field[data-label="Giorno"], .roster-field[data-label="Data"] { grid-column: 1 / -1; background: transparent; padding: 0; }
+.roster-field[data-label="Giorno"] { text-transform: uppercase; font-size: .72rem; letter-spacing: .13em; color: var(--roster-muted); }
+.roster-field[data-label="Data"] { font-size: 1.45rem; font-weight: 850; margin: -6px 0 6px; }
+.roster-field[data-label="Giorno"]::before, .roster-field[data-label="Data"]::before { display: none; }
+.roster-field[data-label="Reperibile"] { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 4px; }
+.roster-field[data-label="Reperibile"]::before { margin: 0; margin-right: auto; }
+.roster-field[data-label="Reperibile"] select { width: auto; min-width: 160px; max-width: 100%; }
+.roster-field select {
+    display: block; width: 100%; min-width: 0; min-height: 44px;
+    border: 1px solid rgba(53, 61, 35, .15); border-radius: 9px;
+    padding: 8px 26px 8px 8px; font: inherit; font-size: .9rem; color: #23271d;
+    background-color: rgba(255, 255, 255, .88); text-overflow: ellipsis;
+}
+.roster-field select:focus-visible { outline: 3px solid #9abb49; outline-offset: 2px; }
+.roster-page .roster-field.bg-success, .roster-page .calendario-bg-success { background: #e8f4e9 !important; color: #215431 !important; }
+.roster-page .roster-field.bg-warning, .roster-page .calendario-bg-warning { background: #fcf4df !important; color: #705315 !important; }
+.roster-page .roster-field.bg-danger, .roster-page .calendario-bg-danger { background: #fbe9ed !important; color: #922d45 !important; }
+.roster-page .roster-field.bg-secondary, .roster-page .calendario-campo-chiuso { background: #edf0f1 !important; color: #535d63 !important; }
+.roster-page .campo-chiuso-motivo { flex-basis: 100%; }
+.roster-page .presenze-actions-cell { grid-column: 1 / -1; background: transparent; padding: 4px 0 0; text-align: right; }
+.roster-page .presenze-actions-cell::before, .roster-page .presenze-actions-cell--empty { display: none; }
+.roster-empty { padding: 32px; text-align: center; border-radius: 20px; background: #fffefa; }
+.roster-page [hidden] { display: none !important; }
+.roster-page .staff-registry-card { max-width: none; border-radius: 20px; background: rgba(255,255,255,.8); }
+.roster-page .staff-registry-form { min-width: 0; }
+@media (max-width: 760px) {
+    .roster-page { padding: 0 6px 24px; margin-top: 20px; }
+    .roster-days { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .roster-page .roster-day { padding: 16px; gap: 8px; }
+    .roster-field { padding: 10px; }
+    .roster-heading p { font-size: .9rem; }
+    .roster-field select { font-size: 16px; }
+}
+@media (max-width: 480px) {
+    .roster-page .roster-day { grid-template-columns: minmax(0, 1fr); }
+}

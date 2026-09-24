@@ -23,26 +23,18 @@
     }
 </style>
 
-<div class="container-custom">
-    <h2 class="text-center">Calendario Assenze</h2>
+<div class="roster-page">
+    <header class="roster-heading">
+        <span class="roster-eyebrow">Organizzazione del campo</span>
+        <h2>Calendario Assenze</h2>
+        <p>Ogni giornata, il suo team. Consulta la reperibilità e segnala le assenze.</p>
+    </header>
 
     <div class="d-flex justify-content-center mb-3">
-        <input type="text" id="filtroCalendario" placeholder="Filtra per giorno, data o nome..." class="form-control" style="max-width: 300px;" />
+        <input type="search" id="filtroCalendario" aria-label="Cerca nel calendario assenze" placeholder="Cerca giorno, data o nome..." class="form-control roster-search" />
     </div>
 
-    <div class="table-responsive calendario-table-wrapper">
-        <table class="calendario-table">
-            <thead>
-                <tr>
-                    <th>Giorno</th>
-                    <th>Data</th>
-                    <th>Reperibile</th>
-                    <th>Montuo</th>
-                    <th>Flavio</th>
-                    <th>Bosax</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="roster-days">
                 @foreach (var giorno in Model)
                 {
                     var giornoSet = giorno.Data.ToString("dddd", new CultureInfo("it-IT"));
@@ -54,11 +46,11 @@
                         repClass = "calendario-campo-chiuso";
                     }
 
-                    <tr>
-                        <td data-label="Giorno">@giornoSet</td>
-                        <td data-label="Data">@giorno.Data.ToString("dd/MM/yyyy")</td>
+                    <article class="roster-day">
+                        <div data-label="Giorno" class="roster-field ">@giornoSet</div>
+                        <div data-label="Data" class="roster-field "><time datetime="@giorno.Data.ToString("yyyy-MM-dd")" data-search-date="@giorno.Data.ToString("dd/MM/yyyy")">@giorno.Data.ToString("dd MMMM yyyy", CultureInfo.GetCultureInfo("it-IT"))</time></div>
 
-                        <td data-label="Reperibile" class="@repClass">
+                        <div data-label="Reperibile" class="roster-field @repClass">
                             @if (campoChiuso)
                             {
                                 <span>Campo chiuso</span>
@@ -69,7 +61,7 @@
                             }
                             else
                             {
-                                <select class="reperibile-select" data-id="@giorno.Id">
+                                <select class="reperibile-select" aria-label="Reperibile del @giorno.Data.ToString("dd/MM/yyyy")" data-id="@giorno.Id">
                                     <option value="In attesa" selected="@(giorno.Reperibile == "In attesa" ? "selected" : null)">In attesa</option>
                                     <option value="Montuo" selected="@(giorno.Reperibile == "Montuo" ? "selected" : null)">Montuo</option>
                                     <option value="Flavio" selected="@(giorno.Reperibile == "Flavio" ? "selected" : null)">Flavio</option>
@@ -77,15 +69,15 @@
                                     <option value="Nessuno" selected="@(giorno.Reperibile == "Nessuno" ? "selected" : null)">Nessuno</option>
                                 </select>
                             }
-                        </td>
+                        </div>
 
                         @foreach (var membro in new[] { "Montuo", "Flavio", "Bosax" })
                         {
                             if (campoChiuso)
                             {
-                                <td data-label="@membro" class="calendario-campo-chiuso">
+                                <div data-label="@membro" class="roster-field calendario-campo-chiuso">
                                     Campo chiuso
-                                </td>
+                                </div>
                                 continue;
                             }
 
@@ -99,30 +91,30 @@
 
                             var bgClass = assenza == "assente" ? "calendario-bg-danger" : "calendario-bg-warning";
 
-                            <td data-label="@membro" class="@bgClass">
-                                <select class="assenza-select" data-id="@giorno.Id" data-nome="@membro">
-                                    <option value="" selected="@(string.IsNullOrWhiteSpace(assenza) ? "selected" : null)"></option>
+                            <div data-label="@membro" class="roster-field @bgClass">
+                                <select class="assenza-select" aria-label="Assenza @membro del @giorno.Data.ToString("dd/MM/yyyy")" data-id="@giorno.Id" data-nome="@membro">
+                                    <option value="" selected="@(string.IsNullOrWhiteSpace(assenza) ? "selected" : null)">Non segnalata</option>
                                     <option value="assente" selected="@(assenza == "assente" ? "selected" : null)">assente</option>
                                 </select>
-                            </td>
+                            </div>
                         }
-                    </tr>
+                    </article>
                 }
-            </tbody>
-        </table>
     </div>
+    <p class="roster-empty" hidden>Nessuna giornata corrisponde alla ricerca.</p>
 </div>
 
-<link href="~/css/assenze-calendario-responsive.css" rel="stylesheet" />
+<link href="~/css/staff-roster.css" rel="stylesheet" asp-append-version="true" />
 
 @section Scripts {
+    <script src="~/js/staff-roster.js" asp-append-version="true"></script>
     <script>
         $(function () {
             $('.reperibile-select').on('change', function () {
                 const sel = $(this);
                 const id = sel.data('id');
                 const val = sel.val();
-                const td = sel.closest('td');
+                const td = sel.closest('.roster-field');
 
                 $.post('/CalendarioAssenze/AggiornaReperibile', { id: id, reperibile: val })
                     .done(() => {
@@ -139,7 +131,7 @@
                 const id = sel.data('id');
                 const nome = sel.data('nome');
                 const val = sel.val();
-                const td = sel.closest('td');
+                const td = sel.closest('.roster-field');
 
                 $.post('/CalendarioAssenze/AggiornaAssenza', { id: id, nome: nome, stato: val })
                     .done(() => {
@@ -150,13 +142,6 @@
                     .fail(() => fmpNotify("Errore durante il salvataggio dell'assenza.", "error"));
             });
 
-            $('#filtroCalendario').on('input', function () {
-                const filtro = $(this).val().toLowerCase();
-                $('.calendario-table tbody tr').each(function () {
-                    const testoRiga = $(this).text().toLowerCase();
-                    $(this).toggle(testoRiga.includes(filtro));
-                });
-            });
         });
     </script>
 }

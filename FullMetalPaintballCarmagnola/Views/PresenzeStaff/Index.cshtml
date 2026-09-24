@@ -9,7 +9,7 @@
     var chiusureCampo = ViewBag.ChiusureCampo as Dictionary<DateTime, CampoChiusura> ?? new Dictionary<DateTime, CampoChiusura>();
 }
 
-<link href="~/css/presenze-responsive.css" rel="stylesheet" />
+<link href="~/css/staff-roster.css" rel="stylesheet" asp-append-version="true" />
 
 <style>
     .riga-infrasettimanale {
@@ -141,9 +141,14 @@
     }
 </style>
 
-<div class="content-container presenze-page">
+<div class="roster-page">
 
-    <h2 class="text-center">Gestione Presenze Staff</h2>
+    <header class="roster-heading">
+        <span class="roster-eyebrow">La squadra in campo</span>
+        <h2>Presenze Staff</h2>
+        <p>Disponibilità a colpo d'occhio, una giornata alla volta.</p>
+        <div class="roster-legend"><span>Disponibile</span><span>In attesa</span><span>Non disponibile</span></div>
+    </header>
 
     <div class="staff-registry-card">
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
@@ -187,24 +192,10 @@
     </div>
 
     <div class="d-flex justify-content-center mb-3">
-        <input type="text" id="filtroPresenze" placeholder="Filtra per giorno, data o nome..." class="form-control" style="max-width: 300px;" />
+        <input type="search" id="filtroPresenze" aria-label="Cerca nelle presenze staff" placeholder="Cerca giorno, data o nome..." class="form-control roster-search" />
     </div>
 
-    <div class="table-responsive">
-        <table class="responsive-table">
-            <thead>
-                <tr>
-                    <th>Giorno</th>
-                    <th>Data</th>
-                    <th>Reperibile</th>
-                    @foreach (var m in staff)
-                    {
-                        <th>@m</th>
-                    }
-                    <th>Azioni</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="roster-days">
                 @foreach (var giorno in dateList)
                 {
                     var giornoSet = giorno.ToString("dddd", new CultureInfo("it-IT"));
@@ -220,24 +211,24 @@
                         repClass = "bg-secondary text-white";
                     }
 
-                    <tr data-data="@giorno.ToString("yyyy-MM-dd")" class="@($"{(isWeekend ? "" : "riga-infrasettimanale")} {(campoChiuso ? "riga-campo-chiuso" : "")}")">
-                        <td data-label="Giorno">@giornoSet</td>
-                        <td data-label="Data">@giorno.ToString("dd/MM/yyyy")</td>
-                        <td data-label="Reperibile" class="@repClass">
+                    <article data-roster-day="true" data-data="@giorno.ToString("yyyy-MM-dd")" class="roster-day @($"{(isWeekend ? "" : "riga-infrasettimanale")} {(campoChiuso ? "riga-campo-chiuso" : "")}")">
+                        <div data-label="Giorno" class="roster-field ">@giornoSet</div>
+                        <div data-label="Data" class="roster-field "><time datetime="@giorno.ToString("yyyy-MM-dd")" data-search-date="@giorno.ToString("dd/MM/yyyy")">@giorno.ToString("dd MMMM yyyy", CultureInfo.GetCultureInfo("it-IT"))</time></div>
+                        <div data-label="Reperibile" class="roster-field @repClass">
                             @sceltaRep
                             @if (campoChiuso && !string.IsNullOrWhiteSpace(chiusuraCampo?.Motivo))
                             {
                                 <span class="campo-chiuso-motivo">@chiusuraCampo.Motivo</span>
                             }
-                        </td>
+                        </div>
 
                         @foreach (var membro in staff)
                         {
                             if (campoChiuso)
                             {
-                                <td data-label="@membro" class="presenza-staff-cell bg-secondary text-white campo-chiuso-cell">
+                                <div data-label="@membro" class="roster-field presenza-staff-cell bg-secondary text-white campo-chiuso-cell">
                                     Campo chiuso
-                                </td>
+                                </div>
                                 continue;
                             }
 
@@ -248,26 +239,25 @@
                             var bgClass = currentSelection == "SI" ? "bg-success" :
                             currentSelection == "NO" ? "bg-danger" : "bg-warning";
 
-                            <td data-label="@membro" class="presenza-staff-cell @bgClass">
-                                <select class="presente-select form-select" data-data="@giorno.ToString("yyyy-MM-dd")" data-nome="@membro">
+                            <div data-label="@membro" class="roster-field presenza-staff-cell @bgClass">
+                                <select class="presente-select form-select" aria-label="Disponibilità @membro del @giorno.ToString("dd/MM/yyyy")" data-data="@giorno.ToString("yyyy-MM-dd")" data-nome="@membro">
                                     <option value="In attesa" selected="@(currentSelection == "In attesa" ? "selected" : null)">In attesa</option>
-                                    <option value="SI" selected="@(currentSelection == "SI" ? "selected" : null)">SI</option>
-                                    <option value="NO" selected="@(currentSelection == "NO" ? "selected" : null)">NO</option>
+                                    <option value="SI" selected="@(currentSelection == "SI" ? "selected" : null)">Disponibile</option>
+                                    <option value="NO" selected="@(currentSelection == "NO" ? "selected" : null)">Non disponibile</option>
                                 </select>
-                            </td>
+                            </div>
                         }
 
-                        <td data-label="Azioni" class="presenze-actions-cell @((isWeekend || campoChiuso) ? "presenze-actions-cell--empty" : "")">
+                        <div data-label="Azioni" class="roster-field presenze-actions-cell @((isWeekend || campoChiuso) ? "presenze-actions-cell--empty" : "")">
                             @if (!isWeekend && !campoChiuso)
                             {
                                 <button class="btn btn-danger btn-sm btn-danger-small elimina-data" data-data="@giorno.ToString("yyyy-MM-dd")">Elimina</button>
                             }
-                        </td>
-                    </tr>
+                        </div>
+                    </article>
                 }
-            </tbody>
-        </table>
     </div>
+    <p class="roster-empty" hidden>Nessuna giornata corrisponde alla ricerca.</p>
 </div>
 
 <div id="StaffConfirmModal" class="staff-confirm-backdrop" aria-hidden="true">
@@ -283,6 +273,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/staff-roster.js" asp-append-version="true"></script>
     <script>
         $(function () {
             const staffConfirmModal = document.getElementById('StaffConfirmModal');
@@ -325,7 +316,7 @@
                 const data = sel.data('data');
                 const nome = sel.data('nome');
                 const val = sel.val();
-                const td = sel.closest('td');
+                const td = sel.closest('.roster-field');
 
                 let presenteValue = null;
                 if (val === 'SI') presenteValue = true;
@@ -373,13 +364,6 @@
                 });
             });
 
-            $('#filtroPresenze').on('input', function () {
-                const filtro = $(this).val().toLowerCase();
-                $('.responsive-table tbody tr').each(function () {
-                    const testoRiga = $(this).text().toLowerCase();
-                    $(this).toggle(testoRiga.includes(filtro));
-                });
-            });
         });
     </script>
 }
