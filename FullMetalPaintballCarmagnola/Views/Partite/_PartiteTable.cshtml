@@ -13,12 +13,9 @@
         return $"{(disponibile ? "✅" : "⏳")} {nome}";
     }
     var listinoLabels = ViewBag.ListinoLabels as IDictionary<short, string> ?? new Dictionary<short, string>();
-    var pricingCatalog = ViewBag.PricingCatalog as PricingCatalog ?? new PricingCatalog();
     var weatherByPartitaId = ViewBag.WeatherByPartitaId as IReadOnlyDictionary<int, Full_Metal_Paintball_Carmagnola.Models.PartitaWeatherViewModel>
         ?? new Dictionary<int, Full_Metal_Paintball_Carmagnola.Models.PartitaWeatherViewModel>();
     short currentListinoId = ViewBag.CurrentListinoId is short currentValue ? currentValue : (short)2;
-    const decimal MembershipFee = 5m;
-    const int MinimumBillablePlayers = 8;
 
     var it = CultureInfo.GetCultureInfo("it-IT");
     var canAssignStaff = User.IsInRole("Admin");
@@ -101,103 +98,6 @@
 
     string JsString(string value) => System.Text.Json.JsonSerializer.Serialize(value);
 
-    bool MatchesDuration(double actual, double expected) => Math.Abs(actual - expected) < 0.01;
-
-    PricingEntry? ResolvePriceEntry(Partita partita)
-    {
-        var isKids = partita.Tipo?.Equals("kids", StringComparison.OrdinalIgnoreCase) ?? false;
-        if (isKids)
-        {
-            if (partita.Torneo)
-            {
-                var tournamentEntry = pricingCatalog.GetEntry(PricingEntryCodes.KidsTournament);
-                if (tournamentEntry != null && tournamentEntry.GetPrice(partita.Listino) > 0m)
-                    return tournamentEntry;
-            }
-
-            if (MatchesDuration(partita.Durata, 1.0)) return pricingCatalog.GetEntry(PricingEntryCodes.Kids1Hour);
-            if (MatchesDuration(partita.Durata, 1.5)) return pricingCatalog.GetEntry(PricingEntryCodes.Kids90Minutes);
-            if (MatchesDuration(partita.Durata, 2.0)) return pricingCatalog.GetEntry(PricingEntryCodes.Kids2Hours);
-            return null;
-        }
-
-        if (partita.Torneo)
-            return pricingCatalog.GetEntry(partita.ColpiIllimitati
-                ? PricingEntryCodes.AdultTournamentUnlimited
-                : PricingEntryCodes.AdultTournamentStandard);
-
-        if (partita.ColpiIllimitati)
-        {
-            if (MatchesDuration(partita.Durata, 1.0)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultUnlimited1Hour);
-            if (MatchesDuration(partita.Durata, 1.5)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultUnlimited90Minutes);
-        }
-
-        if (MatchesDuration(partita.Durata, 1.0)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultStandard1Hour);
-        if (MatchesDuration(partita.Durata, 1.5)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultStandard90Minutes);
-        if (MatchesDuration(partita.Durata, 2.0)) return pricingCatalog.GetEntry(PricingEntryCodes.AdultStandard2Hours);
-        return null;
-    }
-
-    decimal GetRabbitPrice(Partita partita)
-    {
-        if (!partita.Caccia)
-            return 0m;
-
-        var entry = pricingCatalog.GetEntry(partita.CacciaDoppia
-            ? PricingEntryCodes.RabbitDouble
-            : PricingEntryCodes.RabbitSingle);
-        return entry?.GetPrice(partita.Listino) ?? 0m;
-    }
-
-    (decimal? PrezzoBase, decimal Caparra, decimal? Saldo, string Dettaglio) EstimateSaldo(Partita partita)
-    {
-        var entry = ResolvePriceEntry(partita);
-        if (entry == null)
-            return (null, partita.Caparra, null, "Listino non trovato");
-
-        var prezzoUnitario = entry.GetPrice(partita.Listino);
-        var prezzoExtra = GetRabbitPrice(partita);
-        var prezzoBase = (prezzoUnitario * partita.NumeroPartecipanti) + prezzoExtra;
-        var dettaglio = prezzoExtra > 0m
-            ? $"{Money(prezzoUnitario)} x {partita.NumeroPartecipanti} + {Money(prezzoExtra)} extra"
-            : $"{Money(prezzoUnitario)} x {partita.NumeroPartecipanti}";
-        return (prezzoBase, partita.Caparra, prezzoBase - partita.Caparra, dettaglio);
-    }
-
-    string CalcButtonData(Partita partita, int iscritti)
-    {
-        var entry = ResolvePriceEntry(partita);
-        var prezzoUnitario = entry?.GetPrice(partita.Listino) ?? 0m;
-        var prezzoCaccia = GetRabbitPrice(partita);
-        var tesseramentiDefault = iscritti > 0
-            ? Math.Min(iscritti, partita.NumeroPartecipanti)
-            : partita.NumeroPartecipanti;
-        var payerPayload = (partita.Tesseramenti ?? new List<Tesseramento>())
-            .OrderBy(t => t.Cognome)
-            .ThenBy(t => t.Nome)
-            .Select(t => new
-            {
-                id = t.Id,
-                nome = t.Nome,
-                cognome = t.Cognome
-            })
-            .ToList();
-        var payerJson = System.Text.Json.JsonSerializer.Serialize(payerPayload);
-
-        return string.Join(" ",
-            $"data-id=\"{partita.Id}\"",
-            $"data-unit-price=\"{prezzoUnitario.ToString("0.00", CultureInfo.InvariantCulture)}\"",
-            $"data-caparra=\"{partita.Caparra.ToString("0.00", CultureInfo.InvariantCulture)}\"",
-            $"data-rabbit-price=\"{prezzoCaccia.ToString("0.00", CultureInfo.InvariantCulture)}\"",
-            $"data-participants=\"{partita.NumeroPartecipanti}\"",
-            $"data-registered=\"{iscritti}\"",
-            $"data-memberships=\"{Math.Max(0, tesseramentiDefault)}\"",
-            $"data-membership-fee=\"{MembershipFee.ToString("0.00", CultureInfo.InvariantCulture)}\"",
-            $"data-min-players=\"{MinimumBillablePlayers}\"",
-            $"data-price-valid=\"{(entry != null && prezzoUnitario > 0m).ToString().ToLowerInvariant()}\"",
-            $"data-detail=\"{System.Net.WebUtility.HtmlEncode(entry?.Label ?? "Listino non trovato")}\"",
-            $"data-payers=\"{System.Net.WebUtility.HtmlEncode(payerJson)}\"");
-    }
 }
 
 <!-- =========================
@@ -221,10 +121,8 @@
                 <th>Torneo</th>
                 <th>Illimitati</th>
                 <th>Caccia</th>
-                <th>Link</th>
                 <th>WhatsApp</th>
                 <th>Tesserati</th>
-                <th>Calcolo</th>
                 <th>Azioni</th>
             </tr>
         </thead>
@@ -293,9 +191,6 @@
 </td>
 
 
-                    <td data-label="Link">
-                        <a href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" class="icon-link">📎</a>
-                    </td>
 
                     <td data-label="WhatsApp">
                         @{
@@ -337,14 +232,6 @@
                     <td data-label="Tesserati">
                         <a class="btn btn-sm btn-info" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">Mostra</a>
                     </td>
-                    <td data-label="Calcolo">
-                        <button type="button"
-                                class="btn btn-sm btn-info btn-calcolo-saldo"
-                            title="Calcola saldo fine partita"
-                            @Html.Raw(CalcButtonData(partita, iscritti))>
-                            <i class="bi bi-calculator" aria-hidden="true"></i>
-                        </button>
-                    </td>
 
                     <td data-label="Azioni">
                         <a class="btn btn-sm btn-warning" href="@Url.Action("Edit", "Partite", new { id = partita.Id })">✏️</a>
@@ -355,7 +242,7 @@
                 </tr>
 
 <tr class="partita-staff-row" data-parent-partita-id="@partita.Id" style="@(isInfrasett ? "background-color: #ffeeba;" : "")">
-    <td colspan="18" style="background-color: inherit;">
+    <td colspan="17" style="background-color: inherit;">
         <span class="staff-weather-inline">
             @if (weather != null)
             {
@@ -404,7 +291,7 @@
     }
     else
     {
-    <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
+    <select class="form-select staff-select d-inline-block mx-1"
             data-campo="@staff" data-partita="@partita.Id">
         <option value="" selected="@(currentIsInactive ? "selected" : null)">--</option>
         @foreach (var s in staffList)
@@ -454,7 +341,6 @@
         ? "pm-status-deleted"
         : (partita.CaparraConfermata ? "pm-status-ok" : "pm-status-wait");
     weatherByPartitaId.TryGetValue(partita.Id, out var weather);
-    var saldoStimato = EstimateSaldo(partita);
 
     var tipoLabel = TipoLabel(partita);
 
@@ -505,7 +391,6 @@
 
         <div class="pm-row-actions">
             <button type="button" class="pm-iconbtn" onclick="showRiferimento(@JsString(RiferimentoDettaglio(partita)))" title="Riferimento">📇</button>
-            <a class="pm-iconbtn" href="@Url.Action("Index", "Tesseramento", new { partitaId = partita.Id })" title="Link tesseramento">📎</a>
             @{
                 var whatsappMobileUrl = WhatsappUrl(partita);
                 var whatsappMobileNumber = WhatsappNumber(partita);
@@ -537,12 +422,6 @@
                 </button>
             }
             <a class="pm-primary" href="@Url.Action("TesseratiPerPartita", "Partite", new { id = partita.Id })">👥 Tesserati</a>
-            <button type="button"
-                    class="pm-primary pm-primary--calcolo btn-calcolo-saldo"
-                    title="Calcola saldo fine partita"
-                    @Html.Raw(CalcButtonData(partita, iscritti))>
-                <i class="bi bi-calculator" aria-hidden="true"></i> Calcolo
-            </button>
         </div>
 
         <details class="pm-details" open>
