@@ -515,6 +515,7 @@
 
 
 @section Scripts {
+    @Html.AntiForgeryToken()
     <script>
         function showRiferimento(rif) {
             const modal = new bootstrap.Modal(document.getElementById('riferimentoModal'));
@@ -533,7 +534,10 @@
                 $.ajax({
                     url: '@Url.Action("AggiornaStaff", "Partite")',
                     method: 'POST',
-                    data: { id: partitaId, campo: campo, valore: valore },
+                    data: {
+                        id: partitaId, campo: campo, valore: valore,
+                        __RequestVerificationToken: document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
                     success: function (response) {
                         if (!response.success) {
                             fmpNotify(response.message || "Errore durante l'aggiornamento dello staff", "error");

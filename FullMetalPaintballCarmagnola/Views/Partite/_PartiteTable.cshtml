@@ -14,6 +14,7 @@
     const int MinimumBillablePlayers = 8;
 
     var it = CultureInfo.GetCultureInfo("it-IT");
+    var canAssignStaff = User.IsInRole("Admin");
 
     string GetListinoLabel(short id) =>
         listinoLabels.TryGetValue(id, out var label) ? label : $"Listino {id}";
@@ -390,6 +391,12 @@
     var currentIsInactive = !string.IsNullOrWhiteSpace(currentVal)
         && !staffDefault.Contains(currentVal, StringComparer.OrdinalIgnoreCase);
 
+    @if (!canAssignStaff)
+    {
+        <span class="d-inline-block mx-1 py-1">@(string.IsNullOrWhiteSpace(currentVal) ? "--" : currentVal)</span>
+    }
+    else
+    {
     <select class="form-select staff-select d-inline-block mx-1" style="width: 120px;"
             data-campo="@staff" data-partita="@partita.Id">
         <option value="" selected="@(currentIsInactive ? "selected" : null)">--</option>
@@ -398,6 +405,7 @@
             <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
         }
     </select>
+    }
     @if (currentIsInactive)
     {
         <span class="text-muted small me-2">@currentVal non attivo</span>
@@ -552,6 +560,12 @@
         var currentIsInactive = !string.IsNullOrWhiteSpace(currentVal)
             && !staffDefault.Contains(currentVal, StringComparer.OrdinalIgnoreCase);
 
+        @if (!canAssignStaff)
+        {
+            <span class="pm-select py-2">@(string.IsNullOrWhiteSpace(currentVal) ? "--" : currentVal)</span>
+        }
+        else
+        {
         <select class="form-select staff-select pm-select" data-campo="@staff" data-partita="@partita.Id">
             <option value="" selected="@(currentIsInactive ? "selected" : null)">--</option>
             @foreach (var s in staffList)
@@ -559,6 +573,7 @@
                 <option value="@s" selected="@(s == currentVal ? "selected" : null)">@s</option>
             }
         </select>
+        }
         @if (currentIsInactive)
         {
             <span class="text-muted small">@currentVal non attivo</span>

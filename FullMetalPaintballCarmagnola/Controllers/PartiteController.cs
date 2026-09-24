@@ -271,6 +271,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Partita partita)
         {
+            if (!User.IsInRole("Admin") && new[] { partita.Staff1, partita.Staff2, partita.Staff3, partita.Staff4 }
+                .Any(name => !string.IsNullOrWhiteSpace(name)))
+                return Forbid();
+
             NormalizeDurationModelState(partita);
 
             if (partita.NumeroPartecipanti <= 0)
@@ -800,6 +804,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AggiornaStaff(int id, string campo, string valore)
         {
             // Consenti solo i campi Staff1..Staff4 (evita nomi arbitrari via reflection)
