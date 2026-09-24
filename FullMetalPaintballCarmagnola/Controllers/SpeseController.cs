@@ -73,7 +73,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 Descrizione = spesaOrigine.Descrizione,
                 Importo = spesaOrigine.Importo,
                 Riferimento = spesaOrigine.Riferimento,
-                Rimborsato = spesaOrigine.Rimborsato
+                Rimborsato = false
             }).ToList();
 
             _db.Spese.AddRange(nuoveSpese);
