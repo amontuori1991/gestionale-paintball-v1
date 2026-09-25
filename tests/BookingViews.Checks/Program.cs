@@ -43,6 +43,14 @@ async Task<string> Render(string page, bool mixed = false)
         new() { Id = 2, Data = date.AddDays(1), OraInizio = new TimeSpan(15,0,0), Tipo = "Kids", Durata = 2, NumeroPartecipanti = 8, Caparra = 25, Listino = mixed ? (short)1 : (short)2, Nazionalita = "ENG", ColpiIllimitati = true },
         new() { Id = 3, Data = date.AddDays(2), Tipo = "Adulti", Caparra = 20, Listino = 1, IsDeleted = true, Staff4 = "Hidden", Annotazioni = "Nota prova", Rimborso = "SI" }
     };
+    games[0].NomeRiferimento = "Referente aggiornato";
+    games[0].Riferimento = "Riferimento obsoleto";
+    games[0].PrefissoTelefonoRiferimento = "+44";
+    games[0].TelefonoRiferimento = "7700900123";
+    games[1].Riferimento = "Referente storico, +39 3330000000";
+    games[2].NomeRiferimento = "Referente cancellata";
+    games[2].PrefissoTelefonoRiferimento = "+39";
+    games[2].TelefonoRiferimento = "3330000001";
     var data = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary()) { Model = games };
     data["CurrentListinoId"] = (short)2;
     data["ListinoLabels"] = new Dictionary<short,string> { [1] = "Vecchio listino", [2] = "Listino attuale" };
@@ -71,6 +79,12 @@ if (!deposits.Contains("Nota prova") || !deposits.Contains("cap-save") ||
     !deposits.Contains("name=\"dataDa\"") || !deposits.Contains("row-cancellata"))
     throw new Exception("Deposits form failed");
 Console.WriteLine("PASS: conditional price/staff columns, compact names, deleted exclusion and editable cancelled deposits.");
+var depositText = System.Net.WebUtility.HtmlDecode(deposits);
+if (!depositText.Contains("Referente aggiornato") || depositText.Contains("Riferimento obsoleto") ||
+    !depositText.Contains("+44 7700900123") || !depositText.Contains("Referente storico, +39 3330000000") ||
+    !depositText.Contains("Referente cancellata") || !depositText.Contains("+39 3330000001"))
+    throw new Exception("Deposit references must prefer structured fields and preserve legacy references, including cancelled games.");
+Console.WriteLine("PASS: new, legacy and cancelled deposit references with international phone prefixes.");
 if (args.Contains("--database")) await DatabaseChecks.Run();
 if (args.Contains("--preview")) await Task.Delay(Timeout.Infinite);
 await app.StopAsync();

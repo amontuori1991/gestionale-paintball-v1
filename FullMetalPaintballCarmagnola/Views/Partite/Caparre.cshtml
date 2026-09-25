@@ -87,7 +87,18 @@
                                 </td>
 
                                 <td data-label="Riferimento">
-                                    <strong>@partita.Riferimento</strong>
+                                    @{
+                                        var referente = !string.IsNullOrWhiteSpace(partita.NomeRiferimento)
+                                            ? partita.NomeRiferimento.Trim()
+                                            : partita.Riferimento?.Trim();
+                                        var telefono = string.Join(" ", new[] { partita.PrefissoTelefonoRiferimento, partita.TelefonoRiferimento }
+                                            .Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value!.Trim()));
+                                    }
+                                    <strong>@(string.IsNullOrWhiteSpace(referente) ? "Nessun riferimento" : referente)</strong>
+                                    @if (!string.IsNullOrWhiteSpace(telefono))
+                                    {
+                                        <small class="d-block mt-1">@telefono</small>
+                                    }
                                 </td>
 
                                 <td data-label="Importo Caparra">
