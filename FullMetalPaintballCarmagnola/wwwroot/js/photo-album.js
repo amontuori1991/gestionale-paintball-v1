@@ -18,6 +18,23 @@
         try { return (await response.json()).message || 'Operazione non riuscita. Riprova.'; }
         catch { return 'Operazione non riuscita. Ricarica la pagina prima di riprovare.'; }
     };
+    const upload = (url, data, onProgress) => new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.timeout = 180000;
+        xhr.upload.onprogress = event => {
+            if (event.lengthComputable) onProgress(Math.floor(event.loaded / event.total * 100));
+        };
+        xhr.upload.onload = () => onProgress(100);
+        xhr.onload = () => {
+            let body;
+            try { body = JSON.parse(xhr.responseText); } catch { /* A login page is not a successful upload. */ }
+            if (xhr.status >= 200 && xhr.status < 300 && body?.message && xhr.responseURL === new URL(url, location.href).href) resolve();
+            else reject(new Error(xhr.status === 413 ? 'Foto troppo grande: massimo 15 MB.' : body?.message || 'Operazione non riuscita o sessione scaduta. Verifica l\'album prima di riprovare.'));
+        };
+        xhr.onerror = xhr.ontimeout = xhr.onabort = () => reject(new Error('Connessione interrotta o tempo scaduto. Verifica l\'album prima di riprovare.'));
+        xhr.send(data);
+    });
     form?.addEventListener('submit', async event => {
         event.preventDefault();
         if (busy || !form.reportValidity()) return;
@@ -36,16 +53,25 @@
         let done = 0;
         let failed = 0;
         for (const file of files) {
-            status.textContent = `Caricamento foto ${done + failed + 1} di ${files.length}: attendi, applicazione del logo in corso...`;
+            const label = `Foto ${done + failed + 1} di ${files.length}`;
+            progress.value = 0;
+            status.textContent = `${label}: caricamento 0%.`;
             try {
                 if (file.size > 15 * 1024 * 1024) throw new Error('Massimo 15 MB per foto.');
+                if (file.type.startsWith('video/') || !/\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name))
+                    throw new Error('Solo immagini JPG, PNG, WebP, BMP e GIF statiche. Video esclusi; converti gli altri formati in JPG.');
                 const data = new FormData();
                 data.append('__RequestVerificationToken', token);
                 data.append('id', id);
                 data.append('autorizzato', 'true');
                 data.append('foto', file);
-                const response = await fetch(form.action, { method: 'POST', body: data, credentials: 'same-origin' });
-                if (!response.ok || response.redirected) throw new Error(await errorMessage(response));
+                await upload(form.action, data, percent => {
+                    status.textContent = percent < 100
+                        ? `${label}: caricamento ${percent}%.`
+                        : `${label}: trasferimento 100%. Applicazione logo e salvataggio in corso, attendi...`;
+                    if (percent < 100) progress.value = percent;
+                    else progress.removeAttribute('value');
+                });
                 done++;
             } catch (error) {
                 failed++;
@@ -53,7 +79,7 @@
                 li.textContent = `${file.name}: ${error.message}`;
                 failures.appendChild(li);
             }
-            progress.value = Math.round((done + failed) / files.length * 100);
+            progress.value = 100;
         }
         busy = false;
         [...form.elements].forEach(input => input.disabled = false);

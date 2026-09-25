@@ -10,9 +10,9 @@ public sealed class PhotoWatermarker(IWebHostEnvironment environment)
     public byte[] Process(Stream input)
     {
         using var codec = SKCodec.Create(input);
-        if (codec == null || codec.EncodedFormat is not (SKEncodedImageFormat.Jpeg or SKEncodedImageFormat.Png or SKEncodedImageFormat.Webp)
+        if (codec == null || codec.EncodedFormat is not (SKEncodedImageFormat.Jpeg or SKEncodedImageFormat.Png or SKEncodedImageFormat.Webp or SKEncodedImageFormat.Bmp or SKEncodedImageFormat.Gif)
             || codec.FrameCount > 1)
-            throw new InvalidDataException("Formato non supportato. Usa foto JPG, PNG o WebP non animate (converti prima HEIC/HEIF).");
+            throw new InvalidDataException("Sono ammesse solo immagini JPG, PNG, WebP, BMP e GIF non animate. Video esclusi. Converti gli altri formati (anche HEIC/HEIF) in JPG.");
         var info = codec.Info;
         if (info.Width < 16 || info.Height < 16 || (long)info.Width * info.Height > 32_000_000)
             throw new InvalidDataException("La foto deve avere al massimo 32 megapixel.");

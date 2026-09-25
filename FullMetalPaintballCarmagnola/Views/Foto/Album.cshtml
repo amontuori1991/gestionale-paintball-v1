@@ -46,9 +46,9 @@
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.PartitaId" />
                 <h2>Carica le foto <span class="album-counter">@Model.Photos.Count / 60</span></h2>
-                <p>Logo applicato automaticamente in basso a destra. JPG, PNG o WebP, massimo 15 MB e 32 megapixel per foto. Converti prima le foto HEIC/HEIF. Gli originali non vengono conservati.</p>
+                <p>Logo applicato automaticamente in basso a destra. JPG, PNG, WebP, BMP o GIF statiche, massimo 15 MB e 32 megapixel per foto. Video e immagini animate non ammessi. Converti gli altri formati (anche HEIC/HEIF) in JPG. Gli originali non vengono conservati.</p>
                 <label class="album-drop" for="album-files"><span aria-hidden="true">&#128247;</span> Seleziona una o pi&ugrave; foto
-                    <input id="album-files" type="file" multiple accept="image/jpeg,image/png,image/webp" required />
+                    <input id="album-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/bmp,image/gif,.jpg,.jpeg,.png,.webp,.bmp,.gif" required />
                 </label>
                 <label class="album-consent"><input type="checkbox" name="autorizzato" value="true" required /> Confermo che le foto possono essere condivise con il gruppo e che sono state verificate le autorizzazioni necessarie, anche per eventuali minori.</label>
                 <button class="album-button" type="submit">Carica e applica il logo</button>

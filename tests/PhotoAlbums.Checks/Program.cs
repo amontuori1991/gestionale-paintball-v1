@@ -195,6 +195,13 @@ try
     using var anonymous = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = new Uri("http://127.0.0.1:55443") };
     using var staff = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress };
     staff.DefaultRequestHeaders.Add("X-Test-Role", "Staff");
+    Check((await anonymous.GetAsync($"/Foto/Messaggio/{game.Id}")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous photo message access");
+    game.Nazionalita = "ITA"; await db.SaveChangesAsync();
+    var photoMessageIt = await staff.GetStringAsync($"/Foto/Messaggio/{game.Id}");
+    Check(photoMessageIt.Contains(album.Token.ToString("N")) && photoMessageIt.Contains("7 giorni"), "Italian photo message missing link or expiry");
+    game.Nazionalita = "ENG"; await db.SaveChangesAsync();
+    var photoMessageEn = await staff.GetStringAsync($"/Foto/Messaggio/{game.Id}");
+    Check(photoMessageEn.Contains("7 days") && photoMessageEn.Contains("download"), "English photo message missing expiry");
     Check((await anonymous.GetAsync($"/Foto/Gestisci/{game.Id}")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous staff access");
     Check((await anonymous.PostAsync($"/Foto/Carica/{game.Id}", new StringContent(""))).StatusCode == HttpStatusCode.Unauthorized, "Anonymous upload access");
     var publicResponse = await anonymous.GetAsync($"/Foto/Album/{album.Token:N}");
@@ -218,6 +225,14 @@ try
     var post = await staff.PostAsync("/Foto/Carica", form);
     Check(post.IsSuccessStatusCode, "Staff upload failed: " + await post.Content.ReadAsStringAsync());
     Check(storage.Count == 2, "Upload not stored");
+    using var videoForm = new MultipartFormDataContent();
+    videoForm.Add(new StringContent(token), "__RequestVerificationToken");
+    videoForm.Add(new StringContent(game.Id.ToString()), "id");
+    videoForm.Add(new StringContent("true"), "autorizzato");
+    var disguisedVideo = new ByteArrayContent(new byte[] { 0, 0, 0, 24, 102, 116, 121, 112, 109, 112, 52, 50, 0, 0, 0, 0 });
+    disguisedVideo.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+    videoForm.Add(disguisedVideo, "foto", "video.jpg");
+    Check((await staff.PostAsync("/Foto/Carica", videoForm)).StatusCode == HttpStatusCode.BadRequest && storage.Count == 2, "Disguised video accepted");
     using var deletion = new FormUrlEncodedContent(new Dictionary<string,string> { ["id"] = game.Id.ToString(), ["photo"] = uploaded.Id.ToString(), ["__RequestVerificationToken"] = token });
     Check((await staff.PostAsync("/Foto/Elimina", deletion)).IsSuccessStatusCode && storage.Count == 1, "Staff delete failed");
     Check((await anonymous.GetAsync($"/Foto/Immagine/{album.Token:N}/{uploaded.Id}")).StatusCode == HttpStatusCode.NotFound, "Deleted photo available");

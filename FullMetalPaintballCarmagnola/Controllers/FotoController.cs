@@ -41,6 +41,20 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
         return View(await Model(album, album.Partita, false, ct));
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Messaggio(int id, CancellationToken ct)
+    {
+        var game = await db.Partite.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, ct);
+        if (game == null) return NotFound();
+        var album = await albums.GetOrCreate(id, ct);
+        return Ok(new { message = PhotoMessage(game, PhotoAlbumService.PublicUrl(Request, album.Token)) });
+    }
+
+    private static string PhotoMessage(Partita game, string url) =>
+        string.Equals(game.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase)
+            ? $"Hi! Here is the link to download your game photos:\n{url}\n\nEach photo is available for 7 days from its upload, then it is automatically removed. Check the expiry shown below each photo and download it in time. If the album is empty, please check again after upload.\nShare the link only with your group. Thank you!"
+            : $"Ciao! Ecco il link per scaricare le foto della vostra partita:\n{url}\n\nOgni foto resta disponibile per 7 giorni dal suo caricamento, poi viene rimossa automaticamente. Controlla la scadenza riportata sotto ogni foto e scaricala in tempo. Se l'album risulta vuoto, riprova dopo il caricamento.\nCondividi il link solo con il tuo gruppo. Grazie!";
+
     [AllowAnonymous]
     [HttpGet("Foto/Immagine/{token:guid}/{photo:guid}")]
     public async Task<IActionResult> Immagine(Guid token, Guid photo, bool download, CancellationToken ct)
@@ -113,9 +127,7 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
             var number = new string((game.TelefonoRiferimento ?? "").Where(char.IsAsciiDigit).ToArray());
             if (prefix.Length > 0 && number.Length > 0)
             {
-                var message = string.Equals(game.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase)
-                    ? $"Hi! Here is your photo album:\n{model.PublicUrl}\nPhotos will appear after upload and can be downloaded for 7 days from upload. Share this link only with your group!"
-                    : $"Ciao! Qui trovi l'album della vostra partita:\n{model.PublicUrl}\nLe foto compariranno dopo il caricamento e saranno scaricabili per 7 giorni dal caricamento. Condividi il link solo con il tuo gruppo!";
+                var message = PhotoMessage(game, model.PublicUrl);
                 model.WhatsappUrl = $"https://wa.me/{prefix}{number}?text={Uri.EscapeDataString(message)}";
             }
         }
