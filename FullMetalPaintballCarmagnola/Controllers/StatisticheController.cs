@@ -87,7 +87,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             var colpiPartiteAnnualiDbGrouped = await _dbContext.Partite
                 .AsNoTracking()
-                .Where(p => p.CaparraConfermata && !p.IsDeleted)
+                .Where(p => p.CaparraConfermata && !p.IsDeleted
+                    && p.Tipo != null && p.Tipo.Trim().ToLower() == "adulti")
                 .GroupBy(p => new
                 {
                     p.Data.Year,
