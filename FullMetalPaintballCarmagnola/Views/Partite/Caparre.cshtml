@@ -93,8 +93,19 @@
                                             : partita.Riferimento?.Trim();
                                         var telefono = string.Join(" ", new[] { partita.PrefissoTelefonoRiferimento, partita.TelefonoRiferimento }
                                             .Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value!.Trim()));
+                                        var prefissoWa = new string((partita.PrefissoTelefonoRiferimento ?? "").Where(c => c >= '0' && c <= '9').ToArray());
+                                        var numeroWa = new string((partita.TelefonoRiferimento ?? "").Where(c => c >= '0' && c <= '9').ToArray());
                                     }
-                                    <strong>@(string.IsNullOrWhiteSpace(referente) ? "Nessun riferimento" : referente)</strong>
+                                    <div class="cap-reference">
+                                        <strong>@(string.IsNullOrWhiteSpace(referente) ? "Nessun riferimento" : referente)</strong>
+                                        @if (prefissoWa.Length > 0 && numeroWa.Length > 0)
+                                        {
+                                            <a class="cap-whatsapp" href="https://wa.me/@(prefissoWa + numeroWa)" target="_blank" rel="noopener noreferrer"
+                                               title="Apri chat WhatsApp con @referente" aria-label="Apri chat WhatsApp con @referente">
+                                                <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                                            </a>
+                                        }
+                                    </div>
                                     @if (!string.IsNullOrWhiteSpace(telefono))
                                     {
                                         <small class="d-block mt-1">@telefono</small>

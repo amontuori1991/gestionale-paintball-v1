@@ -85,6 +85,11 @@ if (!depositText.Contains("Referente aggiornato") || depositText.Contains("Rifer
     !depositText.Contains("Referente cancellata") || !depositText.Contains("+39 3330000001"))
     throw new Exception("Deposit references must prefer structured fields and preserve legacy references, including cancelled games.");
 Console.WriteLine("PASS: new, legacy and cancelled deposit references with international phone prefixes.");
+if (!deposits.Contains("href=\"https://wa.me/447700900123\"") ||
+    !deposits.Contains("href=\"https://wa.me/393330000001\"") ||
+    deposits.Split("https://wa.me/").Length - 1 != 2)
+    throw new Exception("WhatsApp links must use structured international numbers and omit missing phone fields.");
+Console.WriteLine("PASS: direct WhatsApp links for active/cancelled deposits; no link without structured phone.");
 if (args.Contains("--database")) await DatabaseChecks.Run();
 if (args.Contains("--preview")) await Task.Delay(Timeout.Infinite);
 await app.StopAsync();
