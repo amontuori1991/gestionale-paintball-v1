@@ -13,7 +13,7 @@ if (!update.GetCustomAttributes<AuthorizeAttribute>().Any(a => a.Roles == "Admin
 
 foreach (var field in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
 {
-    var controller = new PartiteController(null!, null!, null!, null!, null!, null!, null!, null!)
+    var controller = new PartiteController(null!, null!, null!, null!, null!, null!, null!, null!, null!)
     {
         ControllerContext = new ControllerContext
         {

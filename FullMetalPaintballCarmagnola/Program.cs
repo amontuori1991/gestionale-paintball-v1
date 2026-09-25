@@ -49,6 +49,10 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMemoryCache();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<PhotoWatermarker>();
+builder.Services.AddSingleton<IPhotoStorage, R2PhotoStorage>();
+builder.Services.AddScoped<PhotoAlbumService>();
 builder.Services.AddHttpClient<WeatherForecastService>();
 builder.Services.AddScoped<AcsiOdsExportService>();
 builder.Services.AddScoped<PricingCatalogService>();
@@ -162,6 +166,11 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""NomeRiferimento"" text NULL;
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""PrefissoTelefonoRiferimento"" text NULL;
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""TelefonoRiferimento"" text NULL;
+        CREATE TABLE IF NOT EXISTS ""PhotoAlbums"" (
+            ""PartitaId"" integer PRIMARY KEY REFERENCES ""Partite"" (""Id"") ON DELETE CASCADE,
+            ""Token"" uuid NOT NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS ""IX_PhotoAlbums_Token"" ON ""PhotoAlbums"" (""Token"");
         CREATE TABLE IF NOT EXISTS ""FieraSportLeads"" (
             ""Id"" SERIAL PRIMARY KEY,
             ""Email"" character varying(255) NOT NULL,

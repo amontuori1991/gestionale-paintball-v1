@@ -831,6 +831,16 @@
         transform: translateY(0);
     }
 
+/* Separate booking pairs without adding rows that would disrupt filters. */
+#partite-page .partita-staff-row > td {
+    padding-top: 12px !important;
+    padding-bottom: 18px !important;
+    border-bottom: 16px solid #fff !important;
+}
+#partite-page .booking-photo-button { white-space: nowrap; margin-left: 6px; }
+#partite-page .pm-card { margin-bottom: 24px !important; }
+#partite-page .pm-actions { flex-wrap: wrap; }
+
 /* colori */
 #partite-page .pbtn-green {
     background: rgba(25,135,84,.16);

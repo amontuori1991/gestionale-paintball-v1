@@ -309,6 +309,10 @@
 
                         <span style="float: right;">
                             <strong>Reperibile:</strong> @partita.Reperibile
+                            @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                            {
+                                <a class="btn btn-sm btn-secondary booking-photo-button" href="@Url.Action("Gestisci", "Foto", new { id = partita.Id })" title="Album foto della partita" aria-label="Album foto della partita">&#128247; Foto</a>
+                            }
                             <button class="btn btn-sm btn-info btn-verifica-presenze mx-2" data-data="@partita.Data.ToString("yyyy-MM-dd")">
                                 Presenze Staff
                             </button>
@@ -478,6 +482,10 @@
         </details>
 
         <div class="pm-actions">
+            @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+            {
+                <a class="pm-act booking-photo-button" href="@Url.Action("Gestisci", "Foto", new { id = partita.Id })" title="Album foto della partita" aria-label="Album foto della partita">&#128247; Foto</a>
+            }
             <a class="pm-act" href="@Url.Action("Edit", "Partite", new { id = partita.Id })" title="Modifica">✏️</a>
             <a class="pm-act" href="@Url.Action("Delete", "Partite", new { id = partita.Id })" title="Elimina">🗑️</a>
             <button type="button" class="pm-act btn-invia-recensione" data-id="@partita.Id" title="Invia recensione">⭐</button>

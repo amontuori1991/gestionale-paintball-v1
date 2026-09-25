@@ -19,7 +19,7 @@ internal static class DatabaseChecks
         var active = new Partita { Data = date.AddDays(1), Caparra = 20, Tipo = "Kids" };
         db.Partite.AddRange(cancelled, active);
         await db.SaveChangesAsync();
-        var controller = new PartiteController(db, null!, null!, null!, null!, null!, null!, null!);
+        var controller = new PartiteController(db, null!, null!, null!, null!, null!, null!, null!, null!);
         if (typeof(PartiteController).GetMethod("AggiornaDettagliCaparra")!.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>() == null)
             throw new Exception("Missing antiforgery protection.");
         await controller.AggiornaDettagliCaparra(cancelled.Id, "Rimborso effettuato", "SI");

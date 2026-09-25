@@ -29,6 +29,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private readonly PricingCatalogService _pricingCatalogService;
         private readonly StaffRegistryService _staffRegistryService;
         private readonly WeatherForecastService _weatherForecastService;
+        private readonly PhotoAlbumService _photoAlbumService;
 
         private static readonly Regex NonDigitRegex = new(@"[^\d]", RegexOptions.Compiled);
         private static readonly string[] KnownPhonePrefixes =
@@ -51,7 +52,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             IWebHostEnvironment env,
             PricingCatalogService pricingCatalogService,
             StaffRegistryService staffRegistryService,
-            WeatherForecastService weatherForecastService)
+            WeatherForecastService weatherForecastService,
+            PhotoAlbumService photoAlbumService)
         {
             _dbContext = dbContext;
             _configuration = configuration;
@@ -61,6 +63,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _pricingCatalogService = pricingCatalogService;
             _staffRegistryService = staffRegistryService;
             _weatherForecastService = weatherForecastService;
+            _photoAlbumService = photoAlbumService;
         }
 
         private async Task SendNotificationToAllUsers(string subject, string messageHtml)
@@ -1020,6 +1023,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             string baseUrl = $"{Request.Scheme}://{Request.Host}";
             string linkTesseramento = $"{baseUrl}/Tesseramento?partitaId={partita.Id}";
             string linkTesseratiPubblico = $"{baseUrl}/Partite/VisualizzaTesseratiPubblico/{partita.Id}";
+            var album = await _photoAlbumService.GetOrCreate(partita.Id, HttpContext.RequestAborted);
+            var linkFoto = PhotoAlbumService.PublicUrl(Request, album.Token);
+            var linkFotoHtml = HtmlEncoder.Default.Encode(linkFoto);
             var supplementoMinimoPartecipanti = "";
             var supplementoMinimoPartecipantiWhatsapp = "";
             if (prezzoUnitario.HasValue && partita.NumeroPartecipanti > 0 && partita.NumeroPartecipanti < 8)
@@ -1073,6 +1079,8 @@ Hi! Here is the summary of your booking:<br><br>
 You can view the registered participants in real time here:<br>
 🔎 <a href='{linkTesseratiPubblico}' target='_blank'>{linkTesseratiPubblico}</a><br><br>";
 
+                messaggioEn += $"Photo album: <a href='{linkFotoHtml}' target='_blank'>{linkFotoHtml}</a><br>Photos will appear after upload and remain available for 7 days from upload. Share this link only with your group.<br><br>";
+
                 if (!string.Equals(shotsEn, "Unlimited", StringComparison.OrdinalIgnoreCase))
                     messaggioEn += "Extra paintballs can be purchased at the field.<br><br>";
                 else
@@ -1123,6 +1131,9 @@ We look forward to seeing you! 🎯";
                 messaggioWhatsappEnLines.Add("You can view the registered participants in real time here:");
                 messaggioWhatsappEnLines.Add(linkTesseratiPubblico);
                 messaggioWhatsappEnLines.Add("");
+                messaggioWhatsappEnLines.Add($"Photo album: {linkFoto}");
+                messaggioWhatsappEnLines.Add("Photos will appear after upload and remain available for 7 days from upload. Share this link only with your group.");
+                messaggioWhatsappEnLines.Add("");
 
                 if (!string.Equals(shotsEn, "Unlimited", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1164,6 +1175,8 @@ Ciao! Di seguito il riepilogo della tua prenotazione:<br><br>
 {infoTesseramento}
 Potrete visualizzare in tempo reale gli iscritti qui:<br>
 🔎 <a href='{linkTesseratiPubblico}' target='_blank'>{linkTesseratiPubblico}</a><br><br>";
+
+            messaggio += $"Album foto: <a href='{linkFotoHtml}' target='_blank'>{linkFotoHtml}</a><br>Le foto compariranno dopo il caricamento e saranno disponibili per 7 giorni dal caricamento. Condividi il link solo con il tuo gruppo.<br><br>";
 
             if (colpi != "Illimitati")
                 messaggio += "Eventuali colpi extra potranno essere acquistati al campo.<br><br>";
@@ -1217,6 +1230,9 @@ Ti aspettiamo! 🎯";
             messaggioWhatsappLines.Add("");
             messaggioWhatsappLines.Add("Potrete visualizzare in tempo reale gli iscritti qui:");
             messaggioWhatsappLines.Add(linkTesseratiPubblico);
+            messaggioWhatsappLines.Add("");
+            messaggioWhatsappLines.Add($"Album foto: {linkFoto}");
+            messaggioWhatsappLines.Add("Le foto compariranno dopo il caricamento e saranno disponibili per 7 giorni dal caricamento. Condividi il link solo con il tuo gruppo.");
             messaggioWhatsappLines.Add("");
 
             if (colpi != "Illimitati")

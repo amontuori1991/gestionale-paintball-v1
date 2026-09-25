@@ -1,0 +1,98 @@
+@model PhotoAlbumViewModel
+@{
+    Layout = Model.Manage ? "_Layout" : null;
+    ViewData["Title"] = Model.English ? "Your photo album" : "Album della partita";
+    string T(string it, string en) => Model.English ? en : it;
+}
+@if (!Model.Manage)
+{
+    @:<!doctype html>
+    @:<html lang="@(Model.English ? "en" : "it")"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Full Metal Paintball | @ViewData["Title"]</title></head><body>
+}
+<link rel="stylesheet" href="~/css/photo-album.css" asp-append-version="true" />
+<div class="photo-album">
+    <header class="album-hero">
+        <img src="~/img/logo.gif" alt="Full Metal Paintball Carmagnola" width="84" height="80" />
+        <div><span class="album-eyebrow">FULL METAL PAINTBALL CARMAGNOLA</span>
+            <h1>@T("La vostra partita, in foto", "Your game, in photos")</h1>
+            <p>@Model.Date.ToString("dd/MM/yyyy") <span aria-hidden="true">/</span> @T("Ricordi da portare a casa", "Memories to take home")</p>
+        </div>
+    </header>
+    <p class="album-notice">@T("Ogni foto resta disponibile per 7 giorni dal caricamento. Scaricala prima della scadenza. Chiunque abbia questo link pu\u00f2 vedere l'album: condividilo solo con il tuo gruppo.", "Each photo is available for 7 days from upload. Download it before it expires. Anyone with this link can view the album: share it only with your group.")</p>
+    @if (Model.Error != null)
+    {
+        <div class="album-error" role="alert">@Model.Error</div>
+    }
+    @if (Model.Manage)
+    {
+        @Html.AntiForgeryToken()
+        <section class="album-panel">
+            <h2>Condividi con il cliente</h2>
+            <p>Il link &egrave; gi&agrave; pronto, anche prima di caricare le foto. &Egrave; incluso nel riepilogo della prenotazione.</p>
+            <label for="album-url">Link privato dell'album</label>
+            <input id="album-url" value="@Model.PublicUrl" readonly />
+            <div class="album-actions">
+                <button type="button" id="album-copy" class="album-button">Copia link</button>
+                @if (Model.WhatsappUrl != null)
+                {
+                    <a class="album-button album-button--whatsapp" href="@Model.WhatsappUrl" target="_blank" rel="noopener noreferrer">Invia link su WhatsApp</a>
+                }
+                <a class="album-button album-button--light" href="@Model.PublicUrl" target="_blank" rel="noopener noreferrer">Anteprima cliente</a>
+            </div>
+        </section>
+        @if (Model.Error == null)
+        {
+            <form class="album-panel" id="album-upload" action="@Url.Action("Carica", "Foto")" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.PartitaId" />
+                <h2>Carica le foto <span class="album-counter">@Model.Photos.Count / 60</span></h2>
+                <p>Logo applicato automaticamente in basso a destra. JPG, PNG o WebP, massimo 15 MB e 32 megapixel per foto. Converti prima le foto HEIC/HEIF. Gli originali non vengono conservati.</p>
+                <label class="album-drop" for="album-files"><span aria-hidden="true">&#128247;</span> Seleziona una o pi&ugrave; foto
+                    <input id="album-files" type="file" multiple accept="image/jpeg,image/png,image/webp" required />
+                </label>
+                <label class="album-consent"><input type="checkbox" name="autorizzato" value="true" required /> Confermo che le foto possono essere condivise con il gruppo e che sono state verificate le autorizzazioni necessarie, anche per eventuali minori.</label>
+                <button class="album-button" type="submit">Carica e applica il logo</button>
+                <progress id="album-progress" max="100" value="0" hidden></progress>
+                <p id="album-status" role="status" aria-live="polite"></p>
+                <ul id="album-failures"></ul>
+            </form>
+        }
+    }
+    <section class="album-gallery-section">
+        <h2>@T("L'album", "The album") <span class="album-counter">@Model.Photos.Count @T("foto", "photos")</span></h2>
+        @if (Model.Photos.Count == 0 && Model.Error == null)
+        {
+            <div class="album-empty"><span aria-hidden="true">&#128247;</span>
+                <h3>@T("Qui arriveranno le vostre foto", "Your photos will appear here")</h3>
+                <p>@T("Non ci sono foto disponibili: non sono ancora state caricate oppure sono gi\u00e0 scadute. Torna su questo stesso link dopo la partita.", "There are no photos available: they have not been uploaded yet or have already expired. Come back to this same link after the game.")</p>
+            </div>
+        }
+        <div class="album-grid">
+            @foreach (var photo in Model.Photos)
+            {
+                var imageUrl = Url.Action("Immagine", "Foto", new { token = Model.Token, photo = photo.Id });
+                <article class="album-photo">
+                    <a href="@imageUrl" target="_blank" rel="noopener noreferrer"><img src="@imageUrl" loading="lazy" alt="@T("Foto della partita", "Game photo")" /></a>
+                    <div class="album-photo-info">
+                        <small>@T("Scade", "Expires") <time class="album-expiry" datetime="@photo.ExpiresAt.ToString("O")">@photo.ExpiresAt.ToString("dd/MM/yyyy HH:mm") UTC</time></small>
+                        <a class="album-button" href="@Url.Action("Immagine", "Foto", new { token = Model.Token, photo = photo.Id, download = true })">@T("Scarica foto", "Download photo")</a>
+                        @if (Model.Manage)
+                        {
+                            <button type="button" class="album-delete" data-url="@Url.Action("Elimina", "Foto")" data-game="@Model.PartitaId" data-photo="@photo.Id">Elimina</button>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+    @if (Model.Manage)
+    {
+        <a class="album-button album-button--light" href="@Url.Action("Index", "Partite")">Torna alle prenotazioni</a>
+    }
+    <p class="album-feedback" id="album-feedback" role="status" aria-live="polite"></p>
+</div>
+<script src="~/js/photo-album.js" asp-append-version="true" defer></script>
+@if (!Model.Manage)
+{
+    @:</body></html>
+}

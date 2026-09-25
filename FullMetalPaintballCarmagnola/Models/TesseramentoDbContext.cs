@@ -12,6 +12,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         public DbSet<Tesseramento> Tesseramenti { get; set; }
         public DbSet<Partita> Partite { get; set; }
+        public DbSet<PhotoAlbum> PhotoAlbums { get; set; }
         public DbSet<PresenzaStaff> PresenzaStaff { get; set; }
         public DbSet<ReperibilitaStaff> ReperibilitaStaff { get; set; }
         public DbSet<AssenzaCalendario> AssenzeCalendario { get; set; }
@@ -37,6 +38,9 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<PhotoAlbum>().HasIndex(a => a.Token).IsUnique();
+            modelBuilder.Entity<PhotoAlbum>().HasOne(a => a.Partita).WithMany()
+                .HasForeignKey(a => a.PartitaId).OnDelete(DeleteBehavior.Cascade);
 
             // Surveys unique slug
             modelBuilder.Entity<Survey>()
