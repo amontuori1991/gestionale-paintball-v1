@@ -58,8 +58,8 @@
             status.textContent = `${label}: caricamento 0%.`;
             try {
                 if (file.size > 15 * 1024 * 1024) throw new Error('Massimo 15 MB per foto.');
-                if (file.type.startsWith('video/') || !/\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name))
-                    throw new Error('Solo immagini JPG, PNG, WebP, BMP e GIF statiche. Video esclusi; converti gli altri formati in JPG.');
+                if (file.type.startsWith('video/') || !/\.(jpe?g|png|webp|bmp|gif|heic|heif)$/i.test(file.name))
+                    throw new Error('Solo immagini JPG, PNG, WebP, BMP, GIF statiche e HEIC/HEIF. Video esclusi.');
                 const data = new FormData();
                 data.append('__RequestVerificationToken', token);
                 data.append('id', id);
@@ -68,7 +68,7 @@
                 await upload(form.action, data, percent => {
                     status.textContent = percent < 100
                         ? `${label}: caricamento ${percent}%.`
-                        : `${label}: trasferimento 100%. Applicazione logo e salvataggio in corso, attendi...`;
+                        : `${label}: trasferimento 100%. Applicazione logo, conversione e salvataggio in corso, attendi...`;
                     if (percent < 100) progress.value = percent;
                     else progress.removeAttribute('value');
                 });

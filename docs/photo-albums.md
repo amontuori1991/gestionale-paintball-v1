@@ -38,7 +38,7 @@ upload timestamps are in R2. No persistent Render disk is required.
 - Italian and English summary messages include the album URL in HTML and plain text.
 - Each file expires individually seven days after upload, not after the booking.
 - Up to 60 currently available images per album; input <=15 MiB and <=32 MP.
-- Supported: static JPEG, PNG, WebP, BMP, GIF. Convert HEIC/HEIF and other formats before uploading.
+- Supported: static JPEG, PNG, WebP, BMP, GIF, HEIC/HEIF. HEIC/HEIF primary images are automatically decoded with Magick.NET, oriented and converted before watermarking; depth/thumbnail auxiliary images are not exported. Movie tracks and image sequences are rejected.
 - Video and animated images are rejected by server-side decoding, even with an image extension.
 - Upload percentage measures browser transfer only; logo processing and R2 saving have a separate indeterminate phase.
 - The WhatsApp quick-action menu includes a dedicated photo download message in the booking language.

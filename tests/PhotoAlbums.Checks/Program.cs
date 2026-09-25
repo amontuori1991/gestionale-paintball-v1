@@ -32,6 +32,17 @@ using Npgsql;
 using SkiaSharp;
 
 void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
+if (args.Length == 2 && args[0] == "--heif-only")
+{
+    var host = WebApplication.CreateBuilder(new WebApplicationOptions
+    { ContentRootPath = Path.GetFullPath("FullMetalPaintballCarmagnola"), WebRootPath = "wwwroot" });
+    using var sourceHeif = File.OpenRead(args[1]);
+    var jpegHeif = new PhotoWatermarker(host.Environment).Process(sourceHeif);
+    using var decoded = SKBitmap.Decode(jpegHeif);
+    Check(decoded != null && jpegHeif[0] == 0xff && jpegHeif[1] == 0xd8, "Native HEIF decoding failed");
+    Console.WriteLine("PASS: native HEIF conversion and watermark on " + System.Runtime.InteropServices.RuntimeInformation.OSDescription);
+    return;
+}
 var database = "photo_checks_" + Guid.NewGuid().ToString("N");
 const string adminCs = "Host=127.0.0.1;Port=55439;Database=postgres;Username=bonus_tests;SSL Mode=Disable";
 await using var admin = new NpgsqlConnection(adminCs);
@@ -106,6 +117,22 @@ try
     Check(parallel.All(t => t == album.Token), "Concurrent token lookup changed link");
 
     var marker = scope.ServiceProvider.GetRequiredService<PhotoWatermarker>();
+    if (args.Length > 0 && File.Exists(args[0]))
+    {
+        using var heif = File.OpenRead(args[0]);
+        var converted = marker.Process(heif);
+        using var decodedHeif = SKBitmap.Decode(converted);
+        Check(decodedHeif != null && decodedHeif.Width <= PhotoWatermarker.MaxOutputSide, "HEIF conversion failed");
+        Check(converted[0] == 0xff && converted[1] == 0xd8, "HEIF output is not JPEG");
+        Console.WriteLine("PASS: real HEIC/HEIF decoded, converted and watermarked.");
+    }
+    var movieHeif = new byte[24];
+    System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(movieHeif, 16);
+    "ftypheic"u8.CopyTo(movieHeif.AsSpan(4));
+    System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(movieHeif.AsSpan(16), 8);
+    "moov"u8.CopyTo(movieHeif.AsSpan(20));
+    try { marker.Process(new MemoryStream(movieHeif)); throw new Exception("Accepted HEIF movie track"); }
+    catch (InvalidDataException) { }
     using var bitmap = new SKBitmap(3000, 2000);
     bitmap.Erase(SKColors.CornflowerBlue);
     using var image = SKImage.FromBitmap(bitmap);
