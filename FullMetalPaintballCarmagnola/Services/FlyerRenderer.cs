@@ -15,7 +15,7 @@ public sealed class FlyerRenderer(IWebHostEnvironment env)
         using var output = new MemoryStream();
         if (model.Format == "pdf")
         {
-            using var pdf = SKDocument.CreatePdf(output);
+            using var pdf = SKDocument.CreatePdf(output, new SKDocumentPdfMetadata { EncodingQuality = 90, RasterDpi = 300 });
             var canvas = pdf.BeginPage(595.276f, 841.89f);
             canvas.Scale(595.276f / W, 841.89f / H);
             Draw(canvas, model, company, bold, regular, logo);
@@ -35,41 +35,68 @@ public sealed class FlyerRenderer(IWebHostEnvironment env)
         return output.ToArray();
     }
 
-    private static void Draw(SKCanvas c, FlyerRequest m, CompanyProfile p, SKTypeface bold, SKTypeface regular, SKBitmap logo)
+    private void Draw(SKCanvas c, FlyerRequest m, CompanyProfile p, SKTypeface bold, SKTypeface regular, SKBitmap logo)
     {
         var light = m.Theme == "sun";
         var bg = SKColor.Parse(light ? "#fff4db" : "#111d19");
         var ink = SKColor.Parse(light ? "#17251c" : "#fff8ec");
         var accent = SKColor.Parse(m.Theme == "ice" ? "#65e8ef" : light ? "#ff5731" : "#d6fa43");
-        var punch = SKColor.Parse(m.Theme == "ice" ? "#ff714e" : "#f12a7a");
         c.Clear(bg);
         using var paint = new SKPaint { IsAntialias = true };
         void Rect(float x, float y, float w, float h, SKColor color) { paint.Color = color; paint.Style = SKPaintStyle.Fill; c.DrawRect(x,y,w,h,paint); }
-        // Deterministic paint marks and target rings keep exported files identical to the preview.
-        paint.Color = accent.WithAlpha(22); paint.Style = SKPaintStyle.Stroke; paint.StrokeWidth = 1.5f;
-        for (var r = 80; r < 500; r += 48) c.DrawCircle(690, 300, r, paint);
+        using var hero = LoadPhoto("hero");
+        using var kids = LoadPhoto("kids");
+        using var adults = LoadPhoto("adults");
+        Rect(0, 0, W, 442, SKColor.Parse("#071a13"));
+        Cover(c, hero, new(270, 0, 900, 442), .5f);
+        using (var shade = new SKPaint { Shader = SKShader.CreateLinearGradient(new(0, 0), new(W, 0),
+            [SKColor.Parse("#071a13"), SKColor.Parse("#071a13").WithAlpha(225), SKColors.Transparent], [0f, .4f, 1f], SKShaderTileMode.Clamp) })
+            c.DrawRect(0, 0, W, 442, shade);
+        // Stable paint flecks: the same design in preview, PDF and JPG.
         var random = new Random(17);
         paint.Style = SKPaintStyle.Fill;
         for (var i = 0; i < 55; i++)
         {
-            paint.Color = (i % 2 == 0 ? accent : punch).WithAlpha(100);
-            c.DrawCircle(random.Next(530, 795), random.Next(80, 630), random.Next(2, 12), paint);
+            paint.Color = accent.WithAlpha(100);
+            c.DrawCircle(random.Next(769, 795), random.Next(160, 842), random.Next(1, 4), paint);
         }
         Rect(38, 37, 7, 55, accent);
-        Text(c, p.Name, new(58, 38, 575, 104), bold, ink, 24, 12);
+        Text(c, p.Name, new(58, 38, 600, 104), bold, SKColors.White, 24, 12);
         paint.Color = SKColors.White;
         c.DrawRoundRect(new SKRect(637, 29, 753, 145), 18, 18, paint);
         var scale = Math.Min(100f / logo.Width, 100f / logo.Height);
         c.DrawBitmap(logo, SKRect.Create(695 - logo.Width * scale / 2, 87 - logo.Height * scale / 2, logo.Width * scale, logo.Height * scale));
-        Text(c, m.Badge, new(46, 150, 730, 181), regular, accent, 17, 13);
-        Text(c, m.Title.ToUpperInvariant(), new(42, 200, 730, 435), bold, ink, 112, 45);
-        Text(c, m.Subtitle, new(46, 448, 686, 516), regular, ink, 28, 19);
-        c.Save(); c.RotateDegrees(-3, 397, 571);
-        Rect(-15, 534, 830, 77, accent);
-        Text(c, m.Offer, new(46, 545, 745, 597), bold, bg, 36, 18);
+        Text(c, m.Badge, new(38, 113, 605, 140), regular, accent, 17, 13);
+        var titleLines = m.Title.ToUpperInvariant().Replace("\r", "").Split('\n', 2);
+        if (titleLines.Length == 2)
+        {
+            Text(c, titleLines[0], new(34, 155, 495, 230), bold, accent, 75, 30);
+            Text(c, titleLines[1], new(34, 237, 480, 343), bold, SKColors.White, 62, 30);
+        }
+        else Text(c, m.Title.ToUpperInvariant(), new(34, 155, 480, 343), bold, SKColors.White, 72, 30);
+        Text(c, m.Subtitle, new(38, 356, 485, 423), regular, SKColors.White, 22, 15);
+        c.Save(); c.RotateDegrees(-2, 397, 453);
+        Rect(-15, 435, 830, 54, accent);
+        Text(c, m.Offer, new(38, 442, 754, 480), bold, SKColor.Parse("#102219"), 29, 18);
         c.Restore();
-        Text(c, m.Event, new(46, 646, 744, 690), bold, accent, 27, 17);
-        Text(c, m.Details, new(46, 704, 740, 812), regular, ink, 24, 16);
+        void Card(float x, SKBitmap photo, float focus, string title, string tag, string facts)
+        {
+            var box = new SKRect(x, 510, x + 350, 751);
+            c.Save();
+            using var clip = new SKRoundRect(box, 10);
+            c.ClipRoundRect(clip);
+            Cover(c, photo, new(x, 510, x + 350, 670), focus);
+            Rect(x, 670, 350, 81, light ? SKColor.Parse("#f5e6cc") : SKColor.Parse("#1c3028"));
+            Rect(x, 644, 350, 31, SKColor.Parse("#071a13").WithAlpha(235));
+            Text(c, title, new(x + 13, 645, x + 237, 674), bold, SKColors.White, 26, 22);
+            Text(c, tag, new(x + 240, 651, x + 338, 674), bold, accent, 18, 14);
+            Text(c, facts, new(x + 13, 684, x + 338, 744), regular, ink, 17, 14);
+            c.Restore();
+        }
+        Card(38, kids, .64f, "PAINTBALL KIDS", "8-13 ANNI", "Attrezzatura dedicata e staff presente.\nCompleanni, gruppi e tanto divertimento.");
+        Card(406, adults, .66f, "PAINTBALL ADULTI", "TEAM PLAY", "Strategia, azione e missioni di squadra.\nAmici, team building e addii al celibato.");
+        Text(c, m.Event, new(38, 763, 756, 793), bold, light ? ink : accent, 24, 13);
+        Text(c, m.Details, new(38, string.IsNullOrWhiteSpace(m.Event) ? 765 : 800, 756, 837), regular, ink, 19, 12);
         Rect(0, 846, W, H - 846, light ? SKColor.Parse("#17251c") : SKColor.Parse("#f6f3e8"));
         var footerInk = light ? SKColors.White : SKColor.Parse("#17251c");
         Text(c, m.CallToAction, new(46, 865, 588, 908), bold, footerInk, 32, 17);
@@ -84,6 +111,18 @@ public sealed class FlyerRenderer(IWebHostEnvironment env)
             c.DrawBitmap(bitmap, new SKRect(611, 919, 749, 1057));
             Text(c, "SCOPRI DI PIU", new(611, 1060, 749, 1085), bold, footerInk, 16, 12);
         }
+    }
+
+    private SKBitmap LoadPhoto(string name) => SKBitmap.Decode(Path.Combine(env.WebRootPath, "img", "flyers", name + ".jpg"))
+        ?? throw new InvalidOperationException("Foto del volantino non disponibile.");
+
+    private static void Cover(SKCanvas canvas, SKBitmap bitmap, SKRect destination, float verticalFocus)
+    {
+        var scale = Math.Max(destination.Width / bitmap.Width, destination.Height / bitmap.Height);
+        var width = destination.Width / scale;
+        var height = destination.Height / scale;
+        var source = SKRect.Create((bitmap.Width - width) / 2, (bitmap.Height - height) * verticalFocus, width, height);
+        canvas.DrawBitmap(bitmap, source, destination);
     }
 
     private static void Text(SKCanvas canvas, string? text, SKRect box, SKTypeface typeface, SKColor color, float max, float min)

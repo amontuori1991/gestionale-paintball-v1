@@ -116,6 +116,19 @@ try
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<TesseramentoDbContext>();
     await db.Database.EnsureCreatedAsync();
+    var identityDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    // Only Identity tables: business tables already exist in this disposable test database.
+    foreach (var statement in identityDb.Database.GenerateCreateScript().Split(';'))
+        if (statement.Contains("AspNet")) await identityDb.Database.ExecuteSqlRawAsync(statement);
+    var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    foreach (var role in new[] { "Admin", "Staff" })
+    {
+        Check((await roles.CreateAsync(new IdentityRole(role))).Succeeded, "Test role creation failed");
+        var user = new ApplicationUser { Id = "test-" + role, UserName = role + "@example.org", FirstName = "Test", LastName = "User" };
+        Check((await users.CreateAsync(user)).Succeeded, "Test user creation failed");
+        Check((await users.AddToRoleAsync(user, role)).Succeeded, "Test role assignment failed");
+    }
     var game = new Partita { Data = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc), Tipo = "Adulti", Durata = 1.5,
         NumeroPartecipanti = 8, Staff1 = "Simone", Staff2 = "Alberto", Reperibile = "Bosax", Caparra = 30,
         NomeRiferimento = "Test", PrefissoTelefonoRiferimento = "+39", TelefonoRiferimento = "3330000000" };
@@ -251,6 +264,20 @@ try
     using (var adminClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress })
     {
         adminClient.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+        var dashboard = await adminClient.GetStringAsync("/Dashboard");
+        Check(dashboard.Contains("value=\"Profilo Azienda\"") && dashboard.Contains("value=\"Crea Volantini\""), "Admin tools missing from customization");
+        var dashboardToken = WebUtility.HtmlDecode(Regex.Match(dashboard, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
+        var preferences = new List<KeyValuePair<string,string>> { new("__RequestVerificationToken", dashboardToken) };
+        Check((await adminClient.PostAsync("/Dashboard/SalvaPreferenzeDashboard", new FormUrlEncodedContent(preferences))).StatusCode == HttpStatusCode.Redirect, "Dashboard save failed");
+        dashboard = await adminClient.GetStringAsync("/Dashboard");
+        Check(!dashboard.Contains("href=\"/Volantini\"") && !dashboard.Contains("href=\"/ProfiloAzienda\""), "Hidden admin buttons still visible");
+        preferences.Add(new("visibleFeatures", "Profilo Azienda")); preferences.Add(new("visibleFeatures", "Crea Volantini"));
+        await adminClient.PostAsync("/Dashboard/SalvaPreferenzeDashboard", new FormUrlEncodedContent(preferences));
+        dashboard = await adminClient.GetStringAsync("/Dashboard");
+        Check(dashboard.Contains("href=\"/Volantini\"") && dashboard.Contains("href=\"/ProfiloAzienda\""), "Admin buttons cannot be restored");
+        var staffDashboard = await staff.GetStringAsync("/Dashboard");
+        Check(!staffDashboard.Contains("Crea Volantini") && !staffDashboard.Contains("Profilo Azienda"), "Admin tools leaked to staff dashboard");
+        Console.WriteLine("PASS: dashboard admin tools customization, hide, persist, restore, staff exclusion.");
         var profileResponse = await adminClient.GetAsync("/ProfiloAzienda");
         Check(profileResponse.IsSuccessStatusCode, "Admin company profile unavailable");
         var profileHtml = await profileResponse.Content.ReadAsStringAsync();
@@ -414,7 +441,7 @@ sealed class TestAuth(IOptionsMonitor<AuthenticationSchemeOptions> options, ILog
         var role = Request.Headers["X-Test-Role"].ToString();
         if (string.IsNullOrEmpty(role)) role = Request.Cookies["PhotoTestRole"] ?? "";
         if (string.IsNullOrEmpty(role)) return Task.FromResult(AuthenticateResult.NoResult());
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "Test"), new Claim(ClaimTypes.Role, role) }, "Test"));
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "Test"), new Claim(ClaimTypes.NameIdentifier, "test-" + role), new Claim(ClaimTypes.Role, role) }, "Test"));
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, "Test")));
     }
 }

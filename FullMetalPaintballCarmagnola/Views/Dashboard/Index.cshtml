@@ -5,6 +5,8 @@
     Func<string, bool> Mostra = feature => dashboardFeaturesVisibili.Contains(feature);
     var dashboardButtons = new Dictionary<string, (string ButtonClass, string Icon, string Url)>
     {
+        ["Profilo Azienda"] = ("btn-outline-info", "bi-building", Url.Action("Index", "ProfiloAzienda") ?? "#"),
+        ["Crea Volantini"] = ("btn-outline-warning", "bi-file-earmark-richtext", Url.Action("Index", "Volantini") ?? "#"),
         ["Tesserati"] = ("btn-outline-primary", "bi-people", Url.Action("ListaTesseramenti", "Tesseramento") ?? "#"),
         ["Prenotazioni"] = ("btn-outline-success", "bi-calendar-check", Url.Action("Index", "Partite") ?? "#"),
         ["Caparre"] = ("btn-outline-warning", "bi-wallet2", Url.Action("Caparre", "Partite") ?? "#"),
@@ -649,22 +651,6 @@
     </div>
 
     <div class="dashboard-btns">
-        @if (User.IsInRole("Admin"))
-        {
-            <div class="btn-container">
-                <a class="btn btn-outline-info" asp-controller="ProfiloAzienda" asp-action="Index">
-                    <i class="bi bi-building" aria-hidden="true"></i>
-                    Profilo Azienda
-                </a>
-            </div>
-            <div class="btn-container">
-                <a class="btn btn-outline-warning" asp-controller="Volantini" asp-action="Index">
-                    <i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>
-                    Crea Volantini
-                </a>
-            </div>
-        }
-
         @foreach (var feature in dashboardFeaturesVisibili.Where(dashboardButtons.ContainsKey))
         {
             var button = dashboardButtons[feature];

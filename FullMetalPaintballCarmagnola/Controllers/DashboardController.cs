@@ -35,16 +35,16 @@ public class DashboardController : Controller
         List<string> permessiVisibili;
 
         // Admin può vedere tutto
-        if (ruolo == "Admin")
+        if (ruoli.Contains("Admin"))
         {
-            permessiVisibili = Features.AllFeatures.ToList();
+            permessiVisibili = Features.AllFeatures.Concat(AdminFeatures).Distinct().ToList();
         }
 
         else
         {
             // Recupera solo i permessi consentiti
             permessiVisibili = await _db.RolePermissions
-                .Where(p => p.RoleName == ruolo && p.IsAllowed)
+                .Where(p => p.RoleName == ruolo && p.IsAllowed && !AdminFeatures.Contains(p.FeatureName))
                 .Select(p => p.FeatureName)
                 .ToListAsync();
         }
@@ -73,14 +73,14 @@ public class DashboardController : Controller
         var ruolo = ruoli.FirstOrDefault() ?? "Nessuno";
 
         List<string> permessiVisibili;
-        if (ruolo == "Admin")
+        if (ruoli.Contains("Admin"))
         {
-            permessiVisibili = Features.AllFeatures.ToList();
+            permessiVisibili = Features.AllFeatures.Concat(AdminFeatures).Distinct().ToList();
         }
         else
         {
             permessiVisibili = await _db.RolePermissions
-                .Where(p => p.RoleName == ruolo && p.IsAllowed)
+                .Where(p => p.RoleName == ruolo && p.IsAllowed && !AdminFeatures.Contains(p.FeatureName))
                 .Select(p => p.FeatureName)
                 .ToListAsync();
         }
@@ -102,6 +102,8 @@ public class DashboardController : Controller
         TempData["DashboardMessage"] = "Preferenze dashboard salvate.";
         return RedirectToAction(nameof(Index));
     }
+
+    private static readonly string[] AdminFeatures = ["Profilo Azienda", "Crea Volantini"];
 
     private static HashSet<string> ParseFeatureSet(string? featuresJson)
     {

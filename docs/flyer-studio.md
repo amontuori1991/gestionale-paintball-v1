@@ -3,6 +3,9 @@
 Admin-only `/Volantini` is linked from the dashboard. The shared back button is
 enabled for both Volantini and ProfiloAzienda. GET and export POST require the
 Admin role; POST also requires antiforgery validation.
+Both admin tools participate in the dashboard's saved visibility and ordering
+preferences. They are excluded from non-admin preferences even if a stale role
+permission record grants their names.
 
 The renderer reads CompanyProfileService for every preview/export and always
 uses `wwwroot/img/logo.gif`. Nothing is fetched from arbitrary external URLs.
@@ -17,6 +20,11 @@ The same Skia layout draws JPEG preview, 2480x3508 JPEG and one-page vector A4 P
 The logo remains raster. There is no bleed/CMYK conversion; professional print
 requirements should be checked with the printer. Font files are bundled with
 their SIL OFL licenses, avoiding dependence on installed server fonts.
+
+The photographic layout uses the association's website hero and Kids/Adults group
+photos, bundled under `wwwroot/img/flyers` (source URLs documented alongside).
+Photo crops retain the players; gradients support headline contrast. Experience
+captions derive from the website; contacts still exclusively use Company Profile.
 
 Rendering fits text within bounded rectangles; content that cannot fit returns
 an explicit error instead of silently cutting it off. No flyer content, generated

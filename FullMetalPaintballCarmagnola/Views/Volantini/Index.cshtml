@@ -10,7 +10,7 @@
             @Html.AntiForgeryToken()
             <h2>01 / La tua idea</h2>
             <div class="studio-presets"><button type="button" data-preset="party">Festa</button><button type="button" data-preset="challenge">Sfida tra amici</button><button type="button" data-preset="event">Open day</button></div>
-            <label asp-for="Title">Titolo principale</label><input asp-for="Title" maxlength="65" required />
+            <label asp-for="Title">Titolo principale</label><textarea asp-for="Title" maxlength="65" rows="2" required></textarea><small>Vai a capo per evidenziare la prima riga con il colore della palette.</small>
             <label asp-for="Subtitle">Sottotitolo</label><input asp-for="Subtitle" maxlength="120" required />
             <label asp-for="Badge">Etichetta in alto</label><input asp-for="Badge" maxlength="40" />
             <label asp-for="Offer">Fascia promozionale</label><input asp-for="Offer" maxlength="60" /><small>Puoi inserire una proposta o un prezzo. Verifica sempre importi e condizioni.</small>
@@ -18,6 +18,7 @@
             <label asp-for="Details">Descrizione e condizioni</label><textarea asp-for="Details" maxlength="320" rows="4"></textarea>
             <label asp-for="CallToAction">Invito all'azione</label><input asp-for="CallToAction" maxlength="45" required />
             <h2>02 / Il carattere</h2>
+            <p>Foto originali dal nostro sito: azione sul campo, Kids e Adulti. Il layout fotografico mantiene sempre il logo e i contatti del Profilo Azienda.</p>
             <label asp-for="Theme">Palette</label><select asp-for="Theme"><option value="impact">Impact / lime e antracite</option><option value="sun">Sun / crema e arancio</option><option value="ice">Ice / turchese e corallo</option></select>
             <div class="studio-company"><strong>@company.Name</strong><p>Logo globale e dati di contatto vengono inseriti automaticamente. Se il sito &egrave; compilato, viene generato anche il QR.</p></div>
             <button type="submit" class="btn btn-dark w-100">Aggiorna anteprima</button>
