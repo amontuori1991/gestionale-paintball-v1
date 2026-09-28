@@ -209,7 +209,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             chiusure = chiusure.Where(c => c.DataInizio.Date <= data.Date && c.DataFine.Date >= data.Date).ToList();
             var chiusura = chiusure.FirstOrDefault(c => c.OraInizio == null);
             var tramonto = GetSunsetTime(data);
-            var ultimaFinePartita = RoundDownToHalfHour(tramonto);
+            var ultimaFinePartita = RoundDownToHalfHour(tramonto - TimeSpan.FromMinutes(15));
             if (ultimaFinePartita < AperturaCampo)
                 ultimaFinePartita = AperturaCampo;
 

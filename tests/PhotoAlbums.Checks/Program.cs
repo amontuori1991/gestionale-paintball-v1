@@ -36,12 +36,17 @@ if (args.Contains("--availability-only"))
 {
     var autumn = DisponibilitaCampoController.BuildGiorno(new DateTime(2026, 10, 25), [], []);
     Check(autumn.UltimaFinePartita == TimeSpan.FromHours(17), "17:28 sunset must close at 17:00");
+    var november = DisponibilitaCampoController.BuildGiorno(new DateTime(2026, 11, 15), [], []);
+    Check(november.UltimaFinePartita == new TimeSpan(16, 30, 0), "17:01 sunset must close at 16:30");
+    Check(november.IsAvailable(TimeSpan.FromHours(15), new TimeSpan(16, 30, 0)), "Game at adjusted closing rejected");
+    Check(!november.IsAvailable(TimeSpan.FromHours(16), TimeSpan.FromHours(17)), "Game inside sunset margin accepted");
     Check(autumn.IsAvailable(TimeSpan.FromHours(16), TimeSpan.FromHours(17)), "Game ending at closing rejected");
     Check(!autumn.IsAvailable(TimeSpan.FromHours(16), new TimeSpan(17, 30, 0)), "Game after closing accepted");
     for (var offset = 0; offset < 365; offset++)
     {
         var current = DisponibilitaCampoController.BuildGiorno(new DateTime(2026, 1, 1).AddDays(offset), [], []);
-        Check(current.UltimaFinePartita <= current.Tramonto && current.Tramonto - current.UltimaFinePartita < TimeSpan.FromMinutes(30), "Closing must floor sunset without an extra margin");
+        var margin = current.Tramonto - current.UltimaFinePartita;
+        Check(margin >= TimeSpan.FromMinutes(15) && margin < TimeSpan.FromMinutes(45), "Closing must floor sunset after a 15-minute margin");
         Check(current.UltimaFinePartita.TotalMinutes % 30 == 0, "Closing not on half-hour boundary");
     }
     var date = new DateTime(2026, 10, 4);
