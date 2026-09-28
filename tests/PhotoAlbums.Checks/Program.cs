@@ -65,6 +65,7 @@ builder.Services.AddAuthorization(o => {
     o.AddPolicy("Disponibilita Campo", p => p.RequireAuthenticatedUser());
 });
 builder.Services.AddScoped<PricingCatalogService>();
+builder.Services.AddScoped<CompanyProfileService>();
 var clock = new TestClock();
 var storage = new TestStorage(clock);
 builder.Services.AddSingleton<TimeProvider>(clock);
@@ -226,6 +227,34 @@ try
     using var anonymous = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = new Uri("http://127.0.0.1:55443") };
     using var staff = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress };
     staff.DefaultRequestHeaders.Add("X-Test-Role", "Staff");
+    Check((await anonymous.GetAsync("/ProfiloAzienda")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous company profile access");
+    Check((await staff.GetAsync("/ProfiloAzienda")).StatusCode == HttpStatusCode.Forbidden, "Staff company profile access");
+    Check((await staff.PostAsync("/ProfiloAzienda", new FormUrlEncodedContent(new Dictionary<string,string> { ["Name"] = "Forbidden" }))).StatusCode == HttpStatusCode.Forbidden, "Staff profile write access");
+    using (var adminClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress })
+    {
+        adminClient.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+        var profileResponse = await adminClient.GetAsync("/ProfiloAzienda");
+        Check(profileResponse.IsSuccessStatusCode, "Admin company profile unavailable");
+        var profileHtml = await profileResponse.Content.ReadAsStringAsync();
+        var profileToken = WebUtility.HtmlDecode(Regex.Match(profileHtml, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
+        Check((await adminClient.PostAsync("/ProfiloAzienda", new FormUrlEncodedContent(new Dictionary<string,string> { ["Name"] = "Test" }))).StatusCode == HttpStatusCode.BadRequest, "Missing profile antiforgery accepted");
+        var fields = new Dictionary<string,string> {
+            ["__RequestVerificationToken"] = profileToken, ["Name"] = " Test Association ", ["TaxCode"] = "12345678901",
+            ["Email"] = "test@example.org", ["FieldAddress"] = "Test Street 10", ["Phone"] = "+39 333 1234567",
+            ["Instagram"] = "test_account", ["Website"] = "www.example.org", ["FacebookPage"] = "Test Page"
+        };
+        Check((await adminClient.PostAsync("/ProfiloAzienda", new FormUrlEncodedContent(fields))).StatusCode == HttpStatusCode.Redirect, "Profile save failed");
+        var profiles = scope.ServiceProvider.GetRequiredService<CompanyProfileService>();
+        var saved = await profiles.GetAsync();
+        Check(saved.Name == "Test Association" && saved.Instagram == "@test_account" && saved.Website == "https://www.example.org" && saved.TaxCode == "12345678901" && saved.Email == "test@example.org" && saved.FieldAddress == "Test Street 10" && saved.FacebookPage == "Test Page" && saved.Phone == "+39 333 1234567", "Profile values not persisted correctly");
+        fields["Website"] = "javascript:alert(1)";
+        Check((await adminClient.PostAsync("/ProfiloAzienda", new FormUrlEncodedContent(fields))).StatusCode == HttpStatusCode.OK, "Invalid profile must redisplay errors");
+        Check((await profiles.GetAsync()).Website == "https://www.example.org", "Invalid profile overwrote stored values");
+        fields["Website"] = "https://example.org/new"; fields["Instagram"] = "@@updated";
+        await adminClient.PostAsync("/ProfiloAzienda", new FormUrlEncodedContent(fields));
+        Check((await profiles.GetAsync()).Instagram == "@updated" && await db.AppSettings.CountAsync(s => s.Key == "CompanyProfileV1") == 1, "Profile update duplicated record");
+        Console.WriteLine("PASS: company profile admin-only GET/POST, antiforgery, all fields persisted, normalization and unsafe URL rejected.");
+    }
     Check((await anonymous.GetAsync($"/Foto/Messaggio/{game.Id}")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous photo message access");
     game.Nazionalita = "ITA"; await db.SaveChangesAsync();
     var photoMessageIt = await staff.GetStringAsync($"/Foto/Messaggio/{game.Id}");

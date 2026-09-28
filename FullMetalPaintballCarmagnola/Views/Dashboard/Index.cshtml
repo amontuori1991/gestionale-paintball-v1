@@ -649,6 +649,15 @@
     </div>
 
     <div class="dashboard-btns">
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="btn-container">
+                <a class="btn btn-outline-info" asp-controller="ProfiloAzienda" asp-action="Index">
+                    <i class="bi bi-building" aria-hidden="true"></i>
+                    Profilo Azienda
+                </a>
+            </div>
+        }
 
         @foreach (var feature in dashboardFeaturesVisibili.Where(dashboardButtons.ContainsKey))
         {

@@ -1,0 +1,41 @@
+@model Full_Metal_Paintball_Carmagnola.Models.CompanyProfile
+@{ ViewData["Title"] = "Profilo Azienda"; }
+<style>
+    .company-profile { max-width: 880px; margin: 30px auto; padding: 26px; border-radius: 24px; background: #fffdf5ee; border: 1px solid #dce2c9; box-shadow: 0 12px 35px #26321a12; }
+    .company-profile header { border-bottom: 3px solid #96c526; margin-bottom: 24px; padding-bottom: 16px; }
+    .company-profile h1 { font-size: clamp(26px, 4vw, 36px); }
+    .company-profile header p { margin-bottom: 0; color: #536044; }
+    .company-profile .profile-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .company-profile label { font-weight: 700; margin-bottom: 6px; }
+    .company-profile input { width: 100%; min-height: 46px; }
+    .company-profile .profile-wide { grid-column: 1 / -1; }
+    .company-profile .profile-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+    @@media(max-width: 600px) { .company-profile { margin: 20px 8px; padding: 20px 16px; } .company-profile .profile-fields { grid-template-columns: minmax(0, 1fr); } }
+</style>
+<section class="company-profile">
+    <header>
+        <span class="badge bg-dark mb-2">Riservato agli Admin</span>
+        <h1>Profilo Azienda</h1>
+        <p>I dati dell'associazione da utilizzare nei futuri volantini pubblicitari.</p>
+    </header>
+    @if (TempData["CompanyProfileSaved"] is string message)
+    {
+        <div class="alert alert-success" role="status">@message</div>
+    }
+    <form asp-action="Index" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+        <div class="profile-fields">
+            <div class="profile-wide"><label asp-for="Name"></label><input asp-for="Name" class="form-control" maxlength="200" required autocomplete="organization" /><span asp-validation-for="Name" class="text-danger"></span></div>
+            <div><label asp-for="TaxCode"></label><input asp-for="TaxCode" class="form-control" maxlength="16" /><span asp-validation-for="TaxCode" class="text-danger"></span></div>
+            <div><label asp-for="Email"></label><input asp-for="Email" type="email" class="form-control" maxlength="254" autocomplete="email" /><span asp-validation-for="Email" class="text-danger"></span></div>
+            <div class="profile-wide"><label asp-for="FieldAddress"></label><input asp-for="FieldAddress" class="form-control" maxlength="300" autocomplete="street-address" /><span asp-validation-for="FieldAddress" class="text-danger"></span></div>
+            <div><label asp-for="Phone"></label><input asp-for="Phone" type="tel" class="form-control" maxlength="40" placeholder="+39 ..." autocomplete="tel" /><span asp-validation-for="Phone" class="text-danger"></span></div>
+            <div><label asp-for="Instagram"></label><input asp-for="Instagram" class="form-control" maxlength="31" placeholder="@@nomeaccount" autocapitalize="none" spellcheck="false" /><small class="text-muted">La @@ iniziale viene aggiunta automaticamente.</small><span asp-validation-for="Instagram" class="text-danger"></span></div>
+            <div><label asp-for="Website"></label><input asp-for="Website" class="form-control" maxlength="500" placeholder="https://..." inputmode="url" autocapitalize="none" /><span asp-validation-for="Website" class="text-danger"></span></div>
+            <div><label asp-for="FacebookPage"></label><input asp-for="FacebookPage" class="form-control" maxlength="200" /><span asp-validation-for="FacebookPage" class="text-danger"></span></div>
+        </div>
+        <p class="text-muted mt-3">Solo il nome associazione &egrave; obbligatorio: puoi completare gli altri dati in seguito. Il salvataggio non modifica i messaggi o i template gi&agrave; esistenti.</p>
+        <div class="profile-actions"><button type="submit" class="btn btn-success">Salva profilo</button><a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">Torna alla dashboard</a></div>
+    </form>
+</section>
