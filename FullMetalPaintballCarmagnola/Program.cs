@@ -166,6 +166,8 @@ using (var scope = app.Services.CreateScope())
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""NomeRiferimento"" text NULL;
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""PrefissoTelefonoRiferimento"" text NULL;
         ALTER TABLE ""Partite"" ADD COLUMN IF NOT EXISTS ""TelefonoRiferimento"" text NULL;
+        ALTER TABLE ""CampoChiusure"" ADD COLUMN IF NOT EXISTS ""OraInizio"" time without time zone NULL;
+        ALTER TABLE ""CampoChiusure"" ADD COLUMN IF NOT EXISTS ""OraFine"" time without time zone NULL;
         CREATE TABLE IF NOT EXISTS ""PhotoAlbums"" (
             ""PartitaId"" integer PRIMARY KEY REFERENCES ""Partite"" (""Id"") ON DELETE CASCADE,
             ""Token"" uuid NOT NULL

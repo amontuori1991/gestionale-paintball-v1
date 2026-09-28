@@ -42,6 +42,9 @@ upload timestamps are in R2. No persistent Render disk is required.
 - Video and animated images are rejected by server-side decoding, even with an image extension.
 - Upload percentage measures browser transfer only; logo processing and R2 saving have a separate indeterminate phase.
 - The WhatsApp quick-action menu includes a dedicated photo download message in the booking language.
+- The photo message includes the existing Google review link; a separate review-only quick action is also available in both languages.
+- Download all creates a temporary ZIP on disk (deleted when the response closes), reading at most 60 current photos sequentially. No ZIP is stored in R2 or Neon. Deleted/expired photos are checked again during preparation.
+- Share / Save to Photos prepares one JPEG via a same-origin endpoint, then requires a second tap to open native sharing. Saving into the photo library is a user choice, not an automatic browser operation. Unsupported browsers retain normal downloads; ZIPs go to Files.
 - Images are re-encoded to JPEG, <=2200 px longest edge, quality 85, <=5 MiB.
   All EXIF orientations are normalized; source metadata is not copied. The
   existing `wwwroot/img/logo.gif` is applied at bottom right. Originals are not kept.

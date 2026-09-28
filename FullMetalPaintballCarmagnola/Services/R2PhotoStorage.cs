@@ -13,6 +13,7 @@ public interface IPhotoStorage
     Task Put(Guid album, Guid photo, byte[] jpeg, CancellationToken ct);
     Task<string?> DownloadUrl(Guid album, Guid photo, bool attachment, CancellationToken ct);
     Task Delete(Guid album, Guid photo, CancellationToken ct);
+    Task<byte[]?> Read(Guid album, Guid photo, CancellationToken ct);
 }
 
 public sealed class R2PhotoStorage : IPhotoStorage, IDisposable
@@ -113,6 +114,26 @@ public sealed class R2PhotoStorage : IPhotoStorage, IDisposable
 
     public async Task Delete(Guid album, Guid photo, CancellationToken ct) =>
         await Client.DeleteObjectAsync(bucket, Key(album, photo), ct);
+
+    public async Task<byte[]?> Read(Guid album, Guid photo, CancellationToken ct)
+    {
+        try
+        {
+            using var response = await Client.GetObjectAsync(bucket, Key(album, photo), ct);
+            if (new DateTimeOffset(response.LastModified.ToUniversalTime()).AddDays(7) <= clock.GetUtcNow()) return null;
+            if (response.ContentLength > 5 * 1024 * 1024) throw new InvalidDataException("Foto troppo grande.");
+            using var output = new MemoryStream();
+            var buffer = new byte[81920];
+            int count;
+            while ((count = await response.ResponseStream.ReadAsync(buffer, ct)) > 0)
+            {
+                if (output.Length + count > 5 * 1024 * 1024) throw new InvalidDataException("Foto troppo grande.");
+                await output.WriteAsync(buffer.AsMemory(0, count), ct);
+            }
+            return output.ToArray();
+        }
+        catch (AmazonS3Exception e) when (e.StatusCode == HttpStatusCode.NotFound) { return null; }
+    }
 
     public void Dispose() => client?.Dispose();
 }

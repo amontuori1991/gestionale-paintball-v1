@@ -11,6 +11,8 @@ public class CampoChiusura
 
     [Required]
     public DateTime DataFine { get; set; }
+    public TimeSpan? OraInizio { get; set; }
+    public TimeSpan? OraFine { get; set; }
 
     [StringLength(160)]
     public string? Motivo { get; set; }

@@ -841,6 +841,16 @@
                     return;
                 }
 
+                const closures = @Html.Raw(JsonSerializer.Serialize(Model.FasceChiusure));
+                if (bookingMode === 'weekday') {
+                    const start = timeToMinutes(weekdayStartTimeInput.value);
+                    const end = start + Number(durationInput.value) * 60;
+                    if (closures.some(c => c.Data === weekdayDateInput.value && start < timeToMinutes(c.Fine) && end > timeToMinutes(c.Inizio))) {
+                        showError('Il campo risulta chiuso nella fascia richiesta. Scegli un altro orario.');
+                        return;
+                    }
+                }
+
                 const message = encodeURIComponent(buildWhatsappMessage());
                 window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank', 'noopener');
             });

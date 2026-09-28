@@ -56,6 +56,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .Where(c => c.DataFine >= oggi && c.DataInizio <= fine)
                 .ToListAsync();
             var dateChiusure = chiusure
+                .Where(c => c.OraInizio == null)
                 .SelectMany(c => Enumerable.Range(0, (c.DataFine.Date - c.DataInizio.Date).Days + 1)
                     .Select(offset => c.DataInizio.Date.AddDays(offset).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)))
                 .Distinct()
@@ -71,12 +72,19 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                         data,
                         partitePerGiorno.TryGetValue(data.Date, out var partite) ? partite : new List<Partita>(),
                         now,
-                        it))
+                        it, chiusure))
                     .Where(giorno => giorno.Slot.Count > 0)
                     .ToList(),
                 Faq = BuildFaq(catalog, currentListinoId),
                 PrimaDataInfrasettimanale = now.Date.AddDays(7),
-                DateChiusure = dateChiusure
+                DateChiusure = dateChiusure,
+                FasceChiusure = chiusure.Where(c => c.OraInizio.HasValue)
+                    .SelectMany(c => Enumerable.Range(0, (c.DataFine.Date - c.DataInizio.Date).Days + 1)
+                        .Select(offset => new PrenotazionePubblicaSlotViewModel
+                        {
+                            Data = c.DataInizio.AddDays(offset).ToString("yyyy-MM-dd"),
+                            Inizio = c.OraInizio!.Value.ToString(@"hh\:mm"), Fine = c.OraFine!.Value.ToString(@"hh\:mm")
+                        })).ToList()
             };
 
             return View(model);
@@ -84,7 +92,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         private static bool IsChiuso(List<CampoChiusura> chiusure, DateTime data)
         {
-            return chiusure.Any(c => c.DataInizio.Date <= data.Date && c.DataFine.Date >= data.Date);
+            return chiusure.Any(c => c.OraInizio == null && c.DataInizio.Date <= data.Date && c.DataFine.Date >= data.Date);
         }
 
         private static List<PrenotazionePubblicaFaqViewModel> BuildFaq(PricingCatalog catalog, short listinoId)
@@ -191,9 +199,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             DateTime data,
             List<Partita> partite,
             DateTime now,
-            CultureInfo culture)
+            CultureInfo culture, List<CampoChiusura> chiusure)
         {
-            var fasce = BuildFasce(data, partite)
+            var fasce = DisponibilitaCampoController.BuildGiorno(data, partite, chiusure).Fasce
                 .Where(f => f.Prenotabile)
                 .Select(f => ApplyMinimumNotice(data, f, now))
                 .Where(f => f != null && f.Prenotabile)

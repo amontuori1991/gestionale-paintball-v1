@@ -4,6 +4,49 @@
     const form = document.getElementById('album-upload');
     let busy = false;
     const tell = message => { if (feedback) feedback.textContent = message; };
+    const english = document.documentElement.lang === 'en';
+    const t = (it, en) => english ? en : it;
+    let preparedPhoto = null;
+    let preparedButton = null;
+    document.querySelectorAll('.album-share').forEach(button => {
+        if (!navigator.share || !navigator.canShare) return;
+        const originalLabel = button.textContent;
+        button.hidden = false;
+        button.addEventListener('click', async () => {
+            if (Date.now() >= Date.parse(button.dataset.expiry)) {
+                preparedPhoto = null;
+                tell(t('Foto scaduta. Aggiorna la pagina.', 'Photo expired. Refresh the page.'));
+                return;
+            }
+            if (preparedButton === button && preparedPhoto) {
+                try {
+                    await navigator.share({ files: [preparedPhoto] });
+                    preparedPhoto = null;
+                    button.textContent = originalLabel;
+                } catch (error) {
+                    if (error.name !== 'AbortError') tell(t('Condivisione non disponibile. Apri la foto e tienila premuta per salvarla.', 'Sharing unavailable. Open the photo and long-press to save it.'));
+                }
+                return;
+            }
+            button.disabled = true;
+            button.textContent = t('Preparazione foto...', 'Preparing photo...');
+            try {
+                const response = await fetch(button.dataset.url, { cache: 'no-store' });
+                if (!response.ok || !response.headers.get('content-type')?.startsWith('image/jpeg')) throw new Error();
+                const file = new File([await response.blob()], 'FullMetal-Foto.jpg', { type: 'image/jpeg' });
+                if (!navigator.canShare({ files: [file] })) throw new Error();
+                if (preparedButton) preparedButton.textContent = originalLabel;
+                preparedPhoto = file;
+                preparedButton = button;
+                // A second explicit tap preserves user activation on iOS after downloading the file.
+                button.textContent = t('Condividi foto', 'Share photo');
+                tell(t('Foto pronta: tocca Condividi foto, poi Salva immagine.', 'Photo ready: tap Share photo, then Save Image.'));
+            } catch {
+                button.textContent = originalLabel;
+                tell(t('Impossibile preparare la foto. Prova Scarica foto oppure aprila e tienila premuta.', 'Unable to prepare photo. Try Download photo or open it and long-press.'));
+            } finally { button.disabled = false; }
+        });
+    });
     document.querySelectorAll('.album-expiry').forEach(time => {
         time.textContent = new Date(time.dateTime).toLocaleString(document.documentElement.lang || 'it', { dateStyle: 'short', timeStyle: 'short' });
     });

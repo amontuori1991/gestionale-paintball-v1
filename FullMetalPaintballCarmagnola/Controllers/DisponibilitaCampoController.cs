@@ -62,7 +62,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     .Select(data => BuildGiorno(
                         data,
                         partitePerGiorno.TryGetValue(data.Date, out var partite) ? partite : new List<Partita>(),
-                        FindChiusura(chiusure, data)))
+                        chiusure))
                     .ToList(),
                 Chiusure = chiusure
             };
@@ -74,6 +74,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AggiungiChiusura([FromForm] CampoChiusuraRequest request)
         {
+            if (!ModelState.IsValid || request.OraInizio.HasValue != request.OraFine.HasValue ||
+                (request.OraInizio.HasValue && (request.OraInizio < TimeSpan.Zero || request.OraFine >= TimeSpan.FromDays(1) || request.OraFine <= request.OraInizio)))
+            {
+                TempData["CampoChiusuraMessage"] = "Indica entrambi gli orari, con fine successiva all'inizio, oppure lasciali entrambi vuoti per l'intera giornata.";
+                return RedirectToAction(nameof(Index));
+            }
             if (!DateTime.TryParseExact(request.DataInizio, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataInizio) ||
                 !DateTime.TryParseExact(request.DataFine, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dataFine))
             {
@@ -91,6 +97,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             {
                 DataInizio = DateTime.SpecifyKind(dataInizio.Date, DateTimeKind.Utc),
                 DataFine = DateTime.SpecifyKind(dataFine.Date, DateTimeKind.Utc),
+                OraInizio = request.OraInizio,
+                OraFine = request.OraFine,
                 Motivo = string.IsNullOrWhiteSpace(request.Motivo) ? null : request.Motivo.Trim()
             });
 
@@ -136,17 +144,17 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
 
             var data = DateTime.SpecifyKind(parsedDate.Date, DateTimeKind.Utc);
-            var chiusura = await _dbContext.CampoChiusure
+            var chiusure = await _dbContext.CampoChiusure
                 .Where(c => c.DataInizio <= data && c.DataFine >= data)
                 .OrderBy(c => c.DataInizio)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
 
             var partite = await _dbContext.Partite
                 .Where(p => !p.IsDeleted && p.Data >= data && p.Data < data.AddDays(1))
                 .OrderBy(p => p.OraInizio)
                 .ToListAsync();
 
-            var giorno = BuildGiorno(data, partite, chiusura);
+            var giorno = BuildGiorno(data, partite, chiusure);
             var slotLiberi = giorno.Fasce
                 .Where(f => f.Prenotabile)
                 .Select(BuildSlotDisponibileLabel)
@@ -157,7 +165,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             if (!hasSpecificTime)
             {
-                var messageForDay = BuildCustomerMessageForDay(data, slotLiberi, catalog, currentListinoId, request.TipoGruppo, chiusura);
+                var messageForDay = BuildCustomerMessageForDay(data, slotLiberi, catalog, currentListinoId, request.TipoGruppo, chiusure.FirstOrDefault(c => c.OraInizio == null));
                 return Json(new
                 {
                     success = true,
@@ -196,8 +204,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             });
         }
 
-        private static CampoDisponibilitaGiornoViewModel BuildGiorno(DateTime data, List<Partita> partite, CampoChiusura? chiusura)
+        public static CampoDisponibilitaGiornoViewModel BuildGiorno(DateTime data, List<Partita> partite, List<CampoChiusura> chiusure)
         {
+            chiusure = chiusure.Where(c => c.DataInizio.Date <= data.Date && c.DataFine.Date >= data.Date).ToList();
+            var chiusura = chiusure.FirstOrDefault(c => c.OraInizio == null);
             var tramonto = GetSunsetTime(data);
             var ultimaFinePartita = RoundDownToHalfHour(tramonto - MargineCampo);
             if (ultimaFinePartita < AperturaCampo)
@@ -230,6 +240,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             var fasceOccupate = partite
                 .Select(partita => BuildFasciaOccupata(partita, ultimaFinePartita))
+                .Concat(chiusure.Select(c => new CampoFasciaViewModel
+                {
+                    Inizio = c.OraInizio!.Value, Fine = c.OraFine!.Value,
+                    Stato = "Chiuso", Dettaglio = "Campo chiuso", Prenotabile = false
+                }))
                 .Where(fascia => fascia.Fine > AperturaCampo && fascia.Inizio < ultimaFinePartita)
                 .Select(fascia =>
                 {

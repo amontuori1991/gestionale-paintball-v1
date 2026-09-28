@@ -531,6 +531,9 @@
                 Motivo
                 <input type="text" name="Motivo" maxlength="160" placeholder="Es. festivita" />
             </label>
+            <label>Dalle (opzionale)<input type="time" name="OraInizio" /></label>
+            <label>Alle (opzionale)<input type="time" name="OraFine" /></label>
+            <p>Orari vuoti: giornata intera. Se indicati, la fascia si ripete ogni giorno nell'intervallo di date. Per fasce separate inserisci pi&ugrave; chiusure.</p>
             <button type="submit">Chiudi campo</button>
         </form>
         <div class="closure-list">
@@ -543,6 +546,7 @@
                 <div class="closure-row">
                     <div>
                         <strong>@chiusura.DataInizio.ToString("dd/MM/yyyy", it) - @chiusura.DataFine.ToString("dd/MM/yyyy", it)</strong>
+                        <span> · @(chiusura.OraInizio.HasValue ? $"{chiusura.OraInizio:hh\\:mm} - {chiusura.OraFine:hh\\:mm}" : "Intera giornata")</span>
                         @if (!string.IsNullOrWhiteSpace(chiusura.Motivo))
                         {
                             <span> · @chiusura.Motivo</span>

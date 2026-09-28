@@ -60,6 +60,11 @@
     }
     <section class="album-gallery-section">
         <h2>@T("L'album", "The album") <span class="album-counter">@Model.Photos.Count @T("foto", "photos")</span></h2>
+        @if (Model.Photos.Count > 0)
+        {
+            <p><a class="album-button" href="@Url.Action("ScaricaTutte", "Foto", new { token = Model.Token })">@T("Scarica tutte le foto (ZIP)", "Download all photos (ZIP)")</a></p>
+            <p>@T("Su iPhone: usa Condividi / Salva in Foto, poi tocca Condividi foto e scegli Salva immagine nel menu di sistema. In alternativa apri la foto e tienila premuta per salvarla. Lo ZIP viene scaricato in File, non nella libreria Foto.", "On iPhone: use Share / Save to Photos, then tap Share photo and choose Save Image in the system menu. Alternatively open the photo and long-press to save it. ZIP downloads go to Files, not the Photos library.")</p>
+        }
         @if (Model.Photos.Count == 0 && Model.Error == null)
         {
             <div class="album-empty"><span aria-hidden="true">&#128247;</span>
@@ -76,6 +81,7 @@
                     <div class="album-photo-info">
                         <small>@T("Scade", "Expires") <time class="album-expiry" datetime="@photo.ExpiresAt.ToString("O")">@photo.ExpiresAt.ToString("dd/MM/yyyy HH:mm") UTC</time></small>
                         <a class="album-button" href="@Url.Action("Immagine", "Foto", new { token = Model.Token, photo = photo.Id, download = true })">@T("Scarica foto", "Download photo")</a>
+                        <button type="button" class="album-button album-share" hidden data-url="@Url.Action("FileFoto", "Foto", new { token = Model.Token, photo = photo.Id })" data-expiry="@photo.ExpiresAt.ToString("O")">@T("Condividi / Salva in Foto", "Share / Save to Photos")</button>
                         @if (Model.Manage)
                         {
                             <button type="button" class="album-delete" data-url="@Url.Action("Elimina", "Foto")" data-game="@Model.PartitaId" data-photo="@photo.Id">Elimina</button>

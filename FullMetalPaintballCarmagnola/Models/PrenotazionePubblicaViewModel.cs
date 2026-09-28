@@ -9,6 +9,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public DateTime PrimaDataInfrasettimanale { get; set; }
 
         public List<string> DateChiusure { get; set; } = new();
+        public List<PrenotazionePubblicaSlotViewModel> FasceChiusure { get; set; } = new();
     }
 
     public class PrenotazionePubblicaGiornoViewModel

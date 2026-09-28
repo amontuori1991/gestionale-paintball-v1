@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
+using System.IO.Compression;
 
 namespace Full_Metal_Paintball_Carmagnola.Controllers;
 
@@ -13,6 +14,68 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers;
 public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService albums, IPhotoStorage storage,
     ILogger<FotoController> logger) : Controller
 {
+    private static readonly SemaphoreSlim ZipGate = new(1, 1);
+    public static string ReviewMessage(bool english) => english
+        ? "Your opinion means a lot to us and helps us improve! If you would like to tell us about your experience, please leave a review:\nhttps://g.page/r/CSY7ElrZDaxMEBM/review\nThank you for your time!"
+        : "Il tuo parere per noi conta molto e ci aiuta a crescere! Se ti va di raccontare la tua esperienza al campo, ci farebbe piacere ricevere una recensione:\nhttps://g.page/r/CSY7ElrZDaxMEBM/review\nGrazie per il tempo che vorrai dedicarci!";
+
+    [HttpGet]
+    public async Task<IActionResult> Recensione(int id, CancellationToken ct)
+    {
+        var game = await db.Partite.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, ct);
+        return game == null ? NotFound() : Ok(new { message = ReviewMessage(string.Equals(game.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase)) });
+    }
+
+    [AllowAnonymous]
+    [HttpGet("Foto/File/{token:guid}/{photo:guid}")]
+    public async Task<IActionResult> FileFoto(Guid token, Guid photo, CancellationToken ct)
+    {
+        if (!await db.PhotoAlbums.AnyAsync(a => a.Token == token && !a.Partita.IsDeleted, ct)) return NotFound();
+        try
+        {
+            var bytes = await storage.Read(token, photo, ct);
+            return bytes == null ? NotFound() : File(bytes, "image/jpeg");
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        { LogStorageError(e); return StatusCode(503); }
+    }
+
+    [AllowAnonymous]
+    [HttpGet("Foto/ScaricaTutte/{token:guid}")]
+    public async Task<IActionResult> ScaricaTutte(Guid token, CancellationToken ct)
+    {
+        if (!await db.PhotoAlbums.AnyAsync(a => a.Token == token && !a.Partita.IsDeleted, ct)) return NotFound();
+        if (!await ZipGate.WaitAsync(TimeSpan.FromSeconds(2), ct)) return StatusCode(429, "Download in preparazione. Riprova tra poco.");
+        FileStream? file = null;
+        try
+        {
+            var photos = await storage.List(token, ct);
+            if (photos.Count == 0) return NotFound("Nessuna foto disponibile.");
+            file = new FileStream(Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".zip"), FileMode.CreateNew,
+                FileAccess.ReadWrite, FileShare.None, 81920, FileOptions.Asynchronous | FileOptions.DeleteOnClose);
+            var count = 0;
+            using (var zip = new ZipArchive(file, ZipArchiveMode.Create, true))
+            {
+                foreach (var photo in photos.Take(PhotoAlbumService.MaxPhotos))
+                {
+                    var bytes = await storage.Read(token, photo.Id, ct);
+                    if (bytes == null) continue;
+                    await using var entry = zip.CreateEntry($"FullMetal-{++count:000}.jpg", CompressionLevel.NoCompression).Open();
+                    await entry.WriteAsync(bytes, ct);
+                }
+            }
+            if (count == 0) { await file.DisposeAsync(); return NotFound("Le foto sono scadute."); }
+            file.Position = 0;
+            return File(file, "application/zip", "FullMetal-Foto.zip");
+        }
+        catch (Exception e)
+        {
+            if (file != null) await file.DisposeAsync();
+            if (e is OperationCanceledException) throw;
+            LogStorageError(e); return StatusCode(503, "Download non riuscito. Riprova tra poco.");
+        }
+        finally { ZipGate.Release(); }
+    }
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         Response.Headers["X-Robots-Tag"] = "noindex, nofollow, noarchive";
@@ -50,10 +113,11 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
         return Ok(new { message = PhotoMessage(game, PhotoAlbumService.PublicUrl(Request, album.Token)) });
     }
 
-    private static string PhotoMessage(Partita game, string url) =>
+    private static string PhotoMessage(Partita game, string url) => (
         string.Equals(game.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase)
             ? $"Hi! Here is the link to download your game photos:\n{url}\n\nEach photo is available for 7 days from its upload, then it is automatically removed. Check the expiry shown below each photo and download it in time. If the album is empty, please check again after upload.\nShare the link only with your group. Thank you!"
-            : $"Ciao! Ecco il link per scaricare le foto della vostra partita:\n{url}\n\nOgni foto resta disponibile per 7 giorni dal suo caricamento, poi viene rimossa automaticamente. Controlla la scadenza riportata sotto ogni foto e scaricala in tempo. Se l'album risulta vuoto, riprova dopo il caricamento.\nCondividi il link solo con il tuo gruppo. Grazie!";
+            : $"Ciao! Ecco il link per scaricare le foto della vostra partita:\n{url}\n\nOgni foto resta disponibile per 7 giorni dal suo caricamento, poi viene rimossa automaticamente. Controlla la scadenza riportata sotto ogni foto e scaricala in tempo. Se l'album risulta vuoto, riprova dopo il caricamento.\nCondividi il link solo con il tuo gruppo. Grazie!")
+            + "\n\n" + ReviewMessage(string.Equals(game.Nazionalita, "ENG", StringComparison.OrdinalIgnoreCase));
 
     [AllowAnonymous]
     [HttpGet("Foto/Immagine/{token:guid}/{photo:guid}")]

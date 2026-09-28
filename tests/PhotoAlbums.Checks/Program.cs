@@ -60,7 +60,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(o => o.UseNpgsql(cs));
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddAuthentication(o => { o.DefaultAuthenticateScheme = "Test"; o.DefaultChallengeScheme = "Test"; o.DefaultForbidScheme = "Test"; })
     .AddScheme<AuthenticationSchemeOptions, TestAuth>("Test", _ => { });
-builder.Services.AddAuthorization(o => o.AddPolicy("Prenotazioni", p => p.RequireAuthenticatedUser()));
+builder.Services.AddAuthorization(o => {
+    o.AddPolicy("Prenotazioni", p => p.RequireAuthenticatedUser());
+    o.AddPolicy("Disponibilita Campo", p => p.RequireAuthenticatedUser());
+});
+builder.Services.AddScoped<PricingCatalogService>();
 var clock = new TestClock();
 var storage = new TestStorage(clock);
 builder.Services.AddSingleton<TimeProvider>(clock);
@@ -229,6 +233,8 @@ try
     game.Nazionalita = "ENG"; await db.SaveChangesAsync();
     var photoMessageEn = await staff.GetStringAsync($"/Foto/Messaggio/{game.Id}");
     Check(photoMessageEn.Contains("7 days") && photoMessageEn.Contains("download"), "English photo message missing expiry");
+    Check(photoMessageIt.Contains("g.page/r/CSY7ElrZDaxMEBM/review") && photoMessageEn.Contains("review"), "Photo messages missing review");
+    Check((await staff.GetStringAsync($"/Foto/Recensione/{game.Id}")).Contains("review"), "Dedicated review message missing");
     Check((await anonymous.GetAsync($"/Foto/Gestisci/{game.Id}")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous staff access");
     Check((await anonymous.PostAsync($"/Foto/Carica/{game.Id}", new StringContent(""))).StatusCode == HttpStatusCode.Unauthorized, "Anonymous upload access");
     var publicResponse = await anonymous.GetAsync($"/Foto/Album/{album.Token:N}");
@@ -239,11 +245,36 @@ try
     Check((await anonymous.GetAsync($"/Foto/Album/{Guid.NewGuid():N}")).StatusCode == HttpStatusCode.NotFound, "Forged token accepted");
     Check((await anonymous.GetAsync($"/Foto/Immagine/{otherAlbum.Token:N}/{uploaded.Id}")).StatusCode == HttpStatusCode.NotFound, "Cross-album photo leak");
     Check((await anonymous.GetAsync($"/Foto/Immagine/{album.Token:N}/{uploaded.Id}")).StatusCode == HttpStatusCode.Redirect, "Download unavailable");
+    Check((await anonymous.GetAsync($"/Foto/File/{otherAlbum.Token:N}/{uploaded.Id}")).StatusCode == HttpStatusCode.NotFound, "Cross-album proxy leak");
+    Check((await anonymous.GetAsync($"/Foto/File/{album.Token:N}/{uploaded.Id}")).Content.Headers.ContentType?.MediaType == "image/jpeg", "Share proxy unavailable");
+    var zipResponse = await anonymous.GetAsync($"/Foto/ScaricaTutte/{album.Token:N}");
+    Check(zipResponse.IsSuccessStatusCode && zipResponse.Content.Headers.ContentType?.MediaType == "application/zip", "ZIP unavailable");
+    using (var zipBytes = new MemoryStream(await zipResponse.Content.ReadAsByteArrayAsync()))
+    using (var archive = new System.IO.Compression.ZipArchive(zipBytes))
+        Check(archive.Entries.Count == 1 && archive.Entries.All(e => e.Name.EndsWith(".jpg")), "Wrong ZIP entries");
     var manageResponse = await staff.GetAsync($"/Foto/Gestisci/{game.Id}");
     Check(manageResponse.IsSuccessStatusCode, "Staff manage unavailable: " + await manageResponse.Content.ReadAsStringAsync());
     var manageHtml = await manageResponse.Content.ReadAsStringAsync();
     var token = WebUtility.HtmlDecode(Regex.Match(manageHtml, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
     Check(token.Length > 0, "No antiforgery token");
+    var closureFields = new Dictionary<string, string> {
+        ["__RequestVerificationToken"] = token, ["DataInizio"] = "2026-10-10", ["DataFine"] = "2026-10-10",
+        ["OraInizio"] = "12:00", ["OraFine"] = "14:00", ["Motivo"] = "Test"
+    };
+    Check((await staff.PostAsync("/DisponibilitaCampo/AggiungiChiusura", new FormUrlEncodedContent(closureFields))).StatusCode == HttpStatusCode.Redirect, "Closure save failed");
+    var savedClosure = await db.CampoChiusure.AsNoTracking().SingleAsync();
+    Check(savedClosure.OraInizio == new TimeSpan(12,0,0) && savedClosure.OraFine == new TimeSpan(14,0,0), "Closure hours not persisted");
+    closureFields["OraFine"] = "11:00";
+    await staff.PostAsync("/DisponibilitaCampo/AggiungiChiusura", new FormUrlEncodedContent(closureFields));
+    Check(await db.CampoChiusure.CountAsync() == 1, "Invalid closure saved");
+    var checkFields = new Dictionary<string, string> { ["__RequestVerificationToken"] = token, ["Data"] = "2026-10-10", ["OraInizio"] = "11:00", ["Durata"] = "1" };
+    var availableJson = await (await staff.PostAsync("/DisponibilitaCampo/VerificaRichiesta", new FormUrlEncodedContent(checkFields))).Content.ReadAsStringAsync();
+    Check(JsonDocument.Parse(availableJson).RootElement.GetProperty("disponibile").GetBoolean(), "Exact closure boundary unavailable");
+    checkFields["OraInizio"] = "12:00";
+    var closedJson = await (await staff.PostAsync("/DisponibilitaCampo/VerificaRichiesta", new FormUrlEncodedContent(checkFields))).Content.ReadAsStringAsync();
+    Check(!JsonDocument.Parse(closedJson).RootElement.GetProperty("disponibile").GetBoolean(), "Partial closure offered to customer");
+    Check((await anonymous.GetAsync("/Prenotazione")).IsSuccessStatusCode, "Public availability page failed");
+    Console.WriteLine("PASS: closure persistence, invalid interval rejection, public page, boundary availability.");
     Check((await staff.PostAsync("/Foto/Carica", new MultipartFormDataContent())).StatusCode == HttpStatusCode.BadRequest, "Missing antiforgery accepted");
     using var form = new MultipartFormDataContent();
     form.Add(new StringContent(token), "__RequestVerificationToken"); form.Add(new StringContent(game.Id.ToString()), "id");
@@ -265,6 +296,7 @@ try
     Check((await anonymous.GetAsync($"/Foto/Immagine/{album.Token:N}/{uploaded.Id}")).StatusCode == HttpStatusCode.NotFound, "Deleted photo available");
     game.IsDeleted = true; await db.SaveChangesAsync();
     Check((await anonymous.GetAsync($"/Foto/Album/{album.Token:N}")).StatusCode == HttpStatusCode.NotFound, "Cancelled album public");
+    Check((await anonymous.GetAsync($"/Foto/ScaricaTutte/{album.Token:N}")).StatusCode == HttpStatusCode.NotFound, "Cancelled ZIP public");
     game.IsDeleted = false; await db.SaveChangesAsync();
     staff.DefaultRequestHeaders.Remove("X-Test-Role"); staff.DefaultRequestHeaders.Add("X-Test-Role", "Viewer");
     Check((await staff.GetAsync($"/Foto/Gestisci/{game.Id}")).StatusCode == HttpStatusCode.Forbidden, "Other role allowed");
@@ -299,6 +331,7 @@ sealed class TestStorage(TestClock clock) : IPhotoStorage
     public Task<IReadOnlyList<AlbumPhoto>> List(Guid album, CancellationToken ct) => Task.FromResult<IReadOnlyList<AlbumPhoto>>(photos.Where(p => p.Key.Item1 == album && p.Value.IsAvailable(clock.Now)).Select(p => p.Value).ToList());
     public Task Put(Guid album, Guid id, byte[] jpeg, CancellationToken ct) { photos[(album,id)] = new(id, clock.Now, jpeg.Length); return Task.CompletedTask; }
     public Task Delete(Guid album, Guid id, CancellationToken ct) { photos.Remove((album,id)); return Task.CompletedTask; }
+    public Task<byte[]?> Read(Guid album, Guid id, CancellationToken ct) => Task.FromResult<byte[]?>(photos.TryGetValue((album,id), out var photo) && photo.IsAvailable(clock.Now) ? Preview : null);
     public Task<string?> DownloadUrl(Guid album, Guid id, bool attachment, CancellationToken ct) => Task.FromResult(photos.TryGetValue((album,id), out var photo) && photo.IsAvailable(clock.Now) ? "/fixtures/photo.jpg" : null);
 }
 sealed class FakeS3() : AmazonS3Client(new BasicAWSCredentials("test", "test"), new AmazonS3Config { ServiceURL = "https://test.eu.r2.cloudflarestorage.com", AuthenticationRegion = "auto", ForcePathStyle = true })

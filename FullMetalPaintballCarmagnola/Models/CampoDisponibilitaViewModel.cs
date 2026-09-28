@@ -9,6 +9,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
     public class CampoChiusuraRequest
     {
+        public TimeSpan? OraInizio { get; set; }
+        public TimeSpan? OraFine { get; set; }
         public string DataInizio { get; set; } = string.Empty;
 
         public string DataFine { get; set; } = string.Empty;

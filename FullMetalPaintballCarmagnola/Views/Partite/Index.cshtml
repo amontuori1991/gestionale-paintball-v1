@@ -921,6 +921,7 @@
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="summary">📄 Messaggio riepilogativo completo</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="link">📎 Link tesseramento</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="photos"><i class="bi bi-camera" aria-hidden="true"></i> Foto della partita</button>
+                                <button type="button" class="btn btn-outline-success js-wa-action" data-action="review"><i class="bi bi-star" aria-hidden="true"></i> Richiedi recensione</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="members-reminder">📝 Sollecito tesseramenti</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="reminder">⏰ Promemoria partita</button>
                                 <button type="button" class="btn btn-outline-success js-wa-action" data-action="short">🎯 Riepilogo rapido</button>
@@ -974,16 +975,16 @@
                     return;
                 }
 
-                if (action === 'photos') {
+                if (action === 'photos' || action === 'review') {
                     try {
-                        Swal.fire({ title: 'Preparo il link foto...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                        const response = await $.ajax({ url: '@Url.Action("Messaggio", "Foto")', method: 'GET', data: { id: button.dataset.id } });
+                        Swal.fire({ title: 'Preparo il messaggio...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        const response = await $.ajax({ url: action === 'photos' ? '@Url.Action("Messaggio", "Foto")' : '@Url.Action("Recensione", "Foto")', method: 'GET', data: { id: button.dataset.id } });
                         Swal.close();
                         if (!response.message) throw new Error('Messaggio assente');
                         openWhatsapp(number, response.message);
                     } catch {
                         Swal.close();
-                        fmpNotify('Impossibile preparare il link foto. Verifica la sessione e riprova.', 'error');
+                        fmpNotify('Impossibile preparare il messaggio. Verifica la sessione e riprova.', 'error');
                     }
                     return;
                 }

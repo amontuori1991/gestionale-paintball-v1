@@ -32,7 +32,7 @@ async function check(mode) {
         }
     }
     runInNewContext(readFileSync('FullMetalPaintballCarmagnola/wwwroot/js/photo-album.js', 'utf8'), {
-        document: { getElementById: id => nodes[id], querySelectorAll: () => [], createElement: () => ({ addEventListener() {} }) },
+        document: { documentElement: { lang: 'it' }, getElementById: id => nodes[id], querySelectorAll: () => [], createElement: () => ({ addEventListener() {} }) },
         window: { addEventListener() {}, location: { reload() { reloaded = true; } } },
         location: { href: form.action }, URL, XMLHttpRequest: Xhr,
         FormData: class { append() {} }

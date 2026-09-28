@@ -116,7 +116,7 @@ public class CalendarioAssenzeController : Controller
         fine = ToUtcDate(fine);
 
         return await _context.CampoChiusure
-            .Where(c => c.DataInizio <= fine && c.DataFine >= inizio)
+            .Where(c => c.OraInizio == null && c.DataInizio <= fine && c.DataFine >= inizio)
             .ToListAsync();
     }
 
@@ -146,7 +146,7 @@ public class CalendarioAssenzeController : Controller
         data = ToUtcDate(data);
 
         return await _context.CampoChiusure
-            .AnyAsync(c => c.DataInizio <= data && c.DataFine >= data);
+            .AnyAsync(c => c.OraInizio == null && c.DataInizio <= data && c.DataFine >= data);
     }
 
     private static DateTime ToUtcDate(DateTime data)
