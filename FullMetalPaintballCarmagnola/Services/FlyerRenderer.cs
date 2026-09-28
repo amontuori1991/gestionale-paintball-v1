@@ -100,7 +100,14 @@ public sealed class FlyerRenderer(IWebHostEnvironment env)
         Rect(0, 846, W, H - 846, light ? SKColor.Parse("#17251c") : SKColor.Parse("#f6f3e8"));
         var footerInk = light ? SKColors.White : SKColor.Parse("#17251c");
         Text(c, m.CallToAction, new(46, 865, 588, 908), bold, footerInk, 32, 17);
-        var contacts = new[] { p.Phone, p.Email, p.FieldAddress, p.Website, p.Instagram, p.FacebookPage == null ? null : "Facebook: " + p.FacebookPage, p.TaxCode == null ? null : "C.F. " + p.TaxCode };
+        static string? Contact(string label, string? value) => string.IsNullOrWhiteSpace(value) ? null : label + ": " + value;
+        var contacts = new[]
+        {
+            Contact("Telefono", p.Phone), Contact("Email", p.Email),
+            Contact("Indirizzo", p.FieldAddress), Contact("Sito", p.Website),
+            Contact("Instagram", p.Instagram), Contact("Facebook", p.FacebookPage),
+            Contact("C.F.", p.TaxCode)
+        };
         Text(c, string.Join("\n", contacts.Where(s => !string.IsNullOrWhiteSpace(s))), new(46, 922, 586, 1082), regular, footerInk, 18, 10);
         if (Uri.TryCreate(p.Website, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
         {
