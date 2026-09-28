@@ -243,7 +243,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private static List<CampoFasciaViewModel> BuildFasce(DateTime data, List<Partita> partite)
         {
             var tramonto = GetSunsetTime(data);
-            var ultimaFinePartita = RoundDownToHalfHour(tramonto - MargineCampo);
+            var ultimaFinePartita = RoundDownToHalfHour(tramonto);
             if (ultimaFinePartita < AperturaCampo)
                 ultimaFinePartita = AperturaCampo;
 

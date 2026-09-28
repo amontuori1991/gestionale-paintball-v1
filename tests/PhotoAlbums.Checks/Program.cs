@@ -34,6 +34,16 @@ using SkiaSharp;
 void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
 if (args.Contains("--availability-only"))
 {
+    var autumn = DisponibilitaCampoController.BuildGiorno(new DateTime(2026, 10, 25), [], []);
+    Check(autumn.UltimaFinePartita == TimeSpan.FromHours(17), "17:28 sunset must close at 17:00");
+    Check(autumn.IsAvailable(TimeSpan.FromHours(16), TimeSpan.FromHours(17)), "Game ending at closing rejected");
+    Check(!autumn.IsAvailable(TimeSpan.FromHours(16), new TimeSpan(17, 30, 0)), "Game after closing accepted");
+    for (var offset = 0; offset < 365; offset++)
+    {
+        var current = DisponibilitaCampoController.BuildGiorno(new DateTime(2026, 1, 1).AddDays(offset), [], []);
+        Check(current.UltimaFinePartita <= current.Tramonto && current.Tramonto - current.UltimaFinePartita < TimeSpan.FromMinutes(30), "Closing must floor sunset without an extra margin");
+        Check(current.UltimaFinePartita.TotalMinutes % 30 == 0, "Closing not on half-hour boundary");
+    }
     var date = new DateTime(2026, 10, 4);
     var booking = new Partita { OraInizio = new TimeSpan(14, 30, 0), Durata = 2.5 };
     CampoChiusura Closure(int start, int end) => new() { DataInizio = date, DataFine = date, OraInizio = TimeSpan.FromHours(start), OraFine = TimeSpan.FromHours(end) };
