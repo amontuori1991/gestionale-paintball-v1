@@ -324,19 +324,27 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private static List<CampoFasciaViewModel> MergeOccupate(List<CampoFasciaViewModel> fasce)
         {
             var result = new List<CampoFasciaViewModel>();
-            foreach (var fascia in fasce)
+            // Split at every boundary so a closure never inherits the end of a booking.
+            var confini = fasce.SelectMany(f => new[] { f.Inizio, f.Fine }).Distinct().OrderBy(t => t).ToList();
+            for (var i = 0; i < confini.Count - 1; i++)
             {
+                var inizio = confini[i];
+                var fine = confini[i + 1];
+                var attive = fasce.Where(f => f.Inizio < fine && f.Fine > inizio).ToList();
+                if (attive.Count == 0) continue;
+                var stato = attive.Any(f => f.Stato == "Chiuso") ? "Chiuso" : "Occupato";
                 var last = result.LastOrDefault();
-                if (last == null || fascia.Inizio > last.Fine)
+                if (last != null && last.Fine == inizio && last.Stato == stato)
                 {
-                    result.Add(fascia);
+                    last.Fine = fine;
                     continue;
                 }
-
-                if (fascia.Fine > last.Fine)
-                    last.Fine = fascia.Fine;
-
-                last.Dettaglio = "Campo occupato";
+                result.Add(new CampoFasciaViewModel
+                {
+                    Inizio = inizio, Fine = fine, Stato = stato,
+                    Dettaglio = stato == "Chiuso" ? "Campo chiuso" : "Campo occupato",
+                    Prenotabile = false
+                });
             }
 
             return result;

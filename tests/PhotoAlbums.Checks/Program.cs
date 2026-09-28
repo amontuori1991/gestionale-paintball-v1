@@ -32,6 +32,24 @@ using Npgsql;
 using SkiaSharp;
 
 void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
+if (args.Contains("--availability-only"))
+{
+    var date = new DateTime(2026, 10, 4);
+    var booking = new Partita { OraInizio = new TimeSpan(14, 30, 0), Durata = 2.5 };
+    CampoChiusura Closure(int start, int end) => new() { DataInizio = date, DataFine = date, OraInizio = TimeSpan.FromHours(start), OraFine = TimeSpan.FromHours(end) };
+    var day = DisponibilitaCampoController.BuildGiorno(date, [booking], [Closure(9, 14)]);
+    Check(day.Fasce[0].Stato == "Chiuso" && day.Fasce[0].Fine == TimeSpan.FromHours(14), "Closure extended into booking");
+    Check(day.Fasce[1].Stato == "Occupato" && day.Fasce[1].Inizio == TimeSpan.FromHours(14) && day.Fasce[1].Fine == new TimeSpan(17,30,0), "Booking boundary lost");
+    Check(day.Fasce[2].Prenotabile && day.Fasce[2].Inizio == new TimeSpan(17,30,0), "Free interval changed");
+    day = DisponibilitaCampoController.BuildGiorno(date, [booking], [Closure(15,16)]);
+    Check(day.Fasce.Where(f => !f.Prenotabile).Select(f => f.Stato).SequenceEqual(new[] { "Occupato", "Chiuso", "Occupato" }), "Overlapping closure not split");
+    day = DisponibilitaCampoController.BuildGiorno(date, [], [Closure(9,11), Closure(10,12), Closure(13,14)]);
+    Check(day.Fasce[0].Fine == TimeSpan.FromHours(12) && day.Fasce[1].Prenotabile && day.Fasce[2].Stato == "Chiuso", "Same-state merging or free gap failed");
+    day = DisponibilitaCampoController.BuildGiorno(date, [booking], [new CampoChiusura { DataInizio = date, DataFine = date }]);
+    Check(day.CampoChiuso && day.Fasce.Count == 1 && !day.Fasce[0].Prenotabile, "Full-day closure changed");
+    Console.WriteLine("PASS: adjacent closure/booking, overlap precedence, same-state merging, free gaps and full-day closure.");
+    return;
+}
 if (args.Contains("--flyer-only"))
 {
     var host = WebApplication.CreateBuilder(new WebApplicationOptions { ContentRootPath = Path.GetFullPath("FullMetalPaintballCarmagnola"), WebRootPath = "wwwroot" });
