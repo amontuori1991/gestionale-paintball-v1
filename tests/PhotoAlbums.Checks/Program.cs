@@ -32,6 +32,18 @@ using Npgsql;
 using SkiaSharp;
 
 void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
+if (args.Contains("--flyer-only"))
+{
+    var host = WebApplication.CreateBuilder(new WebApplicationOptions { ContentRootPath = Path.GetFullPath("FullMetalPaintballCarmagnola"), WebRootPath = "wwwroot" });
+    var renderer = new FlyerRenderer(host.Environment);
+    foreach (var format in new[] { "pdf", "jpg" })
+    {
+        var bytes = renderer.Render(new FlyerRequest { Format = format }, new CompanyProfile { Name = "TEST ASSOCIATION", Website = "https://example.org" });
+        Check(bytes.Length > 1000, "Native flyer generation failed");
+    }
+    Console.WriteLine("PASS: native PDF and JPG flyer rendering on " + System.Runtime.InteropServices.RuntimeInformation.OSDescription);
+    return;
+}
 if (args.Length == 2 && args[0] == "--heif-only")
 {
     var host = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -66,6 +78,7 @@ builder.Services.AddAuthorization(o => {
 });
 builder.Services.AddScoped<PricingCatalogService>();
 builder.Services.AddScoped<CompanyProfileService>();
+builder.Services.AddSingleton<FlyerRenderer>();
 var clock = new TestClock();
 var storage = new TestStorage(clock);
 builder.Services.AddSingleton<TimeProvider>(clock);
@@ -218,17 +231,22 @@ try
     Console.WriteLine("PASS: Italian/English HTML and WhatsApp summary links, stable token across requests.");
 
     if (args.Contains("--preview"))
+    {
+        app.MapGet("/preview/admin", (HttpContext http) => { http.Response.Cookies.Append("PhotoTestRole", "Admin"); return Results.Redirect("/Volantini"); });
         app.MapGet("/preview/login", (HttpContext http) =>
         {
             http.Response.Cookies.Append("PhotoTestRole", "Staff");
             return Results.Redirect($"/Foto/Gestisci/{game.Id}");
         });
+    }
     await app.StartAsync();
     using var anonymous = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = new Uri("http://127.0.0.1:55443") };
     using var staff = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress };
     staff.DefaultRequestHeaders.Add("X-Test-Role", "Staff");
     Check((await anonymous.GetAsync("/ProfiloAzienda")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous company profile access");
     Check((await staff.GetAsync("/ProfiloAzienda")).StatusCode == HttpStatusCode.Forbidden, "Staff company profile access");
+    Check((await staff.GetAsync("/Volantini")).StatusCode == HttpStatusCode.Forbidden, "Staff flyer access");
+    Check((await anonymous.PostAsync("/Volantini/Genera", new StringContent(""))).StatusCode == HttpStatusCode.Unauthorized, "Anonymous flyer export");
     Check((await staff.PostAsync("/ProfiloAzienda", new FormUrlEncodedContent(new Dictionary<string,string> { ["Name"] = "Forbidden" }))).StatusCode == HttpStatusCode.Forbidden, "Staff profile write access");
     using (var adminClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress })
     {
@@ -253,6 +271,25 @@ try
         fields["Website"] = "https://example.org/new"; fields["Instagram"] = "@@updated";
         await adminClient.PostAsync("/ProfiloAzienda", new FormUrlEncodedContent(fields));
         Check((await profiles.GetAsync()).Instagram == "@updated" && await db.AppSettings.CountAsync(s => s.Key == "CompanyProfileV1") == 1, "Profile update duplicated record");
+        var flyerPage = await adminClient.GetStringAsync("/Volantini");
+        Check(flyerPage.Contains("page-back-button"), "Flyer back button missing");
+        Check(profileHtml.Contains("page-back-button"), "Company profile back button missing");
+        var flyerToken = WebUtility.HtmlDecode(Regex.Match(flyerPage, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
+        Check((await adminClient.PostAsync("/Volantini/Genera", new FormUrlEncodedContent(new Dictionary<string,string>()))).StatusCode == HttpStatusCode.BadRequest, "Flyer export without antiforgery");
+        var fixtureDir = Path.GetFullPath(".codex-build/flyer-fixtures"); Directory.CreateDirectory(fixtureDir);
+        foreach (var format in new[] { "preview", "pdf", "jpg" })
+        {
+            var response = await adminClient.PostAsync("/Volantini/Genera", new FormUrlEncodedContent(new Dictionary<string,string> { ["__RequestVerificationToken"] = flyerToken, ["Format"] = format }));
+            Check(response.IsSuccessStatusCode, "Flyer export failed: " + await response.Content.ReadAsStringAsync());
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            if (format == "pdf") Check(System.Text.Encoding.ASCII.GetString(bytes, 0, 4) == "%PDF", "Invalid PDF");
+            else { using var flyerBitmap = SKBitmap.Decode(bytes); Check(flyerBitmap.Width == (format == "jpg" ? 2480 : 794), "Wrong flyer resolution"); }
+            File.WriteAllBytes(Path.Combine(fixtureDir, format == "pdf" ? "flyer.pdf" : format + ".jpg"), bytes);
+        }
+        Check((await adminClient.PostAsync("/Volantini/Genera", new FormUrlEncodedContent(new Dictionary<string,string> { ["__RequestVerificationToken"] = flyerToken, ["Title"] = new string('A', 66) }))).StatusCode == HttpStatusCode.BadRequest, "Oversized title accepted");
+        foreach (var theme in new[] { "sun", "ice" })
+            File.WriteAllBytes(Path.Combine(fixtureDir, theme + ".jpg"), new FlyerRenderer(app.Environment).Render(new FlyerRequest { Theme = theme, Title = "AMICI FUORI. RIVALI IN CAMPO." }, await profiles.GetAsync()));
+        Console.WriteLine("PASS: admin flyer generation, PDF/JPG/preview, high resolution, three themes, validation and back buttons.");
         Console.WriteLine("PASS: company profile admin-only GET/POST, antiforgery, all fields persisted, normalization and unsafe URL rejected.");
     }
     Check((await anonymous.GetAsync($"/Foto/Messaggio/{game.Id}")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous photo message access");

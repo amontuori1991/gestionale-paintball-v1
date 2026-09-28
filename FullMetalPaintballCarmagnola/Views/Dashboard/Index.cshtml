@@ -657,6 +657,12 @@
                     Profilo Azienda
                 </a>
             </div>
+            <div class="btn-container">
+                <a class="btn btn-outline-warning" asp-controller="Volantini" asp-action="Index">
+                    <i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>
+                    Crea Volantini
+                </a>
+            </div>
         }
 
         @foreach (var feature in dashboardFeaturesVisibili.Where(dashboardButtons.ContainsKey))

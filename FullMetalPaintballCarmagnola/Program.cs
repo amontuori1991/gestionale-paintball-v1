@@ -57,6 +57,7 @@ builder.Services.AddHttpClient<WeatherForecastService>();
 builder.Services.AddScoped<AcsiOdsExportService>();
 builder.Services.AddScoped<PricingCatalogService>();
 builder.Services.AddScoped<CompanyProfileService>();
+builder.Services.AddSingleton<FlyerRenderer>();
 builder.Services.AddScoped<StaffRegistryService>();
 builder.Services.AddTransient<IEmailService, EmailSender>();
 builder.Services.AddTransient<IEmailSender, EmailSender>(); // Fondamentale per Identity
