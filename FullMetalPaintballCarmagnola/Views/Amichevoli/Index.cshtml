@@ -1,0 +1,48 @@
+@model Full_Metal_Paintball_Carmagnola.Models.RegistroAmichevoli
+@{ ViewData["Title"] = "Partite amichevoli"; }
+<section class="container py-4" style="max-width:1050px">
+    <a asp-controller="Statistiche" asp-action="Index" class="btn btn-outline-dark mb-3">&larr; Statistiche</a>
+    <div class="bg-white rounded-4 p-3 p-md-4 shadow-sm mb-4">
+        <h1>Partite amichevoli</h1>
+        <p>Solo per le statistiche: nessuna prenotazione, disponibilit&agrave; o assegnazione staff. Ogni partita attiva vale +1 nei conteggi pertinenti. Le Kids restano escluse dal grafico colpi Adulti.</p>
+        @if (TempData["AmichevoliMessage"] is string message) { <div class="alert alert-success" role="status">@message</div> }
+        @if (User.IsInRole("Admin"))
+        {
+            <details open="@(ViewContext.HttpContext.Request.Query.ContainsKey("modifica") || !ViewData.ModelState.IsValid ? "open" : null)">
+                <summary class="btn btn-success mb-3">Aggiungi / modifica partita amichevole</summary>
+                <form asp-action="Salva" method="post" class="row g-3">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input asp-for="Form.Id" type="hidden" />
+                    <div class="col-12 col-sm-4"><label asp-for="Form.Data" class="form-label">Data</label><input asp-for="Form.Data" type="date" class="form-control" required /></div>
+                    <div class="col-6 col-sm-4"><label asp-for="Form.Tipo" class="form-label">Tipologia</label><select asp-for="Form.Tipo" class="form-select"><option>Adulti</option><option>Kids</option></select></div>
+                    <div class="col-6 col-sm-4"><label asp-for="Form.ColpiIllimitati" class="form-label">Colpi</label><select asp-for="Form.ColpiIllimitati" class="form-select"><option value="false">Standard</option><option value="true">Illimitati</option></select></div>
+                    <div class="col-12"><label asp-for="Form.Note" class="form-label">Note</label><textarea asp-for="Form.Note" class="form-control" maxlength="1000" rows="3"></textarea></div>
+                    <div class="col-12 d-flex gap-2"><button class="btn btn-success" type="submit">Salva partita</button><a asp-action="Index" class="btn btn-outline-secondary">Annulla / nuova</a></div>
+                </form>
+            </details>
+        }
+    </div>
+    <h2>Storico <small class="fs-6">@Model.Partite.Count(p => !p.IsDeleted) partite conteggiate</small></h2>
+    @if (Model.Partite.Count == 0) { <p>Nessuna partita amichevole registrata.</p> }
+    @foreach (var row in Model.Partite)
+    {
+        <article class="bg-white rounded-4 p-3 mb-3 shadow-sm" style="overflow-wrap:anywhere">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <strong>@row.Data.ToString("dd/MM/yyyy")</strong><span class="badge bg-dark">@row.Tipo</span>
+                <span>@(row.ColpiIllimitati ? "Colpi illimitati" : "Colpi standard")</span>
+                <span class="badge @(row.IsDeleted ? "bg-secondary" : "bg-success")">@(row.IsDeleted ? "Rimossa dal conteggio" : "+1 nelle statistiche")</span>
+            </div>
+            <p style="white-space:pre-wrap">@row.Note</p>
+            <small>Registrata il @row.CreatedAtUtc.ToString("dd/MM/yyyy HH:mm") UTC. Ultimo aggiornamento: @row.UpdatedAtUtc.ToString("dd/MM/yyyy HH:mm") UTC · @row.UpdatedBy</small>
+            @if (User.IsInRole("Admin") && !row.IsDeleted)
+            {
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a asp-action="Index" asp-route-modifica="@row.Id" class="btn btn-outline-primary btn-sm">Modifica</a>
+                    <form asp-action="Rimuovi" method="post" onsubmit="return confirm('Escludere questa partita dalle statistiche? Rimarrà nello storico.');">
+                        <input type="hidden" name="id" value="@row.Id" /><button class="btn btn-outline-danger btn-sm">Rimuovi dal conteggio</button>
+                    </form>
+                </div>
+            }
+        </article>
+    }
+</section>

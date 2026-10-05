@@ -12,6 +12,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         public DbSet<Tesseramento> Tesseramenti { get; set; }
         public DbSet<Partita> Partite { get; set; }
+        public DbSet<PartitaAmichevole> PartiteAmichevoli { get; set; }
         public DbSet<PhotoAlbum> PhotoAlbums { get; set; }
         public DbSet<PresenzaStaff> PresenzaStaff { get; set; }
         public DbSet<ReperibilitaStaff> ReperibilitaStaff { get; set; }

@@ -45,7 +45,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 [2025] = new() { [1] = 1, [2] = 4, [3] = 7, [4] = 11, [5] = 13, [6] = 5 }
             };
 
-            var confermateDbGrouped = await _dbContext.Partite
+            var partiteStatistiche = _dbContext.Partite.AsNoTracking()
+                .Select(p => new { p.Data, p.Tipo, p.ColpiIllimitati, p.CaparraConfermata, p.IsDeleted })
+                .Concat(_dbContext.PartiteAmichevoli.AsNoTracking()
+                    .Select(p => new { p.Data, Tipo = (string?)p.Tipo, p.ColpiIllimitati, CaparraConfermata = true, p.IsDeleted }));
+
+            var confermateDbGrouped = await partiteStatistiche
                 .AsNoTracking()
                 .Where(p => p.CaparraConfermata && !p.IsDeleted)
                 .GroupBy(p => new { p.Data.Year, p.Data.Month })
@@ -69,7 +74,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 })
                 .ToListAsync();
 
-            var tipoPartiteAnnualiDbGrouped = await _dbContext.Partite
+            var tipoPartiteAnnualiDbGrouped = await partiteStatistiche
                 .AsNoTracking()
                 .Where(p => p.CaparraConfermata && !p.IsDeleted)
                 .GroupBy(p => new
@@ -85,7 +90,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 })
                 .ToListAsync();
 
-            var colpiPartiteAnnualiDbGrouped = await _dbContext.Partite
+            var colpiPartiteAnnualiDbGrouped = await partiteStatistiche
                 .AsNoTracking()
                 .Where(p => p.CaparraConfermata && !p.IsDeleted
                     && p.Tipo != null && p.Tipo.Trim().ToLower() == "adulti")
@@ -152,6 +157,14 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                     && p.Data <= dataLimiteAnnoPrecedente)
                 .GroupBy(p => p.Data.Month)
                 .Select(g => new { Month = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var amichevoliYtd = await _dbContext.PartiteAmichevoli.AsNoTracking()
+                .Where(p => !p.IsDeleted &&
+                    ((p.Data.Year == annoCorrente && p.Data <= dataLimiteAnnoCorrente) ||
+                     (p.Data.Year == annoPrecedente && p.Data <= dataLimiteAnnoPrecedente)))
+                .GroupBy(p => new { p.Data.Year, p.Data.Month })
+                .Select(g => new { g.Key.Year, g.Key.Month, Count = g.Count() })
                 .ToListAsync();
 
             var cancellateYtdCorrenteList = await _dbContext.Partite
@@ -321,6 +334,10 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 {
                     valPrecedente = datiStoriciManuali[annoPrecedente][m];
                 }
+
+                // Add friendlies after the legacy historical fallback, never replace historical totals.
+                valCorrente += amichevoliYtd.Where(p => p.Year == annoCorrente && p.Month == m).Sum(p => p.Count);
+                valPrecedente += amichevoliYtd.Where(p => p.Year == annoPrecedente && p.Month == m).Sum(p => p.Count);
 
                 int valCancellateCorrente = ytdCancellateCorrenteMese.ContainsKey(m) ? ytdCancellateCorrenteMese[m] : 0;
                 int valCancellatePrecedente = ytdCancellatePrecedenteMese.ContainsKey(m) ? ytdCancellatePrecedenteMese[m] : 0;

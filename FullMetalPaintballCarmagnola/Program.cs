@@ -158,6 +158,7 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<TesseramentoDbContext>();
+    await AmichevoliSchema.EnsureAsync(dbContext);
     await dbContext.Database.ExecuteSqlRawAsync(@"
         CREATE TABLE IF NOT EXISTS ""AppSettings"" (
             ""Key"" character varying(100) NOT NULL,

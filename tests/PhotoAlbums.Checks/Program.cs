@@ -108,6 +108,7 @@ builder.Services.AddAuthentication(o => { o.DefaultAuthenticateScheme = "Test"; 
 builder.Services.AddAuthorization(o => {
     o.AddPolicy("Prenotazioni", p => p.RequireAuthenticatedUser());
     o.AddPolicy("Disponibilita Campo", p => p.RequireAuthenticatedUser());
+    o.AddPolicy("Statistiche", p => p.RequireAuthenticatedUser());
 });
 builder.Services.AddScoped<PricingCatalogService>();
 builder.Services.AddScoped<CompanyProfileService>();
@@ -297,6 +298,68 @@ try
     using (var adminClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress })
     {
         adminClient.DefaultRequestHeaders.Add("X-Test-Role", "Admin");
+        var bookingCount = await db.Partite.CountAsync();
+        var closuresCount = await db.CampoChiusure.CountAsync();
+        async Task<StatisticheController> Stats()
+        {
+            var controller = new StatisticheController(db, app.Environment);
+            await controller.Index(10, DateTime.Now.Year);
+            return controller;
+        }
+        var beforeFriendly = await Stats();
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE \"PartiteAmichevoli\"");
+        await AmichevoliSchema.EnsureAsync(db);
+        await AmichevoliSchema.EnsureAsync(db);
+        Check(await db.PartiteAmichevoli.CountAsync() == 1, "Friendly seed duplicated");
+        var seeded = await db.PartiteAmichevoli.AsNoTracking().SingleAsync();
+        Check(seeded.Data == new DateTime(2026,10,4,0,0,0,DateTimeKind.Utc) && seeded.Tipo == "Adulti" && !seeded.ColpiIllimitati && seeded.Note == "Animatori Oratorio", "Wrong friendly seed");
+        var afterFriendly = await Stats();
+        if (DateTime.Now.Year == 2026)
+        {
+            Check((int)afterFriendly.ViewData["Chart2CurrentValue"]! == (int)beforeFriendly.ViewData["Chart2CurrentValue"]! + 1, "Monthly friendly count missing");
+            var expectedYtd = DateTime.UtcNow.Date >= seeded.Data.Date ? 1 : 0;
+            Check(((List<int>)afterFriendly.ViewData["YtdCorrenteValues"]!)[9] == ((List<int>)beforeFriendly.ViewData["YtdCorrenteValues"]!)[9] + expectedYtd, "YTD friendly date cutoff wrong");
+        }
+        int Metric(StatisticheController c, string key, int year) => ((Dictionary<int,int>)c.ViewData[key]!).GetValueOrDefault(year);
+        foreach (var key in new[] { "TotalsPerYear", "PartiteAdultiPerAnno", "PartiteColpiStandardPerAnno" })
+            Check(Metric(afterFriendly, key, 2026) == Metric(beforeFriendly, key, 2026) + 1, "Friendly missing from " + key);
+        Check((int)beforeFriendly.ViewData["StaffPartiteTotale"]! == (int)afterFriendly.ViewData["StaffPartiteTotale"]!, "Friendly changes staff stats");
+        Check((await anonymous.GetAsync("/Amichevoli")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous friendly access");
+        Check((await staff.PostAsync("/Amichevoli/Salva", new StringContent(""))).StatusCode == HttpStatusCode.Forbidden, "Staff friendly write");
+        Check((await adminClient.PostAsync("/Amichevoli/Salva", new StringContent(""))).StatusCode == HttpStatusCode.BadRequest, "Missing friendly antiforgery");
+        var friendlyHtml = await adminClient.GetStringAsync("/Amichevoli");
+        var friendlyToken = WebUtility.HtmlDecode(Regex.Match(friendlyHtml, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);
+        var friendlyId = Guid.NewGuid();
+        var friendlyFields = new Dictionary<string,string> { ["__RequestVerificationToken"] = friendlyToken, ["Form.Id"] = friendlyId.ToString(), ["Form.Data"] = "2026-10-05", ["Form.Tipo"] = "Kids", ["Form.ColpiIllimitati"] = "true", ["Form.Note"] = "Test <script>bad()</script>" };
+        Check((await adminClient.PostAsync("/Amichevoli/Salva", new FormUrlEncodedContent(friendlyFields))).StatusCode == HttpStatusCode.Redirect, "Friendly insert failed");
+        await adminClient.PostAsync("/Amichevoli/Salva", new FormUrlEncodedContent(friendlyFields));
+        Check(await db.PartiteAmichevoli.CountAsync() == 2, "Double submit duplicated friendly");
+        var kidsStats = await Stats();
+        Check(Metric(kidsStats, "PartiteKidsPerAnno", 2026) == Metric(afterFriendly, "PartiteKidsPerAnno", 2026) + 1, "Kids friendly not counted");
+        Check(Metric(kidsStats, "PartiteColpiIllimitatiPerAnno", 2026) == Metric(afterFriendly, "PartiteColpiIllimitatiPerAnno", 2026), "Kids pollute adults shots chart");
+        friendlyFields["Form.Tipo"] = "Adulti";
+        await adminClient.PostAsync("/Amichevoli/Salva", new FormUrlEncodedContent(friendlyFields));
+        Check(Metric(await Stats(), "PartiteColpiIllimitatiPerAnno", 2026) == Metric(afterFriendly, "PartiteColpiIllimitatiPerAnno", 2026) + 1, "Friendly edit not reflected");
+        friendlyFields["Form.Tipo"] = "Invalid";
+        Check((await adminClient.PostAsync("/Amichevoli/Salva", new FormUrlEncodedContent(friendlyFields))).StatusCode == HttpStatusCode.OK, "Validation errors not displayed");
+        Check((await db.PartiteAmichevoli.AsNoTracking().SingleAsync(p => p.Id == friendlyId)).Tipo == "Adulti", "Invalid type persisted");
+        await adminClient.PostAsync("/Amichevoli/Rimuovi", new FormUrlEncodedContent(new Dictionary<string,string> { ["__RequestVerificationToken"] = friendlyToken, ["id"] = friendlyId.ToString() }));
+        Check((await db.PartiteAmichevoli.AsNoTracking().SingleAsync(p => p.Id == friendlyId)).IsDeleted, "Friendly history lost on delete");
+        Check(Metric(await Stats(), "TotalsPerYear", 2026) == Metric(afterFriendly, "TotalsPerYear", 2026), "Deleted friendly still counted");
+        var historicId = Guid.NewGuid();
+        var historicBefore = await Stats();
+        friendlyFields["Form.Id"] = historicId.ToString();
+        friendlyFields["Form.Data"] = $"{DateTime.Now.Year - 1}-01-01";
+        friendlyFields["Form.Tipo"] = "Adulti";
+        await adminClient.PostAsync("/Amichevoli/Salva", new FormUrlEncodedContent(friendlyFields));
+        Check(((List<int>)(await Stats()).ViewData["YtdPrecedenteValues"]!)[9] == ((List<int>)historicBefore.ViewData["YtdPrecedenteValues"]!)[9] + 1, "Friendly replaces manual historical YTD instead of adding");
+        await adminClient.PostAsync("/Amichevoli/Rimuovi", new FormUrlEncodedContent(new Dictionary<string,string> { ["__RequestVerificationToken"] = friendlyToken, ["id"] = historicId.ToString() }));
+        await adminClient.PostAsync("/Amichevoli/Rimuovi", new FormUrlEncodedContent(new Dictionary<string,string> { ["__RequestVerificationToken"] = friendlyToken, ["id"] = seeded.Id.ToString() }));
+        await AmichevoliSchema.EnsureAsync(db);
+        Check((await db.PartiteAmichevoli.AsNoTracking().SingleAsync(p => p.Id == seeded.Id)).IsDeleted, "Deployment resurrects removed seed");
+        Check(await db.Partite.CountAsync() == bookingCount && await db.CampoChiusure.CountAsync() == closuresCount, "Friendly created operational records");
+        Check((await adminClient.GetStringAsync("/Statistiche")).Contains("/Amichevoli"), "Missing friendly statistics link");
+        Console.WriteLine("PASS: friendly seed idempotency, totals and type/shot stats, admin CRUD, validation, antiforgery, duplicate submit and operational isolation.");
         var dashboard = await adminClient.GetStringAsync("/Dashboard");
         Check(dashboard.Contains("value=\"Profilo Azienda\"") && dashboard.Contains("value=\"Crea Volantini\""), "Admin tools missing from customization");
         var dashboardToken = WebUtility.HtmlDecode(Regex.Match(dashboard, "name=\"__RequestVerificationToken\"[^>]*value=\"([^\"]+)\"").Groups[1].Value);

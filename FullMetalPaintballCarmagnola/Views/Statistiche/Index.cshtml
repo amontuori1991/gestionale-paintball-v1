@@ -77,6 +77,10 @@
 
 <div class="statistiche-container">
     <h2>Statistiche Partite &ndash; @labelMese (@annoCorrente)</h2>
+    <div class="text-center mb-3">
+        <a asp-controller="Amichevoli" asp-action="Index" class="btn btn-outline-success">@(User.IsInRole("Admin") ? "Aggiungi partita amichevole / storico" : "Partite amichevoli / storico")</a>
+        <p class="small mt-2">I conteggi delle partite includono le amichevoli attive. Nessun effetto su staff o tesseramenti.</p>
+    </div>
 
     <!-- Navigazione mese -->
     <div style="display:flex; justify-content:center; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
