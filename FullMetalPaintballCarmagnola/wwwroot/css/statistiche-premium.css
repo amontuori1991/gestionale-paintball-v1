@@ -2,8 +2,6 @@
 @font-face { font-family: 'Stats Condensed'; src: url('../fonts/flyers/BarlowCondensed-Bold.ttf') format('truetype'); font-weight: 700; font-display: swap; }
 body:has(.stats-page) { background: #f4f5ed; background-image: radial-gradient(ellipse at 100% 0, #e4ebd5 0, transparent 45%); }
 body:has(.stats-page)::before, body:has(.stats-page)::after, body:has(.stats-page) .background-logo { display: none; }
-body:has(.stats-page) .page-backbar { position: static; max-width: 1400px; margin: 14px auto -12px; padding: 0 28px; }
-body:has(.stats-page) .page-back-button { box-shadow: none; }
 .stats-page { --stats-ink: #183e30; --stats-muted: #617168; --stats-lime: #d6ee83; font-family: 'Stats Barlow', sans-serif; color: var(--stats-ink); max-width: 1400px; margin: 0 auto; padding: 32px 28px 48px; }
 .stats-page *, .stats-page *::before, .stats-page *::after { box-sizing: border-box; }
 .stats-page .stats-eyebrow { color: var(--stats-muted); font-size: .72rem; font-weight: 700; letter-spacing: .14em; margin: 0 0 10px; }
@@ -71,7 +69,6 @@ body:has(.stats-page) .page-back-button { box-shadow: none; }
     .stats-maps { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
-    body:has(.stats-page) .page-backbar { padding: 0 12px; }
     .stats-page { padding: 24px 12px 32px; }
     .stats-hero { flex-direction: column; gap: 18px; }
     .stats-intro { font-size: .95rem; }
