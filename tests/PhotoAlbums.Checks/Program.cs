@@ -121,7 +121,9 @@ builder.Services.AddSingleton<PhotoWatermarker>();
 builder.Services.AddScoped<PhotoAlbumService>();
 await using var app = builder.Build();
 app.Urls.Add("http://127.0.0.1:55443");
-app.UseStaticFiles();
+var staticContentTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+staticContentTypes.Mappings[".geojson"] = "application/geo+json";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = staticContentTypes });
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -279,6 +281,7 @@ try
 
     if (args.Contains("--preview"))
     {
+        app.MapGet("/preview/statistiche", (HttpContext http) => { http.Response.Cookies.Append("PhotoTestRole", "Admin"); return Results.Redirect("/Statistiche?mese=10"); });
         app.MapGet("/preview/admin", (HttpContext http) => { http.Response.Cookies.Append("PhotoTestRole", "Admin"); return Results.Redirect("/Volantini"); });
         app.MapGet("/preview/login", (HttpContext http) =>
         {
@@ -491,8 +494,38 @@ try
     Check((await staff.GetAsync($"/Foto/Gestisci/{game.Id}")).StatusCode == HttpStatusCode.Forbidden, "Other role allowed");
     Console.WriteLine("PASS: staff authorization, anonymous denial, antiforgery, real multipart upload, album isolation, private headers.");
 
+    var statisticsResponse = await staff.GetAsync("/Statistiche?mese=10");
+    var statisticsHtml = await statisticsResponse.Content.ReadAsStringAsync();
+    Check(statisticsResponse.IsSuccessStatusCode && statisticsHtml.Contains("stats-kpis"), "Premium statistics page failed");
+    Check(!statisticsHtml.Contains("Recap Weekend"), "Removed weekend recap restored");
+    foreach (var id in new[] { "andamento", "tipologie", "staff-year-chart", "provenienza" })
+        Check(Regex.Matches(statisticsHtml, $"id=\"{id}\"").Count == 1, "Missing or duplicate statistics section: " + id);
+    Check(Regex.Matches(statisticsHtml, "<canvas ").Count == 9, "Statistics charts lost");
+    Console.WriteLine("PASS: premium statistics sections and chart inventory.");
+
     if (args.Contains("--preview"))
     {
+        // Synthetic fixtures live only in this disposable local database, never in production.
+        var previewStaff = new[] { "Simone", "Alberto", "Enrico", "Federico" };
+        var previewTowns = new[] { "Carmagnola (TO)", "Torino (TO)", "Moncalieri (TO)", "Chieri (TO)", "Alba (CN)", "Cuneo (CN)" };
+        for (var year = DateTime.Today.Year - 1; year <= DateTime.Today.Year; year++)
+        for (var month = 1; month <= 12; month++)
+        for (var index = 0; index < 8 + month * 2 + (year == DateTime.Today.Year ? 3 : 0); index++)
+        {
+            var previewGame = new Partita {
+                Data = new DateTime(year, month, 1 + index % 27, 0, 0, 0, DateTimeKind.Utc),
+                Tipo = index % 3 == 0 ? "Kids" : "Adulti", ColpiIllimitati = index % 3 == 0 || index % 5 == 0,
+                Durata = 1.5, NumeroPartecipanti = 10, CaparraConfermata = true, IsDeleted = index % 13 == 0,
+                Staff1 = previewStaff[index % 4], Staff2 = index % 2 == 0 ? previewStaff[(index + 1) % 4] : null
+            };
+            db.Partite.Add(previewGame);
+            db.Tesseramenti.Add(new Tesseramento {
+                Nome = "Demo", Cognome = "Anteprima", DataNascita = new DateTime(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                ComuneResidenza = previewTowns[index % previewTowns.Length], NazioneResidenza = "Italia",
+                Email = "demo@example.org", Partita = previewGame
+            });
+        }
+        await db.SaveChangesAsync();
         Console.WriteLine($"Preview: http://127.0.0.1:55443/Foto/Album/{album.Token:N} | /preview/table");
         Console.WriteLine($"Manage with X-Test-Role: Staff at /Foto/Gestisci/{game.Id}");
         try { await Task.Delay(Timeout.Infinite, app.Lifetime.ApplicationStopping); }

@@ -69,95 +69,151 @@
     int distanceCurrentOver50Pct = ViewBag.DistanceCurrentOver50Pct;
 }
 
-<link href="~/css/statistiche-responsive.css" rel="stylesheet" />
+<link href="~/css/statistiche-premium.css" rel="stylesheet" asp-append-version="true" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <div class="background-logo"></div>
 
-<div class="statistiche-container">
-    <h2>Statistiche Partite &ndash; @labelMese (@annoCorrente)</h2>
-    <div class="text-center mb-3">
-        <a asp-controller="Amichevoli" asp-action="Index" class="btn btn-outline-success">@(User.IsInRole("Admin") ? "Aggiungi partita amichevole / storico" : "Partite amichevoli / storico")</a>
-        <p class="small mt-2">I conteggi delle partite includono le amichevoli attive. Nessun effetto su staff o tesseramenti.</p>
-    </div>
-
-    <!-- Navigazione mese -->
-    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" class="btn btn-outline-primary" aria-label="Mese precedente">&larr;</a>
-        <div style="font-weight:900; letter-spacing:.5px; min-width:190px; text-align:center;">@labelMese.ToUpper()</div>
-        <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" class="btn btn-outline-primary" aria-label="Mese successivo">&rarr;</a>
-    </div>
-
-    <!-- Legenda cancellate -->
-    <div style="display:flex; align-items:center; gap:18px; margin-bottom:20px; flex-wrap:wrap; font-size:.9rem;">
-        <div style="display:flex; align-items:center; gap:6px;">
-            <div style="width:18px; height:18px; border-radius:3px; background:rgba(59,130,246,0.85);"></div>
-            <span>Partite confermate</span>
+<div class="statistiche-container stats-page">
+    <header class="stats-hero">
+        <div>
+            <p class="stats-eyebrow">FULL METAL / PANORAMICA</p>
+            <h1>Il campo, <span>in numeri.</span></h1>
+            <p class="stats-intro">Partite, persone e territorio. Tutta la stagione a colpo d'occhio.</p>
         </div>
-        <div style="display:flex; align-items:center; gap:6px;">
-            <div style="width:18px; height:18px; border-radius:3px; background:rgba(220,38,38,0.75);"></div>
-            <span>Partite cancellate (sovrapposte)</span>
+        <a asp-controller="Amichevoli" asp-action="Index" class="stats-action">
+            <span aria-hidden="true">+</span> @(User.IsInRole("Admin") ? "Partita amichevole / storico" : "Storico amichevoli")
+        </a>
+    </header>
+
+    <div class="stats-toolbar">
+        <div class="stats-period">
+            <span class="stats-eyebrow">MESE A CONFRONTO</span>
+            <div class="stats-month">
+                <a asp-action="Index" asp-route-mese="@(meseCorrente == 1 ? 12 : meseCorrente - 1)" asp-route-annoStaff="@annoStaffSelezionato" aria-label="Mese precedente">&larr;</a>
+                <strong>@labelMese <span>@annoCorrente</span></strong>
+                <a asp-action="Index" asp-route-mese="@(meseCorrente == 12 ? 1 : meseCorrente + 1)" asp-route-annoStaff="@annoStaffSelezionato" aria-label="Mese successivo">&rarr;</a>
+            </div>
+        </div>
+        <p>I totali includono le amichevoli attive.<br />Staff e tesseramenti restano separati.</p>
+    </div>
+
+    <section class="stats-kpis" aria-label="Indicatori principali">
+        <article class="stats-kpi stats-kpi-featured">
+            <span>PARTITE / @annoCorrente</span>
+            <strong>@(totalsPerYear?.GetValueOrDefault(annoCorrente) ?? 0)</strong>
+            <p>Confermate nell'anno, anche future</p>
+        </article>
+        <article class="stats-kpi">
+            <span>@labelMese.ToUpperInvariant() / @annoCorrente</span>
+            <strong>@chart2CurrentValue</strong>
+            <p>Partite confermate nel mese</p>
+        </article>
+        <article class="stats-kpi">
+            <span>CONFRONTO MENSILE</span>
+            <strong>@((chart2CurrentValue - chart2PrevValue).ToString("+0;-0;0")) <small>partite</small></strong>
+            <p>Rispetto a @labelMese @annoPrecedente (@chart2PrevValue)</p>
+        </article>
+        <article class="stats-kpi">
+            <span>RECORD ANNUALE / @topYearOverall</span>
+            <strong>@topOverallValue</strong>
+            <p>Il miglior totale nello storico</p>
+        </article>
+    </section>
+
+    <nav class="stats-nav" aria-label="Sezioni statistiche">
+        <a href="#andamento"><span>01</span> Andamento</a>
+        <a href="#tipologie"><span>02</span> Tipologie</a>
+        <a href="#staff-year-chart"><span>03</span> Staff</a>
+        <a href="#provenienza"><span>04</span> Provenienza</a>
+    </nav>
+
+    <section id="andamento" class="stats-section" aria-labelledby="andamento-title">
+        <div class="stats-section-heading"><div><p class="stats-eyebrow">01 / LA STAGIONE</p><h2 id="andamento-title">Andamento delle partite</h2></div><span class="stats-tag">Confermate e cancellate</span></div>
+        <div class="stats-grid">
+    <!-- GRAFICO 4: Progressivo YTD -->
+    <div class="chart-card stats-wide stats-trend">
+        <h3>
+            Progressivo YTD: @annoCorrente vs @annoPrecedente
+            <span style="font-size:.8rem; font-weight:400; opacity:.8;">(dal 01/01 al @oggiLabel)</span>
+        </h3>
+        <div class="stats-chart">
+            <canvas id="chartYtd" role="img" aria-label="Andamento cumulativo delle partite"></canvas>
+        </div>
+        <div class="stats-chart-note">
+            Confronto cumulativo dall'inizio dell'anno fino ad oggi (@oggiLabel).
+            Per l'anno precedente il confronto si ferma al corrispondente @oggiLabelAnnoPrecedente.
+            Le linee tratteggiate rosse indicano le cancellate cumulative.
         </div>
     </div>
 
     <!-- GRAFICO 1: TOP storico vs Anno Corrente -->
-    <div class="chart-card" style="margin-bottom:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">TOP storico vs @annoCorrente (mese: @labelMese)</h4>
-        <div style="position:relative; height:340px;">
-            <canvas id="chartTopVsCurrent"></canvas>
+    <div class="chart-card">
+        <h3>Il record di @labelMese</h3>
+        <div class="stats-chart">
+            <canvas id="chartTopVsCurrent" role="img" aria-label="Confronto con il record storico del mese"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div class="stats-chart-note">
             Il TOP considera gli anni precedenti. Se @annoCorrente supera il TOP, diventa lui il nuovo TOP.
             Le barre rosse indicano le partite cancellate nello stesso periodo.
         </div>
     </div>
 
     <!-- GRAFICO 2: Anno Corrente vs Anno Precedente sul mese -->
-    <div class="chart-card" style="margin-bottom:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">@annoCorrente vs @annoPrecedente (mese: @labelMese)</h4>
-        <div style="position:relative; height:300px;">
-            <canvas id="chartCurrentVsPrev"></canvas>
+    <div class="chart-card">
+        <h3>@labelMese: @annoCorrente vs @annoPrecedente</h3>
+        <div class="stats-chart">
+            <canvas id="chartCurrentVsPrev" role="img" aria-label="Confronto mensile con anno precedente"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div class="stats-chart-note">
             Le barre rosse indicano le partite cancellate nello stesso periodo.
         </div>
     </div>
 
     <!-- GRAFICO 3: Totali per anno + TOP assoluto + anno corrente -->
-    <div class="chart-card" style="margin-bottom:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">Totali per anno (con evidenza TOP e anno in corso)</h4>
-        <div style="position:relative; height:360px;">
-            <canvas id="chartYearTotals"></canvas>
+    <div class="chart-card stats-wide">
+        <h3>Una stagione dopo l'altra</h3>
+        <div class="stats-chart">
+            <canvas id="chartYearTotals" role="img" aria-label="Totali partite per anno"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div class="stats-chart-note">
             TOP assoluto: <strong>@topYearOverall</strong> &ndash; <strong>@topOverallValue</strong> partite.
             Le barre rosse indicano le partite cancellate per anno.
         </div>
     </div>
 
-    <div class="chart-card" style="margin-bottom:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">Partite Adulti vs Kids per anno</h4>
-        <div style="position:relative; height:340px;">
-            <canvas id="chartTypeYearTotals"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
-            Il confronto considera le partite confermate presenti a database, suddivise per tipologia salvata sulla prenotazione.
+    </section>
+    <section id="tipologie" class="stats-section" aria-labelledby="tipologie-title">
+        <div class="stats-section-heading"><div><p class="stats-eyebrow">02 / IL GIOCO</p><h2 id="tipologie-title">Come si gioca al campo</h2></div><span class="stats-tag">Confronti annuali</span></div>
+        <div class="stats-grid">
+    <div class="chart-card">
+        <h3>Partite Adulti vs Kids per anno</h3>
+        <div class="stats-chart">
+            <canvas id="chartTypeYearTotals" role="img" aria-label="Adulti e Kids per anno"></canvas>
+        </div>
+        <div class="stats-chart-note">
+            Il confronto considera le partite confermate presenti a database, incluse le amichevoli attive, suddivise per tipologia.
         </div>
     </div>
 
-    <div id="staff-year-chart" class="chart-card" style="margin-bottom:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">Colpi standard vs illimitati per anno (solo Adulti)</h4>
-        <div style="position:relative; height:340px;">
-            <canvas id="chartShotsYearTotals"></canvas>
+    <div class="chart-card">
+        <h3>Colpi standard vs illimitati per anno (solo Adulti)</h3>
+        <div class="stats-chart">
+            <canvas id="chartShotsYearTotals" role="img" aria-label="Colpi standard e illimitati, solo Adulti"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div class="stats-chart-note">
             Il confronto considera solo le partite Adulti confermate e non cancellate presenti a database, suddivise per scelta colpi. Le partite Kids sono escluse.
         </div>
     </div>
 
-    <div class="chart-card" style="margin-bottom:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">Partite gestite per staff - @annoStaffSelezionato</h4>
+        </div>
+    </section>
+    <section id="staff-year-chart" class="stats-section" aria-labelledby="staff-title">
+        <div class="stats-section-heading"><div><p class="stats-eyebrow">03 / LE PERSONE</p><h2 id="staff-title">Il contributo dello staff</h2></div><span class="stats-tag">@staffPartiteTotale assegnazioni nel @annoStaffSelezionato</span></div>
+    <div class="chart-card">
+        <h3>Partite gestite per staff - @annoStaffSelezionato</h3>
         <div style="display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
             <a asp-action="Index"
                asp-route-mese="@meseCorrente"
@@ -180,109 +236,113 @@
                 <button type="button" class="btn btn-outline-secondary" disabled aria-label="Anno staff successivo">&rarr;</button>
             }
         </div>
-        <div style="position:relative; height:340px;">
-            <canvas id="chartStaffYearTotals"></canvas>
+        <div class="stats-chart">
+            <canvas id="chartStaffYearTotals" role="img" aria-label="Partite gestite per membro dello staff"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div class="stats-chart-note">
             Totale assegnazioni staff nell'anno: <strong>@staffPartiteTotale</strong>.
             Sono considerate le partite confermate e non cancellate; una partita con pi&ugrave; membri staff conta una volta per ciascun nominativo assegnato.
         </div>
     </div>
 
-    <!-- GRAFICO 4: Progressivo YTD -->
+    </section>
+    <section id="provenienza" class="stats-section" aria-labelledby="provenienza-title">
+        <div class="stats-section-heading"><div><p class="stats-eyebrow">04 / IL TERRITORIO</p><h2 id="provenienza-title">Da dove arrivano i giocatori</h2></div><span class="stats-tag">Dati dei tesserati</span></div>
     <div class="chart-card">
-        <h4 style="margin:0 0 10px 0; text-align:center;">
-            Progressivo YTD: @annoCorrente vs @annoPrecedente
-            <span style="font-size:.8rem; font-weight:400; opacity:.8;">(dal 01/01 al @oggiLabel)</span>
-        </h4>
-        <div style="position:relative; height:360px;">
-            <canvas id="chartYtd"></canvas>
-        </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
-            Confronto cumulativo dall'inizio dell'anno fino ad oggi (@oggiLabel).
-            Per l'anno precedente il confronto si ferma al corrispondente @oggiLabelAnnoPrecedente.
-            Le linee tratteggiate rosse indicano le cancellate cumulative.
-        </div>
-    </div>
-
-    <div class="chart-card" style="margin-top:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">Distanza Media Tesserati dalla Struttura - Solo Italia</h4>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; font-size:.92rem;">
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(59,130,246,0.1);">
+        <h3>Distanza Media Tesserati dalla Struttura - Solo Italia</h3>
+        <div class="stats-metrics">
+            <div class="stats-metric">
                 Media @annoCorrente: <strong>@distanceCurrentAverage.ToString("0.0", CultureInfo.InvariantCulture) km</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(16,185,129,0.12);">
+            <div class="stats-metric">
                 Mediana @annoCorrente: <strong>@distanceCurrentMedian.ToString("0.0", CultureInfo.InvariantCulture) km</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(234,179,8,0.12);">
+            <div class="stats-metric">
                 Entro 25 km: <strong>@distanceCurrentWithin25Pct%</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(220,38,38,0.10);">
+            <div class="stats-metric">
                 Oltre 50 km: <strong>@distanceCurrentOver50Pct%</strong>
             </div>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-bottom:14px;">
+        <div class="stats-chart-note">
             Distanza calcolata solo sui tesserati con residenza italiana classificata e collegati a una partita, usando la <strong>data della partita</strong> e prendendo come riferimento <strong>@distanceReferenceLabel</strong>.
         </div>
-        <div style="position:relative; height:320px; margin-bottom:18px;">
-            <canvas id="chartDistanceMonthly"></canvas>
+        <div class="stats-chart">
+            <canvas id="chartDistanceMonthly" role="img" aria-label="Distanza media per mese"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-bottom:18px;">
+        <div class="stats-chart-note">
             Confronto mese per mese tra <strong>@annoCorrente</strong> e <strong>@annoPrecedente</strong> della distanza media dei tesserati italiani.
         </div>
-        <div style="position:relative; height:320px;">
-            <canvas id="chartDistanceYearly"></canvas>
+        <div class="stats-chart">
+            <canvas id="chartDistanceYearly" role="img" aria-label="Distanza media per anno"></canvas>
         </div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div class="stats-chart-note">
             Vista anno per anno della distanza media: se cresce nel tempo, il bacino si sta allargando.
         </div>
     </div>
 
-    <div class="chart-card" style="margin-top:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">Affluenza Tesserati per Comune di Residenza</h4>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; font-size:.92rem;">
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(59,130,246,0.1);">
+    <div class="stats-grid stats-maps">
+    <div class="chart-card">
+        <h3>Affluenza Tesserati per Comune di Residenza</h3>
+        <div class="stats-metrics">
+            <div class="stats-metric">
                 Localizzati: <strong>@comuneMapMatched</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(220,38,38,0.08);">
+            <div class="stats-metric">
                 Residenti estero esclusi: <strong>@comuneMapForeign</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(15,23,42,0.06);">
+            <div class="stats-metric">
                 Non classificabili: <strong>@comuneMapExcluded</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(234,179,8,0.12);">
+            <div class="stats-metric">
                 Comune principale: <strong>@comuneMapTopLabel</strong> (@comuneMapTopValue)
             </div>
         </div>
-        <div id="comuniHeatmap" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div id="comuniHeatmap" class="stats-map"></div>
+        <div class="stats-chart-note">
             Sono visualizzati solo i tesserati con comune di residenza italiano normalizzato nel formato <strong>Comune (PV)</strong>.
             I cerchi pi&ugrave; grandi e pi&ugrave; rossi indicano una maggiore affluenza da quel comune.
         </div>
     </div>
 
-    <div class="chart-card" style="margin-top:22px;">
-        <h4 style="margin:0 0 10px 0; text-align:center;">Affluenza Tesserati Esteri per Paese</h4>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; font-size:.92rem;">
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(59,130,246,0.1);">
+    <div class="chart-card">
+        <h3>Affluenza Tesserati Esteri per Paese</h3>
+        <div class="stats-metrics">
+            <div class="stats-metric">
                 Paesi mappati: <strong>@europeMapMatched</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(15,23,42,0.06);">
+            <div class="stats-metric">
                 Estero non classificabile: <strong>@europeMapExcluded</strong>
             </div>
-            <div style="padding:8px 12px; border-radius:999px; background:rgba(234,179,8,0.12);">
+            <div class="stats-metric">
                 Paese principale: <strong>@europeMapTopLabel</strong> (@europeMapTopValue)
             </div>
         </div>
-        <div id="europeChoropleth" style="height:520px; border-radius:18px; overflow:hidden; background:#f8fafc; border:1px solid rgba(148,163,184,0.25);"></div>
-        <div style="font-size:.9rem; opacity:.85; margin-top:10px;">
+        <div id="europeChoropleth" class="stats-map"></div>
+        <div class="stats-chart-note">
             I paesi europei vengono colorati in base al numero di tesserati con residenza estera classificata.
             Pi&ugrave; il rosso &egrave; intenso, pi&ugrave; alta &egrave; l'affluenza da quel paese.
         </div>
     </div>
+    </div>
+    </section>
+    <p class="stats-footer-note">Full Metal Paintball Carmagnola / Statistiche</p>
 </div>
 
 <script>
+    Chart.defaults.font.family = "'Stats Barlow', sans-serif";
+    Chart.defaults.color = '#596b60';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.boxWidth = 8;
+    Chart.defaults.plugins.legend.labels.padding = 18;
+    Chart.defaults.plugins.tooltip.backgroundColor = '#183e30';
+    Chart.defaults.plugins.tooltip.padding = 12;
+    Chart.defaults.scale.grid.color = 'rgba(32,68,49,.07)';
+    Chart.defaults.scale.border.display = false;
+    Chart.defaults.datasets.bar.maxBarThickness = 54;
+    Chart.defaults.elements.bar.borderRadius = 6;
+    Chart.defaults.animation.duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500;
+
     // =============================================================================
     // Plugin: etichette sopra le barre (bar charts)
     // =============================================================================
@@ -321,7 +381,8 @@
                     meta.data.forEach((bar, index) => {
                         const val = dataset.data[index];
                         if (val === null || val === undefined) return;
-                        const label = (dataset.customLabels && dataset.customLabels[index]) ? dataset.customLabels[index] : null;
+                        const label = (dataset.customLabels && dataset.customLabels[index])
+                            ? (isMobile ? String(val) : dataset.customLabels[index]) : null;
                         if (!label) return;
 
                         ctx.font = isMobile ? 'bold 10px sans-serif' : 'bold 12px sans-serif';
@@ -367,12 +428,12 @@
     // =============================================================================
     // Colori comuni
     // =============================================================================
-    const COLOR_CONF_CURR  = 'rgba(59,130,246,0.85)';   // blu anno corrente
-    const COLOR_CONF_PREV  = 'rgba(59,130,246,0.45)';   // blu chiaro anno precedente / TOP
+    const COLOR_CONF_CURR  = '#245a43';
+    const COLOR_CONF_PREV  = '#a9c2b3';
     const COLOR_CANC       = 'rgba(220,38,38,0.75)';    // rosso cancellate
     const COLOR_CANC_LIGHT = 'rgba(220,38,38,0.45)';    // rosso chiaro (anno precedente YTD)
-    const COLOR_BORDER_CURR = 'rgba(37,99,235,1)';
-    const COLOR_BORDER_PREV = 'rgba(37,99,235,0.6)';
+    const COLOR_BORDER_CURR = '#245a43';
+    const COLOR_BORDER_PREV = '#89a896';
     const COLOR_BORDER_CANC = 'rgba(185,28,28,1)';
     const COLOR_BORDER_CANC_L = 'rgba(185,28,28,0.6)';
 
@@ -595,11 +656,11 @@
                 {
                     label: 'Adulti',
                     data: anniTipoPartite.map(a => partiteAdultiPerAnno[a] || 0),
-                    backgroundColor: 'rgba(230,0,126,.74)',
-                    borderColor: 'rgba(190,0,102,1)',
+                    backgroundColor: '#245a43',
+                    borderColor: '#245a43',
                     borderWidth: 1,
                     valueLabels: true,
-                    labelColor: 'rgba(120,0,70,1)'
+                    labelColor: '#245a43'
                 },
                 {
                     label: 'Kids',
@@ -648,11 +709,11 @@
                 {
                     label: 'Colpi standard',
                     data: anniColpiPartite.map(a => partiteColpiStandardPerAnno[a] || 0),
-                    backgroundColor: 'rgba(59,130,246,.78)',
-                    borderColor: 'rgba(37,99,235,1)',
+                    backgroundColor: '#357459',
+                    borderColor: '#245a43',
                     borderWidth: 1,
                     valueLabels: true,
-                    labelColor: 'rgba(30,64,175,1)'
+                    labelColor: '#245a43'
                 },
                 {
                     label: 'Colpi illimitati',
@@ -704,12 +765,12 @@
                     data: staffChartValues,
                     backgroundColor: staffChartValues.map((_, index) => {
                         const palette = [
-                            'rgba(59,130,246,.78)',
+                            '#357459',
                             'rgba(16,185,129,.78)',
                             'rgba(234,179,8,.78)',
-                            'rgba(230,0,126,.70)',
-                            'rgba(99,102,241,.72)',
-                            'rgba(20,184,166,.72)'
+                            '#8dac79',
+                            '#6d8f82',
+                            '#b5c49c'
                         ];
                         return palette[index % palette.length];
                     }),
@@ -857,9 +918,9 @@ new Chart(document.getElementById('chartYtd').getContext('2d'), {
                 {
                     label: '@annoCorrente',
                     data: distanceMonthlyCurrent,
-                    borderColor: 'rgba(59,130,246,1)',
+                    borderColor: '#245a43',
                     backgroundColor: 'rgba(59,130,246,0.12)',
-                    pointBackgroundColor: 'rgba(59,130,246,1)',
+                    pointBackgroundColor: '#245a43',
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     borderWidth: 3,
@@ -918,7 +979,7 @@ new Chart(document.getElementById('chartYtd').getContext('2d'), {
                     item.anno === @annoCorrente ? 'rgba(59,130,246,0.85)' : 'rgba(15,23,42,0.55)'
                 ),
                 borderColor: distanceYearlyAverages.map(item =>
-                    item.anno === @annoCorrente ? 'rgba(37,99,235,1)' : 'rgba(15,23,42,0.85)'
+                    item.anno === @annoCorrente ? '#245a43' : 'rgba(15,23,42,0.85)'
                 ),
                 borderWidth: 2,
                 borderRadius: 8
