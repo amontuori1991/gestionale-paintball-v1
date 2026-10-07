@@ -14,6 +14,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Richiesta prenotazione - Full Metal Paintball</title>
+    <link rel="stylesheet" href="~/css/customer-guide.css" asp-append-version="true" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <style>
         :root {
@@ -429,7 +430,7 @@
         <section class="hero">
             <div class="hero-content">
                 <div class="hero-kicker">Full Metal Paintball Carmagnola</div>
-                <h1>Richiedi la tua prenotazione</h1>
+                <h1>Organizza la tua partita.</h1>
                 <p>
                     Scegli se richiedere un turno nel weekend o in settimana, compila i dati principali e invia la richiesta su WhatsApp.
                     La prenotazione sarà confermata solo dopo risposta dello staff.
@@ -437,7 +438,21 @@
             </div>
         </section>
 
-        <section class="choice-grid" aria-label="Scegli il tipo di richiesta">
+        <nav class="guide-shortcuts" aria-label="Come possiamo aiutarti?">
+            <a href="#QuickAnswers">Informazioni sul campo</a>
+            <a href="#ChooseBooking">Organizza la partita</a>
+            <a href="#ContactHours">Richieste particolari</a>
+        </nav>
+        <section class="faq-card" id="QuickAnswers" aria-labelledby="quick-title">
+            <h2 id="quick-title">Le risposte, in breve.</h2>
+            <div class="guide-services">
+                <div><strong>Spogliatoio</strong><p>Presente. Puoi cambiarti al campo.</p></div>
+                <div><strong>Docce</strong><p>Non presenti.</p></div>
+                <div><strong>Rinfresco e torta</strong><p>Area dedicata disponibile: porta via i rifiuti e lascia tutto come trovato.</p></div>
+            </div>
+            <a href="#AllQuestions">Costi, eta, attrezzatura e altre risposte</a>
+        </section>
+        <section id="ChooseBooking" class="choice-grid" aria-label="Scegli il tipo di richiesta">
             <button type="button" class="choice-card" data-mode-button="weekend">
                 <span class="choice-icon"><i class="bi bi-calendar-week"></i></span>
                 <h2>Turni weekend</h2>
@@ -520,6 +535,15 @@
                         </select>
                     </label>
                     <label class="full-span">
+                        Metodo preferito per la caparra
+                        <select id="DepositMethod" required>
+                            <option value="">Scegli il metodo</option>
+                            <option value="Bonifico">Bonifico</option>
+                            <option value="Satispay">Satispay</option>
+                        </select>
+                        <small>La caparra corrisponde a una quota del pacchetto scelto, extra esclusi. Attendi la risposta dello staff prima di pagare.</small>
+                    </label>
+                    <label class="full-span">
                         Note o richieste
                         <textarea id="Notes" maxlength="500" placeholder="Es. addio al celibato, compleanno, preferenze orarie..."></textarea>
                     </label>
@@ -540,12 +564,16 @@
                         Invia richiesta su WhatsApp
                     </button>
                 </div>
+                <p>Si aprira WhatsApp con il riepilogo: premi Invia nella chat per farci arrivare la richiesta. Questo modulo non blocca il campo e non conferma una prenotazione.</p>
             </form>
         </section>
 
-        <section class="faq-card">
+        <section class="faq-card" id="AllQuestions">
             <h2>Domande frequenti</h2>
             <p class="faq-intro">Qui trovi le informazioni principali su prenotazione, costi, modalità di gioco e regole del campo.</p>
+            <label for="FaqSearch">Cerca una risposta</label>
+            <input id="FaqSearch" type="search" placeholder="Es. docce, costi, caparra..." maxlength="100" />
+            <p id="FaqSearchStatus" role="status" aria-live="polite"></p>
             <div class="faq-list">
                 @foreach (var item in Model.Faq)
                 {
@@ -556,8 +584,15 @@
                 }
             </div>
         </section>
+        <section class="faq-card" id="ContactHours">
+            <h2>Hai una richiesta particolare?</h2>
+            <p>Assistenza telefonica dal lunedi al venerdi, dalle 18:00 alle 21:00. Puoi compilare la richiesta anche fuori orario: la risposta dello staff non e immediata.</p>
+            <p>Per organizzare una partita usa il modulo: riceveremo tutti i dati in un unico messaggio.</p>
+            <a href="https://wa.me/393468741192?text=Buongiorno%2C%20ho%20una%20richiesta%20particolare%3A%20" target="_blank" rel="noopener">Scrivi una richiesta particolare su WhatsApp</a>
+        </section>
     </main>
 
+    <script src="~/js/customer-guide.js" asp-append-version="true" defer></script>
     <script>
         (() => {
             const slots = @Html.Raw(slotsJson);
@@ -752,6 +787,7 @@
                     `${isEnglish ? 'Group type' : 'Tipo gruppo'}: ${groupTypeInput.value}`,
                     `${isEnglish ? 'Paintballs' : 'Colpi'}: ${shotsTypeInput.value}`,
                     `${isEnglish ? 'Rabbit hunt' : 'Caccia al coniglio'}: ${rabbitInput.value}`,
+                    `${isEnglish ? 'Deposit payment method' : 'Metodo caparra'}: ${document.getElementById('DepositMethod').value}`,
                     notes ? `${isEnglish ? 'Notes' : 'Note'}: ${notes}` : null
                 ].filter(Boolean);
 
