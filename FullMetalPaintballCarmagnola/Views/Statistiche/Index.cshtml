@@ -211,9 +211,9 @@
         </div>
     </section>
     <section id="staff-year-chart" class="stats-section" aria-labelledby="staff-title">
-        <div class="stats-section-heading"><div><p class="stats-eyebrow">03 / LE PERSONE</p><h2 id="staff-title">Il contributo dello staff</h2></div><span class="stats-tag">@staffPartiteTotale assegnazioni nel @annoStaffSelezionato</span></div>
+        <div class="stats-section-heading"><div><p class="stats-eyebrow">03 / LE PERSONE</p><h2 id="staff-title">Il contributo di staff e reperibili</h2></div><span class="stats-tag">@staffPartiteTotale assegnazioni nel @annoStaffSelezionato</span></div>
     <div class="chart-card">
-        <h3>Partite gestite per staff - @annoStaffSelezionato</h3>
+        <h3>Partite gestite da staff e reperibili - @annoStaffSelezionato</h3>
         <div style="display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
             <a asp-action="Index"
                asp-route-mese="@meseCorrente"
@@ -237,11 +237,12 @@
             }
         </div>
         <div class="stats-chart">
-            <canvas id="chartStaffYearTotals" role="img" aria-label="Partite gestite per membro dello staff"></canvas>
+            <canvas id="chartStaffYearTotals" role="img" aria-label="Partite gestite per membro dello staff o reperibile assegnato"></canvas>
         </div>
         <div class="stats-chart-note">
-            Totale assegnazioni staff nell'anno: <strong>@staffPartiteTotale</strong>.
-            Sono considerate le partite confermate e non cancellate; una partita con pi&ugrave; membri staff conta una volta per ciascun nominativo assegnato.
+            Totale assegnazioni staff e reperibili nell'anno: <strong>@staffPartiteTotale</strong>.
+            Sono considerate le partite confermate e non cancellate, una volta per ciascun nominativo assegnato in Staff1&ndash;Staff4.
+            Il reperibile viene conteggiato solo se assegnato alla partita: la sola reperibilit&agrave; della giornata non conta come partita gestita.
         </div>
     </div>
 

@@ -119,6 +119,8 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 })
                 .ToListAsync();
 
+            // Count actual assignments, including on-call members outside the staff registry.
+            // Do not join the current on-call calendar: changing it must not rewrite past assignments.
             var staffPartiteAnno = partiteStaffAnno
                 .SelectMany(p => new[] { p.Staff1, p.Staff2, p.Staff3, p.Staff4 }
                     .Where(staff => !string.IsNullOrWhiteSpace(staff))

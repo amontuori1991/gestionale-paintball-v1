@@ -9,6 +9,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Full_Metal_Paintball_Carmagnola.Controllers;
 using Full_Metal_Paintball_Carmagnola.Data;
+using Full_Metal_Paintball_Carmagnola.Helpers;
 using Full_Metal_Paintball_Carmagnola.Models;
 using Full_Metal_Paintball_Carmagnola.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -130,15 +131,20 @@ app.UseAuthorization();
 app.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
 app.MapGet("/fixtures/photo.jpg", () => Results.File(storage.Preview, "image/jpeg"));
 
-async Task<string> RenderTable(HttpContext http)
+async Task<string> RenderTable(HttpContext http, bool simplified = false, bool readOnly = false)
 {
     var services = http.RequestServices;
-    http.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, "Admin") }, "Test"));
+    http.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, readOnly ? "Staff" : "Admin") }, "Test"));
     var context = new ActionContext(http, new RouteData(), new ActionDescriptor());
+    var renderDb = services.GetRequiredService<TesseramentoDbContext>();
+    var games = await renderDb.Partite.OrderBy(p => p.Id).ToListAsync();
+    var calendar = await renderDb.AssenzeCalendario.ToListAsync();
+    foreach (var item in games)
+        item.Reperibile = calendar.FirstOrDefault(a => a.Data == item.Data.Date)?.Reperibile ?? item.Reperibile;
     var data = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-    { Model = await services.GetRequiredService<TesseramentoDbContext>().Partite.OrderBy(p => p.Id).ToListAsync() };
+    { Model = games };
     data["StaffList"] = new List<string> { "Simone", "Alberto", "Federico", "Enrico" };
-    var view = services.GetRequiredService<IRazorViewEngine>().GetView(null, "/Views/Partite/_PartiteTable.cshtml", false);
+    var view = services.GetRequiredService<IRazorViewEngine>().GetView(null, simplified ? "/Views/Partite/Semplificata.cshtml" : "/Views/Partite/_PartiteTable.cshtml", false);
     if (!view.Success) throw new Exception("Booking view not found");
     using var writer = new StringWriter();
     await view.View.RenderAsync(new ViewContext(context, view.View, data,
@@ -146,6 +152,8 @@ async Task<string> RenderTable(HttpContext http)
     return "<!doctype html><html lang='it'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'><link rel='stylesheet' href='/css/site.css'><link rel='stylesheet' href='/css/partite-responsive.css'></head><body><main id='partite-page' style='padding:20px'>" + writer + "</main></body></html>";
 }
 app.MapGet("/preview/table", (Func<HttpContext, Task<IResult>>)(async http => Results.Content(await RenderTable(http), "text/html")));
+app.MapGet("/preview/simple", (Func<HttpContext, Task<IResult>>)(async http => Results.Content(await RenderTable(http, simplified: true), "text/html")));
+app.MapGet("/preview/table-readonly", (Func<HttpContext, Task<IResult>>)(async http => Results.Content(await RenderTable(http, readOnly: true), "text/html")));
 
 try
 {
@@ -502,6 +510,75 @@ try
         Check(Regex.Matches(statisticsHtml, $"id=\"{id}\"").Count == 1, "Missing or duplicate statistics section: " + id);
     Check(Regex.Matches(statisticsHtml, "<canvas ").Count == 9, "Statistics charts lost");
     Console.WriteLine("PASS: premium statistics sections and chart inventory.");
+
+    Check(StaffAssignmentOptions.ForDay(["Simone"], ["Simone", "Enrico"], " Bosax ").SequenceEqual(new[] { "Bosax", "Simone" }), "On-call missing or unavailable staff included");
+    Check(StaffAssignmentOptions.ForDay(["Simone"], ["Simone"], "simone").Count == 1, "Duplicate on-call option");
+    foreach (var placeholder in new[] { "", "In attesa", "Campo chiuso", "Nessuno", "--" })
+        Check(StaffAssignmentOptions.ForDay([], ["Simone"], placeholder).Count == 0, "Placeholder offered as staff");
+    db.AssenzeCalendario.Add(new AssenzaCalendario { Data = game.Data.Date, Giorno = "Test", Reperibile = "Bosax" });
+    db.AssenzeCalendario.Add(new AssenzaCalendario { Data = game.Data.Date.AddDays(1), Giorno = "Test", Reperibile = "Flavio" });
+    await db.SaveChangesAsync();
+    async Task<bool> Assign(string field, string name)
+    {
+        using var assignmentScope = app.Services.CreateScope();
+        var assignmentDb = assignmentScope.ServiceProvider.GetRequiredService<TesseramentoDbContext>();
+        var assignments = new PartiteController(assignmentDb, null!, null!, null!, app.Environment,
+            new PricingCatalogService(assignmentDb), new StaffRegistryService(assignmentDb), null!, albums);
+        var response = (JsonResult)await assignments.AggiornaStaff(game.Id, field, name);
+        return JsonSerializer.SerializeToElement(response.Value).GetProperty("success").GetBoolean();
+    }
+    foreach (var field in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
+        Check(await Assign(field, " bosax "), "On-call assignment rejected: " + field);
+    Check(!await Assign("Staff1", "Flavio"), "Another day's on-call accepted");
+    Check(!await Assign("Staff1", "In attesa"), "Placeholder accepted");
+    Check(!await Assign("Staff1", "Unknown"), "Arbitrary staff accepted");
+    Check(!await Assign("Caparra", "Bosax"), "Invalid staff field accepted");
+    Check(await Assign("Staff4", ""), "Clearing staff rejected");
+    await db.Entry(game).ReloadAsync();
+    Check(game.Staff1 == "Bosax" && game.Staff4 == null, "On-call assignment not persisted");
+    var assignedHtml = await anonymous.GetStringAsync("/preview/table");
+    Check(Regex.Matches(assignedHtml, "Bosax \\(reperibile\\)").Count >= 8, "Desktop/mobile on-call options missing");
+    Check(!assignedHtml.Contains("Bosax non attivo"), "On-call marked inactive");
+    var simpleHtml = await anonymous.GetStringAsync("/preview/simple");
+    Check(simpleHtml.Contains("data-label=\"Staff 1\">Bosax</td>"), "Simplified staff display missing on-call");
+    var readonlyHtml = await anonymous.GetStringAsync("/preview/table-readonly");
+    Check(!readonlyHtml.Contains("staff-select") && readonlyHtml.Contains("Bosax"), "Staff readonly access changed");
+    using var assignmentReader = new HttpClient { BaseAddress = anonymous.BaseAddress };
+    assignmentReader.DefaultRequestHeaders.Add("X-Test-Role", "Staff");
+    Check((await assignmentReader.PostAsync("/Partite/AggiornaStaff", new FormUrlEncodedContent(
+        new Dictionary<string,string> { ["id"] = game.Id.ToString(), ["campo"] = "Staff1", ["valore"] = "Bosax" }))).StatusCode == HttpStatusCode.Forbidden, "Staff can assign on-call");
+    Console.WriteLine("PASS: on-call selection, date-scoped persistence, placeholders, desktop/mobile/simplified rendering and readonly staff.");
+
+    game.CaparraConfermata = true;
+    var staffStatsYear = game.Data.Year;
+    var staffStatsFixtures = new[] {
+        new Partita { Data = game.Data, Tipo = "Adulti", CaparraConfermata = true, Staff1 = "Bosax", Staff2 = " bosax ", Staff3 = "Simone" },
+        new Partita { Data = game.Data, Tipo = "Adulti", CaparraConfermata = false, Staff1 = "Bosax" },
+        new Partita { Data = game.Data, Tipo = "Adulti", CaparraConfermata = true, IsDeleted = true, Staff1 = "Bosax" },
+        new Partita { Data = game.Data.AddYears(-1), Tipo = "Adulti", CaparraConfermata = true, Staff4 = "Bosax" },
+        new Partita { Data = game.Data.AddDays(1), Tipo = "Adulti", CaparraConfermata = true }
+    };
+    db.Partite.AddRange(staffStatsFixtures);
+    await db.SaveChangesAsync();
+    async Task<int> AssignedCount(int year, string name)
+    {
+        var statsController = new StatisticheController(db, app.Environment);
+        await statsController.Index(game.Data.Month, year);
+        var labels = (List<string>)statsController.ViewData["StaffPartiteLabels"]!;
+        var values = (List<int>)statsController.ViewData["StaffPartiteValues"]!;
+        var index = labels.FindIndex(label => label.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return index < 0 ? 0 : values[index];
+    }
+    Check(await AssignedCount(staffStatsYear, "Bosax") == 2, "On-call stats missing or counting duplicate/cancelled/unconfirmed assignments");
+    Check(await AssignedCount(staffStatsYear - 1, "Bosax") == 1, "On-call stats use wrong year");
+    Check(await AssignedCount(staffStatsYear, "Flavio") == 0, "Calendar availability counted without assignment");
+    var calendarEntry = await db.AssenzeCalendario.SingleAsync(a => a.Data == game.Data.Date);
+    calendarEntry.Reperibile = "Montuo";
+    await db.SaveChangesAsync();
+    Check(await AssignedCount(staffStatsYear, "Bosax") == 2, "Calendar change rewrote historical on-call stats");
+    var onCallStatsHtml = await staff.GetStringAsync("/Statistiche");
+    Check(onCallStatsHtml.Contains("Il contributo di staff e reperibili"), "On-call statistics heading missing");
+    Console.WriteLine("PASS: staff/on-call statistics, distinct assignments, year filter, excluded cancelled/pending games and historical stability.");
 
     if (args.Contains("--preview"))
     {

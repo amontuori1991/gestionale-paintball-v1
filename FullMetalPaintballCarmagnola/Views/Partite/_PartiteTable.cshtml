@@ -1,14 +1,17 @@
 ﻿@using System.Globalization
 @using Full_Metal_Paintball_Carmagnola.Models
+@using Full_Metal_Paintball_Carmagnola.Helpers
 @model IEnumerable<Full_Metal_Paintball_Carmagnola.Models.Partita>
 
 @{
     var staffDefault = ViewBag.StaffList as List<string> ?? new List<string>();
     var staffDisponibiliPerData = ViewBag.StaffDisponibiliPerData as Dictionary<DateTime, List<string>>;
     var staffStatiPerData = ViewBag.StaffStatiPerData as Dictionary<DateTime, Dictionary<string, bool?>>;
-    string StaffOptionLabel(DateTime data, string nome)
+    string StaffOptionLabel(Partita partita, string nome)
     {
-        var disponibile = staffStatiPerData != null && staffStatiPerData.TryGetValue(data.Date, out var stati)
+        if (StaffAssignmentOptions.IsOnCall(nome, partita.Reperibile))
+            return $"{nome} (reperibile)";
+        var disponibile = staffStatiPerData != null && staffStatiPerData.TryGetValue(partita.Data.Date, out var stati)
             && stati.TryGetValue(nome, out var stato) && stato == true;
         return $"{(disponibile ? "✅" : "⏳")} {nome}";
     }
@@ -269,13 +272,9 @@
 
                          @{
             var dataKey = partita.Data.Date;
-            var staffList = ((staffDisponibiliPerData != null && staffDisponibiliPerData.TryGetValue(dataKey, out var lista))
+            var staffList = StaffAssignmentOptions.ForDay((staffDisponibiliPerData != null && staffDisponibiliPerData.TryGetValue(dataKey, out var lista))
                 ? lista
-                : staffDefault)
-                .Where(s => staffDefault.Contains(s, StringComparer.OrdinalIgnoreCase))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(s => s)
-                .ToList();
+                : staffDefault, staffDefault, partita.Reperibile);
         }
 
  @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
@@ -283,7 +282,8 @@
     var prop = typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff);
     var currentVal = prop?.GetValue(partita) as string ?? "";
     var currentIsInactive = !string.IsNullOrWhiteSpace(currentVal)
-        && !staffDefault.Contains(currentVal, StringComparer.OrdinalIgnoreCase);
+        && !staffDefault.Contains(currentVal, StringComparer.OrdinalIgnoreCase)
+        && !StaffAssignmentOptions.IsOnCall(currentVal, partita.Reperibile);
 
     @if (!canAssignStaff)
     {
@@ -296,7 +296,7 @@
         <option value="" selected="@(currentIsInactive ? "selected" : null)">--</option>
         @foreach (var s in staffList)
         {
-            <option value="@s" selected="@(s == currentVal ? "selected" : null)">@StaffOptionLabel(partita.Data, s)</option>
+            <option value="@s" selected="@(string.Equals(s, currentVal, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@StaffOptionLabel(partita, s)</option>
         }
     </select>
     }
@@ -435,20 +435,17 @@
  <div class="pm-staff-grid">
     @{
         var dataKey = partita.Data.Date;
-        var staffList = ((staffDisponibiliPerData != null && staffDisponibiliPerData.TryGetValue(dataKey, out var lista))
+        var staffList = StaffAssignmentOptions.ForDay((staffDisponibiliPerData != null && staffDisponibiliPerData.TryGetValue(dataKey, out var lista))
             ? lista
-            : staffDefault)
-            .Where(s => staffDefault.Contains(s, StringComparer.OrdinalIgnoreCase))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(s => s)
-            .ToList();
+            : staffDefault, staffDefault, partita.Reperibile);
     }
 
     @foreach (var staff in new[] { "Staff1", "Staff2", "Staff3", "Staff4" })
     {
         var currentVal = typeof(Full_Metal_Paintball_Carmagnola.Models.Partita).GetProperty(staff)?.GetValue(partita) as string ?? "";
         var currentIsInactive = !string.IsNullOrWhiteSpace(currentVal)
-            && !staffDefault.Contains(currentVal, StringComparer.OrdinalIgnoreCase);
+            && !staffDefault.Contains(currentVal, StringComparer.OrdinalIgnoreCase)
+            && !StaffAssignmentOptions.IsOnCall(currentVal, partita.Reperibile);
 
         @if (!canAssignStaff)
         {
@@ -460,7 +457,7 @@
             <option value="" selected="@(currentIsInactive ? "selected" : null)">--</option>
             @foreach (var s in staffList)
             {
-                <option value="@s" selected="@(s == currentVal ? "selected" : null)">@StaffOptionLabel(partita.Data, s)</option>
+                <option value="@s" selected="@(string.Equals(s, currentVal, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@StaffOptionLabel(partita, s)</option>
             }
         </select>
         }

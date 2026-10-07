@@ -853,12 +853,24 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 return Json(new { success = false, message = "Campo non valido." });
 
             var valoreNormalizzato = string.IsNullOrWhiteSpace(valore) ? null : valore.Trim();
+            var partita = await _dbContext.Partite.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+            if (partita == null)
+                return NotFound();
+
+            var reperibile = Full_Metal_Paintball_Carmagnola.Helpers.StaffAssignmentOptions.OnCallName(
+                await _dbContext.AssenzeCalendario
+                    .Where(a => a.Data == partita.Data.Date)
+                    .Select(a => a.Reperibile)
+                    .FirstOrDefaultAsync());
             var staffAttivi = await _staffRegistryService.GetStaffAsync();
 
             if (!string.IsNullOrWhiteSpace(valoreNormalizzato))
             {
                 var staffValido = staffAttivi.FirstOrDefault(s =>
                     string.Equals(s, valoreNormalizzato, StringComparison.OrdinalIgnoreCase));
+                // The calendar grants this additional choice only for the booking's own day.
+                if (staffValido == null && Full_Metal_Paintball_Carmagnola.Helpers.StaffAssignmentOptions.IsOnCall(valoreNormalizzato, reperibile))
+                    staffValido = reperibile;
 
                 if (staffValido == null)
                 {
