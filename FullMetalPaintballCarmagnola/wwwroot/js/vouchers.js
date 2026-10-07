@@ -2,7 +2,53 @@
     'use strict';
     const type = document.getElementById('Type');
     const unlimited = document.getElementById('Unlimited');
-    type?.addEventListener('change', () => { unlimited.checked = type.value === 'Kids'; });
+    const mode = document.getElementById('Mode');
+    const priceData = document.getElementById('voucher-price-data');
+    if (mode && priceData) {
+        const data = JSON.parse(priceData.textContent);
+        const amount = document.getElementById('Amount');
+        const duration = document.getElementById('Duration');
+        const people = document.getElementById('People');
+        const rabbit = document.getElementById('Rabbit');
+        const info = document.getElementById('voucher-price-info');
+        const money = value => Number(value).toLocaleString('it-IT', {minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:false});
+        let customAmount = mode.value === 'amount' ? amount.value : '';
+        function sync() {
+            const isPackage = mode.value === 'package';
+            const fields = document.getElementById('voucher-package');
+            fields.hidden = !isPackage; fields.disabled = !isPackage;
+            document.getElementById('voucher-money-note').hidden = isPackage;
+            document.getElementById('voucher-show-amount').hidden = !isPackage;
+            amount.readOnly = isPackage; amount.setCustomValidity('');
+            if (!isPackage) { info.textContent = 'Il valore viene sempre riportato sul buono economico.'; return; }
+            if (type.value === 'Kids') unlimited.checked = true;
+            const restricted = type.value === 'Adulti' && duration.value === '2';
+            if (restricted) unlimited.checked = false;
+            unlimited.disabled = restricted || type.value === 'Kids';
+            const shots = type.value === 'Kids' || unlimited.checked ? 'unlimited' : 'standard';
+            const legacy = data.legacy;
+            if (legacy && legacy.Type === type.value && legacy.Duration === duration.value &&
+                legacy.People === Number(people.value) && (legacy.Rabbit || 0) === Number(rabbit.value) &&
+                (legacy.Type === 'Kids' || legacy.Unlimited) === (shots === 'unlimited')) {
+                amount.value = money(legacy.Amount);
+                info.textContent = 'Buono precedente: importo originale conservato. Cambiando pacchetto si applica il listino attuale.';
+                return;
+            }
+            const unit = data.prices[`${type.value}|${shots}|${duration.value}`];
+            const extra = rabbit.value === '0' ? 0 : data.prices['rabbit' + rabbit.value];
+            if (unit == null || unit <= 0 || extra == null || Number(people.value) < 1 || Number(people.value) > 100) {
+                amount.value = ''; info.textContent = 'Seleziona un pacchetto disponibile e un numero valido di partecipanti.';
+                amount.setCustomValidity('Pacchetto non disponibile.'); return;
+            }
+            amount.value = money(unit * Number(people.value) + extra);
+            info.textContent = `${data.name}${data.frozen ? ' (prezzi conservati all\'emissione)' : ' (in vigore)'}: ${money(unit)} euro x ${people.value} persone${extra ? ' + ' + money(extra) + ' euro Caccia al coniglio' : ''} = ${amount.value} euro.`;
+        }
+        type.addEventListener('change', () => { unlimited.checked = type.value === 'Kids'; sync(); });
+        [duration, people, rabbit, unlimited].forEach(input => input.addEventListener('input', sync));
+        amount.addEventListener('input', () => { if(mode.value === 'amount') customAmount = amount.value; });
+        mode.addEventListener('change', () => { if(mode.value === 'amount') amount.value = customAmount; sync(); });
+        sync();
+    }
     document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
         if (!window.confirm(form.dataset.confirm)) event.preventDefault();
     }));

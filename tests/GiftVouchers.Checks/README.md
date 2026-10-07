@@ -29,3 +29,11 @@ customer data is committed. The original signature is stored in AppSettings,
 not wwwroot. Issued company/package data is snapshotted; replacing the signature
 affects subsequent exports. Riscatto never creates a booking or attendance day.
 Real-device camera access and WhatsApp file sharing still require a device test.
+
+Voucher modes: monetary vouchers accept a free amount (always printed) with no
+package fields. Package vouchers calculate the group total on the server from
+the active pricing catalog, including optional rabbit costumes charged once per
+group. The pricing catalog is snapshotted at creation and reused on later edits.
+Legacy vouchers without a snapshot retain their original amount until the package
+selection changes. Tests cover submitted-price tampering, price-list changes,
+legacy compatibility and monetary PDF/JPG output. Both modes remain single-use.

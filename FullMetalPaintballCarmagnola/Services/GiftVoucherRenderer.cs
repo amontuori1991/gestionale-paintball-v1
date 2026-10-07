@@ -66,13 +66,14 @@ public sealed class GiftVoucherRenderer(IWebHostEnvironment env)
         Text(m.Dedication, 44, 379, 690, 62, 21);
         Rect(0,465,1200,335,cream);
         Rect(0,452,1200,13,accent);
-        var duration = m.Duration switch { "1" => "1 ORA", "1.5" => "1 ORA E 30 MINUTI", _ => "2 ORE" };
-        Text($"{m.Type.ToUpperInvariant()} / {m.People} PERSONE / {duration}",44,480,890,42,30,true,ink);
-        Text((m.Unlimited ? "Colpi illimitati" : "Colpi standard") + (string.IsNullOrWhiteSpace(m.Extras) ? "" : " / " + m.Extras),44,528,860,42,19,false,ink);
+        Text(m.Summary.ToUpperInvariant(),44,480,890,42,30,true,ink);
+        Text(m.Mode == "amount" ? "Scegli la tua esperienza al campo. Nessun pacchetto prestabilito."
+            : (m.Unlimited ? "Colpi illimitati" : "Colpi standard") + (string.IsNullOrWhiteSpace(m.PackageExtras) ? "" : " / " + m.PackageExtras),44,528,860,42,19,false,ink);
         Text($"EMESSO IL {v.IssuedOn:dd/MM/yyyy}  /  VALIDO FINO AL {v.ExpiresOn:dd/MM/yyyy}",44,577,850,30,22,true,ink);
-        Text("Da utilizzare interamente in un'unica occasione. Prenotazione necessaria.",44,611,850,24,16,false,ink);
+        Text(m.Mode == "amount" ? "Unico utilizzo integrale, senza credito residuo. Prenotazione necessaria."
+            : "Da utilizzare interamente in un'unica occasione. Prenotazione necessaria.",44,611,850,24,16,false,ink);
         Text(string.IsNullOrWhiteSpace(m.From) ? "Buon divertimento!" : "Un regalo da " + m.From,44,647,430,32,21,false,ink);
-        if (m.ShowAmount) Text($"Valore: {m.Amount:0.00} euro",44,680,390,28,20,true,ink);
+        if (m.ShowAmount && m.Mode != "amount") Text($"Valore: {m.Amount:0.00} euro",44,680,390,28,20,true,ink);
         if (sign != null) Fit(c, sign, new(560,647,885,717));
         using var generator = new QRCodeGenerator();
         using var qrData = generator.CreateQrCode(v.Code, QRCodeGenerator.ECCLevel.M);

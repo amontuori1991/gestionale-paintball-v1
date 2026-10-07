@@ -16,7 +16,7 @@
     </div>
     <div class="voucher-list">
         @foreach(var voucher in Model){var details=voucher.Details;
-        <article class="voucher-item"><div><span class="voucher-tag">@voucher.Status</span><h2>@details.Recipient</h2><p>@details.Type &middot; @details.People persone &middot; @details.Duration.Replace(".",",") ore</p><small>Acquirente: @details.Buyer</small></div><div><strong>@voucher.Code</strong><p>Scade il @voucher.ExpiresOn.ToString("dd/MM/yyyy")</p><a asp-action="Dettaglio" asp-route-id="@voucher.Id" class="btn btn-dark">Apri buono</a></div></article>}
+        <article class="voucher-item"><div><span class="voucher-tag">@voucher.Status</span><h2>@details.Recipient</h2><p>@details.Summary</p><small>Acquirente: @details.Buyer</small></div><div><strong>@voucher.Code</strong><p>Scade il @voucher.ExpiresOn.ToString("dd/MM/yyyy")</p><a asp-action="Dettaglio" asp-route-id="@voucher.Id" class="btn btn-dark">Apri buono</a></div></article>}
     </div>
     @if(Model.Count==0){<p class="voucher-panel">Nessun buono trovato. Puoi cercare il codice anche senza fotocamera.</p>}
     <nav class="voucher-actions" aria-label="Pagine buoni">

@@ -6,6 +6,7 @@ namespace Full_Metal_Paintball_Carmagnola.Models;
 
 public sealed class GiftVoucherInput
 {
+    [Required, RegularExpression("package|amount")] public string Mode { get; set; } = "package";
     [Required, StringLength(100)] public string Recipient { get; set; } = "";
     [Required, StringLength(100)] public string Buyer { get; set; } = "";
     [RegularExpression(@"\+?[0-9]{7,15}"), StringLength(16)] public string? Phone { get; set; }
@@ -15,11 +16,18 @@ public sealed class GiftVoucherInput
     [Range(1, 100)] public int People { get; set; } = 8;
     [Required, RegularExpression(@"^(1|1\.5|2)$")] public string Duration { get; set; } = "1.5";
     public bool Unlimited { get; set; }
+    [Range(0, 2)] public int Rabbit { get; set; }
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindNever] public PricingCatalog? PricingSnapshot { get; set; }
     [StringLength(180)] public string? Extras { get; set; }
     [Range(typeof(decimal), "0.01", "100000", ParseLimitsInInvariantCulture = true)] public decimal Amount { get; set; }
     public bool ShowAmount { get; set; }
     [Required, RegularExpression("classico|compleanno|natale|valentino|ricorrenza")] public string Theme { get; set; } = "classico";
     public DateOnly IssuedOn { get; set; } = GiftVoucher.Today;
+    [System.Text.Json.Serialization.JsonIgnore] public string Summary => Mode == "amount"
+        ? $"Buono a valore da {Amount:0.00} euro"
+        : $"{Type} / {People} persone / {(Duration == "1.5" ? "1 ora e 30 minuti" : Duration == "1" ? "1 ora" : "2 ore")}";
+    [System.Text.Json.Serialization.JsonIgnore] public string PackageExtras => string.Join(" / ",
+        new[] { Rabbit > 0 ? $"Caccia al coniglio: {Rabbit} {(Rabbit == 1 ? "costume" : "costumi")}" : null, Extras }.Where(s => !string.IsNullOrWhiteSpace(s)));
 }
 
 public sealed record VoucherEvent(DateTime AtUtc, string Actor, string Action, string? Reason);

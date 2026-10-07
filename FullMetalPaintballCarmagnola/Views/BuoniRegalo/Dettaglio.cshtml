@@ -5,7 +5,12 @@
 <a asp-action="Index" class="btn btn-outline-dark mb-3">&larr; Buoni regalo</a>
 <header class="voucher-heading"><div><span>@Model.Code</span><h1>@m.Recipient</h1><p>@Model.Status &middot; valido fino al @Model.ExpiresOn.ToString("dd/MM/yyyy")</p></div></header>
 @if(TempData["VoucherMessage"] is string message){<div class="alert alert-info" role="status">@message</div>}
-<div class="voucher-panel"><h2>@m.Type &middot; @m.People persone &middot; @m.Duration.Replace(".",",") ore</h2><p>@(m.Unlimited ? "Colpi illimitati" : "Colpi standard") &middot; @m.Extras</p><p>Acquirente: @m.Buyer &middot; @m.Phone<br />Importo: @m.Amount.ToString("C") &middot; Pagamento: @(Model.Paid ? "confermato" : "da confermare")</p>
+<div class="voucher-panel"><h2>@m.Summary</h2>
+    @if(m.Mode == "package"){
+        <p>@(m.Unlimited ? "Colpi illimitati" : "Colpi standard") &middot; @m.PackageExtras</p>
+        @if(m.PricingSnapshot != null){<p>Prezzo fissato all'emissione: @m.PricingSnapshot.GetCurrentListino().Name.</p>}
+    }else{<p>Valore libero, non legato a un pacchetto. Utilizzo integrale in un'unica occasione, senza credito residuo.</p>}
+    <p>Acquirente: @m.Buyer &middot; @m.Phone<br />Importo: @m.Amount.ToString("C") &middot; Pagamento: @(Model.Paid ? "confermato" : "da confermare")</p>
     <div class="voucher-actions">
     @if(ViewBag.PaymentUrl is string payment && !Model.Paid && !Model.Cancelled){<a href="@payment" target="_blank" rel="noopener" class="btn btn-outline-success">WhatsApp coordinate pagamento</a>}
     @if(User.IsInRole("Admin") && !Model.Redeemed && !Model.Cancelled){<a asp-action="Crea" asp-route-id="@Model.Id" class="btn btn-outline-dark">Modifica</a>}

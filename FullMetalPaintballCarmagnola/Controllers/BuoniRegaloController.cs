@@ -11,7 +11,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers;
 
 [Authorize(Roles = "Admin,Staff"), Authorize(Policy = "Buoni regalo")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfileService profiles, GiftVoucherRenderer renderer) : Controller
+public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfileService profiles, GiftVoucherRenderer renderer, PricingCatalogService pricing) : Controller
 {
     private const string SignatureKey = "GiftVoucherSignatureV1";
     private string Actor => User.Identity?.Name ?? "Operatore";
@@ -20,7 +20,12 @@ public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfi
     {
         var query = db.GiftVouchers.AsNoTracking();
         q = q?.Trim();
-        if (!string.IsNullOrEmpty(q)) query = query.Where(v => v.Code.Contains(q.ToUpper()) || v.Payload.ToLower().Contains(q.ToLower()));
+        if (!string.IsNullOrEmpty(q)) query = db.GiftVouchers.FromSqlInterpolated($"""
+            SELECT * FROM "GiftVouchers"
+            WHERE strpos(lower("Code"), lower({q})) > 0
+               OR strpos(lower("Payload"::jsonb ->> 'Recipient'), lower({q})) > 0
+               OR strpos(lower("Payload"::jsonb ->> 'Buyer'), lower({q})) > 0
+            """).AsNoTracking();
         var today = GiftVoucher.Today;
         query = stato switch
         {
@@ -41,24 +46,50 @@ public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfi
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Crea(Guid? id)
     {
-        if (id == null) return View(new GiftVoucherInput());
+        if (id == null) { await PreparePricing(null); return View(new GiftVoucherInput()); }
         var row = await db.GiftVouchers.FindAsync(id.Value);
         if (row == null) return NotFound();
         if (row.Redeemed || row.Cancelled) return Conflict("Non puoi modificare un buono riscattato o annullato.");
         ViewBag.Id = row.Id; ViewBag.Version = row.Version;
+        await PreparePricing(row.Details);
         return View(row.Details);
     }
 
     [HttpPost, Authorize(Roles = "Admin"), ValidateAntiForgeryToken]
     public async Task<IActionResult> Crea(GiftVoucherInput model, Guid? id, int version = 0)
     {
-        // Accept decimal comma or point, but not ambiguous thousands separators.
+        var existing = id.HasValue ? await db.GiftVouchers.FindAsync(id.Value) : null;
+        if (id.HasValue && existing == null) return NotFound();
+        if (existing != null && (existing.Version != version || existing.Redeemed || existing.Cancelled)) return Conflict("Il buono e' cambiato. Riapri la scheda.");
+        var previous = existing?.Details;
+        var catalog = await PreparePricing(previous);
+        // Never trust a submitted price or price snapshot for a package.
         ModelState.Remove(nameof(model.Amount));
-        var rawAmount = Request.Form[nameof(model.Amount)].ToString().Trim().Replace(',', '.');
-        if (!decimal.TryParse(rawAmount, System.Globalization.NumberStyles.AllowDecimalPoint,
-            System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0 || amount > 100000 || decimal.Round(amount, 2) != amount)
-            ModelState.AddModelError(nameof(model.Amount), "Inserisci un importo tra 0,01 e 100.000 euro, con massimo due decimali e senza separatore delle migliaia.");
-        else model.Amount = amount;
+        model.PricingSnapshot = null;
+        if (model.Mode == "amount")
+        {
+            foreach (var key in new[] { "Type", "People", "Duration", "Unlimited", "Rabbit", "Extras" }) ModelState.Remove(key);
+            model.Type = "Adulti"; model.People = 1; model.Duration = "1"; model.Unlimited = false; model.Rabbit = 0; model.Extras = null;
+            model.ShowAmount = true;
+            var rawAmount = Request.Form[nameof(model.Amount)].ToString().Trim().Replace(',', '.');
+            if (!decimal.TryParse(rawAmount, System.Globalization.NumberStyles.AllowDecimalPoint,
+                System.Globalization.CultureInfo.InvariantCulture, out var amount) || amount <= 0 || amount > 100000 || decimal.Round(amount, 2) != amount)
+                ModelState.AddModelError(nameof(model.Amount), "Inserisci un importo tra 0,01 e 100.000 euro, con massimo due decimali e senza separatore delle migliaia.");
+            else model.Amount = amount;
+        }
+        else if (model.Mode == "package")
+        {
+            if (model.Type == "Kids") model.Unlimited = true;
+            if (previous is { PricingSnapshot: null } && GiftVoucherPricing.SamePackage(model, previous))
+                model.Amount = previous.Amount; // Preserve legacy vouchers until their package is changed.
+            else
+            {
+                model.PricingSnapshot = catalog;
+                var total = GiftVoucherPricing.Calculate(model, catalog);
+                if (!total.HasValue || total <= 0 || total > 100000) ModelState.AddModelError(nameof(model.Amount), "Pacchetto non disponibile nel listino o importo non valido.");
+                else model.Amount = total.Value;
+            }
+        }
         if (model.IssuedOn.Year < 2000 || model.IssuedOn > GiftVoucher.Today)
             ModelState.AddModelError(nameof(model.IssuedOn), "La data deve essere dal 2000 a oggi.");
         var company = await profiles.GetAsync();
@@ -67,13 +98,12 @@ public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfi
         if (signature == null) ModelState.AddModelError("", "Carica prima la firma dalla pagina Buoni regalo.");
         if (!ModelState.IsValid) { ViewBag.Id = id; ViewBag.Version = version; return View(model); }
         GiftVoucher row;
-        if (id.HasValue)
+        if (existing != null)
         {
-            row = await db.GiftVouchers.FindAsync(id.Value) ?? throw new BadHttpRequestException("Buono non trovato.");
-            if (row.Version != version || row.Redeemed || row.Cancelled) return Conflict("Il buono e' cambiato. Riapri la scheda.");
-            if (row.Paid && row.Details.Amount != model.Amount)
+            row = existing;
+            if (row.Paid && (row.Details.Amount != model.Amount || row.Details.Mode != model.Mode))
             {
-                ModelState.AddModelError(nameof(model.Amount), "Il valore di un buono pagato non puo essere modificato. Annulla il buono ed emettine uno nuovo.");
+                ModelState.AddModelError(nameof(model.Amount), "Tipo e valore di un buono pagato non possono essere modificati. Annulla il buono ed emettine uno nuovo.");
                 ViewBag.Id = id; ViewBag.Version = version;
                 return View(model);
             }
@@ -99,6 +129,16 @@ public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfi
         try { await db.SaveChangesAsync(); }
         catch (DbUpdateConcurrencyException) { return Conflict("Modifica contemporanea: ricarica la scheda."); }
         return RedirectToAction(nameof(Dettaglio), new { id = row.Id });
+    }
+
+    private async Task<PricingCatalog> PreparePricing(GiftVoucherInput? previous)
+    {
+        var catalog = previous?.PricingSnapshot ?? await pricing.GetCatalogAsync();
+        ViewBag.VoucherPrices = GiftVoucherPricing.Prices(catalog);
+        ViewBag.PriceName = catalog.GetCurrentListino().Name;
+        ViewBag.LegacyPackage = previous is { Mode: "package", PricingSnapshot: null } ? previous : null;
+        ViewBag.FrozenPrices = previous?.PricingSnapshot != null;
+        return catalog;
     }
 
     public async Task<IActionResult> Dettaglio(Guid id)

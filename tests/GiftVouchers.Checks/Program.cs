@@ -54,6 +54,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthorizationHandler,FeatureAuthorizationHandler>();
 builder.Services.AddAuthorization(o=>o.AddPolicy("Buoni regalo",p=>p.Requirements.Add(new FeatureRequirement("Buoni regalo"))));
 builder.Services.AddScoped<CompanyProfileService>(); builder.Services.AddSingleton<GiftVoucherRenderer>();
+builder.Services.AddScoped<PricingCatalogService>();
 await using var app=builder.Build(); app.Urls.Add("http://127.0.0.1:55447");
 app.UseStaticFiles(); app.UseRouting(); app.UseAuthentication(); app.UseAuthorization();
 app.MapControllerRoute("default","{controller}/{action=Index}/{id?}");
@@ -87,13 +88,23 @@ try {
     Check(response.StatusCode==HttpStatusCode.Redirect,"Create failed: "+Regex.Match(createResult,"validation-summary-errors[\\s\\S]*?</div>").Value);
     db.ChangeTracker.Clear(); var row=await db.GiftVouchers.SingleAsync();
     Check(row.Details.Unlimited && row.ExpiresOn==row.IssuedOn.AddYears(1),"Kids/anniversary persistence");
+    Check(row.Details.Amount==184 && row.Details.PricingSnapshot!=null,"Package price must be 8 x 23, ignoring submitted 240");
+    var catalogService=scope.ServiceProvider.GetRequiredService<PricingCatalogService>();
+    var catalog=await catalogService.GetCatalogAsync();
+    catalog.GetEntry(PricingEntryCodes.Kids90Minutes)!.Listino2Price=99; await catalogService.SaveCatalogAsync(catalog);
+    var editForm=new Dictionary<string,string>(form){{"id",row.Id.ToString()},{"version",row.Version.ToString()}};
+    editForm["Amount"]="1";editForm["From"]="Nuova dedica";
+    Check((await adminClient.PostAsync("/BuoniRegalo/Crea",new FormUrlEncodedContent(editForm))).StatusCode==HttpStatusCode.Redirect,"Edit with frozen price");
+    db.ChangeTracker.Clear(); row=await db.GiftVouchers.SingleAsync();
+    Check(row.Details.Amount==184,"Existing price drifted after listino change");
+    catalog.GetEntry(PricingEntryCodes.Kids90Minutes)!.Listino2Price=23; await catalogService.SaveCatalogAsync(catalog);
     Check(await db.Partite.CountAsync()==0 && await db.AssenzeCalendario.CountAsync()==0,"Side effects on bookings/calendar");
     async Task<HttpResponseMessage> Change(HttpClient client,string op,int version,string? reason=null){var html=await client.GetStringAsync("/BuoniRegalo/Dettaglio/"+row.Id);return await client.PostAsync("/BuoniRegalo/Stato",new FormUrlEncodedContent(new Dictionary<string,string>{{"__RequestVerificationToken",Token(html)},{"id",row.Id.ToString()},{"version",version.ToString()},{"operation",op},{"reason",reason??""}}));}
     await Change(adminClient,"pagato",row.Version); db.ChangeTracker.Clear(); row=await db.GiftVouchers.SingleAsync(); Check(row.Paid,"Payment save");
     var preVersion=row.Version;
     await Change(staff,"riscatta",row.Version); await Change(staff,"riscatta",preVersion);
     db.ChangeTracker.Clear(); row=await db.GiftVouchers.SingleAsync(); Check(row.Redeemed && row.History.Count(x=>x.Action=="riscatta")==1,"Replay redemption");
-    await Change(staff,"ripristina",row.Version,"Errore prova"); db.ChangeTracker.Clear(); row=await db.GiftVouchers.SingleAsync(); Check(!row.Redeemed && row.History.Count==4,"Staff undo persistence");
+    await Change(staff,"ripristina",row.Version,"Errore prova"); db.ChangeTracker.Clear(); row=await db.GiftVouchers.SingleAsync(); Check(!row.Redeemed && row.History.Count==5,"Staff undo persistence");
     await using(var first=new TesseramentoDbContext(new DbContextOptionsBuilder<TesseramentoDbContext>().UseNpgsql(cs).Options))
     await using(var second=new TesseramentoDbContext(new DbContextOptionsBuilder<TesseramentoDbContext>().UseNpgsql(cs).Options)){
         var a=await first.GiftVouchers.SingleAsync(); var b=await second.GiftVouchers.SingleAsync();
@@ -121,6 +132,35 @@ try {
     Check((await staff.GetAsync("/BuoniRegalo")).StatusCode==HttpStatusCode.Forbidden,"Revoked Staff permission");
     staffPermission.IsAllowed=true;await db.SaveChangesAsync();
     var dashboard=await adminClient.GetStringAsync("/BuoniRegalo/Crea");Check(dashboard.Contains("Altre ricorrenze"),"Templates view");
+    var monetary=new Dictionary<string,string>(form){["Mode"]="amount",["Amount"]="100,50",["Type"]="invalid",["People"]="0",["Duration"]="",["ShowAmount"]="false"};
+    Check((await adminClient.PostAsync("/BuoniRegalo/Crea",new FormUrlEncodedContent(monetary))).StatusCode==HttpStatusCode.Redirect,"Monetary voucher must not require package fields");
+    db.ChangeTracker.Clear();var moneyRow=(await db.GiftVouchers.ToListAsync()).Single(x=>x.Details.Mode=="amount");
+    Check(moneyRow.Details.Amount==100.50m && moneyRow.Details.ShowAmount && moneyRow.Details.PricingSnapshot==null,"Monetary value persistence");
+    var moneyHtml=await adminClient.GetStringAsync("/BuoniRegalo/Dettaglio/"+moneyRow.Id);
+    Check(moneyHtml.Contains("100,50") && !moneyHtml.Contains("Colpi standard"),"Monetary detail leaked package");
+    foreach(var format in new[]{"pdf","jpg"}){
+        var export=await adminClient.GetAsync($"/BuoniRegalo/Esporta/{moneyRow.Id}?format={format}");Check(export.IsSuccessStatusCode,"Monetary export");
+        await File.WriteAllBytesAsync(Path.Combine(output,"monetary."+format),await export.Content.ReadAsByteArrayAsync());
+    }
+    var package=new Dictionary<string,string>(form){["Type"]="Adulti",["Unlimited"]="true",["Duration"]="2"};
+    var invalid=await adminClient.PostAsync("/BuoniRegalo/Crea",new FormUrlEncodedContent(package));
+    Check(invalid.StatusCode==HttpStatusCode.OK && (await invalid.Content.ReadAsStringAsync()).Contains("Pacchetto non disponibile"),"Unsupported unlimited 2h accepted");
+    package["Unlimited"]="false";package["Duration"]="1.5";package["Rabbit"]="1";
+    Check((await adminClient.PostAsync("/BuoniRegalo/Crea",new FormUrlEncodedContent(package))).StatusCode==HttpStatusCode.Redirect,"Adult plus rabbit");
+    db.ChangeTracker.Clear(); var withRabbit=(await db.GiftVouchers.ToListAsync()).Single(x=>x.Details.Rabbit==1);
+    Check(withRabbit.Details.Amount==300,"Rabbit must be charged once: 8x30+60");
+    var oldPayload=System.Text.Json.Nodes.JsonNode.Parse(withRabbit.Payload)!;
+    oldPayload.AsObject().Remove("Mode"); oldPayload.AsObject().Remove("PricingSnapshot"); oldPayload.AsObject().Remove("Rabbit");
+    oldPayload["Amount"]=77;withRabbit.Payload=oldPayload.ToJsonString();await db.SaveChangesAsync();
+    var legacyEdit=new Dictionary<string,string>(package){["id"]=withRabbit.Id.ToString(),["version"]=withRabbit.Version.ToString(),["Rabbit"]="0",["Amount"]="1"};
+    Check((await adminClient.PostAsync("/BuoniRegalo/Crea",new FormUrlEncodedContent(legacyEdit))).StatusCode==HttpStatusCode.Redirect,"Legacy edit");
+    db.ChangeTracker.Clear();withRabbit=await db.GiftVouchers.SingleAsync(x=>x.Id==withRabbit.Id);
+    Check(withRabbit.Details.Mode=="package" && withRabbit.Details.Amount==77,"Legacy amount changed on simple edit");
+    legacyEdit["People"]="9";legacyEdit["version"]=withRabbit.Version.ToString();
+    Check((await adminClient.PostAsync("/BuoniRegalo/Crea",new FormUrlEncodedContent(legacyEdit))).StatusCode==HttpStatusCode.Redirect,"Legacy package change");
+    db.ChangeTracker.Clear();withRabbit=await db.GiftVouchers.SingleAsync(x=>x.Id==withRabbit.Id);
+    Check(withRabbit.Details.Amount==270 && withRabbit.Details.PricingSnapshot!=null,"Legacy changed package not repriced");
+    Console.WriteLine("PASS: monetary/package modes, tamper protection, frozen prices, unsupported combinations and rabbit pricing.");
     Console.WriteLine("PASS: PostgreSQL schema twice, signature, real MVC views, permissions/revocation, CSRF, create/payment/redeem/undo, audit, concurrency and all five templates plus PDF/JPG export.");
     Console.WriteLine("Preview: http://127.0.0.1:55447/BuoniRegalo (test cookie VoucherTestRole=Admin). Output: "+output);
     if(args.Contains("--preview")) await Task.Delay(Timeout.Infinite);

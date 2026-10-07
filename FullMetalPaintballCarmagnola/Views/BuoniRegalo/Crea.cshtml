@@ -1,4 +1,5 @@
 @model Full_Metal_Paintball_Carmagnola.Models.GiftVoucherInput
+@using System.Text.Json
 @{ViewData["Title"] = ViewBag.Id == null ? "Crea buono regalo" : "Modifica buono regalo";}
 <link rel="stylesheet" href="~/css/vouchers.css" asp-append-version="true" />
 <section class="voucher-page">
@@ -15,19 +16,28 @@
         <label>Da parte di (facoltativo, sul buono)<input asp-for="From" maxlength="100" /></label>
     </div>
     <label>Dedica<textarea asp-for="Dedication" maxlength="240" rows="2"></textarea></label>
-    <h2>02 / L'esperienza</h2>
+    <h2>02 / Il regalo</h2>
+    <label>Tipologia del buono<select asp-for="Mode"><option value="package">Pacchetto paintball</option><option value="amount">Buono economico / valore libero</option></select></label>
+    <p id="voucher-money-note" hidden>Un valore da spendere al campo, senza pacchetto prestabilito. Riscatto integrale in un'unica occasione, senza credito residuo.</p>
+    <fieldset id="voucher-package">
     <div class="voucher-fields">
         <label>Tipo<select asp-for="Type"><option>Adulti</option><option>Kids</option></select></label>
         <label>Partecipanti<input asp-for="People" type="number" min="1" max="100" /></label>
         <label>Durata<select asp-for="Duration"><option value="1">1 ora</option><option value="1.5">1 ora e 30 minuti</option><option value="2">2 ore</option></select></label>
-        <label>Importo del buono (euro)<input asp-for="Amount" type="text" inputmode="decimal" data-val="false" required maxlength="12" placeholder="Es. 240,00" /></label>
+        <label>Caccia al coniglio<select asp-for="Rabbit"><option value="0">Non inclusa</option><option value="1">1 costume</option><option value="2">2 costumi</option></select></label>
     </div>
-    <div class="voucher-actions"><label><input asp-for="Unlimited" /> Colpi illimitati</label><label><input asp-for="ShowAmount" /> Mostra il valore sul buono</label></div>
-    <label>Extra inclusi<textarea asp-for="Extras" maxlength="180" rows="2" placeholder="Es. Caccia al coniglio"></textarea></label>
+    <label><input asp-for="Unlimited" /> Colpi illimitati</label>
+    <label>Note del pacchetto<textarea asp-for="Extras" maxlength="180" rows="2" placeholder="Eventuali precisazioni, senza supplementi di prezzo"></textarea></label>
+    <p>Le note non modificano il prezzo. La Caccia al coniglio si seleziona sopra.</p>
+    </fieldset>
+    <label>Importo del buono (euro)<input asp-for="Amount" type="text" inputmode="decimal" data-val="false" required maxlength="12" placeholder="Es. 100,00" readonly="@(Model.Mode == "package")" /></label>
+    <p id="voucher-price-info" aria-live="polite"></p>
+    <label id="voucher-show-amount"><input asp-for="ShowAmount" /> Mostra il valore sul buono con pacchetto</label>
     <h2>03 / Lo stile</h2>
     <div class="voucher-fields"><label>Template<select asp-for="Theme"><option value="classico">Classico / Adrenalina</option><option value="compleanno">Compleanno / Lime</option><option value="natale">Natale / Oro</option><option value="valentino">San Valentino / Corallo</option><option value="ricorrenza">Altre ricorrenze / Acqua</option></select></label><label>Data di emissione<input asp-for="IssuedOn" type="date" max="@Full_Metal_Paintball_Carmagnola.Models.GiftVoucher.Today.ToString("yyyy-MM-dd")" /></label></div>
     <p>Scadenza automatica: stesso giorno dell'anno successivo, incluso. Per il 29 febbraio: 28 febbraio. Logo e dati aziendali sono recuperati dal gestionale; il pagamento si conferma separatamente.</p>
     <button type="submit" class="btn btn-dark">Salva e visualizza anteprima</button>
 </form>
 </section>
+<script type="application/json" id="voucher-price-data">@Html.Raw(JsonSerializer.Serialize(new { prices = ViewBag.VoucherPrices, name = ViewBag.PriceName, frozen = ViewBag.FrozenPrices, legacy = ViewBag.LegacyPackage }))</script>
 <script src="~/js/vouchers.js" asp-append-version="true" defer></script>
