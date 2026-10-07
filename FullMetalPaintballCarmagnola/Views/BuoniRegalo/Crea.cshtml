@@ -1,0 +1,33 @@
+@model Full_Metal_Paintball_Carmagnola.Models.GiftVoucherInput
+@{ViewData["Title"] = ViewBag.Id == null ? "Crea buono regalo" : "Modifica buono regalo";}
+<link rel="stylesheet" href="~/css/vouchers.css" asp-append-version="true" />
+<section class="voucher-page">
+<a asp-action="Index" class="btn btn-outline-dark mb-3">&larr; Buoni regalo</a>
+<header class="voucher-heading"><div><span>FULL METAL / GIFT STUDIO</span><h1>@ViewData["Title"]</h1><p>Validita annuale. Un solo riscatto, per l'intero gruppo.</p></div></header>
+<form asp-action="Crea" method="post" class="voucher-panel" data-loading-message="Salvataggio buono regalo...">
+    <input type="hidden" name="id" value="@ViewBag.Id" /><input type="hidden" name="version" value="@(ViewBag.Version ?? 0)" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <h2>01 / A chi regaliamo l'azione?</h2>
+    <div class="voucher-fields">
+        <label>Destinatario<input asp-for="Recipient" maxlength="100" required /></label>
+        <label>Acquirente (solo gestionale)<input asp-for="Buyer" maxlength="100" required /></label>
+        <label>WhatsApp acquirente, con prefisso internazionale<input asp-for="Phone" type="tel" placeholder="+393461234567" /></label>
+        <label>Da parte di (facoltativo, sul buono)<input asp-for="From" maxlength="100" /></label>
+    </div>
+    <label>Dedica<textarea asp-for="Dedication" maxlength="240" rows="2"></textarea></label>
+    <h2>02 / L'esperienza</h2>
+    <div class="voucher-fields">
+        <label>Tipo<select asp-for="Type"><option>Adulti</option><option>Kids</option></select></label>
+        <label>Partecipanti<input asp-for="People" type="number" min="1" max="100" /></label>
+        <label>Durata<select asp-for="Duration"><option value="1">1 ora</option><option value="1.5">1 ora e 30 minuti</option><option value="2">2 ore</option></select></label>
+        <label>Importo del buono (euro)<input asp-for="Amount" type="text" inputmode="decimal" data-val="false" required maxlength="12" placeholder="Es. 240,00" /></label>
+    </div>
+    <div class="voucher-actions"><label><input asp-for="Unlimited" /> Colpi illimitati</label><label><input asp-for="ShowAmount" /> Mostra il valore sul buono</label></div>
+    <label>Extra inclusi<textarea asp-for="Extras" maxlength="180" rows="2" placeholder="Es. Caccia al coniglio"></textarea></label>
+    <h2>03 / Lo stile</h2>
+    <div class="voucher-fields"><label>Template<select asp-for="Theme"><option value="classico">Classico / Adrenalina</option><option value="compleanno">Compleanno / Lime</option><option value="natale">Natale / Oro</option><option value="valentino">San Valentino / Corallo</option><option value="ricorrenza">Altre ricorrenze / Acqua</option></select></label><label>Data di emissione<input asp-for="IssuedOn" type="date" max="@Full_Metal_Paintball_Carmagnola.Models.GiftVoucher.Today.ToString("yyyy-MM-dd")" /></label></div>
+    <p>Scadenza automatica: stesso giorno dell'anno successivo, incluso. Per il 29 febbraio: 28 febbraio. Logo e dati aziendali sono recuperati dal gestionale; il pagamento si conferma separatamente.</p>
+    <button type="submit" class="btn btn-dark">Salva e visualizza anteprima</button>
+</form>
+</section>
+<script src="~/js/vouchers.js" asp-append-version="true" defer></script>

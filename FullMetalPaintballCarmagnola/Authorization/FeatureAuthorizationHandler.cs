@@ -33,7 +33,7 @@ namespace Full_Metal_Paintball_Carmagnola.Authorization
                 return;
             }
 
-            if (requirement.FeatureName == "Bonus Pool" && user.IsInRole("Admin"))
+            if ((requirement.FeatureName == "Bonus Pool" || requirement.FeatureName == "Buoni regalo") && user.IsInRole("Admin"))
             {
                 context.Succeed(requirement);
                 return;

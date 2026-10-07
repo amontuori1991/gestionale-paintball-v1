@@ -132,7 +132,7 @@ public sealed class FlyerRenderer(IWebHostEnvironment env)
         canvas.DrawBitmap(bitmap, source, destination);
     }
 
-    private static void Text(SKCanvas canvas, string? text, SKRect box, SKTypeface typeface, SKColor color, float max, float min)
+    internal static void Text(SKCanvas canvas, string? text, SKRect box, SKTypeface typeface, SKColor color, float max, float min)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
         using var paint = new SKPaint { Color = color, IsAntialias = true };

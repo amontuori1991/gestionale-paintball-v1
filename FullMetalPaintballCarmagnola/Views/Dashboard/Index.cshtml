@@ -6,6 +6,7 @@
     var dashboardButtons = new Dictionary<string, (string ButtonClass, string Icon, string Url)>
     {
         ["Profilo Azienda"] = ("btn-outline-info", "bi-building", Url.Action("Index", "ProfiloAzienda") ?? "#"),
+        ["Buoni regalo"] = ("btn-outline-success", "bi-gift", Url.Action("Index", "BuoniRegalo") ?? "#"),
         ["Crea Volantini"] = ("btn-outline-warning", "bi-file-earmark-richtext", Url.Action("Index", "Volantini") ?? "#"),
         ["Tesserati"] = ("btn-outline-primary", "bi-people", Url.Action("ListaTesseramenti", "Tesseramento") ?? "#"),
         ["Prenotazioni"] = ("btn-outline-success", "bi-calendar-check", Url.Action("Index", "Partite") ?? "#"),

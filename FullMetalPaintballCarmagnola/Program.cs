@@ -58,6 +58,7 @@ builder.Services.AddScoped<AcsiOdsExportService>();
 builder.Services.AddScoped<PricingCatalogService>();
 builder.Services.AddScoped<CompanyProfileService>();
 builder.Services.AddSingleton<FlyerRenderer>();
+builder.Services.AddSingleton<GiftVoucherRenderer>();
 builder.Services.AddScoped<StaffRegistryService>();
 builder.Services.AddTransient<IEmailService, EmailSender>();
 builder.Services.AddTransient<IEmailSender, EmailSender>(); // Fondamentale per Identity
@@ -69,6 +70,7 @@ builder.Services.AddScoped<IAuthorizationHandler, FeatureAuthorizationHandler>()
 
 builder.Services.AddAuthorization(options =>
 {
+    options.AddPolicy("Buoni regalo", policy => policy.Requirements.Add(new FeatureRequirement("Buoni regalo")));
     options.AddPolicy("Tesserati", policy =>
         policy.Requirements.Add(new FeatureRequirement("Tesserati")));
     options.AddPolicy("Prenotazioni", policy =>
@@ -159,6 +161,7 @@ using (var scope = app.Services.CreateScope())
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var dbContext = scope.ServiceProvider.GetRequiredService<TesseramentoDbContext>();
     await AmichevoliSchema.EnsureAsync(dbContext);
+    await GiftVoucherSchema.EnsureAsync(dbContext);
     await dbContext.Database.ExecuteSqlRawAsync(@"
         CREATE TABLE IF NOT EXISTS ""AppSettings"" (
             ""Key"" character varying(100) NOT NULL,

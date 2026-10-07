@@ -1,0 +1,29 @@
+@model Full_Metal_Paintball_Carmagnola.Models.GiftVoucher
+@{ViewData["Title"]="Buono " + Model.Code; var m=Model.Details;}
+<link rel="stylesheet" href="~/css/vouchers.css" asp-append-version="true" />
+<section class="voucher-page">
+<a asp-action="Index" class="btn btn-outline-dark mb-3">&larr; Buoni regalo</a>
+<header class="voucher-heading"><div><span>@Model.Code</span><h1>@m.Recipient</h1><p>@Model.Status &middot; valido fino al @Model.ExpiresOn.ToString("dd/MM/yyyy")</p></div></header>
+@if(TempData["VoucherMessage"] is string message){<div class="alert alert-info" role="status">@message</div>}
+<div class="voucher-panel"><h2>@m.Type &middot; @m.People persone &middot; @m.Duration.Replace(".",",") ore</h2><p>@(m.Unlimited ? "Colpi illimitati" : "Colpi standard") &middot; @m.Extras</p><p>Acquirente: @m.Buyer &middot; @m.Phone<br />Importo: @m.Amount.ToString("C") &middot; Pagamento: @(Model.Paid ? "confermato" : "da confermare")</p>
+    <div class="voucher-actions">
+    @if(ViewBag.PaymentUrl is string payment && !Model.Paid && !Model.Cancelled){<a href="@payment" target="_blank" rel="noopener" class="btn btn-outline-success">WhatsApp coordinate pagamento</a>}
+    @if(User.IsInRole("Admin") && !Model.Redeemed && !Model.Cancelled){<a asp-action="Crea" asp-route-id="@Model.Id" class="btn btn-outline-dark">Modifica</a>}
+    </div>
+    @if(User.IsInRole("Admin") && !Model.Paid && !Model.Cancelled){
+        <form asp-action="Stato" method="post" data-confirm="Confermi di aver verificato il pagamento?"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" /><button name="operation" value="pagato" class="btn btn-success">Conferma pagamento</button></form>
+    }
+    @if(Model.Status=="Disponibile"){
+        <form asp-action="Stato" method="post" data-confirm="Riscattare l'intero buono? Non sono previsti utilizzi parziali."><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" /><button name="operation" value="riscatta" class="btn btn-dark">Riscatta interamente</button></form>
+    }
+    @if(Model.Redeemed){
+        <form asp-action="Stato" method="post" data-confirm="Annullare il riscatto? L'operazione restera nello storico."><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" /><label>Motivo dell'annullamento del riscatto<input name="reason" required maxlength="500" /></label><button name="operation" value="ripristina" class="btn btn-outline-dark">Annulla riscatto</button><small>Se scaduto, il buono non tornera utilizzabile.</small></form>
+    }
+</div>
+<div class="voucher-panel"><h2>Il tuo buono</h2><img class="voucher-preview" src="@Url.Action("Esporta", new {id=Model.Id})" alt="Anteprima buono regalo" /><div class="voucher-actions"><a asp-action="Esporta" asp-route-id="@Model.Id" asp-route-format="pdf" class="btn btn-dark">Scarica PDF</a><a asp-action="Esporta" asp-route-id="@Model.Id" asp-route-format="jpg" class="btn btn-dark">Scarica JPG</a><button type="button" class="btn btn-outline-success" data-share-url="@Url.Action("Esporta", new {id=Model.Id,format="jpg"})" data-share-name="@(Model.Code + ".jpg")">Condividi buono</button></div><p id="share-status" role="status">Su dispositivi compatibili puoi scegliere WhatsApp dal menu di condivisione. In alternativa scarica e allega il JPG.</p></div>
+<details class="voucher-panel"><summary>Storico operazioni (@Model.History.Count)</summary>@foreach(var entry in Model.History.AsEnumerable().Reverse()){<div class="voucher-event"><strong>@entry.Action</strong> &middot; @TimeZoneInfo.ConvertTimeBySystemTimeZoneId(entry.AtUtc,"Europe/Rome").ToString("dd/MM/yyyy HH:mm")<p>@entry.Actor</p>@if(entry.Reason!=null){<p>@entry.Reason</p>}</div>}</details>
+@if(User.IsInRole("Admin") && !Model.Cancelled && !Model.Redeemed){
+<details class="voucher-panel"><summary>Annulla definitivamente il buono</summary><form asp-action="Stato" method="post" data-confirm="Annullare definitivamente questo buono?"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" /><label>Motivo<input name="reason" required maxlength="500" /></label><button name="operation" value="annulla" class="btn btn-outline-danger">Annulla buono</button></form></details>
+}
+</section>
+<script src="~/js/vouchers.js" asp-append-version="true" defer></script>

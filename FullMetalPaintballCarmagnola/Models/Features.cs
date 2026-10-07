@@ -5,6 +5,7 @@
         public static readonly string[] AllFeatures = new[]
         {
             "Tesserati",
+            "Buoni regalo",
             "Prenotazioni",
             "Caparre",
             "Presenze Staff",
