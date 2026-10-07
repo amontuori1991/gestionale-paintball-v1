@@ -115,7 +115,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 new()
                 {
                     Domanda = "Con quanto anticipo bisogna prenotare?",
-                    Risposta = "Per i turni del weekend è richiesto almeno 24 ore di preavviso, salvo disponibilità del campo. Per turni infrasettimanali sono richiesti almeno 7 giorni di preavviso, salvo disponibilità del campo e dello staff."
+                    Risposta = "Per il weekend sono richieste almeno 4 ore di preavviso. Per i turni infrasettimanali sono richiesti almeno 7 giorni: la richiesta si ferma alla verifica manuale della disponibilità dello staff. Attendi la nostra risposta prima di effettuare pagamenti; l'invio non blocca il campo."
                 },
                 new()
                 {
@@ -174,6 +174,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 },
                 new()
                 {
+                    Domanda = "Ci sono bagni, bar, acqua o cibo?",
+                    Risposta = "Non sono presenti bagni né bar. Porta autonomamente acqua, bevande e cibo necessari per la tua permanenza al campo."
+                },
+                new()
+                {
                     Domanda = "A che ora bisogna arrivare?",
                     Risposta = "È richiesto l'arrivo al campo 15/20 minuti prima della prenotazione. L'ora o le ore di gioco vengono conteggiate dall'orario prenotato, anche in caso di ritardo."
                 },
@@ -190,7 +195,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 new()
                 {
                     Domanda = "Si può usare il campo per rinfresco o taglio torta?",
-                    Risposta = "Sì, il campo è a disposizione per rinfreschi o taglio torta nell'area preposta. I rifiuti devono essere portati via e l'area deve essere lasciata come trovata."
+                    Risposta = "Mettiamo a disposizione solo un'area verde con 2 tavoli e 4 panche. Cibo e bevande sono a carico dei partecipanti. I rifiuti devono essere portati via e l'area deve essere lasciata come trovata."
                 }
             };
         }

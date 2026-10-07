@@ -491,7 +491,7 @@ Il tempo rimanente verrà utilizzato per fare dei round da 7 minuti l'uno dove u
                 ageLines.Add("- [x] Età minima richiesta per la modalità kids 8 anni e massimo 13");
 
             return $@"
-La prenotazione deve avvenire via SMS o WhatsApp al numero 3468741192 (reperibile telefonicamente dal lunedì al venerdì dalle 18:00 alle 21:00) almeno 24 ore prima (salvo disponibilità del campo) per turni del weekend. Per turni infrasettimanali almeno 7 giorni di preavviso (salvo disponibilità del campo e dello staff) specificando:
+La richiesta deve avvenire via SMS o WhatsApp al numero 3468741192 (reperibile telefonicamente dal lunedì al venerdì dalle 18:00 alle 21:00) almeno 4 ore prima per turni del weekend. Per turni infrasettimanali almeno 7 giorni di preavviso: occorre attendere la verifica della disponibilità dello staff prima di confermare o pagare. Specificare:
 - numero indicativo di partecipanti (Min 8 e max 16 - se si è meno del numero minimo richiesto, occorre pagare la differenza per le persone mancanti ad esclusione del tesseramento 5€) - se di più si dovrà organizzare un torneo a squadre (il torneo ha una durata fissa di un'ora e mezza al prezzo di un'ora)
 - orario di inizio partita
 - ore di gioco
@@ -511,10 +511,11 @@ N.B. :
 - [x] È preferibile non eseguire conti separati
 - [x] Saldo in contanti o Satispay a fine partita
 - [x] È disponibile uno spogliatoio, ma il campo è sprovvisto di docce
+- [x] Non sono presenti bagni né bar. Acqua, bevande e cibo devono essere portati dai partecipanti
 - [x] È richiesto l'arrivo al campo 15/20 minuti prima della prenotazione. L'ora o le ore di gioco verranno conteggiate dall'orario della prenotazione a prescindere da eventuali ritardi
 - [x] Per chi usa occhiali da vista, si richiede l'utilizzo di lenti a contatto
 {string.Join(Environment.NewLine, ageLines)}
-- [x] Il campo è a disposizione per rinfreschi/taglio torta. Nel caso, potreste utilizzare l'area preposta a patto che i rifiuti vengano portati via lasciando l'area come l'avete trovata.
+- [x] Per rinfreschi/taglio torta mettiamo a disposizione solo un'area verde con 2 tavoli e 4 panche. I rifiuti devono essere portati via lasciando l'area come l'avete trovata.
 
 Restiamo a disposizione.
 Cordiali saluti".TrimStart();

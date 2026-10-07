@@ -18,4 +18,5 @@ Il messaggio non e stato configurato nell'account WhatsApp: va inserito dal tito
 Il sito non legge chat o vocali, non invia messaggi automaticamente e non registra nuove prenotazioni. Il cliente deve premere Invia in WhatsApp.
 Nessuna nuova commissione o servizio esterno introdotto; rimangono i servizi gia utilizzati.
 Non sono attivate scadenze, cancellazioni automatiche, API Satispay o pagamenti automatici.
-Le informazioni sui servizi sono tratte dal messaggio informativo gia presente nel gestionale. Bagni e bar restano da confermare con il titolare.
+Servizi confermati dal titolare: spogliatoio presente; docce, bagni e bar assenti. Cibo e bevande a carico dei clienti; area verde con 2 tavoli e 4 panche.
+Weekend: preavviso minimo 4 ore. Infrasettimanali: minimo 7 giorni, sola richiesta e verifica manuale dei collaboratori prima di confermare o chiedere il pagamento. Sondaggio collaboratori e Pool restano invariati.
