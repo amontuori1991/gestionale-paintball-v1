@@ -229,7 +229,12 @@
         form?.addEventListener('submit', normalizePhoneFields);
 
         if (tipoSelect) {
-            tipoSelect.addEventListener('change', syncListinoLabels);
+            tipoSelect.addEventListener('change', () => {
+                if (unlimitedInput) {
+                    unlimitedInput.checked = tipoSelect.value === 'Kids';
+                }
+                syncListinoLabels();
+            });
             syncListinoLabels();
         }
 
