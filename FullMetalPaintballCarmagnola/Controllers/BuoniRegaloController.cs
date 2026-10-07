@@ -131,6 +131,32 @@ public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfi
         return RedirectToAction(nameof(Dettaglio), new { id = row.Id });
     }
 
+    [HttpPost, Authorize(Roles = "Admin"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Tema(Guid id, int version, string theme)
+    {
+        if (theme is not ("classico" or "compleanno" or "natale" or "valentino" or "ricorrenza")) return BadRequest("Tema non valido.");
+        var row = await db.GiftVouchers.FindAsync(id);
+        if (row == null) return NotFound();
+        if (row.Version != version) return Conflict("Il buono e' cambiato. Ricarica la scheda.");
+        var details = row.Details;
+        var oldTheme = details.Theme;
+        details.Theme = theme;
+        row.Payload = JsonSerializer.Serialize(details);
+        var signature = await db.AppSettings.Where(s => s.Key == SignatureKey).Select(s => s.Value).SingleOrDefaultAsync();
+        if (signature == null) return Conflict("Carica prima la firma aziendale.");
+        try { renderer.Render(row, Convert.FromBase64String(signature), "preview"); }
+        catch (InvalidDataException)
+        {
+            TempData["VoucherMessage"] = "Testi troppo lunghi per questo tema. Accorciali o scegli un altro tema.";
+            return RedirectToAction(nameof(Dettaglio), new { id });
+        }
+        row.Record(Actor, "Cambio tema", $"{oldTheme} -> {theme}");
+        try { await db.SaveChangesAsync(); }
+        catch (DbUpdateConcurrencyException) { return Conflict("Modifica contemporanea: ricarica la scheda."); }
+        TempData["VoucherMessage"] = "Tema aggiornato. Scarica nuovamente il PDF o il JPG: i file gia' inviati non cambiano.";
+        return RedirectToAction(nameof(Dettaglio), new { id });
+    }
+
     private async Task<PricingCatalog> PreparePricing(GiftVoucherInput? previous)
     {
         var catalog = previous?.PricingSnapshot ?? await pricing.GetCatalogAsync();

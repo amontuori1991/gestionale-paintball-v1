@@ -26,6 +26,13 @@
     }
 </div>
 <div class="voucher-panel"><h2>Il tuo buono</h2><img class="voucher-preview" src="@Url.Action("Esporta", new {id=Model.Id})" alt="Anteprima buono regalo" /><div class="voucher-actions"><a asp-action="Esporta" asp-route-id="@Model.Id" asp-route-format="pdf" class="btn btn-dark">Scarica PDF</a><a asp-action="Esporta" asp-route-id="@Model.Id" asp-route-format="jpg" class="btn btn-dark">Scarica JPG</a><button type="button" class="btn btn-outline-success" data-share-url="@Url.Action("Esporta", new {id=Model.Id,format="jpg"})" data-share-name="@(Model.Code + ".jpg")">Condividi buono</button></div><p id="share-status" role="status">Su dispositivi compatibili puoi scegliere WhatsApp dal menu di condivisione. In alternativa scarica e allega il JPG.</p></div>
+@if(User.IsInRole("Admin")){
+<div class="voucher-panel"><h2>Cambia stile del buono</h2><p>Cambia solo la grafica: codice, valore, pagamento, riscatto e scadenza restano invariati.</p>
+<form asp-action="Tema" method="post"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" />
+<label for="voucher-theme">Tema</label><select id="voucher-theme" name="theme">
+@foreach(var t in new[]{("classico","Classico / Paintball"),("compleanno","Compleanno / Festa"),("natale","Natale / Sotto l'albero"),("valentino","San Valentino / Insieme"),("ricorrenza","Altre ricorrenze / Elegante")}){<option value="@t.Item1" selected="@(m.Theme==t.Item1)">@t.Item2</option>}
+</select><button class="btn btn-dark mt-3">Applica tema</button><small>Dopo la modifica scarica nuovamente il PDF o il JPG da condividere.</small></form></div>
+}
 <details class="voucher-panel"><summary>Storico operazioni (@Model.History.Count)</summary>@foreach(var entry in Model.History.AsEnumerable().Reverse()){<div class="voucher-event"><strong>@entry.Action</strong> &middot; @TimeZoneInfo.ConvertTimeBySystemTimeZoneId(entry.AtUtc,"Europe/Rome").ToString("dd/MM/yyyy HH:mm")<p>@entry.Actor</p>@if(entry.Reason!=null){<p>@entry.Reason</p>}</div>}</details>
 @if(User.IsInRole("Admin") && !Model.Cancelled && !Model.Redeemed){
 <details class="voucher-panel"><summary>Annulla definitivamente il buono</summary><form asp-action="Stato" method="post" data-confirm="Annullare definitivamente questo buono?"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" /><label>Motivo<input name="reason" required maxlength="500" /></label><button name="operation" value="annulla" class="btn btn-outline-danger">Annulla buono</button></form></details>

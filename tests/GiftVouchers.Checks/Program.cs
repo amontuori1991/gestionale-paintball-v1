@@ -125,6 +125,9 @@ try {
         row.Payload=JsonSerializer.Serialize(themed);
         var bytes=scope.ServiceProvider.GetRequiredService<GiftVoucherRenderer>().Render(row,signature,"preview");
         await File.WriteAllBytesAsync(Path.Combine(output,theme+".jpg"),bytes);
+        var pdfBytes=scope.ServiceProvider.GetRequiredService<GiftVoucherRenderer>().Render(row,signature,"pdf");
+        Check(System.Text.Encoding.ASCII.GetString(pdfBytes,0,4)=="%PDF","Theme PDF "+theme);
+        await File.WriteAllBytesAsync(Path.Combine(output,theme+".pdf"),pdfBytes);
     }
     row.Payload=savedPayload;
     var staffPermission=await db.RolePermissions.SingleAsync(p=>p.RoleName=="Staff"&&p.FeatureName=="Buoni regalo");
@@ -172,6 +175,27 @@ try {
     deleteForm["version"]=moneyRow.Version.ToString();
     await adminClient.PostAsync("/BuoniRegalo/Elimina",new FormUrlEncodedContent(deleteForm));
     db.ChangeTracker.Clear();Check(!await db.GiftVouchers.AnyAsync(x=>x.Id==moneyRow.Id),"Admin deletion");
+    db.ChangeTracker.Clear();row=await db.GiftVouchers.SingleAsync(x=>x.Id==row.Id);
+    var originalDetails=row.Details;var originalExpiry=row.ExpiresOn;var originalIssued=row.IssuedOn;var originalCode=row.Code;
+    var themeForm=new Dictionary<string,string>{{"__RequestVerificationToken",Token(await adminClient.GetStringAsync("/BuoniRegalo/Dettaglio/"+row.Id))},{"id",row.Id.ToString()},{"version",row.Version.ToString()},{"theme","natale"}};
+    Check((await staff.PostAsync("/BuoniRegalo/Tema",new FormUrlEncodedContent(themeForm))).StatusCode==HttpStatusCode.Forbidden,"Staff theme change forbidden");
+    Check((await adminClient.PostAsync("/BuoniRegalo/Tema",new FormUrlEncodedContent(new Dictionary<string,string>{{"id",row.Id.ToString()},{"theme","natale"}}))).StatusCode==HttpStatusCode.BadRequest,"Theme CSRF");
+    themeForm["theme"]="invalid";
+    Check((await adminClient.PostAsync("/BuoniRegalo/Tema",new FormUrlEncodedContent(themeForm))).StatusCode==HttpStatusCode.BadRequest,"Invalid theme");
+    themeForm["theme"]="natale";themeForm["version"]="-1";
+    Check((await adminClient.PostAsync("/BuoniRegalo/Tema",new FormUrlEncodedContent(themeForm))).StatusCode==HttpStatusCode.Conflict,"Stale theme update");
+    themeForm["version"]=row.Version.ToString();themeForm["Amount"]="1";themeForm["Paid"]="false";
+    Check((await adminClient.PostAsync("/BuoniRegalo/Tema",new FormUrlEncodedContent(themeForm))).StatusCode==HttpStatusCode.Redirect,"Paid voucher theme change");
+    db.ChangeTracker.Clear();row=await db.GiftVouchers.SingleAsync(x=>x.Id==row.Id);
+    originalDetails.Theme="natale";
+    Check(row.Payload==JsonSerializer.Serialize(originalDetails) && row.Paid && !row.Redeemed && !row.Cancelled && row.Code==originalCode && row.ExpiresOn==originalExpiry && row.IssuedOn==originalIssued,"Theme must not change business data");
+    Check(row.History.Last().Action=="Cambio tema","Theme audit");
+    await Change(staff,"riscatta",row.Version);db.ChangeTracker.Clear();row=await db.GiftVouchers.SingleAsync(x=>x.Id==row.Id);
+    themeForm["version"]=row.Version.ToString();themeForm["theme"]="valentino";
+    Check((await adminClient.PostAsync("/BuoniRegalo/Tema",new FormUrlEncodedContent(themeForm))).StatusCode==HttpStatusCode.Redirect,"Redeemed voucher theme change");
+    db.ChangeTracker.Clear();row=await db.GiftVouchers.SingleAsync(x=>x.Id==row.Id);Check(row.Redeemed && row.Details.Theme=="valentino","Theme must not reactivate voucher");
+    await Change(staff,"ripristina",row.Version,"Fine prova tema");
+    Console.WriteLine("PASS: isolated theme change on paid/redeemed vouchers, audit, stale version, CSRF and permissions.");
     Console.WriteLine("PASS: unpaid list redemption blocked, list redirect, Admin deletion, delete CSRF and stale version.");
     Console.WriteLine("PASS: monetary/package modes, tamper protection, frozen prices, unsupported combinations and rabbit pricing.");
     Console.WriteLine("PASS: PostgreSQL schema twice, signature, real MVC views, permissions/revocation, CSRF, create/payment/redeem/undo, audit, concurrency and all five templates plus PDF/JPG export.");

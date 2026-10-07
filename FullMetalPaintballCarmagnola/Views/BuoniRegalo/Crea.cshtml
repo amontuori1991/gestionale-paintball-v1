@@ -34,7 +34,7 @@
     <p id="voucher-price-info" aria-live="polite"></p>
     <label id="voucher-show-amount"><input asp-for="ShowAmount" /> Mostra il valore sul buono con pacchetto</label>
     <h2>03 / Lo stile</h2>
-    <div class="voucher-fields"><label>Template<select asp-for="Theme"><option value="classico">Classico / Adrenalina</option><option value="compleanno">Compleanno / Lime</option><option value="natale">Natale / Oro</option><option value="valentino">San Valentino / Corallo</option><option value="ricorrenza">Altre ricorrenze / Acqua</option></select></label><label>Data di emissione<input asp-for="IssuedOn" type="date" max="@Full_Metal_Paintball_Carmagnola.Models.GiftVoucher.Today.ToString("yyyy-MM-dd")" /></label></div>
+    <div class="voucher-fields"><label>Template<select asp-for="Theme"><option value="classico">Classico / Paintball</option><option value="compleanno">Compleanno / Festa</option><option value="natale">Natale / Sotto l'albero</option><option value="valentino">San Valentino / Insieme</option><option value="ricorrenza">Altre ricorrenze / Elegante</option></select></label><label>Data di emissione<input asp-for="IssuedOn" type="date" max="@Full_Metal_Paintball_Carmagnola.Models.GiftVoucher.Today.ToString("yyyy-MM-dd")" /></label></div>
     <p>Scadenza automatica: stesso giorno dell'anno successivo, incluso. Per il 29 febbraio: 28 febbraio. Logo e dati aziendali sono recuperati dal gestionale; il pagamento si conferma separatamente.</p>
     <button type="submit" class="btn btn-dark">Salva e visualizza anteprima</button>
 </form>
