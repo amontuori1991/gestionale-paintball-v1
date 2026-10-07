@@ -16,7 +16,16 @@
     </div>
     <div class="voucher-list">
         @foreach(var voucher in Model){var details=voucher.Details;
-        <article class="voucher-item"><div><span class="voucher-tag">@voucher.Status</span><h2>@details.Recipient</h2><p>@details.Summary</p><small>Acquirente: @details.Buyer</small></div><div><strong>@voucher.Code</strong><p>Scade il @voucher.ExpiresOn.ToString("dd/MM/yyyy")</p><a asp-action="Dettaglio" asp-route-id="@voucher.Id" class="btn btn-dark">Apri buono</a></div></article>}
+        <article class="voucher-item @(!voucher.Paid ? "voucher-item-unpaid" : "")"><div><span class="voucher-tag">@voucher.Status</span><h2>@details.Recipient</h2><p>@details.Summary</p><small>Acquirente: @details.Buyer</small>
+            @if(!voucher.Paid){<p class="voucher-payment-warning"><strong>Da pagare: @details.Amount.ToString("C")</strong><br />Pagamento non confermato. Riscatto bloccato.</p>}
+        </div><div class="voucher-item-controls"><strong>@voucher.Code</strong><p>Scade il @voucher.ExpiresOn.ToString("dd/MM/yyyy")</p>
+            <div class="voucher-actions"><a asp-action="Dettaglio" asp-route-id="@voucher.Id" class="btn btn-outline-dark">Apri buono</a>
+            @if(voucher.Status == "Disponibile"){
+                <form asp-action="Stato" method="post" data-confirm="Riscattare l'intero buono @voucher.Code per @details.Recipient? Non sono previsti utilizzi parziali."><input type="hidden" name="id" value="@voucher.Id" /><input type="hidden" name="version" value="@voucher.Version" /><input type="hidden" name="returnToList" value="true" /><button name="operation" value="riscatta" class="btn btn-dark">Riscatta interamente</button></form>
+            }else{<button class="btn btn-dark" disabled title="@(voucher.Paid ? voucher.Status : "Prima conferma il pagamento")">Riscatto non disponibile</button>}
+            <partial name="_Elimina" model="voucher" />
+            </div>
+        </div></article>}
     </div>
     @if(Model.Count==0){<p class="voucher-panel">Nessun buono trovato. Puoi cercare il codice anche senza fotocamera.</p>}
     <nav class="voucher-actions" aria-label="Pagine buoni">

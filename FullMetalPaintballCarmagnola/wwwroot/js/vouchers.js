@@ -49,8 +49,38 @@
         mode.addEventListener('change', () => { if(mode.value === 'amount') amount.value = customAmount; sync(); });
         sync();
     }
-    document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
-        if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+    const confirmation = document.createElement('dialog');
+    confirmation.className = 'voucher-confirm-dialog';
+    confirmation.setAttribute('aria-labelledby', 'voucher-confirm-title');
+    confirmation.setAttribute('aria-describedby', 'voucher-confirm-text');
+    confirmation.innerHTML = '<form method="dialog"><span class="voucher-confirm-eyebrow">BUONI REGALO</span><h2 id="voucher-confirm-title"></h2><p id="voucher-confirm-text"></p><div class="voucher-actions"><button value="cancel" class="btn btn-outline-dark" autofocus>Torna indietro</button><button value="confirm" class="btn btn-dark" id="voucher-confirm-yes"></button></div></form>';
+    document.body.appendChild(confirmation);
+    window.addEventListener('pageshow', () => {
+        document.querySelectorAll('form[data-confirm]').forEach(form => {
+            delete form.dataset.submitted;
+            delete form.dataset.confirmed;
+        });
+    });
+    document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', async event => {
+        if (form.dataset.confirmed === 'true') { form.dataset.confirmed = ''; return; }
+        event.preventDefault();
+        if (confirmation.open || form.dataset.submitted === 'true') return;
+        const submitter = event.submitter;
+        const titles = {pagato:'Conferma pagamento',riscatta:'Riscatta il buono',ripristina:'Annulla il riscatto',annulla:'Annulla il buono'};
+        confirmation.querySelector('h2').textContent = form.dataset.confirmTitle || titles[submitter?.value] || 'Conferma operazione';
+        confirmation.querySelector('p').textContent = form.dataset.confirm;
+        const yes = confirmation.querySelector('#voucher-confirm-yes');
+        yes.textContent = submitter?.textContent.trim() || 'Conferma';
+        yes.className = form.dataset.confirmDanger === 'true' || submitter?.value === 'annulla' ? 'btn btn-danger' : 'btn btn-dark';
+        confirmation.returnValue = 'cancel';
+        const result = new Promise(resolve => confirmation.addEventListener('close', () => resolve(confirmation.returnValue === 'confirm'), {once:true}));
+        confirmation.showModal();
+        if (await result) {
+            form.dataset.confirmed = 'true';
+            form.dataset.submitted = 'true';
+            if (submitter) form.requestSubmit(submitter);
+            else form.requestSubmit();
+        }
     }));
     const share = document.querySelector('[data-share-url]');
     share?.addEventListener('click', async () => {

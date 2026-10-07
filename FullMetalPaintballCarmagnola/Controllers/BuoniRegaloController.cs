@@ -156,20 +156,48 @@ public sealed class BuoniRegaloController(TesseramentoDbContext db, CompanyProfi
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Stato(Guid id, int version, string operation, string? reason)
+    public async Task<IActionResult> Stato(Guid id, int version, string operation, string? reason, bool returnToList = false)
     {
         if (reason?.Length > 500) return BadRequest("Motivazione troppo lunga (massimo 500 caratteri).");
         var row = await db.GiftVouchers.FindAsync(id);
         if (row == null) return NotFound();
-        if (row.Version != version) { TempData["VoucherMessage"] = "Il buono e' stato aggiornato da un altro operatore. Controlla lo stato."; return RedirectToAction(nameof(Dettaglio), new { id }); }
+        if (row.Version != version) { TempData["VoucherMessage"] = "Il buono e' stato aggiornato da un altro operatore. Controlla lo stato."; return RedirectToAction(returnToList ? nameof(Index) : nameof(Dettaglio), new { id }); }
         var error = row.ChangeState(operation, User.IsInRole("Admin"), Actor, reason);
         if (error == null)
         {
             try { await db.SaveChangesAsync(); }
             catch (DbUpdateConcurrencyException) { error = "Operazione gia' effettuata o modifica contemporanea. Controlla lo stato aggiornato."; }
         }
-        TempData["VoucherMessage"] = error ?? "Operazione registrata.";
-        return RedirectToAction(nameof(Dettaglio), new { id });
+        TempData["VoucherMessage"] = error ?? (operation switch
+        {
+            "riscatta" => $"Buono {row.Code} riscattato interamente.",
+            "ripristina" => $"Riscatto annullato. Stato del buono: {row.Status}.",
+            "pagato" => "Pagamento confermato.",
+            "annulla" => "Buono annullato e conservato nello storico.",
+            _ => "Operazione registrata."
+        });
+        return RedirectToAction(returnToList ? nameof(Index) : nameof(Dettaglio), new { id });
+    }
+
+    [HttpPost, Authorize(Roles = "Admin"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Elimina(Guid id, int version)
+    {
+        var row = await db.GiftVouchers.FindAsync(id);
+        if (row == null) return NotFound();
+        if (row.Version != version)
+        {
+            TempData["VoucherMessage"] = "Il buono e' cambiato: controllalo prima di eliminarlo.";
+            return RedirectToAction(nameof(Dettaglio), new { id });
+        }
+        db.GiftVouchers.Remove(row);
+        try { await db.SaveChangesAsync(); }
+        catch (DbUpdateConcurrencyException)
+        {
+            TempData["VoucherMessage"] = "Il buono e' stato modificato da un altro operatore. Eliminazione non eseguita.";
+            return RedirectToAction(nameof(Index));
+        }
+        TempData["VoucherMessage"] = $"Buono {row.Code} eliminato definitivamente.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost, Authorize(Roles = "Admin"), ValidateAntiForgeryToken, RequestSizeLimit(2200000)]

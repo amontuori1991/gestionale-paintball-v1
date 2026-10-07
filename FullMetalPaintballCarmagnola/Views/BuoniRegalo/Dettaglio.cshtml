@@ -31,4 +31,5 @@
 <details class="voucher-panel"><summary>Annulla definitivamente il buono</summary><form asp-action="Stato" method="post" data-confirm="Annullare definitivamente questo buono?"><input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" /><label>Motivo<input name="reason" required maxlength="500" /></label><button name="operation" value="annulla" class="btn btn-outline-danger">Annulla buono</button></form></details>
 }
 </section>
+<div class="voucher-page voucher-delete-section"><partial name="_Elimina" model="Model" /></div>
 <script src="~/js/vouchers.js" asp-append-version="true" defer></script>

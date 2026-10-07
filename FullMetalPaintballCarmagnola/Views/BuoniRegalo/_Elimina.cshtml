@@ -1,0 +1,7 @@
+@model Full_Metal_Paintball_Carmagnola.Models.GiftVoucher
+@if(User.IsInRole("Admin")){
+<form asp-action="Elimina" method="post" data-confirm="Eliminare definitivamente il buono @Model.Code per @Model.Details.Recipient? Verranno cancellati anche pagamento e storico delle operazioni. Il codice non sara piu utilizzabile. Questa operazione non si puo annullare." data-confirm-title="Elimina buono" data-confirm-danger="true">
+    <input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Version" />
+    <button class="btn btn-outline-danger">Elimina buono</button>
+</form>
+}
