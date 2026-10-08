@@ -158,6 +158,30 @@ async Task<string> RenderTable(HttpContext http, bool simplified = false, bool r
 app.MapGet("/preview/table", (Func<HttpContext, Task<IResult>>)(async http => Results.Content(await RenderTable(http), "text/html")));
 app.MapGet("/preview/simple", (Func<HttpContext, Task<IResult>>)(async http => Results.Content(await RenderTable(http, simplified: true), "text/html")));
 app.MapGet("/preview/table-readonly", (Func<HttpContext, Task<IResult>>)(async http => Results.Content(await RenderTable(http, readOnly: true), "text/html")));
+app.MapGet("/preview/booking-events", (Func<HttpContext, Task<IResult>>)(async http =>
+{
+    http.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, "Admin") }, "Test"));
+    var context = new ActionContext(http, new RouteData(), new ActionDescriptor());
+    context.RouteData.Values["controller"] = "Partite";
+    context.RouteData.Values["action"] = "Index";
+    context.ActionDescriptor.RouteValues["controller"] = "Partite";
+    context.ActionDescriptor.RouteValues["action"] = "Index";
+    var date = DateTime.UtcNow.Date.AddDays(7);
+    var data = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary());
+    data["PartiteFuture"] = new List<Partita> { new() { Id = 998, Data = date.AddDays(1), OraInizio = TimeSpan.FromHours(12), Tipo = "Adulti" } };
+    data["PartitePassate"] = new List<Partita>(); data["PartiteCancellate"] = new List<Partita>();
+    data["EventiTorneo"] = new List<Torneo> {
+        new() { Id = 991, Nome = "Torneo giorno dedicato", Data = date, OraInizio = TimeSpan.FromHours(10) },
+        new() { Id = 992, Nome = "Torneo settimana dedicata", Data = date.AddDays(21), OraInizio = TimeSpan.FromHours(14) },
+        new() { Id = 993, Nome = "Torneo storico", Data = DateTime.UtcNow.Date.AddDays(-1), OraInizio = TimeSpan.FromHours(9) }
+    };
+    var view = http.RequestServices.GetRequiredService<IRazorViewEngine>().GetView(null, "/Views/Partite/Index.cshtml", true);
+    if (!view.Success) throw new Exception("Booking index view not found");
+    using var writer = new StringWriter();
+    await view.View.RenderAsync(new ViewContext(context, view.View, data,
+        new TempDataDictionary(http, http.RequestServices.GetRequiredService<ITempDataProvider>()), writer, new HtmlHelperOptions()));
+    return Results.Content(writer.ToString(), "text/html");
+}));
 
 try
 {

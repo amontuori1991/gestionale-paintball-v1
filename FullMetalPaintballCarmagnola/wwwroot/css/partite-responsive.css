@@ -894,3 +894,22 @@
         margin-top: 2px;
     }
 }
+.partite-event-band {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+    padding: 1.1rem 1.3rem;
+    margin: 0 0 1rem;
+    border: 1px solid #b4c49f;
+    border-left: 5px solid #386344;
+    border-radius: 14px;
+    background: linear-gradient(110deg, #e7efd7, #fafbf5);
+    color: #223627;
+}
+.partite-event-band__info { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1.2rem; min-width: 0; }
+.partite-event-band__info strong { overflow-wrap: anywhere; }
+.partite-event-band__label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.partite-event-band .btn { flex-shrink: 0; }

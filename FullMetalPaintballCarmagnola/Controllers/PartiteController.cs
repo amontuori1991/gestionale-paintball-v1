@@ -191,7 +191,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
             if (User.IsInRole("Admin") || User.IsInRole("Staff"))
                 ViewBag.EventiTorneo = await _dbContext.Tornei.AsNoTracking()
-                    .Where(t => t.Data >= oggi).OrderBy(t => t.Data).ThenBy(t => t.OraInizio)
+                    .Where(t => t.Data >= dueSettimaneFa).OrderBy(t => t.Data).ThenBy(t => t.OraInizio)
                     .ToListAsync();
 
             // Date presenti tra le partite

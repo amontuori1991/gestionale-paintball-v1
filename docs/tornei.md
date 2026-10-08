@@ -4,7 +4,7 @@
 
 - Dashboard > Torneo: Admin e Staff possono creare, modificare ed eliminare eventi.
 - Il pulsante partecipa alle preferenze di visibilita e ordinamento della dashboard.
-- L'evento non crea una Partita, non occupa disponibilita e non assegna staff. Inserire la chiusura campo separatamente. Le prenotazioni mostrano soltanto un riepilogo dei prossimi eventi.
+- L'evento non crea una Partita, non occupa disponibilita e non assegna staff. Inserire la chiusura campo separatamente. Nelle prenotazioni compare una banda a tutta larghezza nel giorno e nella settimana dell'evento, anche senza altre partite, con nome, data, ora e tasto Gestisci. Gli eventi passati seguono la finestra storica delle prenotazioni; i filtri data si applicano anche alle bande.
 - Da 2 a 64 squadre; almeno due per girone. Le squadre sono distribuite automaticamente e possono essere spostate prima di generare gli incontri.
 - Dopo la creazione, il numero di squadre resta fisso per conservare i link assegnati. Dopo la generazione del calendario, regole e gironi sono bloccati; nomi e contatti restano modificabili.
 
