@@ -24,6 +24,7 @@
     function showSelection(slot){
         selected=slot;$('selection').hidden=false;$('assign-field').replaceChildren();
         slot.fields.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=`Campo ${f}${f===slot.fields[0]?' (suggerito)':''}`;$('assign-field').append(o);});
+        $('assign-field').disabled=slot.fields.length===1;
         const potential=Number($('potential').value),n=Number($('people').value);
         let change='';
         if(potential>n){
@@ -31,7 +32,7 @@
             const candidate=next.find(x=>x.start===slot.start);
             change=` Massimo potenziale ${potential}: ${candidate?'compatibile ora con Campo '+candidate.fields.join(' / '):'non disponibile nello stesso orario'}. Non garantito: richiede nuova verifica${potential>=17?' e passaggio al torneo (90 minuti)':''}.`;
         }
-        $('assignment').textContent=`${time(slot.start)}–${time(slot.end)}. Campi compatibili liberi: ${slot.fields.join(', ')}.${change}`;
+        $('assignment').textContent=`${time(slot.start)}–${time(slot.end)}. Campo prioritario: ${slot.fields[0]}. ${slot.fields.length>1?'Puoi scegliere anche l’altro campo: e libero e compatibile.':'Unico campo disponibile per questa richiesta: non e possibile cambiarlo.'}${change}`;
         updateMessage();document.querySelectorAll('#slots button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.start)===slot.start)));
     }
     function updateMessage(){
@@ -62,7 +63,7 @@
         }
         const slots=engine.slots(parameters());
         $('result').textContent=slots.length?`${slots.length} orari simulati. Scegli un orario per vedere assegnazione e bozza.`:'Nessuna soluzione automatica: verifica numero, pacchetto, campi attivi, impegni e preavviso di 4 ore.';
-        for(const slot of slots){const b=document.createElement('button');b.textContent=`${time(slot.start)}–${time(slot.end)} / ${slot.fields.map(f=>'Campo '+f).join(' + ')}`;b.dataset.start=slot.start;b.setAttribute('aria-pressed','false');b.onclick=()=>showSelection(slot);$('slots').append(b);}
+        for(const slot of slots){const b=document.createElement('button');b.textContent=`${time(slot.start)}–${time(slot.end)} / Campo ${slot.fields[0]}`;b.dataset.start=slot.start;b.setAttribute('aria-pressed','false');b.onclick=()=>showSelection(slot);$('slots').append(b);}
     }
     async function loadDate(){
         const request=++serial;hours=null;selected=null;realData=null;realBlocks=[];realFailed=false;

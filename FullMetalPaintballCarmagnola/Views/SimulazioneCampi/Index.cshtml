@@ -29,7 +29,7 @@
 <label>Alle<input id="block-end" type="time" value="11:00" required/></label><button>Aggiungi impegno</button></form>
 </details><p id="block-error" role="alert"></p><div id="blocks"></div>
 <button id="reset" class="secondary">Azzera tutti gli scenari</button></section>
-<section><h2>03 / Disponibilita per il cliente</h2><aside id="source-status" role="status">Attendi il caricamento delle prenotazioni.</aside><p>Verde significa che almeno un campo e libero, non entrambi. Le etichette dei campi sono mostrate qui per il controllo del simulatore.</p><p id="result" role="status"></p><div id="slots" class="slots"></div>
+<section><h2>03 / Disponibilita per il cliente</h2><aside id="source-status" role="status">Attendi il caricamento delle prenotazioni.</aside><p>Ogni orario mostra solo il campo prioritario. Dopo la selezione puoi cambiarlo soltanto se l'altro campo e libero e compatibile con il gruppo.</p><p id="result" role="status"></p><div id="slots" class="slots"></div>
 <p class="muted">Ogni orario compare una volta sola. Campo 2 ha priorita se compatibile e libero, per preservare Campo 1. In questa prima versione non ottimizziamo automaticamente gli spostamenti delle partite esistenti.</p></section>
 <section id="selection" hidden><h2>04 / Controllo interno</h2><p id="assignment"></p>
 <label>Assegna al campo<select id="assign-field"></select></label>
