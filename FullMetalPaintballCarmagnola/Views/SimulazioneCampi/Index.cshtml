@@ -1,0 +1,38 @@
+@{ Layout = null; }
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/><title>Laboratorio Campo 2</title>
+<link rel="stylesheet" href="~/css/field-simulator.css" asp-append-version="true"/></head>
+<body><main>
+<header><img src="/img/logo.gif" alt="Full Metal Paintball"/><div><p class="eyebrow">FULL METAL / LABORATORIO</p><h1>Due campi.<br/>Proviamo gli incastri.</h1><p>Solo simulazione. Nessun dato reale, prenotazione, pagamento o messaggio inviato.</p></div></header>
+<aside>I dati restano in questa pagina e si perdono ricaricandola. Non inserire nomi o telefoni dei clienti.</aside>
+<section><h2>01 / Il gruppo</h2><div class="grid">
+<label>Data<input id="date" type="date" required/></label>
+<label>Tipo<select id="type"><option>Adulti</option><option>Kids</option></select></label>
+<label>Partecipanti concordati<input id="people" type="number" min="1" max="100" value="10"/></label>
+<label>Massimo potenziale (non garantito)<input id="potential" type="number" min="1" max="100" placeholder="Es. 18"/></label>
+<label>Durata<select id="duration"><option value="60">1 ora</option><option value="90">1 ora e 30</option><option value="120">2 ore</option></select></label>
+<label>Colpi<select id="shots"><option value="standard">Standard</option><option value="unlimited">Illimitati</option></select></label>
+</div><p id="rules" role="status"></p>
+<p class="muted">Sotto il minimo: valutazione manuale, senza preventivo automatico. Torneo 17–30: 90 minuti al prezzo di 60, extra esclusi. Il massimo potenziale non occupa altri campi.</p></section>
+<section><h2>02 / Campi attivi e orari</h2>
+<div class="checks"><label><input id="field1" type="checkbox" checked/> Campo 1 attivo</label><label><input id="field2" type="checkbox" checked/> Campo 2 attivo</label></div>
+<p id="hours"></p><p class="muted">Attivazione valida solo per la data selezionata. Campi indipendenti; margine di 30 minuti prima e dopo ogni partita, come nella logica attuale. Nessuna verifica automatica dello staff.</p>
+<details><summary>Aggiungi un impegno fittizio o una chiusura parziale</summary>
+<form id="block-form" class="grid">
+<label>Campo<select id="block-field"><option value="1">Campo 1</option><option value="2">Campo 2</option></select></label>
+<label>Tipo<select id="block-kind"><option value="booking">Partita fittizia</option><option value="closure">Chiusura / staff insufficiente</option></select></label>
+<label>Dalle<input id="block-start" type="time" value="10:00" required/></label>
+<label>Alle<input id="block-end" type="time" value="11:00" required/></label><button>Aggiungi impegno</button></form>
+</details><p id="block-error" role="alert"></p><div id="blocks"></div>
+<button id="reset" class="secondary">Azzera tutti gli scenari</button></section>
+<section><h2>03 / Disponibilita per il cliente</h2><p id="result" role="status"></p><div id="slots" class="slots"></div>
+<p class="muted">Ogni orario compare una volta sola. Campo 2 ha priorita se compatibile e libero, per preservare Campo 1. In questa prima versione non ottimizziamo automaticamente gli spostamenti delle partite esistenti.</p></section>
+<section id="selection" hidden><h2>04 / Controllo interno</h2><p id="assignment"></p>
+<label>Assegna al campo<select id="assign-field"></select></label>
+<button id="reserve">Inserisci nel calendario fittizio</button>
+<h3>Bozza del messaggio WhatsApp</h3><pre id="message"></pre><p>Nessun pulsante di invio: questa e solo un'anteprima.</p></section>
+<section><h2>Regole di questo laboratorio</h2><p>Campo 1: 8–16 persone; 17–30 torneo, Kids e Adulti. Campo 2: 6–10 Adulti oppure 8–14 Kids. Sei adulti sul Campo 2 non pagano quote mancanti.</p>
+<p>Un aumento richiede nuova verifica; la riduzione da torneo richiede revisione di durata e prezzo. Nessun cambio automatico del prezzo concordato o del campo di una partita gia inserita. Per provarlo, annota il caso, rimuovi l'impegno fittizio e verifica la nuova combinazione.</p>
+<p>Weekend: almeno 4 ore. Infrasettimanali: almeno 7 giorni e stop alla richiesta di verifica staff, senza assegnazione o blocco.</p></section>
+</main><script src="~/js/field-simulator-engine.js" asp-append-version="true"></script><script src="~/js/field-simulator.js" asp-append-version="true"></script></body></html>
