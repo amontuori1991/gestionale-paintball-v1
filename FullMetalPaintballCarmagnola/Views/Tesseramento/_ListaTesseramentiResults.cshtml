@@ -4,7 +4,7 @@
 @if (Model != null && Model.Any())
 {
     var sortedModel = Model
-        .OrderByDescending(t => t.DataPartita)
+        .OrderByDescending(t => t.DataTorneo ?? t.DataPartita)
         .ThenByDescending(t => t.PartitaId);
     var dataAvvioFabbisognoTessere = new DateTime(2026, 5, 1);
     bool IsTesseraFittizia(Full_Metal_Paintball_Carmagnola.Models.TesseramentoViewModel t)
@@ -28,12 +28,12 @@
 
         @foreach (var t in sortedModel)
         {
-            var scadenza = new DateTime((t.DataPartita ?? t.DataCreazione).Year, 12, 31);
+            var scadenza = new DateTime(t.AnnoValiditaTesseramento ?? (t.DataPartita ?? t.DataTorneo ?? t.DataCreazione).Year, 12, 31);
             var hasTessera = !string.IsNullOrEmpty(t.Tessera);
             var tesseraFittizia = IsTesseraFittizia(t);
             var hasPartita = t.PartitaId.HasValue;
             var noTesseramento = t.NoTesseramento;
-            var tesseraDaAssociare = !hasTessera && !noTesseramento && t.DataPartita.HasValue && t.DataPartita.Value.Date >= dataAvvioFabbisognoTessere;
+            var tesseraDaAssociare = !hasTessera && !noTesseramento && (t.DataTorneo ?? t.DataPartita) >= dataAvvioFabbisognoTessere;
 
             <article class="tess-mobile-card">
                 <div class="tess-mobile-card__top">
@@ -50,8 +50,12 @@
                 </div>
 
                 <div class="tess-mobile-card__row">
-                    <span>Data partita</span>
-                    @if (hasPartita)
+                    <span>@(t.TorneoId.HasValue ? "Data torneo" : "Data partita")</span>
+                    @if (t.DataTorneo.HasValue)
+                    {
+                        <strong>@t.DataTorneo.Value.ToString("dd/MM/yyyy")</strong>
+                    }
+                    else if (hasPartita)
                     {
                         <strong>@(t.DataPartita?.ToString("dd/MM/yyyy") ?? "Non indicata")</strong>
                     }
@@ -150,8 +154,8 @@
                     <th style="width:36px;">
                         <input type="checkbox" id="selectAll" class="tess-check select-all-items" />
                     </th>
-                    <th>Partita ID</th>
-                    <th>Data Partita</th>
+                    <th>Evento</th>
+                    <th>Data evento</th>
                     <th>Nome</th>
                     <th>Cognome</th>
                     <th>Data Nascita</th>
@@ -174,12 +178,12 @@
             <tbody>
                 @foreach (var t in sortedModel)
                 {
-                    var scadenza = new DateTime((t.DataPartita ?? t.DataCreazione).Year, 12, 31);
+                    var scadenza = new DateTime(t.AnnoValiditaTesseramento ?? (t.DataPartita ?? t.DataTorneo ?? t.DataCreazione).Year, 12, 31);
                     var hasTessera = !string.IsNullOrEmpty(t.Tessera);
                     var tesseraFittizia = IsTesseraFittizia(t);
                     var hasPartita = t.PartitaId.HasValue;
                     var noTesseramento = t.NoTesseramento;
-                    var tesseraDaAssociare = !hasTessera && !noTesseramento && t.DataPartita.HasValue && t.DataPartita.Value.Date >= dataAvvioFabbisognoTessere;
+                    var tesseraDaAssociare = !hasTessera && !noTesseramento && (t.DataTorneo ?? t.DataPartita) >= dataAvvioFabbisognoTessere;
 
                     <tr>
                         <td data-label="Sel.">
@@ -187,8 +191,12 @@
                                    class="tess-check select-item" />
                         </td>
 
-                        <td data-label="Partita ID">
-                            @if (hasPartita)
+                        <td data-label="Evento">
+                            @if (t.TorneoId.HasValue)
+                            {
+                                <span class="partita-pill">Torneo @t.TorneoId</span>
+                            }
+                            else if (hasPartita)
                             {
                                 <span class="partita-pill">@t.PartitaId</span>
                             }
@@ -200,8 +208,8 @@
                             }
                         </td>
 
-                        <td data-label="Data Partita">
-                            @t.DataPartita?.ToString("dd/MM/yyyy")
+                        <td data-label="Data evento">
+                            @((t.DataTorneo ?? t.DataPartita)?.ToString("dd/MM/yyyy"))
                         </td>
 
                         <td data-label="Nome">@t.Nome</td>

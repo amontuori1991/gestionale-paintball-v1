@@ -189,6 +189,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var oggi = DateTime.UtcNow.Date; // solo data
             var dueSettimaneFa = oggi.AddDays(-14);
 
+            if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                ViewBag.EventiTorneo = await _dbContext.Tornei.AsNoTracking()
+                    .Where(t => t.Data >= oggi).OrderBy(t => t.Data).ThenBy(t => t.OraInizio)
+                    .ToListAsync();
+
             // Date presenti tra le partite
             var datePartite = partite.Select(p => p.Data.Date).Distinct().ToList();
             if (datePartite.Count == 0) datePartite.Add(oggi);

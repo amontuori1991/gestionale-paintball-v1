@@ -1,0 +1,133 @@
+@model TorneoDetail
+@{
+    var torneo = Model.Torneo;
+    ViewData["Title"] = torneo.Nome;
+    var calendario = torneo.Incontri.Count > 0;
+    var finali = torneo.Incontri.Any(i => i.Fase != "Girone");
+    var gironiCompleti = calendario && torneo.Incontri.Where(i => i.Fase == "Girone").All(i => !string.IsNullOrEmpty(i.Esito));
+    var counts = ViewBag.RegistrationCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var iscrizioni = ViewBag.Iscrizioni as List<TorneoIscrizione> ?? new List<TorneoIscrizione>();
+    var albumUrl = Url.Action("Album", "Foto", new { token = torneo.PhotoToken.ToString("N") }, Context.Request.Scheme);
+    var reviewUrl = ViewBag.ReviewUrl as string;
+}
+@section Styles { <link rel="stylesheet" href="~/css/torneo.css" asp-append-version="true" /> }
+<main class="torneo-page container py-4" data-torneo-detail>
+    <header class="torneo-hero">
+        <div><span class="torneo-eyebrow">@torneo.Data.ToString("dd/MM/yyyy") &middot; @torneo.OraInizio.ToString(@"hh\:mm")</span><h1>@torneo.Nome</h1><p>@torneo.NumeroSquadre squadre &middot; @torneo.NumeroGironi gironi &middot; @(torneo.AndataRitorno ? "Andata e ritorno" : "Solo andata")</p></div>
+        <div class="torneo-actions"><a asp-action="Index" class="btn btn-outline-dark">Tutti i tornei</a><a asp-action="Modifica" asp-route-id="@torneo.Id" class="btn btn-dark">@(calendario ? "Modifica evento" : "Modifica regole")</a></div>
+    </header>
+    <partial name="_Messaggi" />
+    <div class="torneo-stats" aria-label="Riepilogo torneo">
+        <div><strong>@counts.Values.Sum()</strong><span>Iscritti</span></div><div><strong>@torneo.Incontri.Count(i => !string.IsNullOrEmpty(i.Esito)) / @torneo.Incontri.Count</strong><span>Risultati</span></div><div><strong>@torneo.PuntiVittoria / @torneo.PuntiPareggio / @torneo.PuntiSconfitta</strong><span>Punti: vittoria / pari / sconfitta</span></div>
+    </div>
+    <nav class="torneo-nav" aria-label="Sezioni torneo"><a href="#squadre">Squadre</a><a href="#classifiche">Classifiche</a><a href="#incontri">Incontri</a><a href="#foto">Foto e condivisione</a></nav>
+    <p class="torneo-hint">@(calendario ? "Calendario generato: regole e gironi sono bloccati. Puoi aggiornare nomi e contatti." : "Completa le squadre e controlla i gironi. Quando sei pronto, genera il calendario.")</p>
+    @if (!string.IsNullOrWhiteSpace(torneo.Note)) { <div class="torneo-panel torneo-notes">@torneo.Note</div> }
+    <section id="squadre" class="torneo-section">
+        <div class="torneo-section-heading"><div><span class="torneo-eyebrow">01 / Organizza</span><h2>Le squadre</h2></div><span>Un link di iscrizione per squadra</span></div>
+        <p class="torneo-hint">La classifica usa i punti, poi differenza punti e punti fatti se registri i punteggi. Per le parit&agrave; residue, assegna ordini di spareggio positivi e diversi: il numero pi&ugrave; basso ha precedenza. Gli spareggi si bloccano alla generazione delle finali.</p>
+        <div class="torneo-cards">
+        @foreach (var squadra in torneo.Squadre.OrderBy(s => s.Girone).ThenBy(s => s.Id))
+        {
+            var signupUrl = Url.Action("Index", "Tesseramento", new { torneoSquadraToken = squadra.Token }, Context.Request.Scheme);
+            var orario = torneo.OraInizio.ToString(@"hh\:mm");
+            var signupText = $"Ciao {squadra.Referente}! Iscrizioni per {torneo.Nome}, squadra {squadra.Nome}, il {torneo.Data:dd/MM/yyyy} alle {orario}. Ogni partecipante puo' completare il tesseramento qui: {signupUrl}";
+            <article class="torneo-card" id="squadra-@squadra.Id">
+                <div class="torneo-card-top"><span class="torneo-badge">Girone @squadra.Girone</span><span>@counts.GetValueOrDefault(squadra.Id) iscritti</span></div>
+                <h3>@squadra.Nome</h3><p>@(string.IsNullOrWhiteSpace(squadra.Referente) ? "Referente da aggiungere" : squadra.Referente) <span class="text-muted">@squadra.Telefono</span></p>
+                <details class="torneo-edit mb-3"><summary>Partecipanti iscritti (@counts.GetValueOrDefault(squadra.Id))</summary>
+                    <ul class="list-group list-group-flush mt-2">
+                    @foreach (var iscrizione in iscrizioni.Where(i => i.TorneoSquadraId == squadra.Id).OrderBy(i => i.Tesseramento.Cognome).ThenBy(i => i.Tesseramento.Nome))
+                    {
+                        <li class="list-group-item px-0 bg-transparent">@iscrizione.Tesseramento.Nome @iscrizione.Tesseramento.Cognome @if (!iscrizione.NuovoTesseramento) { <span class="torneo-badge">Gi&agrave; tesserato</span> }</li>
+                    }
+                    </ul>
+                    @if (!iscrizioni.Any(i => i.TorneoSquadraId == squadra.Id)) { <p class="torneo-hint mt-2 mb-0">Nessun partecipante iscritto. Condividi il link della squadra.</p> }
+                </details>
+                <details class="torneo-edit"><summary>Modifica squadra e spareggio</summary>
+                    <form asp-action="Squadra" method="post" class="row g-3 mt-1">
+                        <input type="hidden" name="id" value="@squadra.Id" /><input type="hidden" name="version" value="@torneo.Version" />
+                        <div class="col-12"><label for="nome-@squadra.Id" class="form-label">Nome squadra</label><input id="nome-@squadra.Id" name="nome" value="@squadra.Nome" maxlength="100" required class="form-control" /></div>
+                        <div class="col-12"><label for="referente-@squadra.Id" class="form-label">Referente</label><input id="referente-@squadra.Id" name="referente" value="@squadra.Referente" maxlength="100" class="form-control" /></div>
+                        <div class="col-12"><label for="telefono-@squadra.Id" class="form-label">Telefono WhatsApp</label><input id="telefono-@squadra.Id" name="telefono" value="@squadra.Telefono" type="tel" maxlength="30" placeholder="+39 333 1234567" class="form-control" /><small class="text-muted">Includi il prefisso internazionale, es. +39.</small></div>
+                        <div class="col-6"><label for="girone-@squadra.Id" class="form-label">Girone</label><select id="girone-@squadra.Id" name="girone" disabled="@calendario" class="form-select">@for (var n = 1; n <= torneo.NumeroGironi; n++) { <option value="@n" selected="@(squadra.Girone == n)">@n</option> }</select>@if (calendario) { <input type="hidden" name="girone" value="@squadra.Girone" /> }</div>
+                        <div class="col-6"><label for="ordine-@squadra.Id" class="form-label">Ordine spareggio</label><input id="ordine-@squadra.Id" name="ordineSpareggio" value="@squadra.OrdineSpareggio" type="number" min="0" readonly="@finali" class="form-control" /></div>
+                        <div class="col-12"><button class="btn btn-dark" type="submit">Salva squadra</button></div>
+                    </form>
+                </details>
+                <div class="torneo-share">
+                    <label for="link-@squadra.Id" class="form-label">Link iscrizione</label><div class="input-group"><input id="link-@squadra.Id" value="@signupUrl" readonly class="form-control" /><button type="button" class="btn btn-outline-dark" data-copy-target="link-@squadra.Id" aria-label="Copia link iscrizione per @squadra.Nome"><i class="bi bi-copy" aria-hidden="true"></i> Copia</button></div>
+                    <div class="torneo-actions mt-2"><button type="button" class="btn btn-outline-success btn-sm" data-wa-number="@squadra.Telefono" data-wa-message="@signupText">WhatsApp iscrizioni</button><button type="button" class="btn btn-outline-success btn-sm" data-wa-number="@squadra.Telefono" data-wa-endpoint="@Url.Action("Messaggio", "FotoTorneo", new { id = torneo.Id })">Foto</button><button type="button" class="btn btn-outline-success btn-sm" data-wa-number="@squadra.Telefono" data-wa-endpoint="@Url.Action("Recensione", "FotoTorneo", new { id = torneo.Id })">Recensione</button></div>
+                </div>
+            </article>
+        }
+        </div>
+        @if (!calendario)
+        {
+            <div class="torneo-panel mt-3"><h3>Pronti a giocare?</h3><p>Controlla nomi e composizione dei gironi: generando gli incontri, le regole e i gironi diventano definitivi. Non &egrave; previsto un azzeramento del calendario.</p><form asp-action="GeneraGironi" method="post" data-confirm="Generare gli incontri? Regole e gironi non saranno piu' modificabili."><input type="hidden" name="id" value="@torneo.Id" /><input type="hidden" name="version" value="@torneo.Version" /><button type="submit" class="btn btn-dark">Genera calendario dei gironi</button></form></div>
+        }
+    </section>
+    <section id="classifiche" class="torneo-section">
+        <div class="torneo-section-heading"><div><span class="torneo-eyebrow">02 / Segui</span><h2>Classifiche dei gironi</h2></div></div>
+        @foreach (var girone in Model.Classifiche.OrderBy(g => g.Key))
+        {
+            <div class="torneo-panel"><h3>Girone @girone.Key</h3><div class="table-responsive"><table class="table torneo-table"><caption>Classifica girone @girone.Key. G: giocate, V: vinte, N: pareggi, P: perse.</caption><thead><tr><th scope="col">Pos.</th><th scope="col">Squadra</th><th scope="col">Punti</th><th scope="col">G</th><th scope="col">V</th><th scope="col">N</th><th scope="col">P</th>@if (torneo.RegistraPunteggio) { <th scope="col">Fatti</th><th scope="col">Subiti</th> }<th scope="col">Spareggio</th></tr></thead><tbody>
+            @{ var posizione = 0; }
+            @foreach (var riga in girone.Value)
+            {
+                posizione++;
+                <tr><td>@posizione</td><th scope="row">@riga.Squadra.Nome</th><td><strong>@riga.Punti</strong></td><td>@riga.Giocate</td><td>@riga.Vinte</td><td>@riga.Pareggi</td><td>@riga.Perse</td>@if (torneo.RegistraPunteggio) { <td>@riga.Fatti</td><td>@riga.Subiti</td> }<td>@riga.Squadra.OrdineSpareggio</td></tr>
+            }
+            </tbody></table></div></div>
+        }
+        @if (torneo.FasiFinali && !finali)
+        {
+            <div class="torneo-panel"><h3>Passaggio alle finali</h3><p>Si qualificano @torneo.QualificatePerGirone squadre per girone. @(torneo.FinaleTerzoPosto ? "Finale per il terzo posto inclusa." : "Senza finale per il terzo posto.") Completa tutti gli incontri e risolvi gli spareggi prima di continuare.</p><form asp-action="GeneraFinali" method="post" data-confirm="Confermi classifiche e spareggi? Le finali verranno generate e gli spareggi saranno bloccati."><input type="hidden" name="id" value="@torneo.Id" /><input type="hidden" name="version" value="@torneo.Version" /><button type="submit" class="btn btn-dark" disabled="@(!gironiCompleti)">Genera fase finale</button></form>@if (!gironiCompleti) { <p class="torneo-hint mt-2 mb-0">Prima registra tutti i risultati dei gironi.</p> }</div>
+        }
+    </section>
+    <section id="incontri" class="torneo-section">
+        <div class="torneo-section-heading"><div><span class="torneo-eyebrow">03 / Gioca</span><h2>Calendario e risultati</h2></div><label class="torneo-filter"><input type="checkbox" data-pending-only /> Solo da giocare</label></div>
+        @if (!calendario) { <div class="torneo-empty"><p>Il calendario comparir&agrave; qui dopo la generazione dei gironi.</p></div> }
+        @foreach (var fase in torneo.Incontri.OrderBy(i => i.Fase == "Girone" ? 0 : 1).ThenBy(i => i.Turno).ThenBy(i => i.Girone).ThenBy(i => i.Posizione).GroupBy(i => new { i.Fase, i.Girone, i.Turno }))
+        {
+            var nomeFase = fase.Key.Fase == "Eliminazione"
+                ? fase.Count() switch { 2 => "Semifinali", 4 => "Quarti di finale", 8 => "Ottavi", 16 => "Sedicesimi", _ => "Eliminazione" }
+                : fase.Key.Fase;
+            <div class="torneo-match-group" data-match-group><h3>@nomeFase @(fase.Key.Fase == "Girone" ? fase.Key.Girone.ToString() : "") <small> / Turno @fase.Key.Turno</small></h3><div class="torneo-cards">
+            @foreach (var incontro in fase)
+            {
+                var pronto = incontro.CasaId.HasValue && incontro.OspiteId.HasValue;
+                var turnoSuccessivo = incontro.Fase != "Girone" && incontro.Fase != "Terzo posto" && torneo.Incontri.Any(i => i.Fase != "Girone" && i.Turno > incontro.Turno);
+                var bye = incontro.Fase != "Girone" && incontro.CasaId.HasValue && !incontro.OspiteId.HasValue && incontro.Esito == "Casa";
+                var bloccato = !pronto || (finali && incontro.Fase == "Girone") || turnoSuccessivo;
+                var risultato = incontro.Esito == "Casa" ? $"Vince {incontro.Casa?.Nome}" : incontro.Esito == "Ospite" ? $"Vince {incontro.Ospite?.Nome}" : incontro.Esito == "Pareggio" ? "Pareggio" : "Da giocare";
+                <article class="torneo-card torneo-match" data-played="@(!string.IsNullOrEmpty(incontro.Esito) ? "true" : "false")">
+                    <span class="torneo-eyebrow">Match @(incontro.Posizione + 1)</span><h4>@(incontro.Casa?.Nome ?? "In attesa") <span class="torneo-versus">vs</span> @(incontro.Ospite?.Nome ?? (bye ? "Turno libero" : "In attesa"))</h4><p class="torneo-result">@risultato @if (torneo.RegistraPunteggio && incontro.PuntiCasa.HasValue && incontro.PuntiOspite.HasValue) { <strong> &middot; @incontro.PuntiCasa : @incontro.PuntiOspite</strong> }</p>
+                    @if (!bloccato)
+                    {
+                        <form asp-action="Risultato" method="post" data-result-form>
+                            <input type="hidden" name="id" value="@incontro.Id" /><input type="hidden" name="version" value="@torneo.Version" />
+                            <label for="esito-@incontro.Id" class="form-label">Esito</label><select id="esito-@incontro.Id" name="esito" class="form-select" required><option value="">Seleziona risultato</option><option value="Casa" selected="@(incontro.Esito == "Casa")">Vince @incontro.Casa?.Nome</option><option value="Ospite" selected="@(incontro.Esito == "Ospite")">Vince @incontro.Ospite?.Nome</option>@if (incontro.Fase == "Girone") { <option value="Pareggio" selected="@(incontro.Esito == "Pareggio")">Pareggio</option> }</select>
+                            @if (torneo.RegistraPunteggio)
+                            {
+                                <div class="row g-2 mt-1"><div class="col-6"><label for="casa-@incontro.Id" class="form-label">Punti @incontro.Casa?.Nome</label><input id="casa-@incontro.Id" name="puntiCasa" value="@incontro.PuntiCasa" type="number" min="0" required class="form-control" /></div><div class="col-6"><label for="ospite-@incontro.Id" class="form-label">Punti @incontro.Ospite?.Nome</label><input id="ospite-@incontro.Id" name="puntiOspite" value="@incontro.PuntiOspite" type="number" min="0" required class="form-control" /></div></div>
+                            }
+                            <button type="submit" class="btn btn-outline-dark mt-3">@(string.IsNullOrEmpty(incontro.Esito) ? "Salva risultato" : "Aggiorna risultato")</button>
+                        </form>
+                    }
+                    else { <p class="torneo-hint mb-0">@(bye ? "Passaggio automatico al turno successivo." : pronto ? "Risultato bloccato: fase successiva gia' generata." : "Le squadre saranno definite dagli incontri precedenti o dal tabellone.")</p> }
+                </article>
+            }
+            </div></div>
+        }
+        <p class="torneo-hint" data-no-pending hidden>Nessun incontro da giocare.</p>
+    </section>
+    <section id="foto" class="torneo-panel torneo-section">
+        <span class="torneo-eyebrow">04 / Condividi</span><h2>Un torneo, un album</h2><p>Carica tutte le foto in un solo album. Ogni referente pu&ograve; condividerlo con la propria squadra; le foto rimangono disponibili per 7 giorni dal caricamento.</p>
+        <div class="torneo-actions"><a asp-controller="FotoTorneo" asp-action="Gestisci" asp-route-id="@torneo.Id" class="btn btn-dark">Gestisci foto</a><a href="@albumUrl" class="btn btn-outline-dark" target="_blank" rel="noopener noreferrer">Apri album pubblico</a>@if (!string.IsNullOrWhiteSpace(reviewUrl)) { <a href="@reviewUrl" class="btn btn-outline-dark" target="_blank" rel="noopener noreferrer">Pagina recensioni</a> }</div>
+        <p class="torneo-hint mt-3 mb-0">I link consentono l'accesso ai destinatari: condividili solo con i partecipanti. Per inviarli su WhatsApp, usa i pulsanti nella scheda della squadra.</p>
+    </section>
+    <details class="torneo-danger"><summary>Elimina torneo</summary><p class="mt-3">Questa operazione elimina evento e risultati. I nuovi tesseramenti acquisiti solo per questo evento e non esportati ACSI saranno eliminati; quelli preesistenti, esportati o utilizzati altrove saranno conservati e scollegati.</p><form asp-action="Elimina" method="post" data-confirm="Eliminare definitivamente questo torneo e i risultati? Verranno rimossi anche i nuovi tesseramenti esclusivi dell'evento non esportati ACSI. Quelli preesistenti, esportati o usati altrove saranno conservati e scollegati. L'operazione non e' annullabile; la chiusura campo va verificata separatamente."><input type="hidden" name="id" value="@torneo.Id" /><input type="hidden" name="version" value="@torneo.Version" /><button type="submit" class="btn btn-danger">Elimina definitivamente</button></form></details>
+    <p class="torneo-live" data-torneo-status role="status" aria-live="polite"></p>
+</main>
+@section Scripts { <script src="~/js/torneo.js" asp-append-version="true"></script> }

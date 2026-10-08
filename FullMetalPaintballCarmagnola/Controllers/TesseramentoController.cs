@@ -21,6 +21,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         private readonly IEmailService _emailSender;
         private readonly AcsiOdsExportService _acsiOdsExportService;
         private readonly ILogger<TesseramentoController> _logger;
+        private readonly TournamentRegistrationService _tournamentRegistrations;
         private const string TesseramentoLiberoEnabledSettingKey = "TesseramentoLiberoEnabled";
         private static readonly Regex TesseraFittiziaRegex = new(@"^\d{10}$", RegexOptions.Compiled);
         private static readonly DateTime DataAvvioFabbisognoTessereUtc =
@@ -30,21 +31,29 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             TesseramentoDbContext dbContext,
             IEmailService emailSender,
             AcsiOdsExportService acsiOdsExportService,
-            ILogger<TesseramentoController> logger)
+            ILogger<TesseramentoController> logger,
+            TournamentRegistrationService tournamentRegistrations)
         {
             _dbContext = dbContext;
             _emailSender = emailSender;
             _acsiOdsExportService = acsiOdsExportService;
             _logger = logger;
+            _tournamentRegistrations = tournamentRegistrations;
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> Index(int? partitaId = null, string lang = "it")
+        public async Task<IActionResult> Index(int? partitaId = null, string lang = "it", Guid? torneoSquadraToken = null)
         {
-            if (!partitaId.HasValue && !await TesseramentoLiberoAbilitatoAsync())
+            if (!ModelState.IsValid) return View("NonDisponibile");
+            if (torneoSquadraToken.HasValue)
+            {
+                if (partitaId.HasValue || !await SetTournamentContextAsync(torneoSquadraToken.Value))
+                    return View("NonDisponibile");
+            }
+            if (!partitaId.HasValue && !torneoSquadraToken.HasValue && !await TesseramentoLiberoAbilitatoAsync())
                 return View("NonDisponibile");
 
-            var model = new TesseramentoViewModel();
+            var model = new TesseramentoViewModel { TorneoSquadraToken = torneoSquadraToken };
             if (partitaId.HasValue)
                 model.PartitaId = partitaId;
 
@@ -63,7 +72,12 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             model.Lingua = NormalizeLanguage(model.Lingua);
             ViewBag.Lingua = model.Lingua;
 
-            if (!model.PartitaId.HasValue && !await TesseramentoLiberoAbilitatoAsync())
+            if (model.TorneoSquadraToken.HasValue)
+            {
+                if (model.PartitaId.HasValue || !await SetTournamentContextAsync(model.TorneoSquadraToken.Value))
+                    return View("NonDisponibile");
+            }
+            if (!model.PartitaId.HasValue && !model.TorneoSquadraToken.HasValue && !await TesseramentoLiberoAbilitatoAsync())
                 return View("NonDisponibile");
 
             if (model.NatoEstero)
@@ -177,26 +191,61 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 try
                 {
                     var entity = model.ToEntity(firmaFilePath);
+                    entity.Id = 0;
+                    entity.Tessera = null;
                     entity.DataCreazione = DateTime.SpecifyKind(entity.DataCreazione, DateTimeKind.Utc);
-                    _dbContext.Tesseramenti.Add(entity);
-                    await _dbContext.SaveChangesAsync();
+                    var existingMembership = entity.NoTesseramento;
+                    if (model.TorneoSquadraToken.HasValue)
+                    {
+                        var result = await _tournamentRegistrations.RegisterAsync(model.TorneoSquadraToken.Value, entity);
+                        if (result.Duplicate)
+                        {
+                            TempData["NomeUtente"] = model.Nome + " " + model.Cognome;
+                            return RedirectToAction("Duplicato");
+                        }
+                        existingMembership = result.Existing;
+                        model.NoTesseramento = result.Existing;
+                    }
+                    else
+                    {
+                        _dbContext.Tesseramenti.Add(entity);
+                        await _dbContext.SaveChangesAsync();
+                    }
 
                     TempData["NomeUtente"] = model.Nome + " " + model.Cognome;
-                    TempData["NoTesseramento"] = entity.NoTesseramento;
+                    TempData["NoTesseramento"] = existingMembership;
 
                     var firmaAbsoluteUrl = $"{Request.Scheme}://{Request.Host}{firmaFilePath}";
-                    await _emailSender.SendTesseramentoNotification(model, firmaAbsoluteUrl);
+                    try
+                    {
+                        await _emailSender.SendTesseramentoNotification(model, firmaAbsoluteUrl);
+                    }
+                    catch (Exception mailException)
+                    {
+                        _logger.LogError(mailException, "Registration saved but notification failed.");
+                    }
 
                     return RedirectToAction("Successo");
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", "Errore durante il salvataggio. Dettagli: " + ex.Message);
+                    _logger.LogError(ex, "Registration failed.");
+                    ModelState.AddModelError("", "Errore durante il salvataggio. Riprova tra poco.");
                     return View(model);
                 }
             }
 
             return View(model);
+        }
+
+        private async Task<bool> SetTournamentContextAsync(Guid token)
+        {
+            if (token == Guid.Empty) return false;
+            var team = await _tournamentRegistrations.FindTeamAsync(token);
+            if (team == null) return false;
+            ViewBag.TorneoNome = team.Torneo.Nome;
+            ViewBag.TorneoSquadraNome = team.Nome;
+            return true;
         }
 
         [HttpGet]
@@ -326,9 +375,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return View();
         }
 
-        public async Task<IActionResult> ListaTesseramenti(string searchNome, string searchCognome, string searchTessera, DateTime? dataDa, DateTime? dataA, int? partitaId, bool soloSenzaPartita = false, bool soloTessereDaAssociare = false)
+        public async Task<IActionResult> ListaTesseramenti(string searchNome, string searchCognome, string searchTessera, DateTime? dataDa, DateTime? dataA, int? partitaId, bool soloSenzaPartita = false, bool soloTessereDaAssociare = false, int? torneoId = null)
         {
-            var query = BuildListaTesseramentiQuery(searchNome, searchCognome, searchTessera, dataDa, dataA, partitaId, soloSenzaPartita, soloTessereDaAssociare);
+            var query = BuildListaTesseramentiQuery(searchNome, searchCognome, searchTessera, dataDa, dataA, partitaId, soloSenzaPartita, soloTessereDaAssociare, torneoId);
 
             query = query
                 .OrderByDescending(t => t.Partita != null ? t.Partita.Data : t.DataCreazione)
@@ -336,11 +385,22 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 .ThenByDescending(t => t.Id);
 
             var tesseramenti = await query.ToListAsync();
+            var ids = tesseramenti.Select(t => t.Id).ToList();
+            var eventi = await _dbContext.TorneoIscrizioni.AsNoTracking()
+                .Where(i => ids.Contains(i.TesseramentoId) && (!torneoId.HasValue || i.TorneoSquadra.TorneoId == torneoId.Value))
+                .Select(i => new { i.TesseramentoId, i.TorneoSquadra.TorneoId, i.TorneoSquadra.Torneo.Data })
+                .ToListAsync();
+            var eventiPerTesserato = eventi
+                .Where(e => (!dataDa.HasValue || e.Data.Date >= dataDa.Value.Date) && (!dataA.HasValue || e.Data.Date <= dataA.Value.Date))
+                .GroupBy(e => e.TesseramentoId).ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.Data).First());
 
             var viewModels = tesseramenti.Select(t => new TesseramentoViewModel
             {
                 Id = t.Id,
                 DataPartita = t.Partita?.Data,
+                DataTorneo = !partitaId.HasValue && (torneoId.HasValue || !t.PartitaId.HasValue) && eventiPerTesserato.TryGetValue(t.Id, out var eventoData) ? eventoData.Data : null,
+                TorneoId = !partitaId.HasValue && (torneoId.HasValue || !t.PartitaId.HasValue) && eventiPerTesserato.TryGetValue(t.Id, out var eventoId) ? eventoId.TorneoId : null,
+                AnnoValiditaTesseramento = t.AnnoValiditaTesseramento,
                 Nome = t.Nome,
                 Cognome = t.Cognome,
                 DataNascita = t.DataNascita,
@@ -375,6 +435,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             ViewBag.DataDa = dataDa?.ToString("yyyy-MM-dd");
             ViewBag.DataA = dataA?.ToString("yyyy-MM-dd");
             ViewBag.PartitaId = partitaId;
+            ViewBag.TorneoId = torneoId;
             ViewBag.SoloSenzaPartita = soloSenzaPartita;
             ViewBag.SoloTessereDaAssociare = soloTessereDaAssociare;
 
@@ -650,11 +711,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExportAcsiOds(string searchNome, string searchCognome, string searchTessera, DateTime? dataDa, DateTime? dataA, int? partitaId, bool soloSenzaPartita = false, bool soloTessereDaAssociare = false)
+        public async Task<IActionResult> ExportAcsiOds(string searchNome, string searchCognome, string searchTessera, DateTime? dataDa, DateTime? dataA, int? partitaId, bool soloSenzaPartita = false, bool soloTessereDaAssociare = false, int? torneoId = null)
         {
             try
             {
-                var tesseramenti = await BuildListaTesseramentiQuery(searchNome, searchCognome, searchTessera, dataDa, dataA, partitaId, soloSenzaPartita, soloTessereDaAssociare)
+                var tesseramenti = await BuildListaTesseramentiQuery(searchNome, searchCognome, searchTessera, dataDa, dataA, partitaId, soloSenzaPartita, soloTessereDaAssociare, torneoId)
                     .OrderByDescending(t => t.Partita != null ? t.Partita.Data : t.DataCreazione)
                     .ThenByDescending(t => t.PartitaId)
                     .ThenByDescending(t => t.Id)
@@ -668,6 +729,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
                 var esteri = esportabili.Where(t => t.NatoEstero).ToList();
                 var archiveBytes = _acsiOdsExportService.CreateArchive(italiani, esteri);
 
+                // Persist protection before delivering any export to the caller.
+                foreach (var tesseramento in esportabili)
+                    tesseramento.EsportatoAcsiIl ??= DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync();
+
                 var fileName = $"Tesseramenti_ACSI_{DateTime.UtcNow:yyyyMMdd_HHmmss}.zip";
                 return File(archiveBytes, "application/zip", fileName);
             }
@@ -678,7 +744,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             }
         }
 
-        private IQueryable<Tesseramento> BuildListaTesseramentiQuery(string? searchNome, string? searchCognome, string? searchTessera, DateTime? dataDa, DateTime? dataA, int? partitaId, bool soloSenzaPartita = false, bool soloTessereDaAssociare = false)
+        private IQueryable<Tesseramento> BuildListaTesseramentiQuery(string? searchNome, string? searchCognome, string? searchTessera, DateTime? dataDa, DateTime? dataA, int? partitaId, bool soloSenzaPartita = false, bool soloTessereDaAssociare = false, int? torneoId = null)
         {
             var query = _dbContext.Tesseramenti
                 .Include(t => t.Partita)
@@ -693,17 +759,19 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             if (!string.IsNullOrWhiteSpace(searchTessera))
                 query = query.Where(t => t.Tessera != null && EF.Functions.ILike(t.Tessera, $"%{searchTessera.Trim()}%"));
 
-            if (dataDa.HasValue)
-            {
-                var dataDaInizio = DateTime.SpecifyKind(dataDa.Value.Date, DateTimeKind.Utc);
-                query = query.Where(t => t.Partita != null && t.Partita.Data >= dataDaInizio);
-            }
-
-            if (dataA.HasValue)
-            {
-                var dataAEnd = DateTime.SpecifyKind(dataA.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
-                query = query.Where(t => t.Partita != null && t.Partita.Data <= dataAEnd);
-            }
+            var start = dataDa.HasValue ? DateTime.SpecifyKind(dataDa.Value.Date, DateTimeKind.Utc) : (DateTime?)null;
+            var end = dataA.HasValue ? DateTime.SpecifyKind(dataA.Value.Date.AddDays(1), DateTimeKind.Utc) : (DateTime?)null;
+            if (torneoId.HasValue)
+                query = query.Where(t => _dbContext.TorneoIscrizioni.Any(i => i.TesseramentoId == t.Id &&
+                    i.TorneoSquadra.TorneoId == torneoId.Value &&
+                    (!start.HasValue || i.TorneoSquadra.Torneo.Data >= start.Value) &&
+                    (!end.HasValue || i.TorneoSquadra.Torneo.Data < end.Value)));
+            else if (start.HasValue || end.HasValue)
+                query = query.Where(t =>
+                    (t.Partita != null && (!start.HasValue || t.Partita.Data >= start.Value) && (!end.HasValue || t.Partita.Data < end.Value)) ||
+                    (!partitaId.HasValue && _dbContext.TorneoIscrizioni.Any(i => i.TesseramentoId == t.Id &&
+                        (!start.HasValue || i.TorneoSquadra.Torneo.Data >= start.Value) &&
+                        (!end.HasValue || i.TorneoSquadra.Torneo.Data < end.Value))));
 
             if (partitaId.HasValue)
                 query = query.Where(t => t.PartitaId == partitaId.Value);
@@ -717,14 +785,15 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             return query;
         }
 
-        private static IQueryable<Tesseramento> ApplicaFiltroTessereDaAssociare(IQueryable<Tesseramento> query)
+        private IQueryable<Tesseramento> ApplicaFiltroTessereDaAssociare(IQueryable<Tesseramento> query)
         {
             return query.Where(t =>
                 string.IsNullOrEmpty(t.Tessera) &&
                 !t.NoTesseramento &&
-                t.Partita != null &&
+                ((t.Partita != null &&
                 !t.Partita.IsDeleted &&
-                t.Partita.Data >= DataAvvioFabbisognoTessereUtc);
+                t.Partita.Data >= DataAvvioFabbisognoTessereUtc) ||
+                 _dbContext.TorneoIscrizioni.Any(i => i.TesseramentoId == t.Id && i.TorneoSquadra.Torneo.Data >= DataAvvioFabbisognoTessereUtc)));
         }
 
         private static string GetTesseraFittiziaPrefix(DateTime dataPartita)
@@ -877,47 +946,22 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             var start = DateTime.SpecifyKind(new DateTime(annoPartita, 1, 1), DateTimeKind.Utc);
             var end = start.AddYears(1);
             var codiceFiscale = NormalizeCode(tesseramento.CodiceFiscale);
-
-            if (!string.IsNullOrWhiteSpace(codiceFiscale))
-            {
-                var candidatiCf = await _dbContext.Tesseramenti
-                    .AsNoTracking()
-                    .Include(t => t.Partita)
-                    .Where(t => t.Id != tesseramento.Id
-                        && !t.NoTesseramento
-                        && t.Partita != null
-                        && t.Partita.Data >= start
-                        && t.Partita.Data < end
-                        && t.CodiceFiscale != null)
-                    .Select(t => t.CodiceFiscale)
-                    .ToListAsync();
-
-                if (candidatiCf.Any(cf => NormalizeCode(cf) == codiceFiscale))
-                    return true;
-            }
-
             var nome = NormalizePersonText(tesseramento.Nome);
             var cognome = NormalizePersonText(tesseramento.Cognome);
             var dataNascita = tesseramento.DataNascita.Date;
-
-            if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(cognome))
-                return false;
-
-            var candidatiAnagrafici = await _dbContext.Tesseramenti
-                .AsNoTracking()
-                .Include(t => t.Partita)
-                .Where(t => t.Id != tesseramento.Id
-                    && !t.NoTesseramento
-                    && t.Partita != null
-                    && t.Partita.Data >= start
-                    && t.Partita.Data < end
-                    && t.DataNascita.Date == dataNascita)
-                .Select(t => new { t.Nome, t.Cognome })
+            var candidati = await _dbContext.Tesseramenti
+                .Where(t => t.Id != tesseramento.Id && !t.NoTesseramento &&
+                    (t.AnnoValiditaTesseramento == annoPartita ||
+                     (t.AnnoValiditaTesseramento == null && t.Partita != null && t.Partita.Data >= start && t.Partita.Data < end)))
                 .ToListAsync();
-
-            return candidatiAnagrafici.Any(t =>
-                NormalizePersonText(t.Nome) == nome &&
-                NormalizePersonText(t.Cognome) == cognome);
+            var esistente = candidati.FirstOrDefault(t =>
+                (!string.IsNullOrWhiteSpace(codiceFiscale) && NormalizeCode(t.CodiceFiscale) == codiceFiscale) ||
+                (!string.IsNullOrWhiteSpace(nome) && !string.IsNullOrWhiteSpace(cognome) &&
+                 t.DataNascita.Date == dataNascita && NormalizePersonText(t.Nome) == nome && NormalizePersonText(t.Cognome) == cognome));
+            if (esistente == null) return false;
+            // A subsequent match permanently ends exclusive ownership by the originating tournament.
+            esistente.TorneoOrigineId = null;
+            return true;
         }
 
         private static string NormalizeCode(string? value)

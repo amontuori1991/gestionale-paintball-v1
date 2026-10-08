@@ -7,6 +7,7 @@
             "Tesserati",
             "Buoni regalo",
             "Prenotazioni",
+            "Torneo",
             "Caparre",
             "Presenze Staff",
             "Gestione Utenti",

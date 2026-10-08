@@ -322,11 +322,16 @@
         <div class="background-logo"></div>
 
         <div class="language-switcher">
-            <a class="@(lang == "it" ? "active" : "")" href="@Url.Action("Index", "Tesseramento", new { partitaId = Model.PartitaId, lang = "it" })">IT - @T("Italian")</a>
-            <a class="@(lang == "en" ? "active" : "")" href="@Url.Action("Index", "Tesseramento", new { partitaId = Model.PartitaId, lang = "en" })">EN - @T("English")</a>
+            <a class="@(lang == "it" ? "active" : "")" href="@Url.Action("Index", "Tesseramento", new { partitaId = Model.PartitaId, torneoSquadraToken = Model.TorneoSquadraToken, lang = "it" })">IT - @T("Italian")</a>
+            <a class="@(lang == "en" ? "active" : "")" href="@Url.Action("Index", "Tesseramento", new { partitaId = Model.PartitaId, torneoSquadraToken = Model.TorneoSquadraToken, lang = "en" })">EN - @T("English")</a>
         </div>
 
         <h2>@T("Title")</h2>
+        @if (Model.TorneoSquadraToken.HasValue)
+        {
+            <p><strong>@ViewBag.TorneoNome</strong> &middot; @ViewBag.TorneoSquadraNome</p>
+            <p>@(lang == "en" ? "Register for this team. An existing annual membership will be reused." : "Iscriviti a questa squadra. Un tesseramento annuale esistente verra riutilizzato.")</p>
+        }
 
         <form method="post" asp-action="Index" id="tesseramentoForm">
             @Html.HiddenFor(model => model.Lingua)
@@ -519,6 +524,7 @@
             </div>
 
             @Html.HiddenFor(model => model.PartitaId)
+            @Html.HiddenFor(model => model.TorneoSquadraToken)
             <button type="submit" class="btn btn-primary" id="submitTesseramentoButton">@T("Invia")</button>
         </form>
 

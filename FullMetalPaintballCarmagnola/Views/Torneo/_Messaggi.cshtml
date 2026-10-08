@@ -1,0 +1,11 @@
+@foreach (var key in new[] { "TorneoMessage", "Success", "Message" })
+{
+    if (TempData[key] is string message)
+    { <div class="alert alert-success" role="status">@message</div> }
+}
+@foreach (var key in new[] { "TorneoError", "Error" })
+{
+    if (TempData[key] is string error)
+    { <div class="alert alert-danger" role="alert">@error</div> }
+}
+<div asp-validation-summary="All" class="text-danger" role="alert"></div>

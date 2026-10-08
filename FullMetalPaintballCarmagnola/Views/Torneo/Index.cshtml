@@ -1,0 +1,27 @@
+@model List<Torneo>
+@{ ViewData["Title"] = "Tornei"; }
+@section Styles { <link rel="stylesheet" href="~/css/torneo.css" asp-append-version="true" /> }
+<main class="torneo-page container py-4">
+    <header class="torneo-hero">
+        <div><span class="torneo-eyebrow">Full Metal / Eventi</span><h1>Tornei</h1><p>Squadre, gironi e risultati. Tutto il torneo, in un unico posto.</p></div>
+        <a asp-action="Crea" class="btn btn-dark"><i class="bi bi-plus-lg" aria-hidden="true"></i> Crea torneo</a>
+    </header>
+    <partial name="_Messaggi" />
+    <p class="torneo-hint"><i class="bi bi-info-circle" aria-hidden="true"></i> I tornei sono eventi indipendenti dalle prenotazioni. Inserisci la chiusura del campo in <a asp-controller="DisponibilitaCampo" asp-action="Index">Disponibilit&agrave; campo</a>.</p>
+    @if (Model.Count == 0)
+    {
+        <div class="torneo-empty"><i class="bi bi-trophy" aria-hidden="true"></i><h2>Il prossimo torneo parte da qui</h2><p>Scegli le regole, prepara le squadre e condividi i link di iscrizione.</p><a asp-action="Crea" class="btn btn-dark">Crea il primo torneo</a></div>
+    }
+    <div class="torneo-cards">
+    @foreach (var torneo in Model.OrderByDescending(t => t.Data))
+    {
+        var stato = torneo.Data.Date < DateTime.Today ? "Evento passato" : "In programma";
+        <article class="torneo-card">
+            <div class="torneo-card-top"><span class="torneo-eyebrow">@torneo.Data.ToString("dd/MM/yyyy") &middot; @torneo.OraInizio.ToString(@"hh\:mm")</span><span class="torneo-badge">@stato</span></div>
+            <h2><a asp-action="Dettaglio" asp-route-id="@torneo.Id">@torneo.Nome</a></h2>
+            <p>@torneo.NumeroSquadre squadre &middot; @torneo.NumeroGironi gironi &middot; @(torneo.AndataRitorno ? "Andata e ritorno" : "Solo andata")</p>
+            <div class="torneo-card-bottom"><span>@(torneo.FasiFinali ? "Con fase finale" : "Solo gironi")</span><a asp-action="Dettaglio" asp-route-id="@torneo.Id" class="btn btn-outline-dark">Gestisci <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>
+        </article>
+    }
+    </div>
+</main>

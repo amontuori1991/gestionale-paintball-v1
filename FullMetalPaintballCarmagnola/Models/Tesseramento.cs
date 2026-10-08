@@ -92,6 +92,10 @@ namespace Full_Metal_Paintball_Carmagnola.Models // Assicurati che il namespace 
 
         public bool NoTesseramento { get; set; }
 
+        public int? TorneoOrigineId { get; set; }
+        public DateTime? EsportatoAcsiIl { get; set; }
+        public int? AnnoValiditaTesseramento { get; set; }
+
         public bool NewsletterConsent { get; set; } = true;
 
         [StringLength(64)]

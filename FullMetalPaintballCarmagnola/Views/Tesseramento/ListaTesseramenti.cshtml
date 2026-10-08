@@ -32,6 +32,12 @@
                     </div>
 
                     <div class="tess-filters__field">
+                        <label class="tess-filters__label">ID Torneo</label>
+                        <input type="number" name="torneoId" value="@ViewBag.TorneoId"
+                               placeholder="es. 12" class="tess-filters__input" style="width:110px;" />
+                    </div>
+
+                    <div class="tess-filters__field">
                         <label class="tess-filters__label">Nome</label>
                         <input type="text" name="searchNome" value="@ViewBag.SearchNome"
                                placeholder="Nome…" class="tess-filters__input" style="width:130px;" />
@@ -50,12 +56,12 @@
                     </div>
 
                     <div class="tess-filters__field">
-                        <label class="tess-filters__label">Data partita dal</label>
+                        <label class="tess-filters__label">Data evento dal</label>
                         <input type="date" name="dataDa" value="@ViewBag.DataDa" class="tess-filters__input" style="width:150px;" />
                     </div>
 
                     <div class="tess-filters__field">
-                        <label class="tess-filters__label">Data partita al</label>
+                        <label class="tess-filters__label">Data evento al</label>
                         <input type="date" name="dataA" value="@ViewBag.DataA" class="tess-filters__input" style="width:150px;" />
                     </div>
 
@@ -117,6 +123,7 @@
             <input type="hidden" name="dataDa" value="@ViewBag.DataDa" />
             <input type="hidden" name="dataA" value="@ViewBag.DataA" />
             <input type="hidden" name="partitaId" value="@ViewBag.PartitaId" />
+            <input type="hidden" name="torneoId" value="@ViewBag.TorneoId" />
             <input type="hidden" name="soloSenzaPartita" value="@(ViewBag.SoloSenzaPartita == true ? "true" : "")" />
             <input type="hidden" name="soloTessereDaAssociare" value="@(ViewBag.SoloTessereDaAssociare == true ? "true" : "")" />
 

@@ -14,6 +14,10 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         public DbSet<Partita> Partite { get; set; }
         public DbSet<PartitaAmichevole> PartiteAmichevoli { get; set; }
         public DbSet<GiftVoucher> GiftVouchers { get; set; }
+        public DbSet<Torneo> Tornei { get; set; }
+        public DbSet<TorneoSquadra> TorneoSquadre { get; set; }
+        public DbSet<TorneoIncontro> TorneoIncontri { get; set; }
+        public DbSet<TorneoIscrizione> TorneoIscrizioni { get; set; }
         public DbSet<PhotoAlbum> PhotoAlbums { get; set; }
         public DbSet<PresenzaStaff> PresenzaStaff { get; set; }
         public DbSet<ReperibilitaStaff> ReperibilitaStaff { get; set; }
@@ -40,6 +44,15 @@ namespace Full_Metal_Paintball_Carmagnola.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Torneo>().HasIndex(t => t.PhotoToken).IsUnique();
+            modelBuilder.Entity<TorneoIscrizione>().HasIndex(i => new { i.TorneoSquadraId, i.TesseramentoId }).IsUnique();
+            modelBuilder.Entity<TorneoIscrizione>().HasOne(i => i.TorneoSquadra).WithMany().HasForeignKey(i => i.TorneoSquadraId).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<TorneoIscrizione>().HasOne(i => i.Tesseramento).WithMany().HasForeignKey(i => i.TesseramentoId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<TorneoSquadra>().HasIndex(s => s.Token).IsUnique();
+            modelBuilder.Entity<TorneoSquadra>().HasOne(s => s.Torneo).WithMany(t => t.Squadre).HasForeignKey(s => s.TorneoId).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<TorneoIncontro>().HasOne(m => m.Torneo).WithMany(t => t.Incontri).HasForeignKey(m => m.TorneoId).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<TorneoIncontro>().HasOne(m => m.Casa).WithMany().HasForeignKey(m => m.CasaId).OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<TorneoIncontro>().HasOne(m => m.Ospite).WithMany().HasForeignKey(m => m.OspiteId).OnDelete(DeleteBehavior.NoAction);
             modelBuilder.Entity<GiftVoucher>().HasIndex(v => v.Code).IsUnique();
             modelBuilder.Entity<PhotoAlbum>().HasIndex(a => a.Token).IsUnique();
             modelBuilder.Entity<PhotoAlbum>().HasOne(a => a.Partita).WithMany()

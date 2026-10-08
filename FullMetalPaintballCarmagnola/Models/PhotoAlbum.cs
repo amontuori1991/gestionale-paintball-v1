@@ -19,6 +19,9 @@ public record AlbumPhoto(Guid Id, DateTimeOffset UploadedAt, long Size)
 public class PhotoAlbumViewModel
 {
     public int PartitaId { get; set; }
+    public int? TorneoId { get; set; }
+    public string? TournamentName { get; set; }
+    public int OwnerId => TorneoId ?? PartitaId;
     public Guid Token { get; set; }
     public bool Manage { get; set; }
     public bool English { get; set; }

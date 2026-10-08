@@ -63,12 +63,15 @@
 				var layoutRoles = await LayoutUserManager.GetRolesAsync(layoutUser);
 				var layoutRole = layoutRoles.FirstOrDefault() ?? "Nessuno";
 
-				navFeatures = layoutRole == "Admin"
+				navFeatures = layoutRoles.Contains("Admin")
 					? Features.AllFeatures.ToList()
 					: await LayoutDb.RolePermissions
 						.Where(p => p.RoleName == layoutRole && p.IsAllowed)
 						.Select(p => p.FeatureName)
 						.ToListAsync();
+
+				if (layoutRoles.Contains("Staff") && !navFeatures.Contains("Torneo"))
+					navFeatures.Add("Torneo");
 
 				var layoutFeatureOrder = new List<string>();
 				if (!string.IsNullOrWhiteSpace(layoutUser.DashboardFeatureOrder))
@@ -119,6 +122,7 @@
 			{
 				["Tesserati"] = ("bi-people", Url.Action("ListaTesseramenti", "Tesseramento") ?? "#", new[] { "Tesseramento" }, Array.Empty<string>()),
 				["Prenotazioni"] = ("bi-calendar-check", Url.Action("Index", "Partite") ?? "#", new[] { "Partite" }, new[] { "Index", "Crea", "Modifica", "Dettagli" }),
+				["Torneo"] = ("bi-trophy-fill", Url.Action("Index", "Torneo") ?? "#", new[] { "Torneo", "FotoTorneo" }, Array.Empty<string>()),
 				["Caparre"] = ("bi-wallet2", Url.Action("Caparre", "Partite") ?? "#", new[] { "Partite" }, new[] { "Caparre" }),
 				["Presenze Staff"] = ("bi-people-fill", Url.Action("Index", "PresenzeStaff") ?? "#", new[] { "PresenzeStaff" }, Array.Empty<string>()),
 				["Gestione Utenti"] = ("bi-person-badge", Url.Action("GestionePermessi", "Ruoli") ?? "#", new[] { "Ruoli" }, Array.Empty<string>()),
@@ -155,6 +159,7 @@
 					}
 					break;
 				case "Partite":
+				case "Torneo":
 					if (currentAction is "Index" or "Caparre")
 					{
 						backController = "Dashboard";
@@ -162,7 +167,7 @@
 					}
 					else
 					{
-						backController = "Partite";
+						backController = currentController;
 						backAction = "Index";
 					}
 					break;

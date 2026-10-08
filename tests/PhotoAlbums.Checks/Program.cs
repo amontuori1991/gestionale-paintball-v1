@@ -107,7 +107,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFramework
 builder.Services.AddAuthentication(o => { o.DefaultAuthenticateScheme = "Test"; o.DefaultChallengeScheme = "Test"; o.DefaultForbidScheme = "Test"; })
     .AddScheme<AuthenticationSchemeOptions, TestAuth>("Test", _ => { });
 builder.Services.AddAuthorization(o => {
-    o.AddPolicy("Prenotazioni", p => p.RequireAuthenticatedUser());
+    o.AddPolicy("Prenotazioni", p =>
+    {
+        p.RequireAuthenticatedUser();
+        if (args.Contains("--tournament-only")) p.RequireRole("Admin");
+    });
     o.AddPolicy("Disponibilita Campo", p => p.RequireAuthenticatedUser());
     o.AddPolicy("Statistiche", p => p.RequireAuthenticatedUser());
 });
@@ -301,6 +305,12 @@ try
     using var anonymous = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = new Uri("http://127.0.0.1:55443") };
     using var staff = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = new CookieContainer() }) { BaseAddress = anonymous.BaseAddress };
     staff.DefaultRequestHeaders.Add("X-Test-Role", "Staff");
+    await TournamentPhotoChecks.Run(db, staff, anonymous, storage, clock, source);
+    if (args.Contains("--tournament-only"))
+    {
+        await app.StopAsync();
+        return;
+    }
     Check((await anonymous.GetAsync("/ProfiloAzienda")).StatusCode == HttpStatusCode.Unauthorized, "Anonymous company profile access");
     Check((await staff.GetAsync("/ProfiloAzienda")).StatusCode == HttpStatusCode.Forbidden, "Staff company profile access");
     Check((await staff.GetAsync("/Volantini")).StatusCode == HttpStatusCode.Forbidden, "Staff flyer access");

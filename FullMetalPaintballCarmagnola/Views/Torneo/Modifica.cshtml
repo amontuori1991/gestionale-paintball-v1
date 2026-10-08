@@ -1,0 +1,8 @@
+@model TorneoForm
+@{ ViewData["Title"] = "Modifica torneo"; }
+@section Styles { <link rel="stylesheet" href="~/css/torneo.css" asp-append-version="true" /> }
+<main class="torneo-page container py-4">
+    <header class="torneo-hero"><div><span class="torneo-eyebrow">Configurazione evento</span><h1>Modifica torneo</h1><p>Le impostazioni si bloccano quando generi il calendario.</p></div></header>
+    <partial name="_Form" model="Model" />
+</main>
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/torneo.js" asp-append-version="true"></script> }

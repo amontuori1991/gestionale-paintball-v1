@@ -53,6 +53,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<PhotoWatermarker>();
 builder.Services.AddSingleton<IPhotoStorage, R2PhotoStorage>();
 builder.Services.AddScoped<PhotoAlbumService>();
+builder.Services.AddScoped<TournamentRegistrationService>();
 builder.Services.AddHttpClient<WeatherForecastService>();
 builder.Services.AddScoped<AcsiOdsExportService>();
 builder.Services.AddScoped<PricingCatalogService>();
@@ -162,6 +163,7 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<TesseramentoDbContext>();
     await AmichevoliSchema.EnsureAsync(dbContext);
     await GiftVoucherSchema.EnsureAsync(dbContext);
+    await TorneoSchema.EnsureAsync(dbContext);
     await dbContext.Database.ExecuteSqlRawAsync(@"
         CREATE TABLE IF NOT EXISTS ""AppSettings"" (
             ""Key"" character varying(100) NOT NULL,

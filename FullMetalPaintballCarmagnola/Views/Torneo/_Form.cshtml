@@ -1,0 +1,58 @@
+@model TorneoForm
+@{
+    var action = ViewContext.RouteData.Values["action"]?.ToString() == "Modifica" ? "Modifica" : "Crea";
+    var locked = ViewBag.Locked as bool? ?? false;
+}
+<form asp-controller="Torneo" asp-action="@action" method="post" class="torneo-settings" data-torneo-settings>
+    <input asp-for="Id" type="hidden" /><input asp-for="Version" type="hidden" />
+    <partial name="_Messaggi" />
+    <section class="torneo-panel">
+        <h2><span class="torneo-step">1</span> L'evento</h2>
+        <div class="row g-3">
+            <div class="col-12"><label asp-for="Nome" class="form-label">Nome torneo</label><input asp-for="Nome" class="form-control" required maxlength="120" /><span asp-validation-for="Nome" class="text-danger"></span></div>
+            <div class="col-sm-6"><label asp-for="Data" class="form-label">Data</label><input asp-for="Data" type="date" class="form-control" required /><span asp-validation-for="Data" class="text-danger"></span></div>
+            <div class="col-sm-6"><label asp-for="OraInizio" class="form-label">Ora di inizio</label><input asp-for="OraInizio" type="time" asp-format="{0:hh\:mm}" class="form-control" required /><span asp-validation-for="OraInizio" class="text-danger"></span></div>
+            <div class="col-12"><label asp-for="Note" class="form-label">Note organizzative</label><textarea asp-for="Note" class="form-control" rows="3" maxlength="2000"></textarea></div>
+        </div>
+        <p class="torneo-hint mt-3 mb-0">Il torneo non crea una prenotazione e non blocca il campo: inserisci separatamente la chiusura campo.</p>
+    </section>
+    @if (locked)
+    {
+        <p class="alert alert-info">Calendario generato: puoi modificare solo nome, data, ora e note. Le regole sono definitive.</p>
+        <input type="hidden" name="NumeroSquadre" value="@Model.NumeroSquadre" /><input type="hidden" name="NumeroGironi" value="@Model.NumeroGironi" />
+        <input type="hidden" name="AndataRitorno" value="@Model.AndataRitorno.ToString()" /><input type="hidden" name="FasiFinali" value="@Model.FasiFinali.ToString()" /><input type="hidden" name="QualificatePerGirone" value="@Model.QualificatePerGirone" />
+        <input type="hidden" name="FinaleTerzoPosto" value="@Model.FinaleTerzoPosto.ToString()" /><input type="hidden" name="RegistraPunteggio" value="@Model.RegistraPunteggio.ToString()" />
+        <input type="hidden" name="PuntiVittoria" value="@Model.PuntiVittoria" /><input type="hidden" name="PuntiPareggio" value="@Model.PuntiPareggio" /><input type="hidden" name="PuntiSconfitta" value="@Model.PuntiSconfitta" />
+    }
+    <fieldset disabled="@locked">
+    <section class="torneo-panel">
+        <h2><span class="torneo-step">2</span> Squadre e gironi</h2>
+        <div class="row g-3">
+            <div class="col-sm-6"><label asp-for="NumeroSquadre" class="form-label">Numero squadre</label><input asp-for="NumeroSquadre" type="number" min="2" max="64" readonly="@(action == "Modifica")" class="form-control" required /><span asp-validation-for="NumeroSquadre" class="text-danger"></span>@if (action == "Modifica") { <small class="text-muted">Il numero di squadre resta fisso dopo la creazione.</small> }</div>
+            <div class="col-sm-6"><label asp-for="NumeroGironi" class="form-label">Numero gironi</label><input asp-for="NumeroGironi" type="number" min="1" class="form-control" required /><span asp-validation-for="NumeroGironi" class="text-danger"></span></div>
+            <div class="col-12"><div class="form-check form-switch"><input asp-for="AndataRitorno" class="form-check-input" /><label asp-for="AndataRitorno" class="form-check-label">Andata e ritorno nei gironi</label></div><small class="text-muted">Se disattivato, ogni coppia di squadre si incontra una sola volta.</small></div>
+        </div>
+        <p class="torneo-hint mt-3 mb-0">Le squadre saranno predisposte automaticamente. Potrai cambiare nomi e composizione dei gironi prima di generare gli incontri.</p>
+    </section>
+    <section class="torneo-panel">
+        <h2><span class="torneo-step">3</span> Punti e risultati</h2>
+        <p>Puoi usare, per esempio, 1 punto alla vittoria e 0,5 al pareggio, oppure impostare valori personalizzati.</p>
+        <div class="row g-3">
+            <div class="col-sm-4"><label asp-for="PuntiVittoria" class="form-label">Vittoria</label><input asp-for="PuntiVittoria" type="text" class="form-control" inputmode="decimal" data-val="false" data-torneo-decimal pattern="[0-9]+([,.][0-9]+)?" required /><span asp-validation-for="PuntiVittoria" class="text-danger"></span></div>
+            <div class="col-sm-4"><label asp-for="PuntiPareggio" class="form-label">Pareggio</label><input asp-for="PuntiPareggio" type="text" class="form-control" inputmode="decimal" data-val="false" data-torneo-decimal pattern="[0-9]+([,.][0-9]+)?" required /><span asp-validation-for="PuntiPareggio" class="text-danger"></span></div>
+            <div class="col-sm-4"><label asp-for="PuntiSconfitta" class="form-label">Sconfitta</label><input asp-for="PuntiSconfitta" type="text" class="form-control" inputmode="decimal" data-val="false" data-torneo-decimal pattern="[0-9]+([,.][0-9]+)?" required /><span asp-validation-for="PuntiSconfitta" class="text-danger"></span></div>
+            <div class="col-12"><div class="form-check form-switch"><input asp-for="RegistraPunteggio" class="form-check-input" /><label asp-for="RegistraPunteggio" class="form-check-label">Registra anche il punteggio di ogni match</label></div><small class="text-muted">Se disattivato, basta selezionare vittoria o pareggio.</small></div>
+        </div>
+    </section>
+    <section class="torneo-panel">
+        <h2><span class="torneo-step">4</span> Fase finale</h2>
+        <div class="form-check form-switch mb-3"><input asp-for="FasiFinali" class="form-check-input" data-finals-toggle /><label asp-for="FasiFinali" class="form-check-label">Abilita eliminazione diretta e finale</label></div>
+        <div class="row g-3" data-finals-options>
+            <div class="col-sm-6"><label asp-for="QualificatePerGirone" class="form-label">Qualificate per girone</label><input asp-for="QualificatePerGirone" type="number" min="1" class="form-control" /><span asp-validation-for="QualificatePerGirone" class="text-danger"></span></div>
+            <div class="col-sm-6 d-flex align-items-end"><div class="form-check mb-2"><input asp-for="FinaleTerzoPosto" class="form-check-input" /><label asp-for="FinaleTerzoPosto" class="form-check-label">Disputa la finale per il terzo posto</label></div></div>
+        </div>
+        <p class="torneo-hint mt-3 mb-0">La classifica usa i punti, poi differenza punti e punti fatti se registri i punteggi. In caso di ulteriore parit&agrave;, assegna ordini di spareggio positivi e diversi dalle schede delle squadre prima di generare le finali.</p>
+    </section>
+    </fieldset>
+    <div class="torneo-actions"><button type="submit" class="btn btn-dark btn-lg">@(action == "Crea" ? "Crea torneo e squadre" : "Salva impostazioni")</button><a asp-action="Index" class="btn btn-outline-secondary">Annulla</a></div>
+</form>

@@ -30,6 +30,9 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         [Display(Name = "Data Partita")]
         public DateTime? DataPartita { get; set; }
+        public DateTime? DataTorneo { get; set; }
+        public int? TorneoId { get; set; }
+        public int? AnnoValiditaTesseramento { get; set; }
 
 
         [Required(ErrorMessage = "Il nome è obbligatorio")]
@@ -114,6 +117,8 @@ namespace Full_Metal_Paintball_Carmagnola.Models
 
         [HiddenInput(DisplayValue = false)]
         public int? PartitaId { get; set; }
+
+        public Guid? TorneoSquadraToken { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {

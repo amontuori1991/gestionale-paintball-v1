@@ -35,7 +35,7 @@ public sealed class PhotoAlbumService(TesseramentoDbContext db, IPhotoStorage st
         try
         {
             if ((await storage.List(album, ct)).Count >= MaxPhotos)
-                throw new InvalidDataException($"Limite di {MaxPhotos} foto disponibili per partita raggiunto.");
+                throw new InvalidDataException($"Limite di {MaxPhotos} foto disponibili per album raggiunto.");
             using var source = file.OpenReadStream();
             var jpeg = watermarker.Process(source);
             ct.ThrowIfCancellationRequested();

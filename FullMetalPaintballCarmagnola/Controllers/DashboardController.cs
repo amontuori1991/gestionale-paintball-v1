@@ -49,6 +49,9 @@ public class DashboardController : Controller
                 .ToListAsync();
         }
 
+        if (ruoli.Contains("Staff") && !permessiVisibili.Contains("Torneo"))
+            permessiVisibili.Add("Torneo");
+
         var orderedFeatures = ApplyDashboardOrder(permessiVisibili, ParseFeatureList(user.DashboardFeatureOrder));
         var hiddenFeatures = ParseFeatureSet(user.DashboardHiddenFeatures);
         var visibleDashboardFeatures = orderedFeatures
@@ -84,6 +87,9 @@ public class DashboardController : Controller
                 .Select(p => p.FeatureName)
                 .ToListAsync();
         }
+
+        if (ruoli.Contains("Staff") && !permessiVisibili.Contains("Torneo"))
+            permessiVisibili.Add("Torneo");
 
         var orderedFeatures = ApplyDashboardOrder(permessiVisibili, featureOrder ?? new List<string>());
 

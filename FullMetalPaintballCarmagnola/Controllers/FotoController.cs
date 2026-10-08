@@ -30,7 +30,7 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
     [HttpGet("Foto/File/{token:guid}/{photo:guid}")]
     public async Task<IActionResult> FileFoto(Guid token, Guid photo, CancellationToken ct)
     {
-        if (!await db.PhotoAlbums.AnyAsync(a => a.Token == token && !a.Partita.IsDeleted, ct)) return NotFound();
+        if (!await PublicTokenExists(token, ct)) return NotFound();
         try
         {
             var bytes = await storage.Read(token, photo, ct);
@@ -44,7 +44,7 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
     [HttpGet("Foto/ScaricaTutte/{token:guid}")]
     public async Task<IActionResult> ScaricaTutte(Guid token, CancellationToken ct)
     {
-        if (!await db.PhotoAlbums.AnyAsync(a => a.Token == token && !a.Partita.IsDeleted, ct)) return NotFound();
+        if (!await PublicTokenExists(token, ct)) return NotFound();
         if (!await ZipGate.WaitAsync(TimeSpan.FromSeconds(2), ct)) return StatusCode(429, "Download in preparazione. Riprova tra poco.");
         FileStream? file = null;
         try
@@ -98,10 +98,12 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
     [HttpGet("Foto/Album/{token:guid}")]
     public async Task<IActionResult> Album(Guid token, CancellationToken ct)
     {
+        if (token == Guid.Empty) return NotFound();
         var album = await db.PhotoAlbums.AsNoTracking().Include(a => a.Partita)
             .FirstOrDefaultAsync(a => a.Token == token && !a.Partita.IsDeleted, ct);
-        if (album == null) return NotFound();
-        return View(await Model(album, album.Partita, false, ct));
+        if (album != null) return View(await Model(album, album.Partita, false, ct));
+        var tournament = await db.Tornei.AsNoTracking().FirstOrDefaultAsync(t => t.PhotoToken == token, ct);
+        return tournament == null ? NotFound() : View(await TournamentModel(tournament, false, ct));
     }
 
     [HttpGet]
@@ -123,7 +125,7 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
     [HttpGet("Foto/Immagine/{token:guid}/{photo:guid}")]
     public async Task<IActionResult> Immagine(Guid token, Guid photo, bool download, CancellationToken ct)
     {
-        if (!await db.PhotoAlbums.AnyAsync(a => a.Token == token && !a.Partita.IsDeleted, ct)) return NotFound();
+        if (!await PublicTokenExists(token, ct)) return NotFound();
         try
         {
             var url = await storage.DownloadUrl(token, photo, download, ct);
@@ -195,17 +197,33 @@ public sealed class FotoController(TesseramentoDbContext db, PhotoAlbumService a
                 model.WhatsappUrl = $"https://wa.me/{prefix}{number}?text={Uri.EscapeDataString(message)}";
             }
         }
-        try { model.Photos = await storage.List(album.Token, ct); }
+        await LoadPhotos(model, ct);
+        if (manage && game.IsDeleted) model.Error = "La partita e' cancellata: caricamento e accesso pubblico disabilitati.";
+        return model;
+    }
+
+    private async Task<PhotoAlbumViewModel> TournamentModel(Torneo tournament, bool manage, CancellationToken ct)
+    {
+        var model = FotoTorneoController.CreateModel(tournament, Request, manage);
+        await LoadPhotos(model, ct);
+        return model;
+    }
+
+    private async Task<bool> PublicTokenExists(Guid token, CancellationToken ct) => token != Guid.Empty &&
+        (await db.PhotoAlbums.AnyAsync(a => a.Token == token && !a.Partita.IsDeleted, ct) ||
+         await db.Tornei.AnyAsync(t => t.PhotoToken == token, ct));
+
+    private async Task LoadPhotos(PhotoAlbumViewModel model, CancellationToken ct)
+    {
+        try { model.Photos = await storage.List(model.Token, ct); }
         catch (Exception e) when (e is not OperationCanceledException)
         {
             LogStorageError(e);
             Response.StatusCode = 503;
-            model.Error = english ? "The album is temporarily unavailable. Please try again later."
-                : manage ? "Archivio foto non disponibile. Verifica le variabili R2 su Render, endpoint EU e permessi sul bucket."
+            model.Error = model.English ? "The album is temporarily unavailable. Please try again later."
+                : model.Manage ? "Archivio foto non disponibile. Verifica le variabili R2 su Render, endpoint EU e permessi sul bucket."
                 : "Album temporaneamente non disponibile. Riprova tra poco.";
         }
-        if (manage && game.IsDeleted) model.Error = "La partita e' cancellata: caricamento e accesso pubblico disabilitati.";
-        return model;
     }
 
     private void LogStorageError(Exception e)
