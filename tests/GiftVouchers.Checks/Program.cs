@@ -200,6 +200,15 @@ try {
     Console.WriteLine("PASS: monetary/package modes, tamper protection, frozen prices, unsupported combinations and rabbit pricing.");
     Console.WriteLine("PASS: PostgreSQL schema twice, signature, real MVC views, permissions/revocation, CSRF, create/payment/redeem/undo, audit, concurrency and all five templates plus PDF/JPG export.");
     Console.WriteLine("Preview: http://127.0.0.1:55447/BuoniRegalo (test cookie VoucherTestRole=Admin). Output: "+output);
+    var realBooking=new Partita { Data=new DateTime(2030,6,8,0,0,0,DateTimeKind.Utc), OraInizio=TimeSpan.FromHours(10), Durata=1, NumeroPartecipanti=10, Tipo="Adulti",NomeRiferimento="DO NOT EXPOSE",TelefonoRiferimento="SECRET" };
+    db.Partite.Add(realBooking);await db.SaveChangesAsync();
+    Check((await anon.GetAsync("/SimulazioneCampi/Prenotazioni?date=2030-06-08")).StatusCode==HttpStatusCode.Unauthorized,"Real simulator anonymous protection");
+    Check((await staff.GetAsync("/SimulazioneCampi/Prenotazioni?date=2030-06-08")).StatusCode==HttpStatusCode.Forbidden,"Real simulator Staff protection");
+    var realSnapshot=await adminClient.GetStringAsync("/SimulazioneCampi/Prenotazioni?date=2030-06-08");
+    Check(realSnapshot.Contains("\"people\":10")&&!realSnapshot.Contains("SECRET")&&!realSnapshot.Contains("DO NOT EXPOSE"),"Read only snapshot must exclude personal details");
+    db.ChangeTracker.Clear();var unchanged=await db.Partite.FindAsync(realBooking.Id);
+    Check(unchanged!.Durata==1&&unchanged.NumeroPartecipanti==10,"Simulation changed real booking");
+    Console.WriteLine("PASS: real simulator authorization, minimal snapshot and unchanged booking.");
     if(args.Contains("--preview")) await Task.Delay(Timeout.Infinite);
 } finally {await app.StopAsync();NpgsqlConnection.ClearAllPools();await new NpgsqlCommand($"DROP DATABASE {database} WITH (FORCE)",admin).ExecuteNonQueryAsync();}
 

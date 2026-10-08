@@ -3,10 +3,11 @@
     const $=id=>document.getElementById(id);
     const engine=window.FieldSimulator;
     let hours=null,selected=null,serial=0,blocks=[],activeByDate={};
+    let realData=null,realBlocks=[],realFailed=false;
     const time=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
     const minutes=s=>{const [h,m]=s.split(':').map(Number);return h*60+m;};
     const dayNumber=s=>Date.parse(s+'T00:00:00Z')/86400000;
-    const onDate=()=>blocks.filter(b=>b.date===$('date').value);
+    const onDate=()=>[...realBlocks,...blocks.filter(b=>b.date===$('date').value)];
     const active=()=>activeByDate[$('date').value]||{1:true,2:true};
     const weekday=()=>![0,6].includes(new Date($('date').value+'T12:00:00Z').getUTCDay());
     function drawBlocks(){
@@ -14,9 +15,10 @@
         for(const b of onDate()){
             const row=document.createElement('div'),text=document.createElement('span'),remove=document.createElement('button');
             const collision=b.kind==='booking'&&(!active()[b.field]||onDate().some(other=>other!==b&&other.field===b.field&&other.start<b.end&&other.end>b.start));
-            text.textContent=`Campo ${b.field} / ${time(b.start)}–${time(b.end)} / ${b.kind==='booking'?'Partita fittizia':'Chiusura'}${collision?' — ATTENZIONE: conflitto, risolvere manualmente':''}`;
+            const label=b.real?(b.kind==='booking'?`Prenotazione #${b.id}: ${b.type}, ${b.people} persone, caparra ${b.paid?'confermata':'in attesa'}${b.unassigned?' — NON ASSEGNABILE, blocco prudenziale':''}`:'Chiusura reale (entrambi i campi)'):(b.kind==='booking'?'Partita fittizia':'Chiusura');
+            text.textContent=`Campo ${b.field} / ${time(b.start)}–${time(b.end)} / ${label}${collision?' — ATTENZIONE: conflitto, risolvere manualmente':''}`;
             remove.textContent='Rimuovi';remove.className='secondary';remove.onclick=()=>{blocks=blocks.filter(x=>x!==b);render();};
-            row.append(text,remove);$('blocks').append(row);
+            row.append(text);if(!b.real)row.append(remove);$('blocks').append(row);
         }
     }
     function showSelection(slot){
@@ -38,8 +40,14 @@
     }
     function parameters(){return {type:$('type').value,people:Number($('people').value),duration:Number($('duration').value),shots:$('shots').value,blocks:onDate(),active:active(),opening:hours.opening,closing:hours.closing,earliest:$('date').value===hours.today?hours.nowMinutes+240:hours.opening};}
     function render(){
+        if(hours&&realData){
+            const allocation=engine.allocate(realData.bookings,realData.closures,active(),hours.opening,hours.closing);
+            realBlocks=allocation.blocks;
+            $('real-status').textContent=`${realData.bookings.length} prenotazioni caricate. ${allocation.unassigned.length} da verificare manualmente. Assegnazione simulata: prima i gruppi vincolati, poi Campo 2 ove possibile. Non e una garanzia di ottimo globale.`;
+        }
         selected=null;$('selection').hidden=true;$('slots').replaceChildren();drawBlocks();
         if(!hours)return;
+        if(realFailed){$('result').textContent='Dati reali non disponibili: nessuno slot mostrato. Ricarica o passa esplicitamente alla modalita fittizia.';return;}
         const n=Number($('people').value),possible=engine.fields($('type').value,n),potential=Number($('potential').value);
         const tournament=n>=17&&n<=30;
         $('duration').disabled=tournament;
@@ -56,16 +64,28 @@
         for(const slot of slots){const b=document.createElement('button');b.textContent=`${time(slot.start)}–${time(slot.end)}`;b.dataset.start=slot.start;b.setAttribute('aria-pressed','false');b.onclick=()=>showSelection(slot);$('slots').append(b);}
     }
     async function loadDate(){
-        const request=++serial;hours=null;selected=null;$('selection').hidden=true;$('slots').replaceChildren();$('result').textContent='Calcolo degli orari...';$('hours').textContent='';
+        const request=++serial;hours=null;selected=null;realData=null;realBlocks=[];realFailed=false;
+        const useReal=$('use-real')?.checked;
+        if($('real-status'))$('real-status').textContent=useReal?'Caricamento prenotazioni...':'Solo dati fittizi.';
+        $('selection').hidden=true;$('slots').replaceChildren();$('result').textContent='Calcolo degli orari...';$('hours').textContent='';
         $('field1').checked=active()[1];$('field2').checked=active()[2];drawBlocks();
         try{
             const response=await fetch('/SimulazioneCampi/Orari?date='+encodeURIComponent($('date').value));
             if(!response.ok)throw new Error();const data=await response.json();if(request!==serial)return;
+            if(useReal){
+                try{
+                    const responseReal=await fetch('/SimulazioneCampi/Prenotazioni?date='+encodeURIComponent($('date').value));
+                    if(!responseReal.ok||!responseReal.headers.get('content-type')?.includes('application/json'))throw new Error();
+                    const snapshot=await responseReal.json();if(request!==serial)return;realData=snapshot;
+                }catch{if(request!==serial)return;realFailed=true;$('real-status').textContent='Caricamento fallito. Verifica accesso Admin e connessione.';}
+            }
             hours=data;$('hours').textContent=`Apertura ${time(data.opening)} · Tramonto ${data.sunset} · Ultima fine partita ${time(data.closing)}`;render();
         }catch{if(request===serial)$('result').textContent='Impossibile calcolare gli orari. Controlla la data o riprova.';}
     }
     $('date').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
     $('date').addEventListener('change',loadDate);
+    $('use-real')?.addEventListener('change',loadDate);
+    $('reload-real')?.addEventListener('click',loadDate);
     ['people','potential','duration','shots'].forEach(id=>$(id).addEventListener('input',render));
     $('type').onchange=()=>{$('shots').value=$('type').value==='Kids'?'unlimited':'standard';$('shots').disabled=$('type').value==='Kids';render();};
     [1,2].forEach(f=>$('field'+f).onchange=()=>{activeByDate[$('date').value]={1:$('field1').checked,2:$('field2').checked};render();});

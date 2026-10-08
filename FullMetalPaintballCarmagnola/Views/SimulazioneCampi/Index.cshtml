@@ -4,8 +4,15 @@
 <meta name="robots" content="noindex,nofollow"/><title>Laboratorio Campo 2</title>
 <link rel="stylesheet" href="~/css/field-simulator.css" asp-append-version="true"/></head>
 <body><main>
-<header><img src="/img/logo.gif" alt="Full Metal Paintball"/><div><p class="eyebrow">FULL METAL / LABORATORIO</p><h1>Due campi.<br/>Proviamo gli incastri.</h1><p>Solo simulazione. Nessun dato reale, prenotazione, pagamento o messaggio inviato.</p></div></header>
-<aside>I dati restano in questa pagina e si perdono ricaricandola. Non inserire nomi o telefoni dei clienti.</aside>
+<header><img src="/img/logo.gif" alt="Full Metal Paintball"/><div><p class="eyebrow">FULL METAL / LABORATORIO</p><h1>Due campi.<br/>Proviamo gli incastri.</h1><p>Solo simulazione. Nessuna prenotazione modificata, pagamento o messaggio inviato.</p></div></header>
+<aside>Le modifiche simulate restano in questa pagina e si perdono ricaricandola. Nessuna scrittura sulle prenotazioni reali.</aside>
+@if(User.IsInRole("Admin")){
+<section><h2>Base dello scenario</h2><label><input id="use-real" type="checkbox" checked/> Carica prenotazioni reali (sola lettura)</label>
+<button id="reload-real" class="secondary" type="button">Ricarica dati</button><p id="real-status" role="status"></p>
+<p>Incluse anche le caparre in attesa. Orari e durate originali conservati; prezzi, staff e assegnazioni reali non cambiano. Le chiusure esistenti, non distinte per campo, sono applicate a entrambi. I casi non assegnabili bloccano prudenzialmente entrambi i campi nella loro fascia.</p></section>
+}else{
+<aside>Modalita fittizia. Per usare prenotazioni reali, accedi come Admin al gestionale e riapri questo link.</aside>
+}
 <section><h2>01 / Il gruppo</h2><div class="grid">
 <label>Data<input id="date" type="date" required/></label>
 <label>Tipo<select id="type"><option>Adulti</option><option>Kids</option></select></label>

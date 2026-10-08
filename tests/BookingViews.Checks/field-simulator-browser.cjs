@@ -27,6 +27,16 @@ const assert=require('node:assert/strict');
   assert.equal(await page.locator('#slots button').count(),0);assert(await page.locator('#selection').isHidden());
   assert.equal(await page.locator('#blocks>div').count(),0);
   const bad=await page.request.get('http://127.0.0.1:55447/SimulazioneCampi/Orari?date=invalid');assert.equal(bad.status(),400);
+  await page.context().addCookies([{name:'VoucherTestRole',value:'Admin',url:'http://127.0.0.1:55447'}]);
+  await page.reload();
+  await page.locator('#date').fill('2030-06-08');await page.locator('#date').dispatchEvent('change');
+  await page.waitForFunction(()=>document.getElementById('real-status').textContent.includes('1 prenotazioni'));
+  assert((await page.locator('#blocks').innerText()).includes('Campo 2'));
+  assert((await page.locator('#blocks').innerText()).includes('caparra in attesa'));
+  assert.equal(await page.locator('#blocks button').count(),0);
+  await page.locator('#field2').uncheck();assert((await page.locator('#blocks').innerText()).includes('Campo 1'));
+  await page.locator('#use-real').uncheck();await page.locator('#slots button').first().waitFor();
+  assert.equal(await page.locator('#blocks>div').count(),0);
   assert.equal(errors.length,0,errors.join('\n'));
   console.log('PASS: anonymous simulator, mobile/desktop, provisional growth, fake booking, closure conflict, six adults, tournament, weekday stop, invalid date.');
  }finally{await browser.close();}
