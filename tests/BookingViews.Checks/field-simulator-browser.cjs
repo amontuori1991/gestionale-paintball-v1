@@ -4,9 +4,12 @@ const assert=require('node:assert/strict');
  const browser=await chromium.launch({channel:'msedge',headless:true});
  try{
   const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  assert.equal((await page.request.get('http://127.0.0.1:55447/SimulazioneCampi')).status(),401);
+  await page.context().addCookies([{name:'VoucherTestRole',value:'Admin',url:'http://127.0.0.1:55447'}]);
   for(const width of [390,1440]){
    await page.setViewportSize({width,height:900});
    const response=await page.goto('http://127.0.0.1:55447/SimulazioneCampi');assert.equal(response.status(),200);
+   await page.locator('#use-real').uncheck();
    await page.locator('#date').fill('2030-06-08');await page.locator('#date').dispatchEvent('change');
    await page.locator('#slots button').first().waitFor();
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
@@ -38,6 +41,6 @@ const assert=require('node:assert/strict');
   await page.locator('#use-real').uncheck();await page.locator('#slots button').first().waitFor();
   assert.equal(await page.locator('#blocks>div').count(),0);
   assert.equal(errors.length,0,errors.join('\n'));
-  console.log('PASS: anonymous simulator, mobile/desktop, provisional growth, fake booking, closure conflict, six adults, tournament, weekday stop, invalid date.');
+  console.log('PASS: Admin-only simulator, explicit fictitious mode, mobile/desktop, real loading, capacity, closures and weekday stop.');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

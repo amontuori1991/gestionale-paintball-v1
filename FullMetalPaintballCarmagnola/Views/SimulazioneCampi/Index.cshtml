@@ -6,13 +6,9 @@
 <body><main>
 <header><img src="/img/logo.gif" alt="Full Metal Paintball"/><div><p class="eyebrow">FULL METAL / LABORATORIO</p><h1>Due campi.<br/>Proviamo gli incastri.</h1><p>Solo simulazione. Nessuna prenotazione modificata, pagamento o messaggio inviato.</p></div></header>
 <aside>Le modifiche simulate restano in questa pagina e si perdono ricaricandola. Nessuna scrittura sulle prenotazioni reali.</aside>
-@if(User.IsInRole("Admin")){
 <section><h2>Base dello scenario</h2><label><input id="use-real" type="checkbox" checked/> Carica prenotazioni reali (sola lettura)</label>
 <button id="reload-real" class="secondary" type="button">Ricarica dati</button><p id="real-status" role="status"></p>
 <p>Incluse anche le caparre in attesa. Orari e durate originali conservati; prezzi, staff e assegnazioni reali non cambiano. Le chiusure esistenti, non distinte per campo, sono applicate a entrambi. I casi non assegnabili bloccano prudenzialmente entrambi i campi nella loro fascia.</p></section>
-}else{
-<aside>Modalita fittizia. Per usare prenotazioni reali, accedi come Admin al gestionale e riapri questo link.</aside>
-}
 <section><h2>01 / Il gruppo</h2><div class="grid">
 <label>Data<input id="date" type="date" required/></label>
 <label>Tipo<select id="type"><option>Adulti</option><option>Kids</option></select></label>
@@ -33,7 +29,7 @@
 <label>Alle<input id="block-end" type="time" value="11:00" required/></label><button>Aggiungi impegno</button></form>
 </details><p id="block-error" role="alert"></p><div id="blocks"></div>
 <button id="reset" class="secondary">Azzera tutti gli scenari</button></section>
-<section><h2>03 / Disponibilita per il cliente</h2><p id="result" role="status"></p><div id="slots" class="slots"></div>
+<section><h2>03 / Disponibilita per il cliente</h2><aside id="source-status" role="status">Attendi il caricamento delle prenotazioni.</aside><p>Verde significa che almeno un campo e libero, non entrambi. Le etichette dei campi sono mostrate qui per il controllo del simulatore.</p><p id="result" role="status"></p><div id="slots" class="slots"></div>
 <p class="muted">Ogni orario compare una volta sola. Campo 2 ha priorita se compatibile e libero, per preservare Campo 1. In questa prima versione non ottimizziamo automaticamente gli spostamenti delle partite esistenti.</p></section>
 <section id="selection" hidden><h2>04 / Controllo interno</h2><p id="assignment"></p>
 <label>Assegna al campo<select id="assign-field"></select></label>

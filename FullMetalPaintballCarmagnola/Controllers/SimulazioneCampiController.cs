@@ -9,7 +9,7 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class SimulazioneCampiController : Controller
 {
-    [HttpGet, AllowAnonymous]
+    [HttpGet, Authorize(Roles = "Admin")]
     public IActionResult Index() => View();
 
     [HttpGet, AllowAnonymous]

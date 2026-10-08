@@ -43,8 +43,9 @@
         if(hours&&realData){
             const allocation=engine.allocate(realData.bookings,realData.closures,active(),hours.opening,hours.closing);
             realBlocks=allocation.blocks;
-            $('real-status').textContent=`${realData.bookings.length} prenotazioni caricate. ${allocation.unassigned.length} da verificare manualmente. Assegnazione simulata: prima i gruppi vincolati, poi Campo 2 ove possibile. Non e una garanzia di ottimo globale.`;
+            $('real-status').textContent=`${$('date').value}: ${realData.bookings.length} prenotazioni caricate. ${allocation.unassigned.length} da verificare manualmente. Assegnazione simulata: prima i gruppi vincolati, poi Campo 2 ove possibile. Non e una garanzia di ottimo globale.`;
         }
+        $('source-status').textContent=realFailed?'ERRORE: prenotazioni reali non caricate. Orari non disponibili.':realData?`BASE REALE: ${realData.bookings.length} prenotazioni per il ${$('date').value}. Controlla l'elenco al punto 02; se manca una partita, premi Ricarica dati.`:$('use-real').checked?'Caricamento dati reali in corso.':'SOLO PROVA FITTIZIA: le prenotazioni reali NON sono considerate.';
         selected=null;$('selection').hidden=true;$('slots').replaceChildren();drawBlocks();
         if(!hours)return;
         if(realFailed){$('result').textContent='Dati reali non disponibili: nessuno slot mostrato. Ricarica o passa esplicitamente alla modalita fittizia.';return;}
@@ -61,13 +62,14 @@
         }
         const slots=engine.slots(parameters());
         $('result').textContent=slots.length?`${slots.length} orari simulati. Scegli un orario per vedere assegnazione e bozza.`:'Nessuna soluzione automatica: verifica numero, pacchetto, campi attivi, impegni e preavviso di 4 ore.';
-        for(const slot of slots){const b=document.createElement('button');b.textContent=`${time(slot.start)}–${time(slot.end)}`;b.dataset.start=slot.start;b.setAttribute('aria-pressed','false');b.onclick=()=>showSelection(slot);$('slots').append(b);}
+        for(const slot of slots){const b=document.createElement('button');b.textContent=`${time(slot.start)}–${time(slot.end)} / ${slot.fields.map(f=>'Campo '+f).join(' + ')}`;b.dataset.start=slot.start;b.setAttribute('aria-pressed','false');b.onclick=()=>showSelection(slot);$('slots').append(b);}
     }
     async function loadDate(){
         const request=++serial;hours=null;selected=null;realData=null;realBlocks=[];realFailed=false;
         const useReal=$('use-real')?.checked;
         if($('real-status'))$('real-status').textContent=useReal?'Caricamento prenotazioni...':'Solo dati fittizi.';
         $('selection').hidden=true;$('slots').replaceChildren();$('result').textContent='Calcolo degli orari...';$('hours').textContent='';
+        $('source-status').textContent=useReal?'Caricamento dati reali in corso.':'SOLO PROVA FITTIZIA: le prenotazioni reali NON sono considerate.';
         $('field1').checked=active()[1];$('field2').checked=active()[2];drawBlocks();
         try{
             const response=await fetch('/SimulazioneCampi/Orari?date='+encodeURIComponent($('date').value));
@@ -80,7 +82,7 @@
                 }catch{if(request!==serial)return;realFailed=true;$('real-status').textContent='Caricamento fallito. Verifica accesso Admin e connessione.';}
             }
             hours=data;$('hours').textContent=`Apertura ${time(data.opening)} · Tramonto ${data.sunset} · Ultima fine partita ${time(data.closing)}`;render();
-        }catch{if(request===serial)$('result').textContent='Impossibile calcolare gli orari. Controlla la data o riprova.';}
+        }catch{if(request===serial){$('source-status').textContent='Caricamento non riuscito: nessun orario disponibile.';$('result').textContent='Impossibile calcolare gli orari. Controlla la data o riprova.';}}
     }
     $('date').value=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
     $('date').addEventListener('change',loadDate);

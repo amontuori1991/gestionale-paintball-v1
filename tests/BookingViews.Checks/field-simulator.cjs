@@ -28,3 +28,9 @@ assert.equal(allocation.unassigned.length,1);assert.equal(allocation.blocks.leng
 allocation=e.allocate(source,[{start:540,end:1080}],base.active,540,1080);
 assert.equal(allocation.unassigned.length,2);
 console.log('PASS: real snapshot assignments, independent overlapping fields, preserved duration, incompatible fallback and global closures.');
+const october=e.allocate([{id:10,type:'Kids',people:8,start:990,end:1080}],[],base.active,540,1110);
+assert.equal(october.blocks[0].field,2);
+const octoberSlots=e.slots({...base,closing:1110,blocks:october.blocks});
+assert.deepEqual(octoberSlots.find(s=>s.start===990).fields,[1]);
+assert(octoberSlots.filter(s=>s.end>960&&s.start<1110).every(s=>!s.fields.includes(2)));
+console.log('PASS: 8 Kids 16:30-18:00 blocks Campo 2 including margins; 10 adults can only use Campo 1.');
