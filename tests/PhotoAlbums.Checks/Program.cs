@@ -114,6 +114,7 @@ builder.Services.AddAuthorization(o => {
     });
     o.AddPolicy("Disponibilita Campo", p => p.RequireAuthenticatedUser());
     o.AddPolicy("Statistiche", p => p.RequireAuthenticatedUser());
+    o.AddPolicy("Spese", p => p.RequireAuthenticatedUser());
 });
 builder.Services.AddScoped<PricingCatalogService>();
 builder.Services.AddScoped<CompanyProfileService>();

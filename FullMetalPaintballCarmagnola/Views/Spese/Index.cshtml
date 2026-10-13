@@ -2,15 +2,27 @@
 
 @{
     ViewData["Title"] = "Gestione Spese";
+    var archivio = ViewBag.Archivio is true;
 }
 <link href="~/css/spese-responsive.css" rel="stylesheet" />
 
 <div class="spese-page">
-<h2 class="text-center">Gestione Spese</h2>
+<h2 class="text-center">@(archivio ? "Archivio spese rimborsate" : "Gestione Spese")</h2>
 
 @Html.AntiForgeryToken()
 
-<button class="btn btn-success mb-3" onclick="apriModaleInserimento()">Aggiungi Spesa</button>
+<div class="d-flex flex-wrap gap-2 mb-3">
+    @if (!archivio)
+    {
+        <button class="btn btn-success" onclick="apriModaleInserimento()">Aggiungi Spesa</button>
+        <a asp-action="Index" asp-route-archivio="true" class="btn btn-outline-dark">Archivio spese rimborsate</a>
+    }
+    else
+    {
+        <a asp-action="Index" class="btn btn-outline-dark">Torna alle spese da rimborsare</a>
+    }
+</div>
+<p class="text-muted">@(archivio ? "Le spese rimborsate restano consultabili qui. Togli il flag per riportarle tra le spese da rimborsare." : "Qui trovi le spese da rimborsare. Confermando il rimborso, la spesa viene spostata nell'archivio.")</p>
 
 <div class="table-responsive">
     <table id="tabellaSpese" class="table table-bordered align-middle">
@@ -39,7 +51,7 @@
                     <td data-label="Descrizione">@item.Descrizione</td>
                     <td data-label="Importo" data-order="@item.Importo.ToString(System.Globalization.CultureInfo.InvariantCulture)">@item.Importo.ToString("0.00")</td>
                     <td data-label="Rimborsato">
-                        <input type="checkbox" class="form-check-input rimborsato-checkbox" data-id="@item.Id" @(item.Rimborsato ? "checked" : "") />
+                        <input type="checkbox" class="form-check-input rimborsato-checkbox" data-id="@item.Id" aria-label="Rimborsato: @item.Descrizione" @(item.Rimborsato ? "checked" : "") />
                     </td>
                     <td data-label="Riferimento">@item.Riferimento</td>
                     <td data-label="Azioni">
@@ -57,7 +69,7 @@
 </div>
 
 <div class="mt-4">
-    <h4>Totale Spese:</h4>
+    <h4>@(archivio ? "Totale spese archiviate:" : "Totale spese da rimborsare:")</h4>
     <div><strong>Importo Totale:</strong> <span id="totaleImporto">0.00 €</span></div>
 </div>
 </div>
@@ -158,10 +170,30 @@
                 table.column(colIdx).search(this.value).draw();
             });
 
-            $('#tabellaSpese').on('change', '.rimborsato-checkbox', function () {
+            $('#tabellaSpese').on('change', '.rimborsato-checkbox', async function () {
+                const checkbox = this;
                 var id = $(this).data('id') || $(this).closest('tr').data('id');
                 var nuovoValore = $(this).is(':checked');
-                aggiornaRimborsato(id, nuovoValore);
+                checkbox.checked = !nuovoValore;
+                checkbox.disabled = true;
+                try {
+                    const confirmed = await fmpConfirm(nuovoValore
+                        ? "Confermi di voler archiviare la spesa?"
+                        : "Confermi di voler riportare la spesa tra quelle da rimborsare?", {
+                        title: nuovoValore ? "Archivia spesa rimborsata" : "Ripristina spesa",
+                        icon: "question",
+                        confirmButtonText: nuovoValore ? "Conferma e archivia" : "Ripristina",
+                        cancelButtonText: "Annulla"
+                    });
+                    if (!confirmed) return;
+                    await aggiornaRimborsato(id, nuovoValore);
+                    table.row($(checkbox).closest('tr')).remove().draw(false);
+                    fmpNotify(nuovoValore ? "Spesa rimborsata e archiviata." : "Spesa ripristinata tra quelle da rimborsare.", "success");
+                } catch {
+                    fmpNotify("Salvataggio non riuscito. La spesa non e stata spostata; riprova o ricarica la pagina per verificarne lo stato.", "error");
+                } finally {
+                    checkbox.disabled = false;
+                }
             });
 
             $('#tabellaSpese').on('click', '.duplica-spesa-btn', function () {
@@ -235,27 +267,21 @@
 
         });
 
-                function aggiornaRimborsato(id, stato) {
+        async function aggiornaRimborsato(id, stato) {
             const payload = {
                 Id: id,
                 Rimborsato: stato
             };
 
-            fetch('/Spese/AggiornaRimborsato', {
+            const response = await fetch('/Spese/AggiornaRimborsato', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                 },
                 body: JSON.stringify(payload)
-            })
-            .then(r => {
-                if (!r.ok) {
-                    r.text().then(t => console.error("Errore risposta server:", t));
-                    fmpNotify('Errore nel salvataggio.', 'error');
-                }
-            })
-            .catch(() => fmpNotify('Errore nella richiesta.', 'error'));
+            });
+            if (!response.ok || response.redirected || !response.headers.get('content-type')?.includes('application/json')) throw new Error('Save failed');
         }
 
 

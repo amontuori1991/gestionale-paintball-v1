@@ -17,9 +17,11 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _db = db;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(bool archivio = false)
         {
-            var spese = await _db.Spese
+            ViewBag.Archivio = archivio;
+            var spese = await _db.Spese.AsNoTracking()
+                .Where(s => s.Rimborsato == archivio)
                 .OrderByDescending(s => s.Data)
                 .ToListAsync();
 
