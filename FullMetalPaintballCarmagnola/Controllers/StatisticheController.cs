@@ -27,6 +27,36 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             _environment = environment;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> PianificaEvento(string dal, string al, int minuti = 240, string giorni = "entrambi")
+        {
+            var localNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("Europe/Rome"));
+            var today = localNow.Date;
+            if (!DateTime.TryParseExact(dal, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var from)
+                || !DateTime.TryParseExact(al, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var to)
+                || from < today || to < from || (to - from).TotalDays > 366 || to > today.AddYears(2)
+                || minuti < 60 || minuti > 600 || minuti % 30 != 0
+                || giorni is not ("entrambi" or "sabato" or "domenica"))
+                return BadRequest(new { errore = "Scegli date future entro due anni, un periodo massimo di 366 giorni e una durata da 1 a 10 ore a passi di mezz'ora." });
+
+            var lower = DateTime.SpecifyKind(new DateTime(from.Year - 1, 1, 1), DateTimeKind.Utc);
+            var upper = DateTime.SpecifyKind(to.AddDays(1), DateTimeKind.Utc);
+            var bookings = await _dbContext.Partite.AsNoTracking().Where(p => p.Data >= lower && p.Data < upper)
+                .Select(p => new Partita { Data = p.Data, OraInizio = p.OraInizio, Durata = p.Durata,
+                    IsDeleted = p.IsDeleted, CaparraConfermata = p.CaparraConfermata }).ToListAsync();
+            var closures = await _dbContext.CampoChiusure.AsNoTracking()
+                .Where(c => c.DataInizio < upper && c.DataFine >= lower).ToListAsync();
+            var tournaments = await _dbContext.Tornei.AsNoTracking().Where(t => t.Data >= lower && t.Data < upper)
+                .Select(t => t.Data).ToListAsync();
+            var friendlies = await _dbContext.PartiteAmichevoli.AsNoTracking()
+                .Where(p => !p.IsDeleted && p.Data >= lower && p.Data < upper).Select(p => p.Data).ToListAsync();
+            var unknown = tournaments.Concat(friendlies).Select(d => d.Date).ToHashSet();
+            var proposals = Services.EventPlanner.Calculate(from, to, minuti, giorni, localNow, bookings, closures, unknown);
+            return Json(new { proposte = proposals, giorniEsclusi = unknown.Count(d => d >= from && d <= to),
+                annoRiferimento = "Anno precedente a ciascuna data proposta" });
+        }
+
         public async Task<IActionResult> Index(int? mese, int? annoStaff)
         {
             var it = new CultureInfo("it-IT");

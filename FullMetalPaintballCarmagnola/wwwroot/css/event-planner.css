@@ -1,0 +1,10 @@
+.event-planner{background:linear-gradient(120deg,#f4f6e6,#fffaf0);border:1px solid #c7d5b8;border-radius:24px;padding:clamp(18px,3vw,36px);color:#193e30;margin:28px 0}
+.event-planner-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:16px;align-items:end;margin:24px 0}
+.event-planner-form label{display:grid;gap:8px;font-weight:600}
+.event-planner-form input,.event-planner-form select{width:100%;min-width:0;padding:12px;border:1px solid #afc2af;border-radius:12px;background:white;color:#193e30}
+.event-planner-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.event-proposal{background:#fffdf7;border:1px solid #cedac8;border-radius:18px;padding:20px}
+.event-proposal h3{font-size:1.25rem;margin:8px 0}.event-proposal strong{display:block;font-size:1.5rem}.event-proposal p{margin:10px 0}.event-proposal small{display:block;color:#526451}
+.event-planner-method{margin-top:24px}.event-planner-method summary{cursor:pointer;font-weight:700}.event-planner [role=status]{font-weight:600}
+@media(max-width:900px){.event-planner-form{grid-template-columns:1fr 1fr}.event-planner-results{grid-template-columns:1fr}}
+@media(max-width:450px){.event-planner-form{grid-template-columns:1fr}}
