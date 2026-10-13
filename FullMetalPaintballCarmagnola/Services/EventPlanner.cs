@@ -26,7 +26,7 @@ public static class EventPlanner
             var available = DisponibilitaCampoController.BuildGiorno(date,
                 active.Where(p => p.Data.Date == date).ToList(), closures);
             var anchor = date.AddYears(-1);
-            var historicalDays = Enumerable.Range(-21, 43).Select(offset => anchor.AddDays(offset))
+            var historicalDays = Enumerable.Range(-3, 7).Select(offset => anchor.AddDays(offset))
                 .Where(d => d.Year == anchor.Year && d.DayOfWeek == date.DayOfWeek
                     && d >= firstRecorded && d < today.Date && !unknownDays.Contains(d)).ToList();
             for (var start = available.Apertura; start.Add(TimeSpan.FromMinutes(minutes)) <= available.UltimaFinePartita;
@@ -63,9 +63,9 @@ public static class EventPlanner
             }
         }
         // One best continuous interval per day; never promote missing history as zero demand.
-        return result.GroupBy(p => p.Data).Select(g => g.OrderBy(p => p.Campioni < 3)
+        return result.GroupBy(p => p.Data).Select(g => g.OrderBy(p => p.Campioni == 0)
             .ThenBy(p => p.Occupazione ?? double.MaxValue).ThenByDescending(p => p.Campioni).ThenBy(p => p.Inizio).First())
-            .OrderBy(p => p.Campioni < 3).ThenBy(p => p.Occupazione ?? double.MaxValue)
+            .OrderBy(p => p.Campioni == 0).ThenBy(p => p.Occupazione ?? double.MaxValue)
             .ThenByDescending(p => p.Campioni).ThenBy(p => p.Data).ToList();
     }
 }

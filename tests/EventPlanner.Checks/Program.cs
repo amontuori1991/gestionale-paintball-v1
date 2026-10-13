@@ -24,7 +24,14 @@ var history = new List<Partita>();
 for (var d = new DateTime(2025, 10, 26); d <= new DateTime(2025, 12, 7); d = d.AddDays(7))
     history.Add(new() { Data = d, OraInizio = TimeSpan.FromHours(9), Durata = 2, CaparraConfermata = true });
 var ranked = Run(180, history).Single();
-Check(ranked.Campioni >= 3 && ranked.Occupazione == 0 && ranked.Inizio == "11:00", "Prefer historically quieter interval");
+Check(ranked.Campioni == 1 && ranked.Occupazione == 0 && ranked.Inizio == "11:00", "Prefer historically quieter interval");
+var october = new DateTime(2026, 10, 18);
+var baseline = new List<Partita> { new() { Data = new DateTime(2025, 1, 1), CaparraConfermata = true, Durata = 1 } };
+var exact = EventPlanner.Calculate(october, october, 240, "entrambi", today, baseline, new(), new()).Single();
+Check(exact.DateConfronto.SequenceEqual(new[] { "19/10/2025" }), "Compare nearest Sunday only");
+var unavailableHistory = EventPlanner.Calculate(october, october, 240, "entrambi", today, baseline,
+    new(), new() { new DateTime(2025, 10, 19) }).Single();
+Check(unavailableHistory.Campioni == 0 && unavailableHistory.Occupazione == null, "No fallback to another weekend");
 var closure = new CampoChiusura { DataInizio = day, DataFine = day, OraInizio = TimeSpan.FromHours(9), OraFine = TimeSpan.FromHours(12) };
 Check(Run(240, closures: new() { closure }).Single().Inizio == "12:00", "Partial closure");
 Check(Run(300, closures: new() { closure }).Count == 0, "No contiguous interval");

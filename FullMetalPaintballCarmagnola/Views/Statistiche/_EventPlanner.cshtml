@@ -7,7 +7,7 @@
         <div><p class="stats-eyebrow">PIANIFICATORE / EVENTI</p><h2>Trova spazio per il prossimo evento</h2></div>
         <span class="stats-tag">Simulazione, nessun blocco del campo</span>
     </div>
-    <p>Le fasce libere di oggi, ordinate per minore occupazione registrata nell'anno precedente alla data proposta.</p>
+    <p>Scegli periodo e durata: ti mostriamo prima le fasce disponibili meno occupate nella giornata equivalente dell'anno scorso.</p>
     <form id="event-planner-form" class="event-planner-form">
         <label>Dal<input name="dal" type="date" required min="@today.ToString("yyyy-MM-dd")" value="@today.ToString("yyyy-MM-dd")" /></label>
         <label>Al<input name="al" type="date" required value="@today.AddMonths(3).ToString("yyyy-MM-dd")" /></label>
@@ -22,9 +22,10 @@
     </form>
     <p id="event-planner-status" role="status" aria-live="polite"></p>
     <div id="event-planner-results" class="event-planner-results"></div>
+    <button type="button" class="stats-action" id="event-planner-more" hidden>Mostra altre proposte</button>
     <details class="event-planner-method"><summary>Come leggere le proposte</summary>
-        <p>Una fascia continua per giornata, con partenze ogni mezz'ora. Confrontiamo lo stesso giorno della settimana nelle tre settimane prima e dopo la data equivalente dell'anno precedente. La percentuale misura i minuti occupati dalle partite confermate, non la probabilita di ricevere prenotazioni.</p>
-        <p>Lo storico inizia dalla prima prenotazione registrata nel periodo caricato. Giorni senza prenotazioni dopo quella data non garantiscono che il campo fosse aperto: cancellazioni, meteo, festivita e dati mancanti possono alterare il confronto. I vecchi totali mensili manuali non permettono analisi orarie. Con meno di tre giornate confrontabili il campione e limitato.</p>
+        <p>Sabato con sabato, domenica con domenica: usiamo una sola data, il giorno equivalente piu vicino nell'anno precedente, entro tre giorni dalla stessa data di calendario. Esempio: domenica 18 ottobre 2026 si confronta con domenica 19 ottobre 2025. Non sostituiamo una giornata piena o senza dati con un weekend piu favorevole.</p>
+        <p>Proponiamo una fascia per giornata, ordinando per minore tempo occupato dalle partite confermate nello storico. Una sola giornata offre un indizio, non una previsione. Assenza di prenotazioni non significa apertura certa: meteo, festivita e registrazioni mancanti possono influire. I vecchi totali mensili non consentono confronti orari.</p>
         <p>Escludiamo le chiusure e le fasce oltre il tramonto meno 15 minuti, arrotondato alla mezz'ora inferiore. Per la disponibilita attuale contano anche le prenotazioni in attesa e i margini di 30 minuti. Tornei senza fine e amichevoli senza orario escludono prudenzialmente l'intera giornata. Campo 2 non e incluso. Prima di fissare un evento verifica staff e disponibilita aggiornata.</p>
     </details>
 </section>

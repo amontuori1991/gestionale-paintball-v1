@@ -28,6 +28,9 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
         }
 
         [HttpGet]
+        public IActionResult PianificatoreEventi() => View();
+
+        [HttpGet]
         public async Task<IActionResult> PianificaEvento(string dal, string al, int minuti = 240, string giorni = "entrambi")
         {
             var localNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
