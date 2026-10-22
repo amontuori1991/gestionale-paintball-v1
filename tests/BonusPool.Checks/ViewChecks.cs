@@ -32,7 +32,7 @@ internal static class ViewChecks
         app.Urls.Add("http://127.0.0.1:55440");
         app.UseStaticFiles();
         app.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
-        async Task<string> Render(string role)
+        async Task<string> Render(string role, bool create = false)
         {
             using var scope = app.Services.CreateScope();
             var http = new DefaultHttpContext { RequestServices = scope.ServiceProvider };
@@ -53,7 +53,7 @@ internal static class ViewChecks
             week.Requests.Add(request);
             var model = new BonusPoolViewModel
             {
-                Week = week, State = new BonusPoolState { Weeks = new() { week } }, Form = request,
+                Week = week, State = new BonusPoolState { Weeks = new() { week } }, Form = create ? new BonusRequest { Date = week.Monday.AddDays(39) } : request,
                 Staff = new() { "Simone", "Davide", "Enrico" }, Calculation = BonusPoolRules.Calculate(week), CanClose = true,
                 Games = new() { new Partita { Id = 10, Data = week.Monday.ToDateTime(TimeOnly.MinValue), OraInizio = new TimeSpan(10,0,0), Durata = 1, NomeRiferimento = "Cliente di prova", Staff1 = "Simone", Staff2 = "Davide" } }
             };
@@ -70,6 +70,14 @@ internal static class ViewChecks
         await app.StartAsync();
         var admin = await Render("Admin");
         var staff = await Render("Staff");
+        var create = await Render("Admin", true);
+        foreach (var html in new[] { admin, create })
+        {
+            var dateInput = System.Text.RegularExpressions.Regex.Match(html, "<input[^>]*name=\"Form.Date\"[^>]*>").Value;
+            if (dateInput.Length == 0 || System.Text.RegularExpressions.Regex.IsMatch(dateInput, @"\s(min|max)="))
+                throw new Exception("Requested date must not be restricted to the displayed week in create or edit");
+        }
+        if (!create.Contains("value=\"2026-10-23\"")) throw new Exception("Future requested date must be preserved");
         if (!admin.Contains("name=\"Form.Date\"") || !admin.Contains("value=\"2026-09-14\"")
             || !admin.Contains("value=\"10:00\"") || !admin.Contains("action=\"/BonusPool/Save\""))
             throw new Exception("Admin form rendering failed");
