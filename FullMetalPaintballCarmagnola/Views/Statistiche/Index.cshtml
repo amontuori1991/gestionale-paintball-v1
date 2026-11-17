@@ -249,6 +249,10 @@
     </div>
 
     </section>
+    @if (ViewBag.Rotation is Full_Metal_Paintball_Carmagnola.Services.StaffRotation rotation)
+    {
+        <partial name="_StaffRotation" model="rotation" />
+    }
     <section id="provenienza" class="stats-section" aria-labelledby="provenienza-title">
         <div class="stats-section-heading"><div><p class="stats-eyebrow">04 / IL TERRITORIO</p><h2 id="provenienza-title">Da dove arrivano i giocatori</h2></div><span class="stats-tag">Dati dei tesserati</span></div>
     <div class="chart-card">

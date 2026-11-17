@@ -645,6 +645,18 @@ namespace Full_Metal_Paintball_Carmagnola.Controllers
             ViewBag.StaffPartiteLabels = staffPartiteAnno.Select(row => row.Staff).ToList();
             ViewBag.StaffPartiteValues = staffPartiteAnno.Select(row => row.Count).ToList();
             ViewBag.StaffPartiteTotale = staffPartiteAnno.Sum(row => row.Count);
+            var rotationNow = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Europe/Rome");
+            var rotationDay = DateTime.SpecifyKind(rotationNow.Date, DateTimeKind.Utc);
+            var rotationGames = await _dbContext.Partite.AsNoTracking()
+                .Where(p => !p.IsDeleted && (p.CaparraConfermata || p.Data >= rotationDay))
+                .Select(p => new Services.RotationGame(p.Id, p.Data, p.OraInizio, p.Durata, p.CaparraConfermata,
+                    p.Reperibile, p.Staff1, p.Staff2, p.Staff3, p.Staff4, p.Tipo, p.NumeroPartecipanti)).ToListAsync();
+            var presence = await _dbContext.PresenzaStaff.AsNoTracking().Where(p => p.Data >= rotationDay && p.Presente == true)
+                .Select(p => new { p.Data, p.NomeStaff }).ToListAsync();
+            var onCall = await _dbContext.AssenzeCalendario.AsNoTracking().Where(a => a.Data >= rotationDay)
+                .Select(a => new { a.Data, a.Reperibile }).ToListAsync();
+            ViewBag.Rotation = Services.StaffRotation.Build(rotationNow, await new Services.StaffRegistryService(_dbContext).GetStaffAsync(),
+                rotationGames, presence.Select(p => (p.Data, p.NomeStaff)), onCall.Select(a => (a.Data, (string?)a.Reperibile)));
 
             ViewBag.YtdLabels = labelsYtd;
             ViewBag.YtdCorrenteValues = ytdCorrenteValues;

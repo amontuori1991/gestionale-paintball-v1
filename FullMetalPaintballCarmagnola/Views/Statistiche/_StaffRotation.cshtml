@@ -1,0 +1,35 @@
+@model Full_Metal_Paintball_Carmagnola.Services.StaffRotation
+<section class="stats-section" aria-labelledby="rotation-title">
+    <div class="stats-section-heading"><div><p class="stats-eyebrow">Organizzazione dei turni</p><h2 id="rotation-title">Rotazione staff</h2></div></div>
+    <div class="chart-card">
+        <h3>Ultima partita e prossimo incarico</h3>
+        <p>Situazione attuale, indipendente dall'anno del grafico. Lo storico include solo partite confermate e terminate.</p>
+        @foreach (var row in Model.Rows)
+        {
+            <div class="border-top py-2">
+                <strong>@row.Name</strong> · Ultima: @(row.Last?.Start.ToString("dd/MM/yyyy HH:mm") ?? "nessuna partita registrata")
+                <br />Prossima: @(row.Next?.Start.ToString("dd/MM/yyyy HH:mm") ?? "nessuna assegnazione")
+                @if (row.Next?.Paid == false) { <span> (in attesa di caparra)</span> }
+                @if (row.FutureCount > 1) { <span> · @row.FutureCount incarichi in programma</span> }
+            </div>
+        }
+        <h3 class="mt-3">Consigli per le prossime partite</h3>
+        <p>Adulti: 2 operatori. Kids: 1 fino a 10 partecipanti, 2 da 11. Un reperibile copre un posto solo se assegnato.</p>
+        @if (Model.Notices.Count == 0) { <p>Nessuna modifica consigliata.</p> }
+        @foreach (var n in Model.Notices.Take(3))
+        {
+            <p><strong>@n.Game.Start.ToString("ddd dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.GetCultureInfo("it-IT"))</strong>
+                @(!n.Game.Paid ? " · caparra in attesa" : "")<br />@n.Text</p>
+        }
+        @if (Model.Notices.Count > 3)
+        {
+            <details><summary>Altri consigli (@(Model.Notices.Count - 3))</summary>
+            @foreach (var n in Model.Notices.Skip(3))
+            {
+                <p><strong>@n.Game.Start.ToString("dd/MM/yyyy HH:mm")</strong> @(!n.Game.Paid ? " · caparra in attesa" : "")<br />@n.Text</p>
+            }
+            </details>
+        }
+        <small>Solo indicazioni: nessun cambio automatico. Preferenza a Simone il sabato e a Davide la domenica; reperibili esclusi.</small>
+    </div>
+</section>
